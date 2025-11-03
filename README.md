@@ -1,21 +1,16 @@
-# FuFood 食物庫存管理 (前端)
+# FuFood 食物庫存管理（前端）
 
-一個以 **React + .NET + Node.js AI 微服務** 建構的食材管理應用，  
-幫助使用者透過「拍照或手動登錄」管理冰箱食材、追蹤到期日、接收 LINE 通知，  
-未來可擴充 AI 功能（影像辨識 / OCR / 食譜生成）。
+一個以 **React + .NET + Node.js AI 微服務** 建構的食材管理應用，幫助使用者透過「拍照或手動登錄」管理冰箱食材、追蹤到期日、接收 LINE 通知，未來可擴充 AI 功能（影像辨識 / OCR / 食譜生成）。
 
 ---
 
 ## 🧭 專案簡介
 
-此專案為食物管理平台 MVP 版本，  
-整合 **LINE 登入 + 自家註冊登入 + PWA 推播通知**，  
-使用者可上傳食材照片、追蹤有效期限，並自動接收提醒與食譜建議。  
-以前後端分離架構開發，並支援 AI 擴充與雲端部署。
+此專案為食物管理平台 MVP 版本，整合 **LINE 登入 + 自家註冊登入 + PWA 推播通知**，使用者可上傳食材照片、追蹤有效期限，並自動接收提醒與食譜建議。以前後端分離架構開發，並支援 AI 擴充與雲端部署。
 
 ---
 
-### 🔹 前端（Frontend）
+## 🔹 前端技術棧
 
 | 項目     | 技術                         | 說明                       |
 | -------- | ---------------------------- | -------------------------- |
@@ -35,31 +30,31 @@
 ## 📂 專案資料夾結構
 
 ```
-    .
+.
 └── FuFood/
     ├── src/
-    │   ├── components/ → 元件
-    │   │   ├── pages/ → 頁面元件
-    │   │   ├── shared/ → 共用元件
-    │   │   └── 頁面資料夾 (Home, About, etc.)/ → 如果頁面需拆分多元件
-    │   │       ├── Section.tsx...
-    │   │       ├── Part.tsx...
-    │   │       └── index.tsx → 主元件 小寫index
-    │   ├── assets/ → 圖片、icon、字型
-    │   ├── index.css → 全域樣式或 Tailwind 設定
-    │   ├── Router.tsx → 路由檔案
-    │   └── main.tsx → 入口檔案
-    ├── vite.config.ts → Vite 設定檔
-    ├── package.json → 專案依賴與指令
-    ├── index.html → 專案入口 HTML
+    │   ├── components/
+    │   │   ├── pages/           → 頁面元件
+    │   │   ├── shared/          → 共用元件
+    │   │   └── [PageName]/      → 頁面資料夾
+    │   │       ├── Section.tsx
+    │   │       ├── Part.tsx
+    │   │       └── index.tsx    → 主元件
+    │   ├── assets/              → 圖片、icon、字型
+    │   ├── index.css            → 全域樣式或 Tailwind 設定
+    │   ├── Router.tsx           → 路由檔案
+    │   └── main.tsx             → 入口檔案
+    ├── vite.config.ts           → Vite 設定檔
+    ├── package.json             → 專案依賴與指令
+    ├── index.html               → 專案入口 HTML
     └── README.md
 ```
 
+---
+
 ## 🌱 Git Flow 規範
 
-### 1. 分支架構
-
-#### 主分支
+### 主分支
 
 | 分支     | 用途         | 部署環境            |
 | -------- | ------------ | ------------------- |
@@ -67,7 +62,7 @@
 | **qa**   | 測試版本     | Vercel / 測試伺服器 |
 | **dev**  | 開發整合分支 | 本地 / 暫存環境     |
 
-#### 副分支
+### 副分支
 
 | 分支        | 用途             | 範例                |
 | ----------- | ---------------- | ------------------- |
@@ -78,7 +73,7 @@
 
 ---
 
-### 2. Commit 規範
+## 📝 Commit 規範
 
 請遵循以下前綴：
 
@@ -93,14 +88,16 @@
 
 **範例：**
 
-````bash
+```bash
 feat: add LINE OAuth 2.0 login
 fix: correct expiry date calculation
+```
+
 ---
 
-### 3. 開發流程
+## 🚀 開發流程
 
-## 1️⃣ 從 dev 建立新分支
+### 1️⃣ 從 dev 建立新分支
 
 ```bash
 git checkout dev
@@ -108,13 +105,13 @@ git pull origin dev
 git checkout -b Feature-功能名稱
 ```
 
-### 建議命名格式
+**建議命名格式：**
 
 - `Feature-login-page`
 - `Fix-api-error`
 - `Update-readme-doc`
 
-## 2️⃣ 開發與提交 Commit
+### 2️⃣ 開發與提交 Commit
 
 ```bash
 git add .
@@ -122,20 +119,18 @@ git commit -m "feat: 新增登入頁面"
 git push origin Feature-功能名稱
 ```
 
-**請遵守前綴規範**：`feat` / `fix` / `refactor` / `docs` / `chore` ...
+**請遵守前綴規範**：`feat` / `fix` / `refactor` / `docs` / `chore`
 
-## 3️⃣ 發送 Pull Request (PR)
+### 3️⃣ 發送 Pull Request（雙 PR 制）
 
-每支開發分支完成後，需建立 **兩個 PR**（雙 PR 制）：
+每支開發分支完成後，需建立 **兩個 PR**：
 
-| 目的 | 目標分支 | PR 標題範例 | 用途 |
-|------|----------|------------|------|
-| 測試驗證 | `qa` | `[QA] Feature: login page` | 部署至 Vercel 供 QA 測試 |
-| 開發整合 | `dev` | `[DEV] Feature: login page` | 保持開發分支與測試同步 |
+| 目的     | 目標分支 | PR 標題範例                 | 用途                     |
+| -------- | -------- | --------------------------- | ------------------------ |
+| 測試驗證 | `qa`     | `[QA] Feature: login page`  | 部署至 Vercel 供 QA 測試 |
+| 開發整合 | `dev`    | `[DEV] Feature: login page` | 保持開發分支與測試同步   |
 
-### 🧾 PR 描述建議格式
-
-發 PR 時，建議使用以下模板撰寫說明區，讓 Reviewer 能快速理解內容：
+#### PR 描述建議模板
 
 ```markdown
 ## 🧩 功能內容
@@ -161,12 +156,13 @@ git push origin Feature-功能名稱
 - 部署後請確認 QA 環境登入功能正常
 ```
 
-## 4️⃣ 合併與上線流程
+### 4️⃣ 合併與上線流程
 
-1. **先合併至 `qa` 進行測試**
-2. **測試通過後，再合併至 `dev`**
+**第一步：先合併至 `qa` 進行測試**
 
-當多項功能完成整合，由管理者從 `dev` 建立上線版本分支：
+**第二步：測試通過後，再合併至 `dev`**
+
+**第三步：管理者從 `dev` 建立上線版本分支**
 
 ```bash
 git checkout dev
@@ -175,7 +171,7 @@ git checkout -b dev-v001
 git push origin dev-v001
 ```
 
-將該版本分支合併至 `main` 進行正式部署：
+**第四步：將版本分支合併至 `main` 進行正式部署**
 
 ```bash
 git checkout main
@@ -186,10 +182,9 @@ git push origin main
 
 ---
 
-## 版本標記（Tag）
+## 🏷️ 版本標記（Tag）
 
-🔖 Tag 用於標記「每次正式上線的版本」，讓團隊能明確追蹤發版記錄。
-一般會在 **版本合併至 main 並上線後** 使用。
+Tag 用於標記「每次正式上線的版本」，讓團隊能明確追蹤發版記錄。一般會在 **版本合併至 main 並上線後** 使用。
 
 ### 建立與推送 Tag
 
@@ -213,7 +208,7 @@ git tag
 git checkout v0.1.0
 ```
 
-## 📦 使用時機建議
+### 使用時機建議
 
 ✅ 當某次版本（例如 `dev-v001`）已完成並合併至 `main` 時
 
@@ -237,4 +232,3 @@ qa 測試完成 → dev 整合完成
 ▼
 建立 dev-v001 → 合併 main → 打上 Tag → 正式上線
 ```
-````
