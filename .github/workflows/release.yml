@@ -9,10 +9,11 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.ACTIONS_PAT }}
 
       - name: Get version from package.json or .NET project
         id: version
@@ -34,7 +35,7 @@ jobs:
       - name: Create Git Tag
         run: |
           git tag -a v${{ steps.version.outputs.version }} -m "Release v${{ steps.version.outputs.version }}"
-          git push origin v${{ steps.version.outputs.version }}
+          git push https://${{ secrets.ACTIONS_PAT }}@github.com/${{ github.repository }}.git v${{ steps.version.outputs.version }}
 
       - name: Generate Release Notes
         uses: softprops/action-gh-release@v2
@@ -42,5 +43,4 @@ jobs:
           tag_name: v${{ steps.version.outputs.version }}
           name: "Release v${{ steps.version.outputs.version }}"
           body_path: CHANGELOG.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.ACTIONS_PAT }}
