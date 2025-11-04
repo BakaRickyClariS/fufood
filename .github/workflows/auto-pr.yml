@@ -1,0 +1,55 @@
+name: Manual Dual Pull Requests
+
+# ✅ 手動執行開關
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "要建立 PR 的分支名稱"
+        required: true
+        default: "Feature-login-page"
+      title:
+        description: "PR 標題"
+        required: true
+        default: "Feature: login page"
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create QA Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          base: qa
+          branch: ${{ github.event.inputs.branch }}
+          title: "[QA] ${{ github.event.inputs.title }}"
+          body: |
+            ## 🧩 功能摘要
+            - 自動建立 QA 測試用 PR
+            - 來源分支：${{ github.event.inputs.branch }}
+
+            ## 🧪 測試項目
+            - [ ] 功能可在 Vercel QA 環境正常運作
+
+            ## 📎 備註
+            - 此 PR 為手動建立的 QA 測試版本。
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create DEV Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          base: dev
+          branch: ${{ github.event.inputs.branch }}
+          title: "[DEV] ${{ github.event.inputs.title }}"
+          body: |
+            ## 🧩 功能摘要
+            - 自動建立 DEV 整合用 PR
+            - 來源分支：${{ github.event.inputs.branch }}
+
+            ## 🧪 測試項目
+            - [ ] 確認此功能已同步至開發環境
+          token: ${{ secrets.GITHUB_TOKEN }}
