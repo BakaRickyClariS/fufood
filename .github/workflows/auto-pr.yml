@@ -1,55 +1,75 @@
-name: Manual Dual Pull Requests
+name: Auto PR for all unmerged branches
 
-# ✅ 手動執行開關
 on:
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: "要建立 PR 的分支名稱"
-        required: true
-        default: "Feature-login-page"
-      title:
-        description: "PR 標題"
-        required: true
-        default: "Feature: login page"
+  workflow_dispatch: # 手動觸發
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
-  create-pr:
+  batch-pr:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Create QA Pull Request
-        uses: peter-evans/create-pull-request@v6
         with:
-          base: qa
-          branch: ${{ github.event.inputs.branch }}
-          title: "[QA] ${{ github.event.inputs.title }}"
-          body: |
-            ## 🧩 功能摘要
-            - 自動建立 QA 測試用 PR
-            - 來源分支：${{ github.event.inputs.branch }}
+          fetch-depth: 0
 
-            ## 🧪 測試項目
-            - [ ] 功能可在 Vercel QA 環境正常運作
+      - name: Fetch all remote branches
+        run: git fetch origin
 
-            ## 📎 備註
-            - 此 PR 為手動建立的 QA 測試版本。
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Find unmerged branches
+        id: list
+        shell: bash
+        run: |
+          BRANCHES=$(git branch -r --no-merged origin/dev | grep -v "origin/dev" | grep -v "origin/main" | grep -v "origin/qa" | sed 's|origin/||')
+          echo "branches=$BRANCHES" >> $GITHUB_OUTPUT
+          echo "🧭 Unmerged branches:"
+          echo "$BRANCHES"
 
-      - name: Create DEV Pull Request
-        uses: peter-evans/create-pull-request@v6
+      - name: Create QA and DEV Pull Requests
+        if: steps.list.outputs.branches != ''
+        uses: actions/github-script@v7
         with:
-          base: dev
-          branch: ${{ github.event.inputs.branch }}
-          title: "[DEV] ${{ github.event.inputs.title }}"
-          body: |
-            ## 🧩 功能摘要
-            - 自動建立 DEV 整合用 PR
-            - 來源分支：${{ github.event.inputs.branch }}
+          script: |
+            const branches = `${{ steps.list.outputs.branches }}`.split('\n').filter(Boolean);
+            console.log(`🧩 Found ${branches.length} branches to process`);
 
-            ## 🧪 測試項目
-            - [ ] 確認此功能已同步至開發環境
-          token: ${{ secrets.GITHUB_TOKEN }}
+            function formatTitle(branch) {
+              const cleaned = branch.replace(/^Feature-/, '')
+                                   .replace(/^Fix-/, '')
+                                   .replace(/^Update-/, '')
+                                   .replace(/-/g, ' ')
+                                   .replace(/\b\w/g, c => c.toUpperCase());
+              return cleaned.trim();
+            }
+
+            for (const branch of branches) {
+              const title = formatTitle(branch);
+              const qaTitle = `[QA] ${title}`;
+              const devTitle = `[DEV] ${title}`;
+
+              console.log(`🚀 Creating PRs for: ${branch} → ${title}`);
+
+              // 建立 QA PR
+              await github.rest.pulls.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head: branch,
+                base: "qa",
+                title: qaTitle,
+                body: `自動建立 QA 測試用 PR\n來源分支：${branch}`
+              }).catch(err => console.log(`⚠️ QA PR skipped for ${branch}: ${err.message}`));
+
+              // 建立 DEV PR
+              await github.rest.pulls.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head: branch,
+                base: "dev",
+                title: devTitle,
+                body: `自動建立 DEV 整合用 PR\n來源分支：${branch}`
+              }).catch(err => console.log(`⚠️ DEV PR skipped for ${branch}: ${err.message}`));
+            }
