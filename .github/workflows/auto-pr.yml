@@ -4,127 +4,81 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
 
 jobs:
-  batch-pr-auto-label:
+  create-pull-requests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.ACTIONS_PAT }}
           fetch-depth: 0
 
-      - name: Fetch all remote branches
+      - name: Fetch all branches
         run: git fetch origin
 
       - name: Find unmerged branches
-        id: list
-        shell: bash
+        id: branches
         run: |
-          BRANCHES=$(git branch -r --no-merged origin/dev | grep -v "origin/dev" | grep -v "origin/main" | grep -v "origin/qa" | sed 's|origin/||')
-          echo "branches=$BRANCHES" >> $GITHUB_OUTPUT
-          echo "🧭 Unmerged branches:"
-          echo "$BRANCHES"
+          BRANCHES=$(git branch -r --no-merged origin/dev | grep -v origin/dev | grep -v origin/main | grep -v origin/qa | sed 's|origin/||')
+          echo "list<<EOF" >> $GITHUB_OUTPUT
+          echo "$BRANCHES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Create QA and DEV Pull Requests with Auto Labels
-        if: steps.list.outputs.branches != ''
+      - name: Create Pull Requests
+        if: steps.branches.outputs.list != ''
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.ACTIONS_PAT }}
           script: |
-            const branches = `${{ steps.list.outputs.branches }}`.split('\n').filter(Boolean);
-
-            console.log(`🧩 Found ${branches.length} branches to process`);
+            const branches = `${{ steps.branches.outputs.list }}`.trim().split('\n').filter(b => b);
 
             function formatTitle(branch) {
-              const cleaned = branch.replace(/^Feature-/, '')
-                .replace(/^Fix-/, '')
-                .replace(/^Update-/, '')
-                .replace(/^Hotfix-/, '')
+              return branch
+                .replace(/^Feature-/, '').replace(/^Fix-/, '').replace(/^Update-/, '').replace(/^Hotfix-/, '')
                 .replace(/-/g, ' ')
-                .replace(/\b\w/g, c => c.toUpperCase());
-              return cleaned.trim();
+                .replace(/\b\w/g, c => c.toUpperCase())
+                .trim();
             }
 
             function getLabels(branch) {
-              const labels = [];
-              
-              if (branch.startsWith('Feature-')) {
-                labels.push('feature', 'enhancement');
-              } else if (branch.startsWith('Fix-')) {
-                labels.push('bug', 'fix');
-              } else if (branch.startsWith('Update-')) {
-                labels.push('documentation', 'update');
-              } else if (branch.startsWith('Hotfix-')) {
-                labels.push('hotfix', 'urgent');
-              }
-              
-              return labels;
+              if (branch.startsWith('Feature-')) return ['feature', 'enhancement'];
+              if (branch.startsWith('Fix-')) return ['bug', 'fix'];
+              if (branch.startsWith('Update-')) return ['documentation', 'update'];
+              if (branch.startsWith('Hotfix-')) return ['hotfix', 'urgent'];
+              return [];
             }
 
             for (const branch of branches) {
               const title = formatTitle(branch);
-              const qaTitle = `[QA] ${title}`;
-              const devTitle = `[DEV] ${title}`;
               const labels = getLabels(branch);
               
-              console.log(`🚀 Creating PRs for: ${branch} → ${title}`);
-              console.log(`🏷️ Labels: ${labels.join(', ')}`);
-
-              // 建立 QA PR
-              try {
-                const qaPr = await github.rest.pulls.create({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  head: branch,
-                  base: "qa",
-                  title: qaTitle,
-                  body: `## 🧩 功能摘要\n\n自動建立 QA 測試用 PR\n\n**來源分支：** ${branch}\n\n## 🧪 測試項目\n\n- [ ] 功能可在 Vercel QA 環境正常運作\n\n## 📎 備註\n\n此 PR 為自動建立的測試版本`
-                });
-                
-                // 為 QA PR 添加 labels
-                if (labels.length > 0) {
-                  await github.rest.issues.addLabels({
+              for (const base of ['qa', 'dev']) {
+                try {
+                  const prTitle = `[${base.toUpperCase()}] ${title}`;
+                  const pr = await github.rest.pulls.create({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
-                    issue_number: qaPr.data.number,
-                    labels: labels
+                    head: branch,
+                    base: base,
+                    title: prTitle,
+                    body: `Auto-created PR from branch: ${branch}`
                   });
-                  console.log(`✅ QA PR #${qaPr.data.number} created with labels: ${labels.join(', ')}`);
-                } else {
-                  console.log(`✅ QA PR #${qaPr.data.number} created`);
+                  
+                  if (labels.length > 0) {
+                    await github.rest.issues.addLabels({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: pr.data.number,
+                      labels: labels
+                    });
+                  }
+                  
+                  console.log(`Created ${base.toUpperCase()} PR #${pr.data.number}`);
+                } catch (error) {
+                  console.log(`Error creating ${base} PR: ${error.message}`);
                 }
-              } catch (err) {
-                console.log(`⚠️ QA PR skipped for ${branch}: ${err.message}`);
-              }
-
-              // 建立 DEV PR
-              try {
-                const devPr = await github.rest.pulls.create({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  head: branch,
-                  base: "dev",
-                  title: devTitle,
-                  body: `## 🧩 功能摘要\n\n自動建立 DEV 整合用 PR\n\n**來源分支：** ${branch}\n\n## 🧪 測試項目\n\n- [ ] 功能可在開發環境正常運作\n\n## 📎 備註\n\n此 PR 為自動建立的整合版本`
-                });
-                
-                // 為 DEV PR 添加 labels
-                if (labels.length > 0) {
-                  await github.rest.issues.addLabels({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: devPr.data.number,
-                    labels: labels
-                  });
-                  console.log(`✅ DEV PR #${devPr.data.number} created with labels: ${labels.join(', ')}`);
-                } else {
-                  console.log(`✅ DEV PR #${devPr.data.number} created`);
-                }
-              } catch (err) {
-                console.log(`⚠️ DEV PR skipped for ${branch}: ${err.message}`);
               }
             }
