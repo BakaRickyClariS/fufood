@@ -1,4 +1,4 @@
-name: Create Release Branch and PR
+name: Create Release PR
 
 on:
   workflow_dispatch:
@@ -8,72 +8,110 @@ permissions:
   pull-requests: write
 
 jobs:
-  create-release:
+  create-release-pr:
     runs-on: ubuntu-latest
-    outputs:
-      new_version: ${{ steps.new_version.outputs.new_version }}
-      current_version: ${{ steps.current_version.outputs.current_version }}
-      release_branch: ${{ steps.release_branch.outputs.release_branch }}
-      pr_number: ${{ steps.create_pr.outputs.pr_number }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.ACTIONS_PAT }}
 
-      - name: Set Git identity
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
 
       - name: Get current version
-        id: current_version
-        shell: bash
+        id: version
         run: |
-          VERSION=""
-          if [ -f "package.json" ]; then
-            VERSION=$(jq -r .version package.json)
-          elif [ -f "$(find . -name '*.csproj' | head -n 1)" ]; then
-            VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" $(find . -name '*.csproj' | head -n 1))
-          fi
-
-          if [ -z "$VERSION" ]; then
+          if [ -f package.json ]; then
+            VERSION=$(node -p "require('./package.json').version")
+          elif [ -f *.csproj ]; then
+            VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" *.csproj | head -1)
+          else
             VERSION="0.1.0"
           fi
 
-          echo "current_version=$VERSION" >> $GITHUB_OUTPUT
+          echo "current=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Bump patch version
-        id: new_version
-        shell: bash
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+          echo "next=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update version in files
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.next }}
         run: |
-          CURRENT_VERSION="${{ steps.current_version.outputs.current_version }}"
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
-          PATCH=$((PATCH + 1))
-          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
-
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Update package.json version
-        if: hashFiles('package.json') != ''
-        shell: bash
-        run: |
-          jq '.version = "${{ steps.new_version.outputs.new_version }}"' package.json > package.json.tmp
-          mv package.json.tmp package.json
-
-      - name: Update .csproj version
-        if: hashFiles('*.csproj') != ''
-        shell: bash
-        run: |
-          CSPROJ_FILE=$(find . -name '*.csproj' | head -n 1)
-          if [ -f "$CSPROJ_FILE" ]; then
-            sed -i "s/<Version>[^<]*<\/Version>/<Version>${{ steps.new_version.outputs.new_version }}<\/Version>/g" "$CSPROJ_FILE"
+          if [ -f package.json ]; then
+            node -e "const pkg = require('./package.json'); pkg.version = '$NEW_VERSION'; require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2));"
           fi
 
-      - name: Create or update CHANGELOG
-        shell: bash
-        run: |
-          RELEASE_DATE=$(date +%Y-%m-%d)
-          NEW_VERSION="${{ steps.new_version.outputs.new_version }}"
+          if [ -f *.csproj ]; then
+            sed -i "s/<Version>.*<\/Version>/<Version>$NEW_VERSION<\/Version>/g" *.csproj
+          fi
 
-          CHANGELOG_ENTRY="## [$NEW_VERSION] - $RELEASE_DATE
+      - name: Update CHANGELOG
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.next }}
+          RELEASE_DATE: ${{ env.TODAY }}
+        run: |
+          TODAY=$(date +%Y-%m-%d)
+
+          cat > /tmp/new_entry.txt << 'EOF'
+          ## [NEW_VERSION] - TODAY
+
+          ### Added
+          - New features here
+
+          ### Fixed
+          - Bug fixes here
+
+          ### Changed
+          - Changes here
+
+          EOF
+          sed -i "s/NEW_VERSION/$NEW_VERSION/g" /tmp/new_entry.txt
+          sed -i "s/TODAY/$TODAY/g" /tmp/new_entry.txt
+
+          if [ -f CHANGELOG.md ]; then
+            cat /tmp/new_entry.txt CHANGELOG.md > CHANGELOG.md.tmp
+            mv CHANGELOG.md.tmp CHANGELOG.md
+          else
+            cat /tmp/new_entry.txt > CHANGELOG.md
+          fi
+
+      - name: Create Release Branch
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.next }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "release/v$NEW_VERSION"
+          git add package.json CHANGELOG.md *.csproj 2>/dev/null || true
+          git commit -m "chore(release): v$NEW_VERSION"
+          git push -u origin "release/v$NEW_VERSION"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.ACTIONS_PAT }}
+          commit-message: "chore(release): v${{ steps.version.outputs.next }}"
+          title: "[RELEASE] v${{ steps.version.outputs.next }}"
+          body: |
+            ## Release v${{ steps.version.outputs.next }}
+
+            **Previous version:** v${{ steps.version.outputs.current }}
+            **New version:** v${{ steps.version.outputs.next }}
+
+            ### Checklist
+            - [ ] Version numbers are correct
+            - [ ] CHANGELOG is updated
+            - [ ] Tests pass
+
+            Please review and merge to trigger automatic release.
+          branch: "release/v${{ steps.version.outputs.next }}"
+          base: main
+          labels: "release,automation"
+          assignees: |
+            ${{ github.actor }}
