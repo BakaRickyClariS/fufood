@@ -1,0 +1,79 @@
+name: Create Release Branch and PR
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.new_version.outputs.new_version }}
+      current_version: ${{ steps.current_version.outputs.current_version }}
+      release_branch: ${{ steps.release_branch.outputs.release_branch }}
+      pr_number: ${{ steps.create_pr.outputs.pr_number }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.ACTIONS_PAT }}
+
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Get current version
+        id: current_version
+        shell: bash
+        run: |
+          VERSION=""
+          if [ -f "package.json" ]; then
+            VERSION=$(jq -r .version package.json)
+          elif [ -f "$(find . -name '*.csproj' | head -n 1)" ]; then
+            VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" $(find . -name '*.csproj' | head -n 1))
+          fi
+
+          if [ -z "$VERSION" ]; then
+            VERSION="0.1.0"
+          fi
+
+          echo "current_version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Bump patch version
+        id: new_version
+        shell: bash
+        run: |
+          CURRENT_VERSION="${{ steps.current_version.outputs.current_version }}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+          PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update package.json version
+        if: hashFiles('package.json') != ''
+        shell: bash
+        run: |
+          jq '.version = "${{ steps.new_version.outputs.new_version }}"' package.json > package.json.tmp
+          mv package.json.tmp package.json
+
+      - name: Update .csproj version
+        if: hashFiles('*.csproj') != ''
+        shell: bash
+        run: |
+          CSPROJ_FILE=$(find . -name '*.csproj' | head -n 1)
+          if [ -f "$CSPROJ_FILE" ]; then
+            sed -i "s/<Version>[^<]*<\/Version>/<Version>${{ steps.new_version.outputs.new_version }}<\/Version>/g" "$CSPROJ_FILE"
+          fi
+
+      - name: Create or update CHANGELOG
+        shell: bash
+        run: |
+          RELEASE_DATE=$(date +%Y-%m-%d)
+          NEW_VERSION="${{ steps.new_version.outputs.new_version }}"
+
+          CHANGELOG_ENTRY="## [$NEW_VERSION] - $RELEASE_DATE
