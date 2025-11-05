@@ -25,9 +25,9 @@ jobs:
         shell: bash
         run: |
           BRANCHES=$(git branch -r --no-merged origin/dev | grep -v "origin/dev" | grep -v "origin/main" | grep -v "origin/qa" | sed 's|origin/||')
-          echo "branches=$BRANCHES" >> $GITHUB_OUTPUT
-          echo "🧭 Unmerged branches:"
-          echo "$BRANCHES"
+          echo "branches<<EOF" >> $GITHUB_OUTPUT
+          echo "$BRANCHES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create QA and DEV Pull Requests with Auto Labels
         if: steps.list.outputs.branches != ''
@@ -37,21 +37,18 @@ jobs:
           script: |
             const branches = `${{ steps.list.outputs.branches }}`.split('\n').filter(Boolean);
 
-            console.log(`🧩 Found ${branches.length} branches to process`);
-
             function formatTitle(branch) {
-              const cleaned = branch.replace(/^Feature-/, '')
+              return branch.replace(/^Feature-/, '')
                 .replace(/^Fix-/, '')
                 .replace(/^Update-/, '')
                 .replace(/^Hotfix-/, '')
                 .replace(/-/g, ' ')
-                .replace(/\b\w/g, c => c.toUpperCase());
-              return cleaned.trim();
+                .replace(/\b\w/g, c => c.toUpperCase())
+                .trim();
             }
 
             function getLabels(branch) {
               const labels = [];
-              
               if (branch.startsWith('Feature-')) {
                 labels.push('feature', 'enhancement');
               } else if (branch.startsWith('Fix-')) {
@@ -61,7 +58,6 @@ jobs:
               } else if (branch.startsWith('Hotfix-')) {
                 labels.push('hotfix', 'urgent');
               }
-              
               return labels;
             }
 
@@ -71,10 +67,7 @@ jobs:
               const devTitle = `[DEV] ${title}`;
               const labels = getLabels(branch);
               
-              console.log(`🚀 Creating PRs for: ${branch} → ${title}`);
-              console.log(`🏷️ Labels: ${labels.join(', ')}`);
-
-              // 建立 QA PR
+              // Create QA PR
               try {
                 const qaPr = await github.rest.pulls.create({
                   owner: context.repo.owner,
@@ -82,10 +75,9 @@ jobs:
                   head: branch,
                   base: "qa",
                   title: qaTitle,
-                  body: `## 🧩 功能摘要\n\n自動建立 QA 測試用 PR\n\n**來源分支：** ${branch}\n\n## 🧪 測試項目\n\n- [ ] 功能可在 Vercel QA 環境正常運作\n\n## 📎 備註\n\n此 PR 為自動建立的測試版本`
+                  body: `## Feature Summary\n\nAuto QA test PR\n\n**Source branch:** ${branch}`
                 });
                 
-                // 為 QA PR 添加 labels
                 if (labels.length > 0) {
                   await github.rest.issues.addLabels({
                     owner: context.repo.owner,
@@ -93,15 +85,14 @@ jobs:
                     issue_number: qaPr.data.number,
                     labels: labels
                   });
-                  console.log(`✅ QA PR #${qaPr.data.number} created with labels: ${labels.join(', ')}`);
-                } else {
-                  console.log(`✅ QA PR #${qaPr.data.number} created`);
                 }
+                
+                core.info(`✓ QA PR #${qaPr.data.number} created for ${branch}`);
               } catch (err) {
-                console.log(`⚠️ QA PR skipped for ${branch}: ${err.message}`);
+                core.warning(`QA PR skipped for ${branch}: ${err.message}`);
               }
-
-              // 建立 DEV PR
+              
+              // Create DEV PR
               try {
                 const devPr = await github.rest.pulls.create({
                   owner: context.repo.owner,
@@ -109,10 +100,9 @@ jobs:
                   head: branch,
                   base: "dev",
                   title: devTitle,
-                  body: `## 🧩 功能摘要\n\n自動建立 DEV 整合用 PR\n\n**來源分支：** ${branch}\n\n## 🧪 測試項目\n\n- [ ] 功能可在開發環境正常運作\n\n## 📎 備註\n\n此 PR 為自動建立的整合版本`
+                  body: `## Feature Summary\n\nAuto DEV integration PR\n\n**Source branch:** ${branch}`
                 });
                 
-                // 為 DEV PR 添加 labels
                 if (labels.length > 0) {
                   await github.rest.issues.addLabels({
                     owner: context.repo.owner,
@@ -120,11 +110,10 @@ jobs:
                     issue_number: devPr.data.number,
                     labels: labels
                   });
-                  console.log(`✅ DEV PR #${devPr.data.number} created with labels: ${labels.join(', ')}`);
-                } else {
-                  console.log(`✅ DEV PR #${devPr.data.number} created`);
                 }
+                
+                core.info(`✓ DEV PR #${devPr.data.number} created for ${branch}`);
               } catch (err) {
-                console.log(`⚠️ DEV PR skipped for ${branch}: ${err.message}`);
+                core.warning(`DEV PR skipped for ${branch}: ${err.message}`);
               }
             }
