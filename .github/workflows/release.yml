@@ -1,0 +1,46 @@
+name: Auto Release Version
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.ACTIONS_PAT }}
+
+      - name: Get version from package.json or .NET project
+        id: version
+        shell: bash
+        run: |
+          VERSION=""
+          if [ -f "package.json" ]; then
+            VERSION=$(jq -r .version package.json)
+          elif [ -f "$(find . -name '*.csproj' | head -n 1)" ]; then
+            VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" $(find . -name '*.csproj' | head -n 1))
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create Git Tag
+        run: |
+          git tag -a v${{ steps.version.outputs.version }} -m "Release v${{ steps.version.outputs.version }}"
+          git push https://${{ secrets.ACTIONS_PAT }}@github.com/${{ github.repository }}.git v${{ steps.version.outputs.version }}
+
+      - name: Generate Release Notes
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: "Release v${{ steps.version.outputs.version }}"
+          body_path: CHANGELOG.md
+          token: ${{ secrets.ACTIONS_PAT }}
