@@ -36,11 +36,9 @@ jobs:
           elif [ -f "$(find . -name '*.csproj' | head -n 1)" ]; then
             VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" $(find . -name '*.csproj' | head -n 1))
           fi
-
           if [ -z "$VERSION" ]; then
             VERSION="0.1.0"
           fi
-
           echo "current_version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Bump patch version
@@ -51,7 +49,6 @@ jobs:
           IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
           PATCH=$((PATCH + 1))
           NEW_VERSION="$MAJOR.$MINOR.$PATCH"
-
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Update package.json version
@@ -61,7 +58,7 @@ jobs:
           jq '.version = "${{ steps.new_version.outputs.new_version }}"' package.json > package.json.tmp
           mv package.json.tmp package.json
 
-      - name: Update .csproj version
+      - name: Update csproj version
         if: hashFiles('*.csproj') != ''
         shell: bash
         run: |
@@ -73,7 +70,80 @@ jobs:
       - name: Create or update CHANGELOG
         shell: bash
         run: |
-          RELEASE_DATE=$(date +%Y-%m-%d)
           NEW_VERSION="${{ steps.new_version.outputs.new_version }}"
+          RELEASE_DATE=$(date +%Y-%m-%d)
+          if [ -f "CHANGELOG.md" ]; then
+            {
+              echo "## [$NEW_VERSION] - $RELEASE_DATE"
+              echo ""
+              echo "### New Features"
+              echo "- Feature item (auto placeholder)"
+              echo ""
+              echo "### Bug Fixes"
+              echo "- Fix item (auto placeholder)"
+              echo ""
+              echo "### Updates"
+              echo "- Update item (auto placeholder)"
+              echo ""
+              cat CHANGELOG.md
+            } > CHANGELOG.md.tmp
+            mv CHANGELOG.md.tmp CHANGELOG.md
+          else
+            {
+              echo "# Changelog"
+              echo ""
+              echo "All notable changes to this project will be documented in this file."
+              echo ""
+              echo "## [$NEW_VERSION] - $RELEASE_DATE"
+              echo ""
+              echo "### New Features"
+              echo "- Feature item (auto placeholder)"
+              echo ""
+              echo "### Bug Fixes"
+              echo "- Fix item (auto placeholder)"
+              echo ""
+              echo "### Updates"
+              echo "- Update item (auto placeholder)"
+              echo ""
+            } > CHANGELOG.md
+          fi
 
-          CHANGELOG_ENTRY="## [$NEW_VERSION] - $RELEASE_DATE
+      - name: Create release branch
+        id: release_branch
+        run: |
+          RELEASE_BRANCH="release/v${{ steps.new_version.outputs.new_version }}"
+          git checkout -b "$RELEASE_BRANCH"
+          git add .
+          git commit -m "chore: bump version to ${{ steps.new_version.outputs.new_version }}"
+          git push https://${{ secrets.ACTIONS_PAT }}@github.com/${{ github.repository }}.git "$RELEASE_BRANCH"
+          echo "release_branch=$RELEASE_BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Create Release Pull Request
+        id: create_pr
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.ACTIONS_PAT }}
+          script: |
+            const prTitle = `[RELEASE] v${{ steps.new_version.outputs.new_version }}`;
+            const prBody = `## Release Information\n\n**Version:** v${{ steps.new_version.outputs.new_version }}\n**Previous Version:** v${{ steps.current_version.outputs.current_version }}\n\nThis PR was automatically created by GitHub Actions.`;
+            const pr = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: '${{ steps.release_branch.outputs.release_branch }}',
+              base: 'main',
+              title: prTitle,
+              body: prBody
+            });
+            core.setOutput('pr_number', pr.data.number);
+
+      - name: Add release labels
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.ACTIONS_PAT }}
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ steps.create_pr.outputs.pr_number }},
+              labels: ['release', 'automation']
+            });

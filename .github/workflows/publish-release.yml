@@ -2,7 +2,8 @@ name: Publish Release
 
 on:
   pull_request:
-    types: [closed]
+    types:
+      - closed
     branches:
       - main
 
@@ -39,11 +40,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.extract_version.outputs.version }}
-          name: "Release v${{ steps.extract_version.outputs.version }}"
+          name: Release v${{ steps.extract_version.outputs.version }}
           body: |
-            📦 **Version:** v${{ steps.extract_version.outputs.version }}
+            **Version:** v${{ steps.extract_version.outputs.version }}
 
-            詳細內容請查看 PR #${{ github.event.pull_request.number }}
+            See PR #${{ github.event.pull_request.number }} for details
           token: ${{ secrets.ACTIONS_PAT }}
           draft: false
           prerelease: false
@@ -57,4 +58,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: ${{ github.event.pull_request.number }},
-              body: `🚀 **版本發佈完成！**
+              body: `Release published successfully!\n\n**Version:** v${{ steps.extract_version.outputs.version }}`
+            });
