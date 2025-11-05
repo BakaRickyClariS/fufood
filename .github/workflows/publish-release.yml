@@ -62,5 +62,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
-              body: `✅ Release v${{ steps.extract.outputs.version }} published successfully!\n\n🔗 [View Release](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.extract.outputs.version }})`
+              body: `✅ Release v${{ steps.extract.outputs.version }}  published successfully!\n\n🔗 [View Release](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.extract.outputs.version }})`
             });
