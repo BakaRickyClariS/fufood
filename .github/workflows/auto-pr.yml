@@ -19,52 +19,41 @@ jobs:
       - name: Fetch all branches
         run: git fetch origin
 
-      - name: Find unmerged branches
-        id: branches
-        run: |
-          BRANCHES=$(git branch -r --no-merged origin/dev | grep -v origin/dev | grep -v origin/main | grep -v origin/qa | sed 's|origin/||')
-          echo "list<<EOF" >> $GITHUB_OUTPUT
-          echo "$BRANCHES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
       - name: Create Pull Requests
-        if: steps.branches.outputs.list != ''
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.ACTIONS_PAT }}
           script: |
-            const branches = `${{ steps.branches.outputs.list }}`.trim().split('\n').filter(b => b);
+            const { execSync } = require('child_process');
 
-            function formatTitle(branch) {
-              return branch
-                .replace(/^Feature-/, '').replace(/^Fix-/, '').replace(/^Update-/, '').replace(/^Hotfix-/, '')
-                .replace(/-/g, ' ')
-                .replace(/\b\w/g, c => c.toUpperCase())
+            const unmergedBranches = execSync('git branch -r --no-merged origin/dev | grep -v origin/dev | grep -v origin/main | grep -v origin/qa | sed "s|origin/||"')
+              .toString()
+              .trim()
+              .split('\n')
+              .filter(b => b);
+
+            for (const branch of unmergedBranches) {
+              let labels = [];
+              if (branch.startsWith('Feature-')) labels = ['feature', 'enhancement'];
+              else if (branch.startsWith('Fix-')) labels = ['bug', 'fix'];
+              else if (branch.startsWith('Update-')) labels = ['documentation', 'update'];
+              else if (branch.startsWith('Hotfix-')) labels = ['hotfix', 'urgent'];
+              
+              const commits = execSync(`git log origin/dev..origin/${branch} --pretty=format:"- %s" --reverse`)
+                .toString()
                 .trim();
-            }
-
-            function getLabels(branch) {
-              if (branch.startsWith('Feature-')) return ['feature', 'enhancement'];
-              if (branch.startsWith('Fix-')) return ['bug', 'fix'];
-              if (branch.startsWith('Update-')) return ['documentation', 'update'];
-              if (branch.startsWith('Hotfix-')) return ['hotfix', 'urgent'];
-              return [];
-            }
-
-            for (const branch of branches) {
-              const title = formatTitle(branch);
-              const labels = getLabels(branch);
+              
+              const prBody = `## Commits\n\n${commits || 'No commit messages available'}`;
               
               for (const base of ['qa', 'dev']) {
                 try {
-                  const prTitle = `[${base.toUpperCase()}] ${title}`;
                   const pr = await github.rest.pulls.create({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     head: branch,
                     base: base,
-                    title: prTitle,
-                    body: `Auto-created PR from branch: ${branch}`
+                    title: `[${base.toUpperCase()}] ${branch}`,
+                    body: prBody
                   });
                   
                   if (labels.length > 0) {
@@ -75,10 +64,8 @@ jobs:
                       labels: labels
                     });
                   }
-                  
-                  console.log(`Created ${base.toUpperCase()} PR #${pr.data.number}`);
-                } catch (error) {
-                  console.log(`Error creating ${base} PR: ${error.message}`);
+                } catch (e) {
+                  console.log(`Skipped ${base} PR for ${branch}: ${e.message}`);
                 }
               }
             }
