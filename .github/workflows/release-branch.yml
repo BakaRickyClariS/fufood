@@ -1,6 +1,4 @@
-# unified-release-correct-branches.yml - 依據 FuFood 的分支結構
-
-name: Unified Release Workflow
+name: Create Release Branch
 
 on:
   workflow_dispatch:
@@ -20,7 +18,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  create-and-publish-release:
+  create-release-branch:
     runs-on: ubuntu-latest
     outputs:
       new_version: ${{ steps.version.outputs.next }}
@@ -44,13 +42,11 @@ jobs:
         run: |
           if [ -f package.json ]; then
             VERSION=$(node -p "require('./package.json').version")
-          elif [ -f *.csproj ]; then
-            VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" *.csproj | head -1)
           else
             VERSION="0.1.0"
           fi
           echo "current=$VERSION" >> $GITHUB_OUTPUT
-
+          
           # 計算新版本
           IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
           case "${{ github.event.inputs.version_type }}" in
@@ -66,17 +62,16 @@ jobs:
           esac
           echo "next=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      # 步驟 2: 更新版本檔案
-      - name: Update version in files
+      # 步驟 2: 更新版本在 package.json
+      - name: Update version in package.json
         env:
           NEW_VERSION: ${{ steps.version.outputs.next }}
         run: |
           if [ -f package.json ]; then
             node -e "const pkg = require('./package.json'); pkg.version = '$NEW_VERSION'; require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2));"
-          fi
-
-          if [ -f *.csproj ]; then
-            sed -i "s/<Version>.*<\/Version>/<Version>$NEW_VERSION<\/Version>/g" *.csproj
+            echo "✅ Updated package.json to v$NEW_VERSION"
+          else
+            echo "⚠️ package.json not found"
           fi
 
       # 步驟 3: 更新 CHANGELOG
@@ -87,23 +82,25 @@ jobs:
           TODAY=$(date +%Y-%m-%d)
           cat > /tmp/new_entry.txt << EOF
           ## [$NEW_VERSION] - $TODAY
-
+          
           ### Added
           - New features
-
+          
           ### Fixed
           - Bug fixes
-
+          
           ### Changed
           - Changes
-
+          
           EOF
-
+          
           if [ -f CHANGELOG.md ]; then
             cat /tmp/new_entry.txt CHANGELOG.md > CHANGELOG.md.tmp
             mv CHANGELOG.md.tmp CHANGELOG.md
+            echo "✅ Updated CHANGELOG.md"
           else
             cat /tmp/new_entry.txt > CHANGELOG.md
+            echo "✅ Created CHANGELOG.md"
           fi
 
       # 步驟 4: 建立帶版本號的分支
@@ -115,29 +112,36 @@ jobs:
           # 轉換版本號: 0.2.0 → 020
           BRANCH_SUFFIX=$(echo "$NEW_VERSION" | sed 's/\.//g')
           BRANCH_NAME="dev-v${BRANCH_SUFFIX}"
-
+          
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
+          
           git checkout -b "$BRANCH_NAME"
-          git add package.json CHANGELOG.md *.csproj 2>/dev/null || true
-          git commit -m "chore(release): v$NEW_VERSION"
+          
+          # 只 add 存在的檔案
+          git add package.json 2>/dev/null || true
+          git add CHANGELOG.md 2>/dev/null || true
+          
+          # 檢查是否有檔案被 stage
+          if git diff --cached --quiet; then
+            echo "⚠️ No changes to commit, creating empty commit"
+            git commit --allow-empty -m "chore(release): v$NEW_VERSION"
+          else
+            git commit -m "chore(release): v$NEW_VERSION"
+          fi
+          
           git push -u origin "$BRANCH_NAME"
-
           echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "✅ Created branch: $BRANCH_NAME"
 
       # 步驟 5: 取得上個版本 tag
       - name: Get last version tag
         id: last_tag
         run: |
-          # 獲取最新的 tag (跳過當前版本)
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-
           if [ -z "$LAST_TAG" ]; then
-            # 如果沒有 tag，使用第一個 commit
             LAST_TAG=$(git rev-list --max-parents=0 HEAD 2>/dev/null || echo "HEAD")
           fi
-
           echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
 
       # 步驟 6: 取得自上個版本以來有更新的 Feature/Fix/Update/Hotfix 分支
@@ -146,9 +150,8 @@ jobs:
         env:
           LAST_TAG: ${{ steps.last_tag.outputs.last_tag }}
         run: |
-          # 只取副分支 (Feature-, Fix-, Update-, Hotfix-)
           BRANCHES=""
-
+          
           # 獲取所有遠端分支
           for branch in $(git branch -r --format='%(refname:short)'); do
             # 只處理 Feature-, Fix-, Update-, Hotfix- 開頭的分支
@@ -157,17 +160,15 @@ jobs:
               
               # 檢查這個分支是否在上個版本之後有更新
               if [ "$LAST_TAG" = "HEAD" ]; then
-                # 沒有 tag，所有副分支都算有更新
                 BRANCHES="$BRANCHES- $CLEAN_BRANCH"$'\n'
               else
-                # 檢查是否有新的 commits
                 if git log "$LAST_TAG".."$branch" --oneline 2>/dev/null | grep -q .; then
                   BRANCHES="$BRANCHES- $CLEAN_BRANCH"$'\n'
                 fi
               fi
             fi
           done
-
+          
           # 如果沒有副分支，就列出主要分支 (dev, qa)
           if [ -z "$BRANCHES" ]; then
             BRANCHES="- dev"$'\n'"- qa"
@@ -175,32 +176,29 @@ jobs:
             # 移除末尾的新行
             BRANCHES=$(echo "$BRANCHES" | sed '$ s/.$//')
           fi
-
+          
           echo "branches<<EOF" >> $GITHUB_OUTPUT
           echo "$BRANCHES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      # 步驟 7: 產生 PR 描述 (簡潔版 - 只有分支列表)
+      # 步驟 7: 產生 PR 描述
       - name: Generate PR description
         id: pr_body
         env:
           NEW_VERSION: ${{ steps.version.outputs.next }}
           BRANCHES: ${{ steps.branches_list.outputs.branches }}
         run: |
-          # 轉換版本號: 0.2.0 → v020
           VERSION_NUM=$(echo "$NEW_VERSION" | sed 's/\.//g')
-
           cat > /tmp/pr_body.txt << 'EOF'
           Dev v$VERSION_NUM merge:
-
+          
           $BRANCHES
           EOF
-
-          # 手動替換變數
+          
           BODY=$(cat /tmp/pr_body.txt)
           BODY="${BODY//\$VERSION_NUM/$VERSION_NUM}"
           BODY="${BODY//\$BRANCHES/$BRANCHES}"
-
+          
           echo "body<<EOF" >> $GITHUB_OUTPUT
           echo "$BODY" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -226,7 +224,7 @@ jobs:
           NEW_VERSION: ${{ steps.version.outputs.next }}
         run: |
           VERSION_NUM=$(echo "$NEW_VERSION" | sed 's/\.//g')
-          echo "✅ Release PR created successfully!"
+          echo "✅ Release branch created successfully!"
           echo "Branch: ${{ steps.create_branch.outputs.branch_name }}"
           echo "PR Number: ${{ steps.create_pr.outputs.pull-request-number }}"
           echo "Title: Dev v${VERSION_NUM}"
