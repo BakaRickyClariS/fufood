@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       version_type:
-        description: "Version type to bump"
+        description: 'Version type to bump'
         required: true
-        default: "patch"
+        default: 'patch'
         type: choice
         options:
           - patch
@@ -34,21 +34,72 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: '18'
 
-      # 步驟 1: 獲取當前版本
-      - name: Get current version
+      # 步驟 1: 掃描所有 dev-vXXX 分支，推敲最新版本號
+      - name: Detect latest version from existing branches
         id: version
         run: |
-          if [ -f package.json ]; then
-            VERSION=$(node -p "require('./package.json').version")
-          else
-            VERSION="0.1.0"
-          fi
-          echo "current=$VERSION" >> $GITHUB_OUTPUT
-          
-          # 計算新版本
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          # Fetch all remote branches
+          git fetch origin --all 2>&1 | grep -E "(remote|branch)" | head -5
+
+          echo "📋 Scanning existing dev-v* branches..."
+          git branch -r --format='%(refname:short)' | grep '^origin/dev-v' | sort -V | tail -5
+          echo ""
+
+          # 掃描所有 dev-vXXX 分支，提取版本號
+          LATEST_VERSION="0.0.0"
+          LATEST_BRANCH=""
+
+          # 列出所有 dev-v 開頭的分支（按版本排序）
+          for branch in $(git branch -r --format='%(refname:short)' | grep '^origin/dev-v' | sort -V); do
+            # 提取版本號部分: origin/dev-v020 → 020
+            VERSION_NUM=$(echo "$branch" | sed 's/^origin\/dev-v//')
+            
+            # 檢查版本號是否有效（只包含數字）
+            if [[ $VERSION_NUM =~ ^[0-9]+$ ]]; then
+              # 轉換: 020 → 0.2.0, 001 → 0.0.1, 100 → 1.0.0
+              NUM_LEN=${#VERSION_NUM}
+              
+              if [ $NUM_LEN -eq 1 ]; then
+                MAJOR=0
+                MINOR=0
+                PATCH=$VERSION_NUM
+              elif [ $NUM_LEN -eq 2 ]; then
+                MAJOR=0
+                MINOR=${VERSION_NUM:0:1}
+                PATCH=${VERSION_NUM:1:1}
+              elif [ $NUM_LEN -eq 3 ]; then
+                MAJOR=${VERSION_NUM:0:1}
+                MINOR=${VERSION_NUM:1:1}
+                PATCH=${VERSION_NUM:2:1}
+              else
+                MAJOR=${VERSION_NUM:0:1}
+                MINOR=${VERSION_NUM:1:1}
+                PATCH=${VERSION_NUM:2:1}
+              fi
+              
+              DETECTED_VERSION="$MAJOR.$MINOR.$PATCH"
+              
+              # 比較版本（簡單的數值比較）
+              LATEST_MAJOR=$(echo $LATEST_VERSION | cut -d. -f1)
+              LATEST_MINOR=$(echo $LATEST_VERSION | cut -d. -f2)
+              LATEST_PATCH=$(echo $LATEST_VERSION | cut -d. -f3)
+              
+              if [ $MAJOR -gt $LATEST_MAJOR ] || \
+                 ([ $MAJOR -eq $LATEST_MAJOR ] && [ $MINOR -gt $LATEST_MINOR ]) || \
+                 ([ $MAJOR -eq $LATEST_MAJOR ] && [ $MINOR -eq $LATEST_MINOR ] && [ $PATCH -gt $LATEST_PATCH ]); then
+                LATEST_VERSION=$DETECTED_VERSION
+                LATEST_BRANCH=$branch
+              fi
+            fi
+          done
+
+          echo "🎯 Latest version detected: v$LATEST_VERSION (from $LATEST_BRANCH)"
+          echo "current=$LATEST_VERSION" >> $GITHUB_OUTPUT
+
+          # 計算初始新版本
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST_VERSION"
           case "${{ github.event.inputs.version_type }}" in
             major)
               NEW_VERSION="$((MAJOR+1)).0.0"
@@ -60,12 +111,58 @@ jobs:
               NEW_VERSION="$MAJOR.$MINOR.$((PATCH+1))"
               ;;
           esac
+
           echo "next=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      # 步驟 2: 更新版本在 package.json
+      # 步驟 2: 檢查計算的版本分支是否存在，如果存在則自動進位
+      - name: Check and auto-increment version if conflict
+        id: check_version
+        env:
+          INITIAL_VERSION: ${{ steps.version.outputs.next }}
+        run: |
+          CURRENT_VERSION=$INITIAL_VERSION
+          ATTEMPT=0
+          MAX_ATTEMPTS=10
+
+          echo "🔍 Checking if branch dev-v$(echo $CURRENT_VERSION | sed 's/\.//g') exists..."
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            BRANCH_SUFFIX=$(echo "$CURRENT_VERSION" | sed 's/\.//g')
+            BRANCH_NAME="dev-v${BRANCH_SUFFIX}"
+            
+            # 檢查分支是否存在
+            if ! git rev-parse --verify "origin/$BRANCH_NAME" >/dev/null 2>&1; then
+              echo "✅ Branch $BRANCH_NAME is available!"
+              echo "final_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+              echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+              break
+            else
+              echo "⚠️ Branch $BRANCH_NAME already exists, auto-incrementing..."
+              
+              # 進位 patch 版本
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+              CURRENT_VERSION="$MAJOR.$MINOR.$((PATCH+1))"
+              
+              ATTEMPT=$((ATTEMPT+1))
+            fi
+          done
+
+          if [ $ATTEMPT -ge $MAX_ATTEMPTS ]; then
+            echo "❌ ERROR: Could not find an available version after $MAX_ATTEMPTS attempts!"
+            exit 1
+          fi
+
+          if [ "$CURRENT_VERSION" != "$INITIAL_VERSION" ]; then
+            echo ""
+            echo "🔄 Version auto-incremented:"
+            echo "   Initial: v$INITIAL_VERSION → dev-v$(echo $INITIAL_VERSION | sed 's/\.//g') (already exists)"
+            echo "   Final:   v$CURRENT_VERSION → dev-v$(echo $CURRENT_VERSION | sed 's/\.//g') (using this)"
+          fi
+
+      # 步驟 3: 更新版本在 package.json
       - name: Update version in package.json
         env:
-          NEW_VERSION: ${{ steps.version.outputs.next }}
+          NEW_VERSION: ${{ steps.check_version.outputs.final_version }}
         run: |
           if [ -f package.json ]; then
             node -e "const pkg = require('./package.json'); pkg.version = '$NEW_VERSION'; require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2));"
@@ -74,26 +171,26 @@ jobs:
             echo "⚠️ package.json not found"
           fi
 
-      # 步驟 3: 更新 CHANGELOG
+      # 步驟 4: 更新 CHANGELOG
       - name: Update CHANGELOG
         env:
-          NEW_VERSION: ${{ steps.version.outputs.next }}
+          NEW_VERSION: ${{ steps.check_version.outputs.final_version }}
         run: |
           TODAY=$(date +%Y-%m-%d)
           cat > /tmp/new_entry.txt << EOF
           ## [$NEW_VERSION] - $TODAY
-          
+
           ### Added
           - New features
-          
+
           ### Fixed
           - Bug fixes
-          
+
           ### Changed
           - Changes
-          
+
           EOF
-          
+
           if [ -f CHANGELOG.md ]; then
             cat /tmp/new_entry.txt CHANGELOG.md > CHANGELOG.md.tmp
             mv CHANGELOG.md.tmp CHANGELOG.md
@@ -103,80 +200,71 @@ jobs:
             echo "✅ Created CHANGELOG.md"
           fi
 
-      # 步驟 4: 建立帶版本號的分支
+      # 步驟 5: 建立帶版本號的分支
       - name: Create release branch
         id: create_branch
         env:
-          NEW_VERSION: ${{ steps.version.outputs.next }}
+          BRANCH_NAME: ${{ steps.check_version.outputs.branch_name }}
+          NEW_VERSION: ${{ steps.check_version.outputs.final_version }}
         run: |
-          # 轉換版本號: 0.2.0 → 020
-          BRANCH_SUFFIX=$(echo "$NEW_VERSION" | sed 's/\.//g')
-          BRANCH_NAME="dev-v${BRANCH_SUFFIX}"
-          
+          echo "🌿 Creating branch: $BRANCH_NAME"
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
+
+          # 建立新分支
           git checkout -b "$BRANCH_NAME"
-          
+          echo "✅ Created local branch: $BRANCH_NAME"
+
           # 只 add 存在的檔案
           git add package.json 2>/dev/null || true
           git add CHANGELOG.md 2>/dev/null || true
-          
+
           # 檢查是否有檔案被 stage
           if git diff --cached --quiet; then
             echo "⚠️ No changes to commit, creating empty commit"
             git commit --allow-empty -m "chore(release): v$NEW_VERSION"
           else
+            echo "✅ Committing changes..."
             git commit -m "chore(release): v$NEW_VERSION"
           fi
-          
-          git push -u origin "$BRANCH_NAME"
-          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
-          echo "✅ Created branch: $BRANCH_NAME"
 
-      # 步驟 5: 取得上個版本 tag
-      - name: Get last version tag
-        id: last_tag
-        run: |
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ -z "$LAST_TAG" ]; then
-            LAST_TAG=$(git rev-list --max-parents=0 HEAD 2>/dev/null || echo "HEAD")
+          # Push 到遠端
+          echo "Pushing to remote..."
+          if git push -u origin "$BRANCH_NAME" 2>&1; then
+            echo "✅ Successfully pushed to origin/$BRANCH_NAME"
+            echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Failed to push"
+            exit 1
           fi
-          echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
 
-      # 步驟 6: 取得自上個版本以來有更新的 Feature/Fix/Update/Hotfix 分支
-      - name: Get updated feature branches
+      # 步驟 6: 取得已 merge 到 dev 的所有副分支
+      - name: Get all merged feature branches
         id: branches_list
-        env:
-          LAST_TAG: ${{ steps.last_tag.outputs.last_tag }}
         run: |
           BRANCHES=""
-          
+
           # 獲取所有遠端分支
-          for branch in $(git branch -r --format='%(refname:short)'); do
-            # 只處理 Feature-, Fix-, Update-, Hotfix- 開頭的分支
-            if [[ "$branch" =~ ^origin/(Feature|Fix|Update|Hotfix)- ]]; then
-              CLEAN_BRANCH=$(echo "$branch" | sed 's/^origin\///')
-              
-              # 檢查這個分支是否在上個版本之後有更新
-              if [ "$LAST_TAG" = "HEAD" ]; then
+          for branch in $(git branch -r --format='%(refname:short)' | grep '^origin/' | grep -v '^origin/HEAD' | grep -v '^origin/main$' | grep -v '^origin/dev$' | grep -v '^origin/qa$' | grep -v '^origin/dev-v'); do
+            CLEAN_BRANCH=$(echo "$branch" | sed 's/^origin\///')
+            
+            if [[ "$CLEAN_BRANCH" =~ ^(Feature|Fix|Update|Hotfix)- ]]; then
+              # 檢查這個分支是否已經 merge 進 dev
+              if git merge-base --is-ancestor "$branch" origin/dev 2>/dev/null; then
                 BRANCHES="$BRANCHES- $CLEAN_BRANCH"$'\n'
-              else
-                if git log "$LAST_TAG".."$branch" --oneline 2>/dev/null | grep -q .; then
-                  BRANCHES="$BRANCHES- $CLEAN_BRANCH"$'\n'
-                fi
               fi
             fi
           done
-          
-          # 如果沒有副分支，就列出主要分支 (dev, qa)
+
+          # 如果沒有副分支，就列出主要分支
           if [ -z "$BRANCHES" ]; then
             BRANCHES="- dev"$'\n'"- qa"
           else
             # 移除末尾的新行
             BRANCHES=$(echo "$BRANCHES" | sed '$ s/.$//')
           fi
-          
+
           echo "branches<<EOF" >> $GITHUB_OUTPUT
           echo "$BRANCHES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -185,20 +273,20 @@ jobs:
       - name: Generate PR description
         id: pr_body
         env:
-          NEW_VERSION: ${{ steps.version.outputs.next }}
+          NEW_VERSION: ${{ steps.check_version.outputs.final_version }}
           BRANCHES: ${{ steps.branches_list.outputs.branches }}
         run: |
           VERSION_NUM=$(echo "$NEW_VERSION" | sed 's/\.//g')
           cat > /tmp/pr_body.txt << 'EOF'
           Dev v$VERSION_NUM merge:
-          
+
           $BRANCHES
           EOF
-          
+
           BODY=$(cat /tmp/pr_body.txt)
           BODY="${BODY//\$VERSION_NUM/$VERSION_NUM}"
           BODY="${BODY//\$BRANCHES/$BRANCHES}"
-          
+
           echo "body<<EOF" >> $GITHUB_OUTPUT
           echo "$BODY" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -209,22 +297,44 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.ACTIONS_PAT }}
-          commit-message: "chore(release): v${{ steps.version.outputs.next }}"
-          title: "Dev v${{ steps.version.outputs.next }}"
+          commit-message: 'chore(release): v${{ steps.check_version.outputs.final_version }}'
+          title: 'Dev v${{ steps.check_version.outputs.final_version }}'
           body: ${{ steps.pr_body.outputs.body }}
-          branch: ${{ steps.create_branch.outputs.branch_name }}
+          branch: ${{ steps.check_version.outputs.branch_name }}
           base: main
-          labels: "release,automation"
+          labels: 'release,automation'
           assignees: ${{ github.actor }}
           draft: false
           delete-branch: false
 
-      - name: Notify PR created
+      - name: Notify workflow completion
         env:
-          NEW_VERSION: ${{ steps.version.outputs.next }}
+          INITIAL_VERSION: ${{ steps.version.outputs.next }}
+          FINAL_VERSION: ${{ steps.check_version.outputs.final_version }}
+          OLD_VERSION: ${{ steps.version.outputs.current }}
+          BRANCH_NAME: ${{ steps.check_version.outputs.branch_name }}
+          PR_NUMBER: ${{ steps.create_pr.outputs.pull-request-number }}
         run: |
-          VERSION_NUM=$(echo "$NEW_VERSION" | sed 's/\.//g')
-          echo "✅ Release branch created successfully!"
-          echo "Branch: ${{ steps.create_branch.outputs.branch_name }}"
-          echo "PR Number: ${{ steps.create_pr.outputs.pull-request-number }}"
-          echo "Title: Dev v${VERSION_NUM}"
+          echo ""
+          echo "════════════════════════════════════════════════════════════"
+          echo "✅ Release workflow completed successfully!"
+          echo "════════════════════════════════════════════════════════════"
+          echo ""
+          echo "📊 Version Information:"
+          echo "   Previous version:  v$OLD_VERSION"
+          echo "   Calculated version: v$INITIAL_VERSION"
+
+          if [ "$INITIAL_VERSION" != "$FINAL_VERSION" ]; then
+            echo "   ⚠️  Conflict detected! Branch dev-v$(echo $INITIAL_VERSION | sed 's/\.//g') already exists"
+            echo "   🔄 Auto-incremented to: v$FINAL_VERSION"
+          else
+            echo "   Final version:     v$FINAL_VERSION"
+          fi
+
+          echo ""
+          echo "📌 Branch & PR Details:"
+          echo "   Branch name: $BRANCH_NAME"
+          echo "   PR number:   #$PR_NUMBER"
+          echo "   Base branch: main"
+          echo ""
+          echo "════════════════════════════════════════════════════════════"
