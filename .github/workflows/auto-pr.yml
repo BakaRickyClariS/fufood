@@ -40,26 +40,24 @@ jobs:
                 .toString()
                 .trim();
               const prBody = `## Commits\n\n${commits || 'No commit messages available'}`;
-              for (const base of ['qa', 'dev']) {
-                try {
-                  const pr = await github.rest.pulls.create({
+              try {
+                const pr = await github.rest.pulls.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  head: branch,
+                  base: base,
+                  title: `${branch}`,
+                  body: prBody
+                });
+                if (labels.length > 0) {
+                  await github.rest.issues.addLabels({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
-                    head: branch,
-                    base: base,
-                    title: `[${base.toUpperCase()}] ${branch}`,
-                    body: prBody
+                    issue_number: pr.data.number,
+                    labels: labels
                   });
-                  if (labels.length > 0) {
-                    await github.rest.issues.addLabels({
-                      owner: context.repo.owner,
-                      repo: context.repo.repo,
-                      issue_number: pr.data.number,
-                      labels: labels
-                    });
-                  }
-                } catch (e) {
-                  console.log(`Skipped ${base} PR for ${branch}: ${e.message}`);
                 }
+              } catch (e) {
+                console.log(`Skipped ${base} PR for ${branch}: ${e.message}`);
               }
             }
