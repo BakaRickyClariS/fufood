@@ -15,36 +15,31 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Fetch all branches
         run: git fetch origin
-
       - name: Create Pull Requests
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.ACTIONS_PAT }}
           script: |
             const { execSync } = require('child_process');
-
             const unmergedBranches = execSync('git branch -r --no-merged origin/dev | grep -v origin/dev | grep -v origin/main | grep -v origin/qa | sed "s|origin/||"')
               .toString()
               .trim()
               .split('\n')
               .filter(b => b);
-
             for (const branch of unmergedBranches) {
               let labels = [];
               if (branch.startsWith('Feature-')) labels = ['feature', 'enhancement'];
               else if (branch.startsWith('Fix-')) labels = ['bug', 'fix'];
               else if (branch.startsWith('Update-')) labels = ['documentation', 'update'];
               else if (branch.startsWith('Hotfix-')) labels = ['hotfix', 'urgent'];
-              
-              const commits = execSync(`git log origin/dev..origin/${branch} --pretty=format:"- %s" --reverse`)
+              // FETCH remote branch and update refs to avoid ambiguous argument error
+              execSync(`git fetch origin ${branch}:${branch}`);
+              const commits = execSync(`git log origin/dev..${branch} --pretty=format:"- %s" --reverse`)
                 .toString()
                 .trim();
-              
               const prBody = `## Commits\n\n${commits || 'No commit messages available'}`;
-              
               for (const base of ['qa', 'dev']) {
                 try {
                   const pr = await github.rest.pulls.create({
@@ -55,7 +50,6 @@ jobs:
                     title: `[${base.toUpperCase()}] ${branch}`,
                     body: prBody
                   });
-                  
                   if (labels.length > 0) {
                     await github.rest.issues.addLabels({
                       owner: context.repo.owner,
