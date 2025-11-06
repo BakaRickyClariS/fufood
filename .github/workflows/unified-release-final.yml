@@ -1,0 +1,180 @@
+# unified-release.yml - 符合你的 PR 格式
+
+name: Unified Release Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version type to bump'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-and-publish-release:
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.version.outputs.next }}
+      release_branch: ${{ steps.create_branch.outputs.branch_name }}
+    steps:
+      - name: Checkout dev branch
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.ACTIONS_PAT }}
+          ref: dev
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      # 步驟 1: 獲取當前版本
+      - name: Get current version
+        id: version
+        run: |
+          if [ -f package.json ]; then
+            VERSION=$(node -p "require('./package.json').version")
+          elif [ -f *.csproj ]; then
+            VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" *.csproj | head -1)
+          else
+            VERSION="0.1.0"
+          fi
+          echo "current=$VERSION" >> $GITHUB_OUTPUT
+
+          # 計算新版本
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          case "${{ github.event.inputs.version_type }}" in
+            major)
+              NEW_VERSION="$((MAJOR+1)).0.0"
+              ;;
+            minor)
+              NEW_VERSION="$MAJOR.$((MINOR+1)).0"
+              ;;
+            patch)
+              NEW_VERSION="$MAJOR.$MINOR.$((PATCH+1))"
+              ;;
+          esac
+          echo "next=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      # 步驟 2: 更新版本檔案
+      - name: Update version in files
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.next }}
+        run: |
+          if [ -f package.json ]; then
+            node -e "const pkg = require('./package.json'); pkg.version = '$NEW_VERSION'; require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2));"
+          fi
+
+          if [ -f *.csproj ]; then
+            sed -i "s/<Version>.*<\/Version>/<Version>$NEW_VERSION<\/Version>/g" *.csproj
+          fi
+
+      # 步驟 3: 更新 CHANGELOG
+      - name: Update CHANGELOG
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.next }}
+        run: |
+          TODAY=$(date +%Y-%m-%d)
+          cat > /tmp/new_entry.txt << EOF
+          ## [$NEW_VERSION] - $TODAY
+
+          ### Added
+          - New features
+
+          ### Fixed
+          - Bug fixes
+
+          ### Changed
+          - Changes
+
+          EOF
+
+          if [ -f CHANGELOG.md ]; then
+            cat /tmp/new_entry.txt CHANGELOG.md > CHANGELOG.md.tmp
+            mv CHANGELOG.md.tmp CHANGELOG.md
+          else
+            cat /tmp/new_entry.txt > CHANGELOG.md
+          fi
+
+      # 步驟 4: 建立帶版本號的分支
+      - name: Create release branch
+        id: create_branch
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.next }}
+        run: |
+          BRANCH_NAME="dev-v$(echo $NEW_VERSION | tr '.' '')"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git checkout -b "$BRANCH_NAME"
+          git add package.json CHANGELOG.md *.csproj 2>/dev/null || true
+          git commit -m "chore(release): v$NEW_VERSION"
+          git push -u origin "$BRANCH_NAME"
+          
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      # 步驟 5: 獲取最新的 commit 訊息 (用於 PR 描述)
+      - name: Get latest commit message
+        id: commit_msg
+        run: |
+          # 獲取 dev 分支中最新的 commit 訊息（來自最新的 feature 或 fix）
+          # 跳過 merge commits，找第一個有意義的 commit
+          COMMIT_MSG=$(git log --oneline origin/dev..HEAD -n 5 | grep -v "Merge" | head -1 | sed 's/^[^ ]* //')
+          
+          if [ -z "$COMMIT_MSG" ]; then
+            COMMIT_MSG="Release v${{ steps.version.outputs.next }}"
+          fi
+          
+          echo "message=$COMMIT_MSG" >> $GITHUB_OUTPUT
+
+      # 步驟 6: 產生 PR 描述 (符合你的格式)
+      - name: Generate PR description
+        id: pr_body
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.next }}
+          COMMIT_MSG: ${{ steps.commit_msg.outputs.message }}
+        run: |
+          cat > /tmp/pr_body.txt << 'EOF'
+          Dev v${{ env.NEW_VERSION }} merge:
+
+          - ${{ env.COMMIT_MSG }}
+          EOF
+
+          BODY=$(cat /tmp/pr_body.txt)
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$BODY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # 步驟 7: 建立 Release PR
+      - name: Create Release PR to main
+        id: create_pr
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.ACTIONS_PAT }}
+          commit-message: 'chore(release): v${{ steps.version.outputs.next }}'
+          title: 'Dev v${{ steps.version.outputs.next }}'
+          body: ${{ steps.pr_body.outputs.body }}
+          branch: ${{ steps.create_branch.outputs.branch_name }}
+          base: main
+          labels: 'release,automation'
+          assignees: ${{ github.actor }}
+          draft: false
+          delete-branch: false
+
+      - name: Notify PR created
+        run: |
+          echo "✅ Release PR created successfully!"
+          echo "Branch: ${{ steps.create_branch.outputs.branch_name }}"
+          echo "PR Number: ${{ steps.create_pr.outputs.pull-request-number }}"
+          echo "Title: Dev v${{ steps.version.outputs.next }}"
+          echo "Version: v${{ steps.version.outputs.next }}"
