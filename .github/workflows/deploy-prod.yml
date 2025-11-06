@@ -1,0 +1,132 @@
+name: Deploy to Production
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  deploy-production:
+    if: github.event.pull_request.merged && contains(github.event.pull_request.title, 'Dev v')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.ACTIONS_PAT }}
+          ref: main
+
+      - name: Extract version from PR title
+        id: extract
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+          # 提取 vXXX 格式
+          VERSION_NUM=$(echo "$TITLE" | grep -oP 'v\K[0-9]+' | head -1)
+          
+          if [ -z "$VERSION_NUM" ]; then
+            VERSION="0.0.1"
+          else
+            # 轉換: v005 → 0.0.5, v020 → 0.2.0, v100 → 1.0.0
+            MAJOR=$((${#VERSION_NUM} > 2 ? ${VERSION_NUM:0:1} : 0))
+            MINOR=$((${#VERSION_NUM} > 2 ? ${VERSION_NUM:1:1} : ${VERSION_NUM:0:1}))
+            PATCH=$((${#VERSION_NUM} > 2 ? ${VERSION_NUM:2} : ${VERSION_NUM:1}))
+            
+            # 補零確保正確格式
+            MAJOR=$(printf "%d" $MAJOR 2>/dev/null || echo "0")
+            MINOR=$(printf "%d" $MINOR 2>/dev/null || echo "0")
+            PATCH=$(printf "%d" $PATCH 2>/dev/null || echo "0")
+            
+            VERSION="$MAJOR.$MINOR.$PATCH"
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "🔖 Extracted version: v$VERSION"
+
+      # ================================================================
+      # 以下為部署到正式環境的模板
+      # 正式環境設定還未完成，故暫時禁用
+      # 待環境就緒時，請啟用以下步驟
+      # ================================================================
+
+      - name: "[TEMPLATE] Setup Node.js"
+        run: |
+          echo "⏸️  Production deployment is not yet configured."
+          echo "📋 Template steps:"
+          echo "   1. Setup Node.js environment"
+          echo "   2. Install dependencies"
+          echo "   3. Run build process"
+          echo "   4. Deploy to production server/CDN"
+          echo "   5. Run smoke tests"
+          echo "   6. Notify deployment status"
+
+      # 生產環境部署範例 (待啟用):
+      # - name: Setup Node.js
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: "18"
+      #
+      # - name: Install dependencies
+      #   run: npm ci
+      #
+      # - name: Build application
+      #   run: npm run build
+      #
+      # - name: Deploy to production
+      #   env:
+      #     DEPLOY_SERVER: ${{ secrets.PROD_DEPLOY_SERVER }}
+      #     DEPLOY_KEY: ${{ secrets.PROD_DEPLOY_KEY }}
+      #     DEPLOY_PATH: ${{ secrets.PROD_DEPLOY_PATH }}
+      #   run: |
+      #     # 部署指令範例
+      #     # scp -i $DEPLOY_KEY -r dist/* user@$DEPLOY_SERVER:$DEPLOY_PATH
+      #     echo "Deploying v${{ steps.extract.outputs.version }} to production..."
+      #
+      # - name: Run smoke tests
+      #   run: |
+      #     echo "Running smoke tests..."
+      #     # npm run test:smoke
+      #
+      # - name: Notify deployment success
+      #   uses: actions/github-script@v7
+      #   with:
+      #     github-token: ${{ secrets.ACTIONS_PAT }}
+      #     script: |
+      #       await github.rest.issues.createComment({
+      #         owner: context.repo.owner,
+      #         repo: context.repo.repo,
+      #         issue_number: context.payload.pull_request.number,
+      #         body: `✅ Production deployment successful!\n\n🚀 Version: v${{ steps.extract.outputs.version }}`
+      #       });
+
+      - name: Log deployment information
+        run: |
+          echo "📦 Deployment Information"
+          echo "========================"
+          echo "Version: v${{ steps.extract.outputs.version }}"
+          echo "PR: #${{ github.event.pull_request.number }}"
+          echo "PR Title: ${{ github.event.pull_request.title }}"
+          echo ""
+          echo "⏳ Status: Waiting for production environment setup"
+          echo "📝 TODO: Configure production deployment parameters in GitHub Secrets"
+          echo "   - PROD_DEPLOY_SERVER"
+          echo "   - PROD_DEPLOY_KEY"
+          echo "   - PROD_DEPLOY_PATH"
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.ACTIONS_PAT }}
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: `⏸️ Production deployment v${{ steps.extract.outputs.version }} - Template ready\n\n📋 Status: Production environment not yet configured\n\n✅ Once production environment is ready, enable the deployment steps in the workflow.`
+            });
