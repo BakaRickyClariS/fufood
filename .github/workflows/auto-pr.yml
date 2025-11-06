@@ -45,7 +45,7 @@ jobs:
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   head: branch,
-                  base: base,
+                  base: "dev",
                   title: `${branch}`,
                   body: prBody
                 });
@@ -58,6 +58,6 @@ jobs:
                   });
                 }
               } catch (e) {
-                console.log(`Skipped ${base} PR for ${branch}: ${e.message}`);
+                console.log(`Skipped dev PR for ${branch}: ${e.message}`);
               }
             }
