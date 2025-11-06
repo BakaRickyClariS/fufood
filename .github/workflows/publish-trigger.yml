@@ -28,10 +28,10 @@ jobs:
         run: |
           # 從 PR 標題提取版本 (Dev v005 → 0.0.5)
           TITLE="${{ github.event.pull_request.title }}"
-          
+
           # 提取 vXXX 格式
           VERSION_NUM=$(echo "$TITLE" | grep -oP 'v\K[0-9]+' | head -1)
-          
+
           if [ -z "$VERSION_NUM" ]; then
             echo "version=0.0.1" >> $GITHUB_OUTPUT
           else
@@ -48,7 +48,7 @@ jobs:
             VERSION="$MAJOR.$MINOR.$PATCH"
             echo "version=$VERSION" >> $GITHUB_OUTPUT
           fi
-          
+
           echo "🔖 Extracted version: v$VERSION"
 
       - name: Create git tag
@@ -77,7 +77,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.extract.outputs.version }}
-          name: Dev v${{ steps.extract.outputs.version }}
+          name: Release v${{ steps.extract.outputs.version }}
           body: ${{ steps.changelog.outputs.content }}
           draft: false
           prerelease: false
