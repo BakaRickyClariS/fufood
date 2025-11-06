@@ -35,9 +35,9 @@
 └── FuFood/
     ├── .github/
     │   └── workflows/
-    │       ├── auto-pr.yml         → 雙 PR 自動建立工作流
-    │       ├── release.yml         → 自動版本發佈工作流
-    │       └── gemini-review.yml   → Gemini Code Review 工作流
+    │       ├── auto-pr.yml              → 自動 PR 建立工作流
+    │       ├── publish-trigger.yml      → 自動版本發佈工作流
+    │       └── unified-release.yml      → 統一版本釋出工作流
     ├── src/
     │   ├── components/
     │   │   ├── pages/           → 頁面元件
@@ -112,11 +112,7 @@ git pull origin dev
 git checkout -b Feature-功能名稱
 ```
 
-**建議命名格式：**
-
-- `Feature-login-page`
-- `Fix-api-error`
-- `Update-readme-doc`
+**建議命名格式：** `Feature-login-page`、`Fix-api-error`、`Update-readme-doc`
 
 ### 2️⃣ 開發與提交 Commit
 
@@ -126,277 +122,129 @@ git commit -m "feat: 新增登入頁面"
 git push origin Feature-功能名稱
 ```
 
-**請遵守前綴規範**：`feat` / `fix` / `refactor` / `docs` / `chore`
+### 3️⃣ 自動產生 PR（GitHub Actions）
 
-### 3️⃣ 發送 Pull Request（自動雙 PR 流程）
+完成開發後，進入 Repository → **Actions** 分頁，選擇 **Auto PR by Branch Naming**，點選 **Run workflow** 自動建立：
 
-完成開發後，透過 GitHub Actions 的自動 PR 工作流程建立兩個 PR。
-
-#### ⚙️ 自動 PR 工作流程 (`auto-pr.yml`)
-
-使用 **GitHub Actions 手動觸發** 快速建立 QA 與 DEV 的雙 PR：
-
-**步驟：**
-
-1. 進入 Repository → **Actions** 分頁
-2. 左側選擇 **Manual Dual Pull Requests** 工作流程
-3. 點選 **Run workflow**
-4. 填入下列參數：
-
-   | 參數       | 說明                 | 範例                  |
-   | ---------- | -------------------- | --------------------- |
-   | **branch** | 要建立 PR 的分支名稱 | `Feature-login-page`  |
-   | **title**  | PR 標題              | `Feature: login page` |
-
-5. 點選 **Run workflow** 執行
+- **QA PR**：`[QA] Feature xxx` → 合併至 `qa` 分支
+- **DEV PR**：`[DEV] Feature xxx` → 合併至 `dev` 分支
 
 **工作流程會自動：**
 
-- 建立 → `[QA] Feature: login page` PR（目標分支：`qa`）
-- 建立 → `[DEV] Feature: login page` PR（目標分支：`dev`）
-- 在兩個 PR 中自動包含測試檢查清單與備註說明
-- 每個 PR 均會觸發 **Gemini AI Code Review**
+- 偵測分支名稱（Feature/Fix/Update/Hotfix）
+- 加入適當 Label（feature/bug/documentation/hotfix）
+- 整理 Commit 訊息至 PR 描述
+- 觸發 **Gemini AI Code Review**（中文反饋）
 
-#### 📋 PR 描述模板（自動產生）
+### 4️⃣ QA 測試與審查
 
-工作流程會自動在 PR 中附加以下內容：
-
-```markdown
-## 🧩 功能摘要
-
-- 自動建立 QA 測試用 PR
-- 來源分支：Feature-login-page
-
-## 🧪 測試項目
-
-- [ ] 功能可在 Vercel QA 環境正常運作
-
-## 📎 備註
-
-- 此 PR 為自動建立的測試版本
-```
-
-### 4️⃣ QA 測試階段
-
-1. QA 人員在 `qa` 分支的 PR 上進行測試
-2. 使用 `/gemini review` 指令觸發 **Gemini AI Code Review**
-3. 提出改善建議或審核通過
-4. 測試完成後，QA 應批准此 PR
+1. QA 人員在 `qa` 分支 PR 測試功能
+2. **Gemini AI 自動審查**（已自動用中文回饋，無需手動觸發）
+3. 根據回饋進行修正或通過審查
+4. QA 批准後 Merge PR
 
 ### 5️⃣ 整合至開發環境
 
-1. 測試通過後，`qa` 分支的 PR 應被 **merge**
-2. 相應的 `dev` 分支 PR 也應被 **merge**
-3. 此時 `dev` 分支已包含最新功能
+1. `qa` 分支 PR 合併後
+2. 相應的 `dev` 分支 PR 也應合併
+3. `dev` 分支現已包含最新功能
 
-### 6️⃣ 自動版本發佈流程
+### 6️⃣ 上線版本釋出
 
-當開發完成並準備上線時，使用 **GitHub Actions 自動發佈工作流程**。
+當準備上線時，進入 Repository → **Actions** → **Unified Release Workflow**，點選 **Run workflow**，選擇版本升級型態：
 
-#### ⚙️ 自動版本發佈工作流程 (`release.yml`)
+**支援版本升級：**
 
-此工作流程自動處理版本標記與發佈流程：
+- **patch**（0.0.1 → 0.0.2）：小改進、bug 修復
+- **minor**（0.0.2 → 0.1.0）：新功能
+- **major**（0.1.0 → 1.0.0）：重大更新
 
-**觸發方式：**
+**自動執行流程：**
 
-- **方式 1 - 自動觸發**：代碼 push 至 `main` 分支時自動執行
-- **方式 2 - 手動觸發**：進入 **Actions** → **Auto Release Version** → **Run workflow**
+- 讀取當前版本（package.json / .csproj）
+- 升級版本號
+- 更新 CHANGELOG.md
+- 建立 release 分支（dev-v001 等）
+- 產生 Release PR 至 main 分支
 
-**工作流程執行流程：**
+### 7️⃣ 最後發佈步驟
 
-1. **簽出代碼** (Checkout code)
+Release PR 合併至 main 後，自動觸發 **publish-trigger.yml**：
 
-   ```
-   ✓ 從 main 分支拉取最新代碼
-   ```
-
-2. **提取版本號** (Get version)
-
-   ```
-   ✓ 從 package.json 讀取版本（React 前端）
-   或
-   ✓ 從 .csproj 讀取版本（.NET 後端）
-   ```
-
-3. **建立 Git Tag** (Create Git Tag)
-
-   ```
-   ✓ 建立 git tag（例如：v0.1.0）
-   ✓ 自動 push tag 至 GitHub
-   ```
-
-4. **產生 Release Notes** (Generate Release Notes)
-
-   ```
-   ✓ 從 CHANGELOG.md 讀取版本說明
-   ✓ 自動在 GitHub Releases 建立新版本發佈
-   ```
-
-**工作流程會自動產生：**
-
-- 📌 **Git Tag**（例如：`v0.1.0`）
-- 📄 **GitHub Release**（含版本號與發佈備註）
-- 🔗 **下載連結**（供使用者下載該版本）
+- 建立 Git tag（v0.1.0）
+- 推送 tag 至 GitHub
+- 自動產生 GitHub Release
+- 完成版本發佈
 
 ---
 
-## 📊 完整開發與發佈流程圖
+## 🤖 GitHub Actions 自動化工作流程
 
-```
-新功能分支 (Feature-xxx)
-│
-├─ 在 GitHub Actions 中執行
-│  "Manual Dual Pull Requests"
-│
-├─ 自動建立 → QA PR ─────→ Gemini AI Review ─→ QA 測試
-│            └── [QA] Feature: xxx
-│
-└─ 自動建立 → DEV PR ────→ Gemini AI Review ─→ Dev 測試
-             └── [DEV] Feature: xxx
-│
-▼
-QA 測試通過 + DEV 整合完成
-│
-├─ Merge QA PR → qa 分支
-│
-├─ Merge DEV PR → dev 分支
-│
-▼
-準備上線：建立上線分支
-│
-└─ git checkout -b dev-v001
-   git merge dev → dev-v001
-   git push origin dev-v001
-│
-▼
-在 GitHub Actions 中執行
-"Auto Release Version"
-│
-├─ 簽出 main 分支代碼
-│
-├─ 從 package.json / .csproj 讀取版本
-│
-├─ 建立 Git Tag (v0.1.0)
-│
-├─ Push Tag 至 GitHub
-│
-└─ 自動產生 GitHub Release
+### 三大核心 Workflow
 
-▼
-✅ 正式上線完成！
-```
+| Workflow                | 觸發方式                   | 用途                                  |
+| ----------------------- | -------------------------- | ------------------------------------- |
+| **auto-pr.yml**         | 手動觸發（Actions）        | 自動產生 QA/DEV PR，自動 Label 與摘要 |
+| **unified-release.yml** | 手動觸發（Actions）        | 統一版本升級與 Release PR 產生        |
+| **publish-trigger.yml** | 自動觸發（PR 合併至 main） | 自動建立 Git tag 與 GitHub Release    |
+
+### 自動化優勢
+
+- ✅ **節省時間**：減少手動 PR、tag、release 操作
+- ✅ **降低錯誤**：統一規範、自動驗證分支與版本
+- ✅ **加強追蹤**：完整的版本歷史與 Release Notes
+- ✅ **提升效率**：團隊協作更順暢，合併流程標準化
 
 ---
 
-## 🤖 Gemini Code Assist Code Review 整合
+## 🤖 Gemini AI Code Review 整合（中文審查）
 
-本專案已整合 **Gemini Code Assist** 進行自動化 AI Code Review，幫助團隊提升程式碼品質與審查效率。
+本專案已整合 **Gemini Code Assist** 進行自動化 AI Code Review，所有反饋均**自動用中文呈現**，幫助團隊提升程式碼品質。
 
-### 🔧 Gemini Code Assist 設定步驟
+### ⚙️ Gemini Code Assist 設定步驟
 
-#### 1. 安裝 Gemini Code Assist GitHub App
+#### 1. 安裝 GitHub App
 
 1. 訪問 [Gemini Code Assist GitHub Marketplace](https://github.com/apps/gemini-code-assist)
-2. 點選「Install」並選擇此專案的 Repository
-3. 授予必要的權限（PR 評論、程式碼審查等）
-4. 完成授權後，App 會自動關聯至此 GitHub 組織或個人帳號
+2. 點擊 **Install**
+3. 選擇你的專案
 
-#### 2. 設定風格指南（選用）
+#### 2. 新增中文設定檔（已完成 ✅）
 
-在專案根目錄建立 `.gemini-code-review.json` 設定檔：
+在 repo 根目錄已建立 `.gemini-code-review.json`：
 
 ```json
 {
-  "reviewRules": {
-    "severity": ["Critical", "High", "Medium", "Low"],
-    "focusAreas": ["security", "performance", "best-practices", "code-style"],
-    "customInstructions": "遵循 React 最佳實踐，優先檢查 TypeScript 型別安全"
-  },
-  "autoReview": {
-    "enabled": true,
-    "reviewOnNewPR": true,
-    "reviewOnUpdate": true
-  },
-  "styleGuide": {
-    "language": "zh-TW",
-    "framework": "React",
-    "codeStyle": "Airbnb"
-  }
+  "language": "中文",
+  "focusAreas": ["正確性", "效能優化", "可維護性", "安全性"]
 }
 ```
 
-### 📋 在 PR 中使用 Gemini Code Assist
+此設定自動讓 Gemini 用**中文**進行審查，無需手動觸發任何指令。
 
-#### 自動審查
+#### 3. 完成！全自動運作
 
-當建立新 PR 時，Gemini Code Assist 會自動：
+- ✅ 建立新 PR → 自動審查
+- ✅ 用中文回饋審查意見
+- ✅ 約 5 分鐘內產生初步評論
+- ✅ 無需手動輸入任何指令
 
-- 產生提取要求（PR）摘要
-- 掃描程式碼尋找潛在問題
-- 提供改善建議與程式碼片段
-- 自動加入為 PR 審查人員
+### 📋 手動命令（可選）
 
-#### 手動叫用指令
+如需額外評論或重新審查，可在 PR 留言使用：
 
-在 PR 的任何評論區塊中使用以下指令：
+| 指令              | 用途             |
+| ----------------- | ---------------- |
+| `/gemini review`  | 重新進行詳細審查 |
+| `/gemini summary` | 產生變更摘要     |
+| `/gemini help`    | 查看所有指令     |
 
-| 指令              | 說明                       | 範例                           |
-| ----------------- | -------------------------- | ------------------------------ |
-| `/gemini summary` | 產生 PR 變更摘要           | 在評論中輸入 `/gemini summary` |
-| `/gemini review`  | 進行詳細程式碼審查         | 在評論中輸入 `/gemini review`  |
-| `/gemini`         | 根據 PR 提出自訂問題或建議 | 在評論中輸入 `/gemini`         |
-| `/gemini help`    | 查看所有可用指令           | 在評論中輸入 `/gemini help`    |
+### 💡 Gemini Code Review 最佳實踐
 
-#### 與 AI 持續互動
-
-- **追問細節**：對 Gemini 的評論提出後續問題，AI 會進一步解釋
-- **要求改進**：請 Gemini 針對特定程式碼段提供改善建議
-- **尋求最佳實踐**：詢問如何實現更優雅或高效的解決方案
-
-### 📊 Gemini Code Review 工作流程
-
-專案已配置 GitHub Actions 工作流程 `gemini-review.yml`，可在以下情況自動觸發 Gemini Code Review：
-
-```yaml
-name: Gemini Code Assist Auto Review
-
-on:
-  pull_request:
-    types: [opened, synchronize]
-  workflow_dispatch:
-
-jobs:
-  gemini-review:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Trigger Gemini Code Review
-        uses: google-gemini/gemini-code-assist-action@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
-```
-
-### 🔐 設定 API 金鑰
-
-1. 在 GitHub Settings → Secrets 中新增 `GEMINI_API_KEY`
-2. 取得 API Key：[Google AI Studio](https://aistudio.google.com/app/apikey)
-3. 複製 API Key 至 GitHub Secret
-
-### 💡 Code Review 最佳實踐
-
-1. **定期檢查 Gemini 的評論**：不是所有建議都必須接納，但都值得考慮
-2. **整合團隊反饋**：結合 Gemini 的自動審查與人工審查
-3. **建立團隊規範**：根據團隊風格調整 `.gemini-code-review.json`
-4. **持續改進**：記錄常見問題，更新審查規則以預防未來的缺陷
-
-### 📚 Gemini Code Assist 文件
-
-- [官方教學 - 使用 Gemini Code Assist 檢查 GitHub 程式碼](https://developers.google.com/gemini-code-assist/docs/review-github-code?hl=zh-tw)
-- [Gemini CLI GitHub Actions 介紹](https://blog.google/technology/developers/introducing-gemini-cli-github-actions/)
-- [Gemini Code Review Extension](https://github.com/gemini-cli-extensions/code-review)
+1. **定期檢查 Gemini 的中文評論**：理解為何提出該建議
+2. **整合團隊反饋**：結合 AI 自動審查與人工審查
+3. **記錄常見問題**：改進程式碼習慣
+4. **持續改進**：根據團隊風格調整 `.gemini-code-review.json`
 
 ---
 
@@ -434,22 +282,13 @@ npm run preview
 
 ---
 
-## 🔗 相關連結
-
-- **Gemini Code Assist**: https://developers.google.com/gemini-code-assist
-- **GitHub App**: https://github.com/apps/gemini-code-assist
-- **API 金鑰申請**: https://aistudio.google.com/app/apikey
-
----
-
 ## 📝 貢獻指南
 
 1. 遵循本 README 的 Git Flow 與 Commit 規範
 2. 建立 Feature 分支進行開發
-3. 透過 GitHub Actions **Manual Dual Pull Requests** 自動建立 QA 與 DEV PR
-4. 等待 Gemini AI Code Review 與人工審查
+3. 透過 GitHub Actions 自動建立 PR
+4. 等待 Gemini AI 中文審查與人工審查
 5. 測試通過後由管理者進行上線發佈
-6. 自動執行 **Auto Release Version** 工作流程完成版本標記與發佈
 
 ---
 
@@ -459,5 +298,5 @@ npm run preview
 
 ---
 
-**最後更新**: 2025-11-03  
+**最後更新**: 2025-11-06  
 **版本**: v0.1.0 (MVP)
