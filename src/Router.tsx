@@ -6,21 +6,16 @@ import Inventory from './routes/Inventory';
 import Recipe from './routes/Recipe';
 import SettingsRoutes from './routes/Settings';
 
-export const router = createBrowserRouter(
-  [
-    {
-      path: '/',
-      element: <Layout />,
-      children: [
-        { index: true, element: <Dashboard /> },
-        ...AuthRoutes,
-        { path: 'inventory', element: <Inventory /> },
-        { path: 'recipe', element: <Recipe /> },
-        ...SettingsRoutes,
-      ],
-    },
-  ],
+export const router = createBrowserRouter([
   {
-    basename: '/fufood/',
+    path: '/',
+    element: <Layout />,
+    children: [
+      { index: true, element: <Dashboard /> },
+      ...AuthRoutes,
+      { path: 'inventory', element: <Inventory /> },
+      { path: 'recipe', element: <Recipe /> },
+      ...SettingsRoutes,
+    ],
   },
-);
+]);
