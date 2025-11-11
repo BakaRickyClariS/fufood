@@ -1,27 +1,23 @@
 import { createBrowserRouter } from 'react-router-dom';
 import Layout from './Layout';
+import Dashboard from './routes/Dashboard';
+import Inventory from './routes/Inventory';
+import Recipe from './routes/Recipe';
+import FoodInput from './routes/FoodInput';
+import AuthRoutes from './routes/Auth';
+import SettingsRoutes from './routes/Settings';
 
-export const router = createBrowserRouter(
-  [
-    {
-      path: '/',
-      element: <Layout />,
-      // children: [
-      //   { index: true, element: <Home /> },
-      //   {
-      //     path: 'login',
-      //     element: <Login />,
-      //     handle: { headerVariant: 'simple', footer: false },
-      //   },
-      //   {
-      //     path: 'sign-up',
-      //     element: <Signup />,
-      //     handle: { headerVariant: 'simple', footer: false },
-      //   },
-      // ],
-    },
-  ],
+export const router = createBrowserRouter([
   {
-    basename: '/fufood/', // ← 設定前綴
+    path: '/',
+    element: <Layout />,
+    children: [
+      { index: true, element: <Dashboard /> },
+      ...AuthRoutes,
+      { path: 'inventory', element: <Inventory /> },
+      { path: 'recipe', element: <Recipe /> },
+      { path: 'foodInput', element: <FoodInput /> },
+      ...SettingsRoutes,
+    ],
   },
-);
+]);
