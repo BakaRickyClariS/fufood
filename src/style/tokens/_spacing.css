@@ -1,0 +1,24 @@
+/* ==========================================================================
+   SPACING TOKENS - 間距系統
+   ========================================================================== */
+
+@theme {
+  /* ==================== BASE SPACING SCALE ==================== */
+  --spacing-tiny: 0.125rem; /* 2px */
+  --spacing-xxs: 0.25rem; /* 4px */
+  --spacing-xs: 0.5rem; /* 8px */
+  --spacing-s: 0.75rem; /* 12px */
+  --spacing-m: 1rem; /* 16px */
+  --spacing-l: 1.5rem; /* 24px */
+  --spacing-xl: 2rem; /* 32px */
+  --spacing-2xl: 2.5rem; /* 40px */
+  --spacing-3xl: 3rem; /* 48px */
+  --spacing-4xl: 3.5rem; /* 56px */
+  --spacing-5xl: 4rem; /* 64px */
+
+  /* ==================== SEMANTIC SPACING ==================== */
+  --space-section: var(--spacing-5xl); /* 區塊間距 (64px) */
+  --space-component: var(--spacing-l); /* 元件間距 (24px) */
+  --space-element: var(--spacing-m); /* 元素間距 (16px) */
+  --space-inline: var(--spacing-xs); /* 行內間距 (8px) */
+}
