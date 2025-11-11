@@ -13,43 +13,36 @@
   /* ==================== H1 - Heading XXL ==================== */
   h1 {
     @apply text-[var(--text-size-heading-xxl)] leading-[var(--line-height-heading-xxl)] font-bold text-[color:var(--color-text-primary)] mb-[var(--space-component)];
-    font-family: var(--font-family-base);
   }
 
   /* ==================== H2 - Heading XL ==================== */
   h2 {
     @apply text-[var(--text-size-heading-xl)] leading-[var(--line-height-heading-xl)] font-bold text-[color:var(--color-text-primary)] mb-[var(--space-component)];
-    font-family: var(--font-family-base);
   }
 
   /* ==================== H3 - Heading Large ==================== */
   h3 {
     @apply text-[var(--text-size-heading-lg)] leading-[var(--line-height-heading-lg)] font-bold text-[color:var(--color-text-primary)] mb-[var(--space-element)];
-    font-family: var(--font-family-base);
   }
 
   /* ==================== H4 - Heading Medium ==================== */
   h4 {
     @apply text-[var(--text-size-heading-md)] leading-[var(--line-height-heading-md)] font-bold text-[color:var(--color-text-primary)] mb-[var(--space-element)];
-    font-family: var(--font-family-base);
   }
 
   /* ==================== H5 - Heading Small ==================== */
   h5 {
     @apply text-[var(--text-size-heading-sm)] leading-[var(--line-height-heading-sm)] font-bold text-[color:var(--color-text-primary)] mb-[var(--space-inline)];
-    font-family: var(--font-family-base);
   }
 
   /* ==================== H6 - Label Large ==================== */
   h6 {
     @apply text-[var(--text-size-label-lg)] leading-[var(--line-height-label-lg)] font-bold text-[color:var(--color-text-primary)] mb-[var(--space-inline)];
-    font-family: var(--font-family-base);
   }
 
   /* ==================== PARAGRAPH - Paragraph Medium ==================== */
   p {
     @apply text-[var(--text-size-paragraph-md)] leading-[var(--line-height-paragraph-md)] text-[color:var(--color-text-secondary)] mb-[var(--space-element)];
-    font-family: var(--font-family-base);
   }
 
   /* ==================== LINKS ==================== */
@@ -88,13 +81,11 @@
 
   li {
     @apply mb-[var(--space-inline)] text-[var(--text-size-paragraph-md)] leading-[var(--line-height-paragraph-md)];
-    font-family: var(--font-family-base);
   }
 
   /* ==================== BLOCKQUOTE ==================== */
   blockquote {
     @apply border-l-4 border-[color:var(--color-border-default)] pl-[var(--space-element)] my-[var(--space-element)] text-[var(--text-size-paragraph-md)] leading-[var(--line-height-paragraph-md)] text-[color:var(--color-text-secondary)] italic;
-    font-family: var(--font-family-base);
   }
 
   /* ==================== HORIZONTAL RULE ==================== */
@@ -109,12 +100,10 @@
 
   th {
     @apply text-[var(--text-size-label-md)] leading-[var(--line-height-label-md)] font-bold p-[var(--space-element)] text-left border-b-2 border-[color:var(--color-border-default)] bg-[color:var(--color-bg-secondary)];
-    font-family: var(--font-family-base);
   }
 
   td {
     @apply text-[var(--text-size-paragraph-md)] leading-[var(--line-height-paragraph-md)] p-[var(--space-element)] border-b border-[color:var(--color-border-default)];
-    font-family: var(--font-family-base);
   }
 
   tr:hover {
@@ -124,7 +113,6 @@
   /* ==================== SMALL ==================== */
   small {
     @apply text-[var(--text-size-label-xs)] leading-[var(--line-height-label-xs)] text-[color:var(--color-text-tertiary)];
-    font-family: var(--font-family-base);
   }
 
   /* ==================== STRONG ==================== */
