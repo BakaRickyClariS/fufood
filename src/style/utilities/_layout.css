@@ -1,0 +1,90 @@
+/* ==========================================================================
+   LAYOUT UTILITIES - 佈局工具類別
+   基於 Tailwind + 你的 Token 系統
+   ========================================================================== */
+
+@layer utilities {
+  /* ==================== SPACING UTILITIES ==================== */
+
+  /* Section Spacing - 區塊間距 */
+  .space-section {
+    @apply mb-[var(--space-section)];
+  }
+
+  .gap-section {
+    @apply gap-[var(--space-section)];
+  }
+
+  .p-section {
+    @apply p-[var(--space-section)];
+  }
+
+  /* Component Spacing - 元件間距 */
+  .space-component {
+    @apply mb-[var(--space-component)];
+  }
+
+  .gap-component {
+    @apply gap-[var(--space-component)];
+  }
+
+  .p-component {
+    @apply p-[var(--space-component)];
+  }
+
+  /* Element Spacing - 元素間距 */
+  .space-element {
+    @apply mb-[var(--space-element)];
+  }
+
+  .gap-element {
+    @apply gap-[var(--space-element)];
+  }
+
+  .p-element {
+    @apply p-[var(--space-element)];
+  }
+
+  /* Inline Spacing - 行內間距 */
+  .space-inline {
+    @apply mb-[var(--space-inline)];
+  }
+
+  .gap-inline {
+    @apply gap-[var(--space-inline)];
+  }
+
+  .p-inline {
+    @apply p-[var(--space-inline)];
+  }
+
+  /* ==================== RADIUS UTILITIES ==================== */
+
+  .rounded-xxs {
+    @apply rounded-[var(--radius-xxs)];
+  }
+
+  .rounded-xs {
+    @apply rounded-[var(--radius-xs)];
+  }
+
+  .rounded-s {
+    @apply rounded-[var(--radius-s)];
+  }
+
+  .rounded-m {
+    @apply rounded-[var(--radius-m)];
+  }
+
+  .rounded-l {
+    @apply rounded-[var(--radius-l)];
+  }
+
+  .rounded-xl {
+    @apply rounded-[var(--radius-xl)];
+  }
+
+  .rounded-full {
+    @apply rounded-[var(--radius-rounded)];
+  }
+}

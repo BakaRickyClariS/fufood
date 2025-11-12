@@ -1,0 +1,127 @@
+/* ==========================================================================
+   BASE TYPOGRAPHY - 全域字體樣式
+   基於 Tailwind v4 CSS-First + Noto Sans TC + Figma 設計系統
+   ========================================================================== */
+
+@layer base {
+  /* ==================== BODY ==================== */
+  body {
+    @apply text-[var(--text-size-label-md)] leading-[var(--line-height-label-md)] text-[color:var(--color-text-primary)] bg-[color:var(--color-bg-default)];
+    font-family: var(--font-family-base);
+  }
+
+  /* ==================== H1 - Heading XXL ==================== */
+  h1 {
+    @apply text-[var(--text-size-heading-xxl)] leading-[var(--line-height-heading-xxl)] font-bold text-[color:var(--color-text-primary)] mb-[var(--space-component)];
+  }
+
+  /* ==================== H2 - Heading XL ==================== */
+  h2 {
+    @apply text-[var(--text-size-heading-xl)] leading-[var(--line-height-heading-xl)] font-bold text-[color:var(--color-text-primary)] mb-[var(--space-component)];
+  }
+
+  /* ==================== H3 - Heading Large ==================== */
+  h3 {
+    @apply text-[var(--text-size-heading-lg)] leading-[var(--line-height-heading-lg)] font-bold text-[color:var(--color-text-primary)] mb-[var(--space-element)];
+  }
+
+  /* ==================== H4 - Heading Medium ==================== */
+  h4 {
+    @apply text-[var(--text-size-heading-md)] leading-[var(--line-height-heading-md)] font-bold text-[color:var(--color-text-primary)] mb-[var(--space-element)];
+  }
+
+  /* ==================== H5 - Heading Small ==================== */
+  h5 {
+    @apply text-[var(--text-size-heading-sm)] leading-[var(--line-height-heading-sm)] font-bold text-[color:var(--color-text-primary)] mb-[var(--space-inline)];
+  }
+
+  /* ==================== H6 - Label Large ==================== */
+  h6 {
+    @apply text-[var(--text-size-label-lg)] leading-[var(--line-height-label-lg)] font-bold text-[color:var(--color-text-primary)] mb-[var(--space-inline)];
+  }
+
+  /* ==================== PARAGRAPH - Paragraph Medium ==================== */
+  p {
+    @apply text-[var(--text-size-paragraph-md)] leading-[var(--line-height-paragraph-md)] text-[color:var(--color-text-secondary)] mb-[var(--space-element)];
+  }
+
+  /* ==================== LINKS ==================== */
+  a {
+    @apply text-[color:var(--color-interactive)] no-underline transition-colors duration-200;
+  }
+
+  a:hover {
+    @apply text-[color:var(--color-interactive-hover)] underline;
+  }
+
+  a:active {
+    @apply text-[color:var(--color-interactive-active)];
+  }
+
+  /* ==================== CODE ==================== */
+  code {
+    @apply text-[var(--text-size-label-sm)] px-[var(--space-inline)] py-[var(--spacing-xxs)] bg-[color:var(--color-bg-secondary)] rounded-[var(--radius-xs)];
+    font-family: var(--font-family-mono);
+  }
+
+  pre {
+    @apply text-[var(--text-size-label-sm)] leading-[1.5] p-[var(--space-element)] bg-[color:var(--color-bg-secondary)] rounded-[var(--radius-xs)] overflow-x-auto mb-[var(--space-element)];
+    font-family: var(--font-family-mono);
+  }
+
+  pre code {
+    @apply p-0 bg-transparent;
+  }
+
+  /* ==================== LISTS ==================== */
+  ul,
+  ol {
+    @apply mb-[var(--space-element)] pl-[var(--space-component)] text-[color:var(--color-text-secondary)];
+  }
+
+  li {
+    @apply mb-[var(--space-inline)] text-[var(--text-size-paragraph-md)] leading-[var(--line-height-paragraph-md)];
+  }
+
+  /* ==================== BLOCKQUOTE ==================== */
+  blockquote {
+    @apply border-l-4 border-[color:var(--color-border-default)] pl-[var(--space-element)] my-[var(--space-element)] text-[var(--text-size-paragraph-md)] leading-[var(--line-height-paragraph-md)] text-[color:var(--color-text-secondary)] italic;
+  }
+
+  /* ==================== HORIZONTAL RULE ==================== */
+  hr {
+    @apply border-0 border-t border-[color:var(--color-border-default)] my-[var(--space-component)];
+  }
+
+  /* ==================== TABLE ==================== */
+  table {
+    @apply w-full border-collapse mb-[var(--space-element)];
+  }
+
+  th {
+    @apply text-[var(--text-size-label-md)] leading-[var(--line-height-label-md)] font-bold p-[var(--space-element)] text-left border-b-2 border-[color:var(--color-border-default)] bg-[color:var(--color-bg-secondary)];
+  }
+
+  td {
+    @apply text-[var(--text-size-paragraph-md)] leading-[var(--line-height-paragraph-md)] p-[var(--space-element)] border-b border-[color:var(--color-border-default)];
+  }
+
+  tr:hover {
+    @apply bg-[color:var(--color-bg-secondary)];
+  }
+
+  /* ==================== SMALL ==================== */
+  small {
+    @apply text-[var(--text-size-label-xs)] leading-[var(--line-height-label-xs)] text-[color:var(--color-text-tertiary)];
+  }
+
+  /* ==================== STRONG ==================== */
+  strong {
+    @apply font-bold;
+  }
+
+  /* ==================== EMPHASIS ==================== */
+  em {
+    @apply italic;
+  }
+}

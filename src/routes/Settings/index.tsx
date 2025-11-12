@@ -4,17 +4,17 @@ import Subscription from './Subscription';
 
 const SettingsRoutes = [
   {
-    path: 'Notifications',
+    path: 'notifications',
     element: <Notifications />,
     handle: { headerVariant: 'simple', footer: false },
   },
   {
-    path: 'Profile',
+    path: 'profile',
     element: <Profile />,
     handle: { headerVariant: 'simple', footer: false },
   },
   {
-    path: 'Subscription',
+    path: 'subscription',
     element: <Subscription />,
     handle: { headerVariant: 'simple', footer: false },
   },
