@@ -5,12 +5,12 @@ import { Home, Plus, Settings } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-export interface NavItem {
+export type NavItem = {
   id: string;
   label: string;
   icon: React.ReactNode;
   href: string;
-}
+};
 
 const defaultNavItems: NavItem[] = [
   { id: 'home', label: '首頁', icon: <Home className="w-5 h-5" />, href: '/' },
