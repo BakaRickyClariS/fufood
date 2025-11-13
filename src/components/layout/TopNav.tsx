@@ -12,7 +12,7 @@ import { useState } from 'react';
 
 export default function TopNav() {
   const [selectedHome, setSelectedHome] = useState('My Home');
-  const [userLevel, setUserLevel] = useState('PRO'); // 可改為 FREE, PREMIUM 等
+  // const [userLevel, setUserLevel] = useState('PRO'); // 可改為 FREE, PREMIUM 等
 
   const homeOptions = [
     { label: 'My Home', value: 'My Home' },
@@ -26,7 +26,7 @@ export default function TopNav() {
         {/* 左側：會籍等級標籤 */}
         <div className="flex-shrink-0">
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-            {userLevel}
+            {/* {userLevel} */}PRO
           </span>
         </div>
 
