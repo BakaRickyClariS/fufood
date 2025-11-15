@@ -89,6 +89,6 @@
   }
 
   .body-dashboard-bg {
-    background: radial-gradient(circle, #fef3f2 0%, #fde6e3 50%, #fdd0cb 100%);
+    background: radial-gradient(circle, #fef3f2 0%, #fde6e3 30%, #fdd0cb 60%);
   }
 }
