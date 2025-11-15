@@ -31,7 +31,7 @@
    自定義工具類別（補充 Tailwind 不足的部分）
    ========================================================================== */
 @import './utilities/_layout.css';
-@import "tw-animate-css";
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
