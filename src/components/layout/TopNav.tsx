@@ -21,7 +21,7 @@ export default function TopNav() {
   ];
 
   return (
-    <div className="sticky top-0 left-0 right-0 bg-white dark:bg-slate-800 border-b z-40 px-4 py-3">
+    <div className="sticky top-0 left-0 right-0  dark:bg-slate-800 z-40 px-4 py-3">
       <div className="flex items-center justify-between gap-2">
         {/* 左側：會籍等級標籤 */}
         <div className="flex-shrink-0">
