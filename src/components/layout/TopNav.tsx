@@ -21,10 +21,10 @@ export default function TopNav() {
   ];
 
   return (
-    <div className="sticky top-0 left-0 right-0 bg-white dark:bg-slate-800 border-b z-40 px-4 py-3">
+    <div className="sticky top-0 left-0 right-0  dark:bg-slate-800 z-40 px-4 py-3">
       <div className="flex items-center justify-between gap-2">
         {/* 左側：會籍等級標籤 */}
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
             {/* {userLevel} */}PRO
           </span>
@@ -64,7 +64,7 @@ export default function TopNav() {
         </div>
 
         {/* 右側：通知 + 用戶 */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="w-5 h-5" />
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
