@@ -24,7 +24,7 @@ const Dashboard: React.FC = () => {
             <img
               className="max-w-[300px] w-full h-auto object-cover"
               src={heroBanner}
-              alt="banner"
+              alt="Illustration of a person looking into a fridge"
             />
           </div>
         </div>
