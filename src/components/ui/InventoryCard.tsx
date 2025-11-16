@@ -1,13 +1,13 @@
 import { Card } from '@/components/ui/card';
 
-interface InventoryCardProps {
+type InventoryCardProps = {
   title: string;
   value: number;
   bgColor?: string; // ex: "bg-[#FFE5E2]"
   img: string; // local image path
   boxShadow?: string; // ex: "shadow-[0_8px_15px_-3px_rgba(0,0,0,0.1)]"
   borderColor?: string; // ex: "border-neutral-100"
-}
+};
 
 const InventoryCard: React.FC<InventoryCardProps> = ({
   title,
@@ -26,7 +26,7 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
         <p className="mt-1 text-4xl font-bold text-neutral-900">{value}</p>
       </div>
 
-      <img src={img} alt="" className="w-full h-auto object-cover" />
+      <img src={img} alt={title} className="w-full h-auto object-cover" />
     </Card>
   );
 };

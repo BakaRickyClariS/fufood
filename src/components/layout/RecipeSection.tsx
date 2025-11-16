@@ -5,11 +5,13 @@ import recipe2 from '@/assets/images/dashboard/recipe-2.png';
 
 const RecipeSection = () => {
   return (
-    <section className="w-full rounded-t-3xl overflow-hidden bg-white px-4 mt-6 pb-30">
+    <section className="w-full rounded-t-3xl overflow-hidden bg-white px-4 mt-6 pb-32">
       {/* 標題列 */}
       <div className="flex justify-between items-center max-w-[800px] mx-auto mb-4">
         <p className="text-neutral-900 font-bold text-lg">推薦食譜</p>
-        <button className="text-neutral-700 text-sm">查看更多</button>
+        <button type="button" className="text-neutral-700 text-sm">
+          查看更多
+        </button>
       </div>
 
       {/* 卡片排版 */}

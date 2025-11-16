@@ -22,7 +22,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
     <Card className="overflow-hidden rounded-2xl shadow-[0_6px_14px_-2px_rgba(0,0,0,0.12)] border-none bg-white">
       {/* 封面圖 */}
       <div className="relative">
-        <img src={cover} className="w-full h-36 object-cover" />
+        <img src={cover} alt={title} className="w-full h-36 object-cover" />
 
         {/* 熱門 Tag */}
         {tag && (
@@ -32,7 +32,11 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
         )}
 
         {/* 愛心 icon */}
-        <button className="absolute top-2 right-2 bg-black/40 rounded-full p-1">
+        <button
+          type="button"
+          aria-label="Add to favorites"
+          className="absolute top-2 right-2 bg-black/40 rounded-full p-1"
+        >
           <Heart size={18} className="text-white" />
         </button>
 

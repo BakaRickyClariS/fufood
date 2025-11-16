@@ -3,7 +3,7 @@ import aiImg from '@/assets/images/dashboard/ai-banner.png';
 
 const AiRecommendCard = () => {
   return (
-    <Card className="mt-5 px-5 py-6 rounded-2xl bg-gradient-to-br from-[#FFD3CC] to-[#FFC4B8] shadow-[0_6px_14px_-2px_rgba(0,0,0,0.12)] border-none max-w-[800px] mx-auto relative overflow-hidden">
+    <Card className="mt-5 px-5 py-6 rounded-2xl bg-linear-to-br from-[#FFD3CC] to-[#FFC4B8] shadow-[0_6px_14px_-2px_rgba(0,0,0,0.12)] border-none max-w-[800px] mx-auto relative overflow-hidden">
       <div className="max-w-[55%]">
         <p className="text-neutral-800 font-semibold text-lg leading-snug">
           推薦最剛好的料理， 每天都有新靈感！
@@ -17,6 +17,7 @@ const AiRecommendCard = () => {
       <img
         src={aiImg}
         className="absolute right-2 bottom-0 w-32 object-contain"
+        alt="AI Recommendation"
       />
     </Card>
   );
