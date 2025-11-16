@@ -17,7 +17,7 @@ const AiRecommendCard = () => {
       <img
         src={aiImg}
         className="absolute right-2 bottom-0 w-32 object-contain"
-        alt="AI Recommendation"
+        alt="AI assistant illustration"
       />
     </Card>
   );

@@ -1,7 +1,12 @@
+import MemberList from '@/components/layout/MemberList';
+import InventoryCategorySection from '@/components/layout/InventoryCategorySection';
+import InventoryTabsSection from '@/components/layout/InventoryTabsSection';
 const Inventory: React.FC = () => {
   return (
     <>
-      <h1>Inventory</h1>
+      <MemberList />
+      <InventoryTabsSection />
+      <InventoryCategorySection />
     </>
   );
 };
