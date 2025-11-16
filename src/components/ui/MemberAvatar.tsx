@@ -30,7 +30,11 @@ const MemberAvatar: React.FC<MemberAvatarProps> = ({
         {isInvite ? (
           <span className="text-3xl text-neutral-500">+</span>
         ) : (
-          <img src={img} className="w-full h-full rounded-full object-cover" />
+          <img
+            src={img}
+            alt={name}
+            className="w-full h-full rounded-full object-cover"
+          />
         )}
       </div>
 

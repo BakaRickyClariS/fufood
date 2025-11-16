@@ -69,8 +69,8 @@ const categories: CategoryItem[] = [
 ];
 
 // 2. 強型別 chunkTwo()
-const chunkTwo = (arr: CategoryItem[]): CategoryItem[][] => {
-  const result: CategoryItem[][] = [];
+const chunkTwo = <T,>(arr: T[]): T[][] => {
+  const result: T[][] = [];
   for (let i = 0; i < arr.length; i += 2) {
     result.push(arr.slice(i, i + 2));
   }
