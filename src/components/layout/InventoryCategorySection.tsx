@@ -1,4 +1,4 @@
-import InventoryCard from '@/components/ui/InventoryCard';
+import CategoryCard from '@/components/ui/CategoryCard';
 
 import fruitImg from '@/assets/images/inventory/fruit.png';
 import frozenImg from '@/assets/images/inventory/frozen.png';
@@ -14,6 +14,7 @@ type CategoryItem = {
   value: number;
   img: string;
   bgColor: string;
+  borderColor: string;
 };
 
 const categories: CategoryItem[] = [
@@ -23,6 +24,7 @@ const categories: CategoryItem[] = [
     value: 92,
     img: fruitImg,
     bgColor: 'bg-[#D8EBC5]',
+    borderColor: 'border-[#D8EBC5]/70',
   },
   {
     id: 'frozen',
@@ -30,6 +32,7 @@ const categories: CategoryItem[] = [
     value: 252,
     img: frozenImg,
     bgColor: 'bg-[#FFE895]',
+    borderColor: 'border-[#FFE895]/70',
   },
   {
     id: 'bake',
@@ -37,6 +40,7 @@ const categories: CategoryItem[] = [
     value: 49,
     img: bakeImg,
     bgColor: 'bg-[#FFD6E3]',
+    borderColor: 'border-[#FFD6E3]/70',
   },
   {
     id: 'milk',
@@ -44,6 +48,7 @@ const categories: CategoryItem[] = [
     value: 3,
     img: milkImg,
     bgColor: 'bg-[#DDF0FF]',
+    borderColor: 'border-[#DDF0FF]/70',
   },
   {
     id: 'seafood',
@@ -51,6 +56,7 @@ const categories: CategoryItem[] = [
     value: 20,
     img: seafoodImg,
     bgColor: 'bg-[#FFC5A4]',
+    borderColor: 'border-[#FFC5A4]/70',
   },
   {
     id: 'meat',
@@ -58,6 +64,7 @@ const categories: CategoryItem[] = [
     value: 8,
     img: meatImg,
     bgColor: 'bg-[#FFD4D4]',
+    borderColor: 'border-[#FFD4D4]/70',
   },
   {
     id: 'others',
@@ -65,6 +72,7 @@ const categories: CategoryItem[] = [
     value: 6,
     img: otherImg,
     bgColor: 'bg-[#E2E2E2]',
+    borderColor: 'border-[#E2E2E2]/70',
   },
 ];
 
@@ -85,12 +93,11 @@ const InventoryCategorySection = () => {
     <section className="px-4 mt-6">
       <div className="flex flex-col gap-4 max-w-[800px] mx-auto">
         {/* 大卡片 */}
-        <InventoryCard
+        <CategoryCard
           title={first.title}
-          value={first.value}
           img={first.img}
           bgColor={first.bgColor}
-          borderColor="border-neutral-200"
+          borderColor={first.borderColor}
           boxShadow="shadow-[0_6px_14px_-2px_rgba(0,0,0,0.06)]"
         />
 
@@ -98,13 +105,12 @@ const InventoryCategorySection = () => {
         {groups.map((pair) => (
           <div key={pair[0].id} className="grid grid-cols-2 gap-4">
             {pair.map((item) => (
-              <InventoryCard
+              <CategoryCard
                 key={item.id}
                 title={item.title}
-                value={item.value}
                 img={item.img}
                 bgColor={item.bgColor}
-                borderColor="border-neutral-200"
+                borderColor={item.borderColor}
                 boxShadow="shadow-[0_6px_14px_-2px_rgba(0,0,0,0.06)]"
               />
             ))}
