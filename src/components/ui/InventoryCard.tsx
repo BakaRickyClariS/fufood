@@ -29,7 +29,15 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
       <img
         src={img}
         alt={title}
-        className=" w-1/2 h-auto object-cover absolute top-1/2 right-0 -translate-y-1/2 z-0"
+        className=" absolute
+    bottom-0
+    right-0
+    max-h-full
+    w-auto
+    object-contain
+    translate-x-1/8   /* 讓圖片稍微往外延伸，看起來更像設計稿 */
+    z-0
+    pointer-events-none"
       />
     </Card>
   );
