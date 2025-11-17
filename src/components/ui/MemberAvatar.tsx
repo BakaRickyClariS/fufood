@@ -22,7 +22,7 @@ const MemberAvatar: React.FC<MemberAvatarProps> = ({
     >
       <div
         className={`
-          flex items-center justify-center w-14 h-14 rounded-full bg-white 
+          flex items-center justify-center w-full max-h-20 aspect-square rounded-full bg-white 
           shadow-sm transition-all 
           ${isActive ? 'border-2 border-[#FF6A6A]' : 'border border-neutral-200'}
         `}

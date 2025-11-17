@@ -19,14 +19,18 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
 }) => {
   return (
     <Card
-      className={`flex flex-row items-center justify-between px-5 py-4 rounded-2xl border-2 ${borderColor} ${boxShadow} ${bgColor}`}
+      className={`flex flex-row items-center justify-between px-5 py-4 rounded-2xl border-2 relative overflow-hidden h-36 ${borderColor} ${boxShadow} ${bgColor}`}
     >
       <div className="flex flex-col w-full">
         <p className="text-lg font-semibold text-primary-900">{title}</p>
         <p className="mt-1 text-4xl font-bold text-neutral-900">{value}</p>
       </div>
 
-      <img src={img} alt={title} className="w-full h-auto object-cover" />
+      <img
+        src={img}
+        alt={title}
+        className=" w-1/2 h-auto object-cover absolute top-1/2 right-0 -translate-y-1/2 z-0"
+      />
     </Card>
   );
 };
