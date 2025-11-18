@@ -12,12 +12,11 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
   title,
   bgColor = 'bg-white',
   boxShadow = '',
-  borderColor = 'border-neutral-100',
   img,
 }) => {
   return (
     <Card
-      className={`flex flex-row items-start justify-between p-4 rounded-2xl border-2 relative overflow-hidden h-36 ${borderColor} ${boxShadow} ${bgColor}`}
+      className={`flex flex-row items-start justify-between p-4 rounded-2xl border-2 relative overflow-hidden h-full border-[#848484]/20 ${boxShadow} ${bgColor}`}
     >
       <div className="flex flex-col w-full">
         <p className="text-base font-semibold text-neutral-900">{title}</p>

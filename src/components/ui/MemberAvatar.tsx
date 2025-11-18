@@ -17,24 +17,23 @@ const MemberAvatar: React.FC<MemberAvatarProps> = ({
 }) => {
   return (
     <div
-      className="flex flex-col items-center cursor-pointer min-w-20"
+      className="flex flex-col items-center cursor-pointer min-w-15"
       onClick={onClick}
     >
       <div
         className={`
-          flex items-center justify-center w-full max-h-20 aspect-square rounded-full bg-white 
-          shadow-sm transition-all 
-          ${isActive ? 'border-2 border-[#FF6A6A]' : 'border border-neutral-200'}
+          flex items-center justify-center w-full max-h-20 aspect-square rounded-full bg-white transition-all p-0.5
+          ${isActive ? 'border-2 border-[#FF6A6A]' : ''}
         `}
       >
         {isInvite ? (
-          <span className="text-3xl text-neutral-500">+</span>
+          <div className="flex items-center justify-center w-full h-full rounded-full aspect-square overflow-hidden border border-neutral-200">
+            <span className="text-3xl text-neutral-500 aspect-square">+</span>
+          </div>
         ) : (
-          <img
-            src={img}
-            alt={name}
-            className="w-full h-full rounded-full object-cover"
-          />
+          <div className="w-full h-full rounded-full aspect-square overflow-hidden border border-neutral-500">
+            <img src={img} alt={name} className="w-full h-full  object-cover" />
+          </div>
         )}
       </div>
 
