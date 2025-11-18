@@ -1,13 +1,13 @@
 import React from 'react';
 
-interface MainTabsProps {
+type MainTabsProps = {
   active: 'overview' | 'settings';
   onChange: (value: 'overview' | 'settings') => void;
-}
+};
 
 const InventoryMainTabs: React.FC<MainTabsProps> = ({ active, onChange }) => {
   return (
-    <div className="flex justify-center items-center gap-10 py-3 bg-white">
+    <div className="flex justify-center items-center bg-white shadow-[0_6px_5px_-2px_rgba(0,0,0,0.06)]">
       {[
         { id: 'overview', label: '庫存總覽' },
         { id: 'settings', label: '管理設定' },
@@ -15,14 +15,9 @@ const InventoryMainTabs: React.FC<MainTabsProps> = ({ active, onChange }) => {
         <button
           key={tab.id}
           onClick={() => onChange(tab.id as 'overview' | 'settings')}
-          className="relative font-semibold text-neutral-900"
+          className={`relative font-semibold text-neutral-900 pt-4 pb-2 px-2 border-b-4  ${active === tab.id ? '  border-primary-500' : 'border-transparent'}`}
         >
           {tab.label}
-
-          {/* 底線效果 */}
-          {active === tab.id && (
-            <span className="absolute left-0 right-0 -bottom-1 mx-auto h-1 w-10 rounded-full bg-[#FF6A6A]"></span>
-          )}
         </button>
       ))}
     </div>
