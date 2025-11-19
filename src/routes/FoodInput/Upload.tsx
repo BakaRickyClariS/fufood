@@ -41,7 +41,14 @@ const Upload: React.FC<CameraCaptureProps> = ({ onUpload }) => {
       const formData = new FormData();
       formData.append('image', blob, 'photo.jpg');
 
-      const uploadResponse = await fetch('http://your-backend/api/upload', {
+      const uploadUrl = import.meta.env.VITE_UPLOAD_API_URL;
+      if (!uploadUrl) {
+        // In a real app, you might want to handle this more gracefully
+        // or ensure the env var is always set during the build process.
+        console.error('Upload API URL is not configured. Please set VITE_UPLOAD_API_URL in your .env file.');
+        throw new Error('上傳失敗: API URL 未配置');
+      }
+      const uploadResponse = await fetch(uploadUrl, {
         method: 'POST',
         body: formData,
       });
