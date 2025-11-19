@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 import Webcam from 'react-webcam';
 import {
   Camera,
@@ -45,7 +45,9 @@ const Upload: React.FC<CameraCaptureProps> = ({ onUpload }) => {
       if (!uploadUrl) {
         // In a real app, you might want to handle this more gracefully
         // or ensure the env var is always set during the build process.
-        console.error('Upload API URL is not configured. Please set VITE_UPLOAD_API_URL in your .env file.');
+        console.error(
+          'Upload API URL is not configured. Please set VITE_UPLOAD_API_URL in your .env file.',
+        );
         throw new Error('上傳失敗: API URL 未配置');
       }
       const uploadResponse = await fetch(uploadUrl, {
@@ -65,11 +67,6 @@ const Upload: React.FC<CameraCaptureProps> = ({ onUpload }) => {
       }
 
       setSuccess(true);
-      setTimeout(() => {
-        setImg(null);
-        setIsCapturing(true);
-        setSuccess(false);
-      }, 1500);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '上傳失敗';
       setError(errorMessage);
@@ -90,6 +87,17 @@ const Upload: React.FC<CameraCaptureProps> = ({ onUpload }) => {
     height: { ideal: 720 },
     facingMode: 'environment' as const,
   };
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        setImg(null);
+        setIsCapturing(true);
+        setSuccess(false);
+      }, 1500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
