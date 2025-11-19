@@ -1,5 +1,11 @@
-const FoodInput: React.FC = () => {
-  return <>FoodInput</>;
-};
+import Upload from './Upload';
 
-export default FoodInput;
+const FoodInputRoutes = [
+  {
+    path: 'upload',
+    element: <Upload />,
+    handle: { headerVariant: 'simple', footer: false },
+  },
+];
+
+export default FoodInputRoutes;
