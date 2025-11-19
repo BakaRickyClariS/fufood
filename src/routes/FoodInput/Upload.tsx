@@ -7,10 +7,10 @@ import {
   AlertCircle,
   Check,
 } from 'lucide-react';
-type CameraCaptureProps = {
+type UploadProps = {
   onUpload?: (file: Blob) => Promise<void>;
 };
-const Upload: React.FC<CameraCaptureProps> = ({ onUpload }) => {
+const Upload: React.FC<UploadProps> = ({ onUpload }) => {
   const [img, setImg] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
