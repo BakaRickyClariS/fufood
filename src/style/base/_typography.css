@@ -1,0 +1,47 @@
+/* ==========================================================================
+   BASE TYPOGRAPHY - 全域字體樣式
+   基於 Tailwind v4 CSS-First + Noto Sans TC + Figma 設計系統
+   ========================================================================== */
+
+@layer base {
+  /* ==================== BODY ==================== */
+  body {
+    @apply text-[var(--text-size-label-md)] text-[color:var(--color-text-primary)];
+    font-family: var(--font-family-base);
+  }
+
+  /* ==================== H1 - Heading XXL ==================== */
+  h1 {
+    @apply text-[var(--text-size-heading-xxl)] font-bold text-[color:var(--color-text-primary)];
+  }
+
+  /* ==================== H2 - Heading XL ==================== */
+  h2 {
+    @apply text-[var(--text-size-heading-xl)] font-bold text-[color:var(--color-text-primary)];
+  }
+
+  /* ==================== H3 - Heading Large ==================== */
+  h3 {
+    @apply text-[var(--text-size-heading-lg)] font-bold text-[color:var(--color-text-primary)];
+  }
+
+  /* ==================== H4 - Heading Medium ==================== */
+  h4 {
+    @apply text-[var(--text-size-heading-md)] font-bold text-[color:var(--color-text-primary)];
+  }
+
+  /* ==================== H5 - Heading Small ==================== */
+  h5 {
+    @apply text-[var(--text-size-heading-sm)] font-bold text-[color:var(--color-text-primary)];
+  }
+
+  /* ==================== H6 - Label Large ==================== */
+  h6 {
+    @apply text-[var(--text-size-label-lg)] font-bold text-[color:var(--color-text-primary)];
+  }
+
+  /* ==================== PARAGRAPH - Paragraph Medium ==================== */
+  p {
+    @apply text-[var(--text-size-paragraph-md)] text-[color:var(--color-text-secondary)];
+  }
+}

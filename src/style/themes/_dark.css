@@ -1,0 +1,85 @@
+/* ==========================================================================
+   DARK THEME - 深色模式覆蓋
+   基於 Tailwind + 你的 Token 系統
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+  @theme {
+    /* ==================== 背景顏色覆蓋 ==================== */
+    --color-bg-default: var(--color-neutral-800);
+    --color-bg-secondary: var(--color-neutral-700);
+    --color-bg-tertiary: var(--color-neutral-600);
+
+    /* ==================== 文字顏色覆蓋 ==================== */
+    --color-text-primary: var(--color-neutral-100);
+    --color-text-secondary: var(--color-neutral-300);
+    --color-text-tertiary: var(--color-neutral-400);
+    --color-text-inverse: var(--color-neutral-800);
+
+    /* ==================== 邊框顏色覆蓋 ==================== */
+    --color-border-default: var(--color-neutral-600);
+    --color-border-strong: var(--color-neutral-500);
+
+    /* ==================== 互動元素顏色覆蓋 ==================== */
+    --color-interactive: var(--color-primary-500);
+    --color-interactive-hover: var(--color-primary-400);
+    --color-interactive-active: var(--color-primary-600);
+    --color-interactive-disabled: var(--color-neutral-500);
+  }
+
+  @layer base {
+    body {
+      @apply text-[color:var(--color-text-primary)] bg-[color:var(--color-bg-default)];
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      @apply text-[color:var(--color-text-primary)];
+    }
+
+    p {
+      @apply text-[color:var(--color-text-secondary)];
+    }
+
+    a {
+      @apply text-[color:var(--color-interactive)];
+    }
+
+    a:hover {
+      @apply text-[color:var(--color-interactive-hover)];
+    }
+
+    code,
+    pre {
+      @apply bg-[color:var(--color-bg-secondary)];
+    }
+
+    blockquote {
+      @apply border-[color:var(--color-border-default)] text-[color:var(--color-text-secondary)];
+    }
+
+    th {
+      @apply border-[color:var(--color-border-default)] bg-[color:var(--color-bg-secondary)];
+    }
+
+    td {
+      @apply border-[color:var(--color-border-default)];
+    }
+
+    tr:hover {
+      @apply bg-[color:var(--color-bg-secondary)];
+    }
+
+    hr {
+      @apply border-[color:var(--color-border-default)];
+    }
+
+    small {
+      @apply text-[color:var(--color-text-tertiary)];
+    }
+  }
+}
