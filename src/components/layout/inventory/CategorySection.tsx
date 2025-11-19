@@ -32,6 +32,7 @@ const CategorySection = () => {
         {categories.map((item) => (
           <div key={item.id} className={`grid-area-${item.id}`}>
             <CategoryCard
+              id={item.id}
               title={item.title}
               img={item.img}
               bgColor={item.bgColor}
