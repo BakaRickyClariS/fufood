@@ -15,28 +15,28 @@ const InventorySubTabs: React.FC<SubTabsProps> = ({ active, onChange }) => {
   ];
 
   return (
-    <div className="flex items-center justify-between bg-neutral-100 rounded-full px-2 py-1 mt-2">
+    <div className="flex items-center justify-between bg-neutral-200 rounded-full gap-0.5 p-0.5 mt-8 mb-6 relative">
       {tabs.map((tab, index) => (
-        <div key={tab.id} className="flex items-center">
-          <button
-            className={`
-              px-6 py-2 rounded-full text-sm font-medium transition-all
-              ${
-                active === tab.id
-                  ? 'bg-white shadow-[0_6px_14px_-2px_rgba(0,0,0,0.12)]'
-                  : 'text-neutral-600'
-              }
-            `}
-            onClick={() => onChange(tab.id)}
-          >
-            {tab.label}
-          </button>
-
-          {/* 分隔線 | */}
-          {index !== tabs.length - 1 && (
-            <span className="mx-2 text-neutral-400 font-light text-lg">|</span>
+        <React.Fragment key={tab.id}>
+          <div className="flex items-center justify-center w-1/3">
+            <button
+              className={`
+                px-6 py-1 w-full rounded-full text-sm font-medium transition-all
+                ${
+                  active === tab.id
+                    ? 'bg-white shadow-[0_6px_14px_-2px_rgba(0,0,0,0.12)] z-10'
+                    : 'text-neutral-600'
+                }
+              `}
+              onClick={() => onChange(tab.id)}
+            >
+              {tab.label}
+            </button>
+          </div>
+          {index < tabs.length - 1 && (
+            <span className="text-neutral-100 font-light text-sm">|</span>
           )}
-        </div>
+        </React.Fragment>
       ))}
     </div>
   );
