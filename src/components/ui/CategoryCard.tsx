@@ -34,6 +34,21 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
     z-0
     pointer-events-none"
       />
+      {/* <img
+        src={img}
+        alt={title}
+        className=" absolute
+    bottom-0
+    right-0
+    max-h-full
+    rotate-[10deg]
+    translate-x-1/5
+    translate-y-1/4
+    w-auto
+    object-contain
+    z-0
+    pointer-events-none"
+      /> */}
     </Card>
   );
 };
