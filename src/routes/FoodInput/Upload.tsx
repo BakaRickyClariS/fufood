@@ -39,7 +39,7 @@ const Upload: React.FC<UploadProps> = ({ onUpload }) => {
       const blob = await response.blob();
 
       const formData = new FormData();
-      formData.append('image', blob, 'photo.jpg');
+      formData.append('image', blob, `photo-${Date.now()}.jpg`);
 
       const uploadUrl = import.meta.env.VITE_UPLOAD_API_URL;
       if (!uploadUrl) {
