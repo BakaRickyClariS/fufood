@@ -91,4 +91,17 @@
   .body-dashboard-bg {
     background: radial-gradient(circle, #fef3f2 0%, #fde6e3 30%, #fdd0cb 60%);
   }
+
+  .category-card {
+    /* 將 data-bg 注入的 hex 轉入 CSS 變數 */
+    --bg: attr(data-bg color);
+    --border-base: attr(data-bg color);
+
+    /* ⭐ 邊框淺色版本（自動從背景色計算） */
+    --border-light: color-mix(in srgb, var(--border-base) 70%, white);
+
+    /* 套用顏色 */
+    background-color: var(--bg);
+    border-color: var(--border-light);
+  }
 }

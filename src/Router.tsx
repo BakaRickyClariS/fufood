@@ -3,7 +3,7 @@ import Layout from './Layout';
 import Dashboard from './routes/Dashboard';
 import Inventory from './routes/Inventory';
 import Recipe from './routes/Recipe';
-import FoodInput from './routes/FoodInput';
+import FoodInputRoutes from './routes/FoodInput';
 import AuthRoutes from './routes/Auth';
 import SettingsRoutes from './routes/Settings';
 
@@ -16,7 +16,7 @@ export const router = createBrowserRouter([
       ...AuthRoutes,
       { path: 'inventory', element: <Inventory /> },
       { path: 'recipe', element: <Recipe /> },
-      { path: 'foodInput', element: <FoodInput /> },
+      ...FoodInputRoutes,
       ...SettingsRoutes,
     ],
   },
