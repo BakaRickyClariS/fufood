@@ -1,6 +1,8 @@
 import { Card } from '@/components/ui/card';
+import { Link } from 'react-router-dom';
 
 type CategoryCardProps = {
+  id?: string;
   title: string;
   bgColor?: string; // ex: "bg-[#FFE5E2]"
   img: string; // local image path
@@ -9,14 +11,15 @@ type CategoryCardProps = {
 };
 
 const CategoryCard: React.FC<CategoryCardProps> = ({
+  id,
   title,
   bgColor = 'bg-white',
   boxShadow = '',
   img,
 }) => {
-  return (
+  const CardContent = (
     <Card
-      className={`flex flex-row items-start justify-between p-4 rounded-2xl border-2 relative overflow-hidden h-full border-[#848484]/20 ${boxShadow} ${bgColor}`}
+      className={`flex flex-row items-start justify-between p-4 rounded-2xl border-2 relative overflow-hidden h-full border-[#848484]/20 ${boxShadow} ${bgColor} transition-transform hover:scale-[1.02] active:scale-95`}
     >
       <div className="flex flex-col w-full">
         <p className="text-base font-semibold text-neutral-900">{title}</p>
@@ -36,6 +39,12 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
       />
     </Card>
   );
+
+  if (id) {
+    return <Link to={`/inventory/category/${id}`}>{CardContent}</Link>;
+  }
+
+  return CardContent;
 };
 
 export default CategoryCard;
