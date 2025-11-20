@@ -23,7 +23,18 @@ import mexicanPotato from '@/assets/images/foods/mexicanPotato.png';
 import frozenCauliflower from '@/assets/images/foods/frozenCauliflower.png';
 import chocoIceCream from '@/assets/images/foods/chocoIceCream.png';
 
-export const vegList = [
+export interface FoodItem {
+  name: string;
+  img: {
+    alt: string;
+    src: string;
+  };
+  quantity: number;
+  addedAt: string;
+  expireAt: string;
+}
+
+const vegList: FoodItem[] = [
   {
     name: '大陸A菜',
     img: { alt: 'mainlandAchoy', src: mainlandAchoy },
@@ -61,7 +72,7 @@ export const vegList = [
   },
 ];
 
-export const fruitList = [
+const fruitList: FoodItem[] = [
   {
     name: '柑橘',
     img: { alt: 'citrus', src: citrus },
@@ -85,7 +96,7 @@ export const fruitList = [
   },
 ];
 
-export const frozenList = [
+const frozenList: FoodItem[] = [
   {
     name: '帶皮薯條',
     img: { alt: 'skinOn', src: skinOn },
@@ -130,7 +141,7 @@ export const frozenList = [
   },
 ];
 
-export const dessertList = [
+const dessertList: FoodItem[] = [
   {
     name: '檸檬冰淇淋',
     img: { alt: 'lemonIce', src: lemonIce },
@@ -168,7 +179,7 @@ export const dessertList = [
   },
 ];
 
-export const staplesList = [
+const staplesList: FoodItem[] = [
   {
     name: '原味生吐司',
     img: { alt: 'freshToast', src: freshToast },
@@ -205,3 +216,13 @@ export const staplesList = [
     expireAt: '2026/01/13',
   },
 ];
+
+export const foodData: Record<string, FoodItem[]> = {
+  fruit: [...vegList, ...fruitList],
+  frozen: frozenList,
+  bake: staplesList,
+  milk: [],
+  seafood: [],
+  meat: [],
+  others: dessertList,
+};

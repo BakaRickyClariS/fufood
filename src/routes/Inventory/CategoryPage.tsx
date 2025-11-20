@@ -7,10 +7,12 @@ import FoodCard from '@/components/ui/FoodCard';
 import HeroCard from '@/components/layout/HeroCard';
 import CategoryBanner from '@/components/layout/inventory/CategoryBanner';
 import { categories } from '../../data/categories';
+import { foodData } from '@/data/foodIImg';
 
 const CategoryPage: React.FC = () => {
   const { categoryId } = useParams<{ categoryId: string }>();
   const category = categories.find((c) => c.id === categoryId);
+  const items = categoryId ? foodData[categoryId] || [] : [];
 
   if (!category) {
     return (
@@ -81,12 +83,17 @@ const CategoryPage: React.FC = () => {
           </Button>
         </div>
 
-        {/* Item List Placeholder */}
+        {/* Item List */}
         <div className="grid grid-cols-2 gap-3">
-          {/* Mock Items */}
-          {[1, 2, 3, 4].map((i) => (
-            <FoodCard key={i} />
-          ))}
+          {items.length > 0 ? (
+            items.map((item, index) => (
+              <FoodCard key={index} item={item} />
+            ))
+          ) : (
+            <div className="col-span-2 text-center py-10 text-neutral-400">
+              目前沒有資料
+            </div>
+          )}
         </div>
       </div>
     </div>
