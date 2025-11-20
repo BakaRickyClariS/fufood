@@ -12,7 +12,7 @@ const members = [
 
 const MemberList: React.FC = () => {
   return (
-    <>
+    <div className="flex items-center gap-6 px-3 py-4 ">
       <MemberAvatar name="邀請成員" isInvite />
       {members.map((m) => (
         <MemberAvatar
@@ -22,7 +22,7 @@ const MemberList: React.FC = () => {
           isActive={m.active}
         />
       ))}
-    </>
+    </div>
   );
 };
 
