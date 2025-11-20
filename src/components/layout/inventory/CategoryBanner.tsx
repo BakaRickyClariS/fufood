@@ -1,5 +1,5 @@
 import React from 'react';
-import type { CategoryItem } from '@/routes/Inventory/categories';
+import type { CategoryItem } from '@/data/categories';
 
 type CategoryBannerProps = {
   category: CategoryItem;
@@ -7,22 +7,24 @@ type CategoryBannerProps = {
 
 const CategoryBanner: React.FC<CategoryBannerProps> = ({ category }) => {
   return (
-    <div className="flex items-center justify-between w-full h-full relative overflow-hidden">
-      <div className="flex flex-col z-10 pl-2">
-        <h2 className="text-xl font-bold text-neutral-900 mb-1">{category.title.split(' ')[0]}</h2>
-        <div className="flex flex-col text-xs text-neutral-500 space-y-0.5">
-          <p className="font-bold text-neutral-700 mb-1">{category.slogan}</p>
+    <div className="flex items-center justify-between w-full h-full min-h-[124px] relative overflow-hidden px-3 py-4">
+      <div className="flex flex-col w-full z-10 pl-2">
+        <h2 className="text-base font-bold text-neutral-900 mb-3">
+          {category.slogan}
+        </h2>
+        <div className="flex flex-col text-xs text-neutral-500 space-y-0.5 border-l-3 border-neutral-600 pl-2">
+          {/* <p className="font-bold text-neutral-700 mb-1">{category.slogan}</p> */}
           {category.description.map((line, index) => (
             <p key={index}>{line}</p>
           ))}
         </div>
       </div>
-      
-      <div className="relative w-32 h-32 -mr-6 -mb-6">
-         <img
+
+      <div className="relative w-2/5 max-h-32">
+        <img
           src={category.img}
           alt={category.title}
-          className="w-full h-full object-contain object-center transform scale-125 translate-y-2"
+          className="w-full h-full object-contain object-center transform scale-500 translate-x-[-30%] translate-y-[-100%]"
         />
       </div>
     </div>

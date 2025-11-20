@@ -1,7 +1,7 @@
 // src/data/autoLayoutEngine.ts
 
-import { categories } from './categories';
-import { layoutPattern } from './layoutPattern';
+import { categories } from '../data/categories';
+import { layoutPattern } from '../data/layoutPattern';
 
 export function generateAutoLayout() {
   const COLUMN_COUNT = 2; // 兩欄
