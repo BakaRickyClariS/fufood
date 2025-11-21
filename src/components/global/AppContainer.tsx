@@ -2,15 +2,17 @@ import { router } from '../../Router';
 import { RouterProvider } from 'react-router-dom';
 import { registerSW } from 'virtual:pwa-register';
 import { SWPrompt } from '../feedback/SWPrompt';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 const AppContainer: React.FC = () => {
   const [needRefresh, setNeedRefresh] = useState(false);
-
-  const updateSW = registerSW({
-    onNeedRefresh() {
-      setNeedRefresh(true);
-    },
-  });
+  const updateSW = useRef<(reloadPage?: boolean) => Promise<void> | void>(undefined);
+  useEffect(() => {
+    updateSW.current = registerSW({
+      onNeedRefresh() {
+        setNeedRefresh(true);
+      },
+    });
+  }, []);
 
   return (
     <>
@@ -18,8 +20,7 @@ const AppContainer: React.FC = () => {
       <SWPrompt
         show={needRefresh}
         onUpdate={() => {
-          updateSW();
-          setNeedRefresh(false);
+          updateSW.current?.();
         }}
         onClose={() => setNeedRefresh(false)}
       />
