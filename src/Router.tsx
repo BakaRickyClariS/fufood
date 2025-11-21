@@ -6,6 +6,7 @@ import Recipe from './routes/Recipe';
 import FoodInputRoutes from './routes/FoodInput';
 import AuthRoutes from './routes/Auth';
 import SettingsRoutes from './routes/Settings';
+import CategoryPage from './routes/Inventory/CategoryPage';
 
 export const router = createBrowserRouter([
   {
@@ -14,7 +15,13 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Dashboard /> },
       ...AuthRoutes,
-      { path: 'inventory', element: <Inventory /> },
+      {
+        path: 'inventory',
+        children: [
+          { index: true, element: <Inventory /> },
+          { path: 'category/:categoryId', element: <CategoryPage /> },
+        ],
+      },
       { path: 'recipe', element: <Recipe /> },
       ...FoodInputRoutes,
       ...SettingsRoutes,
