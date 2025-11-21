@@ -23,7 +23,7 @@ import mexicanPotato from '@/assets/images/foods/mexicanPotato.png';
 import frozenCauliflower from '@/assets/images/foods/frozenCauliflower.png';
 import chocoIceCream from '@/assets/images/foods/chocoIceCream.png';
 
-export interface FoodItem {
+export type FoodItem = {
   name: string;
   img: {
     alt: string;
@@ -32,7 +32,7 @@ export interface FoodItem {
   quantity: number;
   addedAt: string;
   expireAt: string;
-}
+};
 
 const vegList: FoodItem[] = [
   {
