@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import FoodCard from '@/components/ui/FoodCard';
 import HeroCard from '@/components/layout/HeroCard';
 import CategoryBanner from '@/components/layout/inventory/CategoryBanner';
-import { categories } from '../../data/categories';
+import { categories } from '@/data/categories';
 import { foodData } from '@/data/foodIImg';
 
 const CategoryPage: React.FC = () => {
@@ -86,9 +86,7 @@ const CategoryPage: React.FC = () => {
         {/* Item List */}
         <div className="grid grid-cols-2 gap-3">
           {items.length > 0 ? (
-            items.map((item, index) => (
-              <FoodCard key={index} item={item} />
-            ))
+            items.map((item) => <FoodCard key={item.id} item={item} />)
           ) : (
             <div className="col-span-2 text-center py-10 text-neutral-400">
               目前沒有資料
