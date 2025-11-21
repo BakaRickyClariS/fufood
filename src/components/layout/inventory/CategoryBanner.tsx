@@ -13,7 +13,6 @@ const CategoryBanner: React.FC<CategoryBannerProps> = ({ category }) => {
           {category.slogan}
         </h2>
         <div className="flex flex-col text-xs text-neutral-500 space-y-0.5 border-l-3 border-neutral-600 pl-2">
-          {/* <p className="font-bold text-neutral-700 mb-1">{category.slogan}</p> */}
           {category.description.map((line, index) => (
             <p key={index}>{line}</p>
           ))}
