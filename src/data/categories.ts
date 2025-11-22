@@ -14,6 +14,8 @@ export type CategoryItem = {
   value: number;
   img: string;
   bgColor: string;
+  slogan: string;
+  description: string[];
 };
 
 export const categories: CategoryItem[] = [
@@ -23,6 +25,8 @@ export const categories: CategoryItem[] = [
     value: 92,
     img: fruitImg,
     bgColor: 'bg-[#D8EBC5]',
+    slogan: '新鮮採摘，即時掌握狀態',
+    description: ['各種葉菜類、根莖類、', '瓜果類、新鮮菇類、水果'],
   },
   {
     id: 'frozen',
@@ -30,6 +34,8 @@ export const categories: CategoryItem[] = [
     value: 252,
     img: frozenImg,
     bgColor: 'bg-[#FFE895]',
+    slogan: '懶人救星，備品狀況一目瞭然',
+    description: ['各種冷凍調理包、', '加熱即食餐、冷凍甜點'],
   },
   {
     id: 'bake',
@@ -37,6 +43,8 @@ export const categories: CategoryItem[] = [
     value: 49,
     img: bakeImg,
     bgColor: 'bg-[#FFD6E3]',
+    slogan: '麵飯糧倉，存貨輕鬆盤點',
+    description: ['冷藏保存的米飯、麵條、', '麵包、堅果、乾貨'],
   },
   {
     id: 'milk',
@@ -44,6 +52,12 @@ export const categories: CategoryItem[] = [
     value: 3,
     img: milkImg,
     bgColor: 'bg-[#DDF0FF]',
+    slogan: '乳品飲料類',
+    description: [
+      '各種蛋類、鮮奶、優格、奶油',
+      '各式起司、果汁、茶飲',
+      '飲、啤酒、氣泡水',
+    ],
   },
   {
     id: 'seafood',
@@ -51,6 +65,8 @@ export const categories: CategoryItem[] = [
     value: 20,
     img: seafoodImg,
     bgColor: 'bg-[#FFC5A4]',
+    slogan: '大海珍味，鎖住鮮甜隨時上桌',
+    description: ['各種魚肉、甲殼類、貝類、', '加工製品（魚漿、魚丸）'],
   },
   {
     id: 'meat',
@@ -58,6 +74,8 @@ export const categories: CategoryItem[] = [
     value: 8,
     img: meatImg,
     bgColor: 'bg-[#FFD4D4]',
+    slogan: '優質蛋白，肉類管理不遺漏',
+    description: ['各種豬肉類、牛肉類、', '雞肉類、加工肉品'],
   },
   {
     id: 'others',
@@ -65,5 +83,11 @@ export const categories: CategoryItem[] = [
     value: 6,
     img: otherImg,
     bgColor: 'bg-[#E2E2E2]',
+    slogan: '風味秘寶，缺漏一鍵補齊',
+    description: [
+      '各種調味醬、果醬、乾燥海',
+      '味/菇類/果乾、油品與堅',
+      '果、醃製品',
+    ],
   },
 ];
