@@ -4,13 +4,14 @@ import InventorySubTabs, { type SubTabType } from '../../ui/InventorySubTabs';
 import CategorySection from '@/components/layout/inventory/CategorySection';
 import CommonItemsSection from '@/components/layout/inventory/CommonItemsSection';
 import ExpiredRecordsSection from '@/components/layout/inventory/ExpiredRecordsSection';
+import InventorySettingsSection from '@/components/layout/inventory/InventorySettingsSection';
 
 const TabsSection = () => {
   const [mainTab, setMainTab] = useState<'overview' | 'settings'>('overview');
   const [subTab, setSubTab] = useState<SubTabType>('all');
 
   return (
-    <section>
+    <section className={mainTab === 'settings' ? 'bg-neutral-100 min-h-screen' : ''}>
       <div className="max-w-[800px] mx-auto">
         {/* 主 Tabs */}
         <InventoryMainTabs active={mainTab} onChange={setMainTab} />
@@ -23,6 +24,7 @@ const TabsSection = () => {
               {subTab === 'expired' && <ExpiredRecordsSection />}
             </>
           )}
+          {mainTab === 'settings' && <InventorySettingsSection />}
         </div>
       </div>
     </section>
