@@ -2,6 +2,8 @@ import { useState } from 'react';
 import InventoryMainTabs from '../../ui/InventoryMainTabs';
 import InventorySubTabs, { type SubTabType } from '../../ui/InventorySubTabs';
 import CategorySection from '@/components/layout/inventory/CategorySection';
+import CommonItemsSection from '@/components/layout/inventory/CommonItemsSection';
+import ExpiredRecordsSection from '@/components/layout/inventory/ExpiredRecordsSection';
 
 const TabsSection = () => {
   const [mainTab, setMainTab] = useState<'overview' | 'settings'>('overview');
@@ -16,7 +18,9 @@ const TabsSection = () => {
           {mainTab === 'overview' && (
             <>
               <InventorySubTabs active={subTab} onChange={setSubTab} />
-              <CategorySection />
+              {subTab === 'all' && <CategorySection />}
+              {subTab === 'common' && <CommonItemsSection />}
+              {subTab === 'expired' && <ExpiredRecordsSection />}
             </>
           )}
         </div>
