@@ -15,7 +15,7 @@ export const SWPrompt: React.FC<SWPromptProps> = ({
   show ? (
     <div className="sw-modal">
       有新版本可用！
-      <button onClick={onUpdate}>刷新</button>
+      <button onClick={onUpdate}>更新</button>
       <button onClick={onClose}>關閉</button>
     </div>
   ) : null;
