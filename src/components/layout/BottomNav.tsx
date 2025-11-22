@@ -31,7 +31,7 @@ const defaultNavItems: NavItem[] = [
     id: 'foodinput',
     label: '',
     icon: <ScanLine className="w-6 h-6" />,
-    href: '/foodInput',
+    href: '/upload',
     isFab: true,
   },
   {
