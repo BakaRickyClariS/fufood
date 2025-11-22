@@ -1,6 +1,4 @@
-'use client';
-
-import { Bell, ChevronDown } from 'lucide-react';
+import { ChevronDown, HousePlus, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -9,10 +7,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useState } from 'react';
+import zoeImg from '@/assets/images/inventory/members-zo.png';
 
 export default function TopNav() {
   const [selectedHome, setSelectedHome] = useState('My Home');
-  // const [userLevel, setUserLevel] = useState('PRO'); // 可改為 FREE, PREMIUM 等
 
   const homeOptions = [
     { label: 'My Home', value: 'My Home' },
@@ -21,35 +19,35 @@ export default function TopNav() {
   ];
 
   return (
-    <div className="sticky top-0 left-0 right-0  dark:bg-slate-800 z-40 px-4 py-3">
+    <div className="sticky top-0 left-0 right-0 bg-white z-40 px-4 py-3">
       <div className="flex items-center justify-between gap-2">
-        {/* 左側：會籍等級標籤 */}
-        <div className="shrink-0">
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-            {/* {userLevel} */}PRO
-          </span>
-        </div>
+        {/* Left: Free Badge + Home Selector */}
+        <div className="flex items-center gap-3">
+          {/* Free Badge */}
+          <div className="flex items-center gap-1 bg-[#C48B6B] text-white px-2 py-1 rounded-md shadow-sm">
+             <ShieldCheck className="w-4 h-4 text-white" />
+             <span className="text-xs font-bold">Free</span>
+          </div>
 
-        {/* 中間：標題 + 下拉選單 */}
-        <div className="flex-1 flex items-center justify-start">
+          {/* Home Selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="flex items-center gap-1 text-lg font-semibold px-2"
+                className="flex items-center gap-1 text-xl font-bold text-neutral-900 px-0 hover:bg-transparent"
               >
                 {selectedHome}
-                <ChevronDown className="w-4 h-4" />
+                <ChevronDown className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-48">
+            <DropdownMenuContent align="start" className="w-48">
               {homeOptions.map((option) => (
                 <DropdownMenuItem
                   key={option.value}
                   onClick={() => setSelectedHome(option.label)}
                   className={
                     selectedHome === option.label
-                      ? 'bg-gray-100 dark:bg-gray-700'
+                      ? 'bg-gray-100'
                       : ''
                   }
                 >
@@ -63,29 +61,15 @@ export default function TopNav() {
           </DropdownMenu>
         </div>
 
-        {/* 右側：通知 + 用戶 */}
-        <div className="flex items-center gap-2 shrink-0">
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-              3
-            </span>
+        {/* Right: Home Icon + User Avatar */}
+        <div className="flex items-center gap-3 shrink-0">
+          <Button variant="ghost" size="icon" className="text-neutral-900 hover:bg-transparent">
+            <HousePlus className="w-6 h-6" />
           </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                  R
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>個人資料</DropdownMenuItem>
-              <DropdownMenuItem>設定</DropdownMenuItem>
-              <DropdownMenuItem>登出</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="w-8 h-8 rounded-full overflow-hidden border border-gray-200">
+            <img src={zoeImg} alt="User" className="w-full h-full object-cover" />
+          </div>
         </div>
       </div>
     </div>
