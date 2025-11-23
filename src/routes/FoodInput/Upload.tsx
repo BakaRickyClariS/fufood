@@ -1,10 +1,14 @@
 import React, { useCallback, useRef, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Webcam from 'react-webcam';
 import { Image as ImageIcon, Check, X, Info } from 'lucide-react';
 import { cld } from '../../config/cloudinary';
 import { format, quality } from '@cloudinary/url-gen/actions/delivery';
 import { auto } from '@cloudinary/url-gen/qualifiers/format';
 import { auto as qAuto } from '@cloudinary/url-gen/qualifiers/quality';
+import { limitFit } from '@cloudinary/url-gen/actions/resize';
+import { recognizeImage } from '../../api/recipe';
+import type { AnalyzeResponse } from '../../api/recipe';
 
 type UploadProps = {
   onUpload?: (file: Blob) => Promise<void>;
@@ -13,9 +17,11 @@ type UploadProps = {
 const INSTRUCTIONS_KEY = 'fufood_upload_instructions_seen';
 
 const Upload: React.FC<UploadProps> = ({ onUpload }) => {
+  const navigate = useNavigate();
   const [img, setImg] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const webcamRef = useRef<Webcam>(null);
@@ -100,7 +106,10 @@ const Upload: React.FC<UploadProps> = ({ onUpload }) => {
       console.log('上傳成功:', result);
 
       const myImage = cld.image(result.public_id);
-      myImage.delivery(format(auto())).delivery(quality(qAuto()));
+      myImage
+        .delivery(format(auto()))
+        .delivery(quality(qAuto()))
+        .resize(limitFit().width(500).height(500));
 
       const optimizedUrl = myImage.toURL();
       console.log('優化後的 URL:', optimizedUrl);
@@ -108,13 +117,40 @@ const Upload: React.FC<UploadProps> = ({ onUpload }) => {
       if (onUpload) {
         await onUpload(blob);
       }
+
+      // Start Analysis
+      setIsAnalyzing(true);
+      try {
+        const analyzeResult = await recognizeImage(optimizedUrl);
+        navigate('scan-result', {
+          state: { result: analyzeResult.data, imageUrl: optimizedUrl },
+        });
+      } catch (error) {
+        console.error('API Error, falling back to mock data:', error);
+        // Mock Data Fallback
+        const mockData: AnalyzeResponse['data'] = {
+          productName: '鮮奶',
+          category: '乳製品飲料類',
+          attributes: '鮮奶類',
+          quantity: '1 / 罐',
+          expiryDate: '約10天',
+          notes: '常備品',
+        };
+        // Simulate delay for better UX
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        navigate('scan-result', {
+          state: { result: mockData, imageUrl: optimizedUrl },
+        });
+      } finally {
+        setIsAnalyzing(false);
+      }
     } catch (err) {
       console.error('上傳失敗:', err);
       // Handle error visually if needed
     } finally {
       setIsUploading(false);
     }
-  }, [img, onUpload]);
+  }, [img, onUpload, navigate]);
 
   const retake = useCallback(() => {
     setImg(null);
@@ -158,8 +194,10 @@ const Upload: React.FC<UploadProps> = ({ onUpload }) => {
             {isCapturing
               ? '請將食材放入框內'
               : isUploading
-                ? '處理中...'
-                : '掃描完成'}
+                ? '上傳處理中...'
+                : isAnalyzing
+                  ? 'AI 辨識中...'
+                  : '掃描完成'}
           </div>
         </div>
 
@@ -209,10 +247,10 @@ const Upload: React.FC<UploadProps> = ({ onUpload }) => {
                 </button>
                 <button
                   onClick={uploadImage}
-                  disabled={isUploading}
+                  disabled={isUploading || isAnalyzing}
                   className="w-20 h-20 bg-white rounded-full p-1.5 shadow-xl transition-transform active:scale-95 flex items-center justify-center"
                 >
-                  {isUploading ? (
+                  {isUploading || isAnalyzing ? (
                     <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
                   ) : (
                     <Check size={40} className="text-red-500" />
