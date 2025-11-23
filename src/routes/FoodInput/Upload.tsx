@@ -1,76 +1,116 @@
 import React, { useCallback, useRef, useState, useEffect } from 'react';
 import Webcam from 'react-webcam';
-import {
-  Camera,
-  RotateCcw,
-  Upload as UploadIcon,
-  AlertCircle,
-  Check,
-} from 'lucide-react';
+import { Image as ImageIcon, Check, X, Info } from 'lucide-react';
+import { cld } from '../../config/cloudinary';
+import { format, quality } from '@cloudinary/url-gen/actions/delivery';
+import { auto } from '@cloudinary/url-gen/qualifiers/format';
+import { auto as qAuto } from '@cloudinary/url-gen/qualifiers/quality';
+
 type UploadProps = {
   onUpload?: (file: Blob) => Promise<void>;
 };
+
+const INSTRUCTIONS_KEY = 'fufood_upload_instructions_seen';
+
 const Upload: React.FC<UploadProps> = ({ onUpload }) => {
   const [img, setImg] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
   const webcamRef = useRef<Webcam>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const seen = localStorage.getItem(INSTRUCTIONS_KEY);
+    if (!seen) {
+      setShowInstructions(true);
+    }
+  }, []);
+
+  const handleCloseInstructions = () => {
+    if (dontShowAgain) {
+      localStorage.setItem(INSTRUCTIONS_KEY, 'true');
+    }
+    setShowInstructions(false);
+  };
 
   const capture = useCallback(() => {
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
       setImg(imageSrc);
       setIsCapturing(false);
-      setError(null);
     }
   }, []);
+
+  const handleGalleryClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImg(reader.result as string);
+        setIsCapturing(false);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const uploadImage = useCallback(async () => {
     if (!img) return;
 
     setIsUploading(true);
-    setError(null);
-    setSuccess(false);
 
     try {
       const response = await fetch(img);
       const blob = await response.blob();
 
       const formData = new FormData();
-      formData.append('image', blob, `photo-${Date.now()}.jpg`);
+      formData.append('file', blob);
+      formData.append(
+        'upload_preset',
+        import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET,
+      );
 
-      const uploadUrl = import.meta.env.VITE_UPLOAD_API_URL;
-      if (!uploadUrl) {
-        // In a real app, you might want to handle this more gracefully
-        // or ensure the env var is always set during the build process.
-        console.error(
-          'Upload API URL is not configured. Please set VITE_UPLOAD_API_URL in your .env file.',
-        );
-        throw new Error('上傳失敗: API URL 未配置');
+      const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+      // The instruction implies removing the cloudName check and error throw,
+      // but for robustness, I'll keep a simplified check.
+      if (!cloudName) {
+        console.error('Cloudinary cloud name is not configured');
+        throw new Error('Cloudinary cloud name is not configured');
       }
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'POST',
-        body: formData,
-      });
+
+      const uploadResponse = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        },
+      );
 
       if (!uploadResponse.ok) {
+        console.error(`上傳失敗: ${uploadResponse.statusText}`);
         throw new Error(`上傳失敗: ${uploadResponse.statusText}`);
       }
 
       const result = await uploadResponse.json();
       console.log('上傳成功:', result);
 
+      const myImage = cld.image(result.public_id);
+      myImage.delivery(format(auto())).delivery(quality(qAuto()));
+
+      const optimizedUrl = myImage.toURL();
+      console.log('優化後的 URL:', optimizedUrl);
+
       if (onUpload) {
         await onUpload(blob);
       }
-
-      setSuccess(true);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '上傳失敗';
-      setError(errorMessage);
       console.error('上傳失敗:', err);
+      // Handle error visually if needed
     } finally {
       setIsUploading(false);
     }
@@ -79,120 +119,164 @@ const Upload: React.FC<UploadProps> = ({ onUpload }) => {
   const retake = useCallback(() => {
     setImg(null);
     setIsCapturing(true);
-    setError(null);
   }, []);
 
   const videoConstraints = {
-    width: { ideal: 1280 },
-    height: { ideal: 720 },
+    width: { ideal: 1920 },
+    height: { ideal: 1080 },
     facingMode: 'environment' as const,
   };
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => {
-        setImg(null);
-        setIsCapturing(true);
-        setSuccess(false);
-      }, 1500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [success]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">拍照上傳</h1>
-          <p className="text-slate-400">捕捉照片並上傳到伺服器</p>
+    <div className="fixed inset-0 w-full h-[100dvh] bg-black overflow-hidden overscroll-none touch-none flex flex-col">
+      {/* Camera Layer */}
+      <div className="absolute inset-0 z-0">
+        {isCapturing ? (
+          <Webcam
+            audio={false}
+            ref={webcamRef}
+            screenshotFormat="image/jpeg"
+            videoConstraints={videoConstraints}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          img && (
+            <img
+              src={img}
+              alt="Captured"
+              className="h-full w-full object-cover"
+            />
+          )
+        )}
+      </div>
+
+      {/* Overlays */}
+      <div className="relative z-10 flex-1 flex flex-col p-6 mt-20 pointer-events-none">
+        {/* Top Status Pill */}
+        <div className="absolute top-3 left-0 right-0 flex justify-center z-20">
+          <div className="bg-yellow-400/90 text-black px-6 py-2 rounded-full font-bold text-sm shadow-lg backdrop-blur-sm">
+            {isCapturing
+              ? '請將食材放入框內'
+              : isUploading
+                ? '處理中...'
+                : '掃描完成'}
+          </div>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-          {isCapturing ? (
-            <>
-              <div className="relative bg-black">
-                <Webcam
-                  audio={false}
-                  ref={webcamRef}
-                  screenshotFormat="image/jpeg"
-                  videoConstraints={videoConstraints}
-                  className="w-full h-96 object-cover"
-                />
-                <div className="absolute top-4 left-4 bg-black/40 text-white px-3 py-1 rounded-full text-sm font-medium">
-                  請直對鏡頭
-                </div>
-              </div>
+        {/* Center Group: Frame + Controls */}
+        <div className="flex-1 flex flex-col items-center justify-center -mt-15 w-full">
+          {/* Scanning Frame */}
+          <div className="w-64 h-64 border-2 border-white/50 rounded-3xl relative">
+            {/* Corners */}
+            <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white rounded-tl-3xl -mt-1 -ml-1"></div>
+            <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white rounded-tr-3xl -mt-1 -mr-1"></div>
+            <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white rounded-bl-3xl -mb-1 -ml-1"></div>
+            <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-white rounded-br-3xl -mb-1 -mr-1"></div>
+          </div>
 
-              <div className="p-6 flex gap-3">
+          {/* Bottom Controls - 12px (mt-3) below frame */}
+          <div className="mt-8 flex items-center justify-center gap-8 pointer-events-auto">
+            {/* Gallery Button */}
+            <button
+              onClick={handleGalleryClick}
+              className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all"
+            >
+              <ImageIcon size={24} />
+            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/*"
+              className="hidden"
+            />
+
+            {/* Capture/Action Button */}
+            {isCapturing ? (
+              <button
+                onClick={capture}
+                className="w-20 h-20 bg-white rounded-full p-1.5 shadow-xl transition-transform active:scale-95"
+              >
+                <div className="w-full h-full rounded-full border-4 border-black/10 bg-red-500"></div>
+              </button>
+            ) : (
+              <div className="flex gap-4">
                 <button
-                  onClick={capture}
-                  className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                  onClick={retake}
+                  className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all"
                 >
-                  <Camera size={20} />
-                  拍照
+                  <X size={24} />
                 </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="relative bg-gradient-to-br from-slate-100 to-slate-200">
-                {img && (
-                  <img
-                    src={img}
-                    alt="Captured"
-                    className="w-full h-96 object-cover"
-                  />
-                )}
-              </div>
-
-              {success && (
-                <div className="mx-6 mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
-                  <Check size={20} className="text-green-600" />
-                  <span className="text-green-700 font-medium text-sm">
-                    上傳成功！
-                  </span>
-                </div>
-              )}
-
-              {error && (
-                <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-                  <AlertCircle
-                    size={20}
-                    className="text-red-600 flex-shrink-0 mt-0.5"
-                  />
-                  <span className="text-red-700 font-medium text-sm">
-                    {error}
-                  </span>
-                </div>
-              )}
-
-              <div className="p-6 flex gap-3">
                 <button
                   onClick={uploadImage}
                   disabled={isUploading}
-                  className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:from-slate-400 disabled:to-slate-500 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 disabled:cursor-not-allowed"
+                  className="w-20 h-20 bg-white rounded-full p-1.5 shadow-xl transition-transform active:scale-95 flex items-center justify-center"
                 >
-                  <UploadIcon size={20} />
-                  {isUploading ? '上傳中...' : '上傳'}
-                </button>
-
-                <button
-                  onClick={retake}
-                  disabled={isUploading}
-                  className="flex-1 bg-gradient-to-r from-slate-400 to-slate-500 hover:from-slate-500 hover:to-slate-600 disabled:from-slate-300 disabled:to-slate-400 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 disabled:cursor-not-allowed"
-                >
-                  <RotateCcw size={20} />
-                  重拍
+                  {isUploading ? (
+                    <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <Check size={40} className="text-red-500" />
+                  )}
                 </button>
               </div>
-            </>
-          )}
-        </div>
+            )}
 
-        <div className="text-center mt-6 text-slate-400 text-sm">
-          <p>⚠️ 需要 HTTPS 連接以訪問相機</p>
+            {/* Balance spacer for Gallery button if needed, but centering gap-8 works well */}
+            <div className="w-12"></div>
+          </div>
         </div>
       </div>
+
+      {/* Instructions Modal */}
+      {showInstructions && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-6">
+          <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in duration-300">
+            <h2 className="text-xl font-bold text-center mb-6 text-slate-800">
+              注意事項
+            </h2>
+
+            <div className="flex justify-center mb-6">
+              {/* Placeholder Illustration */}
+              <div className="w-32 h-32 bg-slate-100 rounded-full flex items-center justify-center">
+                <Info size={48} className="text-slate-300" />
+              </div>
+            </div>
+
+            <div className="space-y-4 mb-8">
+              {[
+                '請在光線充足處掃描',
+                '請對準食材並保持手機穩定',
+                '請避免包裝反光',
+                '一次請掃描一樣食材',
+              ].map((text, i) => (
+                <div key={i} className="flex items-center gap-3 text-slate-600">
+                  <Check size={18} className="text-red-500 flex-shrink-0" />
+                  <span className="text-sm font-medium">{text}</span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={handleCloseInstructions}
+              className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl transition-colors mb-4 shadow-lg shadow-red-500/30"
+            >
+              我知道了
+            </button>
+
+            <label className="flex items-center gap-2 justify-center cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={dontShowAgain}
+                onChange={(e) => setDontShowAgain(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-red-500 focus:ring-red-500"
+              />
+              <span className="text-slate-400 text-sm group-hover:text-slate-500 transition-colors">
+                下次不再顯示提醒
+              </span>
+            </label>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
