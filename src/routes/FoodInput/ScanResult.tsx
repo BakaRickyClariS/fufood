@@ -85,27 +85,20 @@ const ScanResult: React.FC = () => {
 
             <div className="flex justify-between items-center py-2 border-b border-slate-100">
               <div className="flex items-center gap-3 text-slate-500">
-                <span className="text-sm font-medium pl-8">單位數量</span>
-              </div>
-              <span className="font-bold text-slate-800">{result.quantity}</span>
-            </div>
-
-            <div className="flex justify-between items-center py-2 border-b border-slate-100">
-              <div className="flex items-center gap-3 text-slate-500">
-                <Calendar size={18} />
-                <span className="text-sm font-medium">入庫日期</span>
+                <span className="text-sm font-medium pl-8">購物數量</span>
               </div>
               <span className="font-bold text-slate-800">
-                {new Date().toLocaleDateString()}
+                {result.purchaseQuantity} {result.unit}
               </span>
             </div>
 
             <div className="flex justify-between items-center py-2 border-b border-slate-100">
               <div className="flex items-center gap-3 text-slate-500">
-                <span className="text-sm font-medium pl-8">保存期限</span>
+                <Calendar size={18} />
+                <span className="text-sm font-medium">購物日期</span>
               </div>
               <span className="font-bold text-slate-800">
-                {result.expiryDate}
+                {new Date(result.purchaseDate).toLocaleDateString('zh-TW')}
               </span>
             </div>
 
@@ -114,11 +107,25 @@ const ScanResult: React.FC = () => {
                 <span className="text-sm font-medium pl-8">過期日期</span>
               </div>
               <span className="font-bold text-slate-800">
-                {/* Simple calculation logic could be added here if needed, 
-                    for now just using API return or placeholder */}
-                {/* Assuming API returns expiry date or we calculate it */}
-                {/* If API returns relative time like "10 days", we might need to calc date */}
-                2026/01/10
+                {new Date(result.expiryDate).toLocaleDateString('zh-TW')}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center py-2 border-b border-slate-100">
+              <div className="flex items-center gap-3 text-slate-500">
+                <span className="text-sm font-medium pl-8">開啟通知</span>
+              </div>
+              <span className="font-bold text-slate-800">
+                {result.lowStockAlert ? '開啟' : '關閉'}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center py-2 border-b border-slate-100">
+              <div className="flex items-center gap-3 text-slate-500">
+                <span className="text-sm font-medium pl-8">低庫存數量通知</span>
+              </div>
+              <span className="font-bold text-slate-800">
+                {result.lowStockThreshold}
               </span>
             </div>
 
