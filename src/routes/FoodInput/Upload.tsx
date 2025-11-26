@@ -122,18 +122,31 @@ const Upload: React.FC<UploadProps> = ({ onUpload }) => {
       setIsAnalyzing(true);
       try {
         const analyzeResult = await recognizeImage(optimizedUrl);
+        console.log('API Analyze Result:', analyzeResult);
+
+        // Validate data - if critical fields are missing, throw error to trigger fallback
+        if (!analyzeResult.data || !analyzeResult.data.productName) {
+          console.warn('API returned empty or invalid data, triggering fallback');
+          throw new Error('API returned empty data');
+        }
+
         navigate('scan-result', {
           state: { result: analyzeResult.data, imageUrl: optimizedUrl },
         });
       } catch (error) {
-        console.error('API Error, falling back to mock data:', error);
         // Mock Data Fallback
         const mockData: AnalyzeResponse['data'] = {
           productName: '鮮奶',
           category: '乳製品飲料類',
           attributes: '鮮奶類',
-          quantity: '1 / 罐',
-          expiryDate: '約10天',
+          purchaseQuantity: 1,
+          unit: '罐',
+          purchaseDate: new Date().toISOString().split('T')[0], // 今天的日期 YYYY-MM-DD
+          expiryDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split('T')[0], // 10天後
+          lowStockAlert: true, // 預設開啟
+          lowStockThreshold: 2, // 預設2個
           notes: '常備品',
         };
         // Simulate delay for better UX
