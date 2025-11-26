@@ -3,11 +3,15 @@ import type { FoodItem } from '@/data/foodIImg';
 
 type FoodCardProps = {
   item: FoodItem;
+  onClick?: () => void;
 };
 
-const FoodCard: React.FC<FoodCardProps> = ({ item }) => {
+const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
   return (
-    <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-md">
+    <div 
+      className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-md cursor-pointer transition-transform active:scale-95"
+      onClick={onClick}
+    >
       {/* Background Image */}
       <img
         {...item.img}
@@ -17,7 +21,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ item }) => {
       {/* Content */}
       <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-2">
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/90 backdrop-blur-[1px] z-0 cursor-pointer-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/90 backdrop-blur-[1px] z-0" />
         {/* Header: Name and Quantity */}
         <div className="flex justify-between items-end text-lg text-white z-10">
           <h3 className="tracking-wide">{item.name}</h3>

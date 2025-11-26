@@ -10,8 +10,8 @@ type SubTabsProps = {
 const InventorySubTabs: React.FC<SubTabsProps> = ({ active, onChange }) => {
   const tabs: { id: SubTabType; label: string }[] = [
     { id: 'all', label: '總覽' },
-    { id: 'common', label: '常用' },
-    { id: 'expired', label: '已過期' },
+    { id: 'common', label: '常用項目' },
+    { id: 'expired', label: '過期紀錄' },
   ];
 
   return (
