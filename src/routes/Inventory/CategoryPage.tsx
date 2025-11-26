@@ -1,3 +1,21 @@
+import React, { useState, useMemo } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { ChevronLeft, Search, ListFilter } from 'lucide-react';
+import { Button } from '@/shared/components/ui/button';
+import HeroCard from '@/shared/components/layout/HeroCard';
+import CategoryBanner from '@/features/inventory/components/CategoryBanner';
+import FoodCard from '@/features/inventory/components/FoodCard';
+import FoodDetailModal from '@/features/inventory/components/FoodDetailModal';
+import SearchModal from '@/shared/components/common/SearchModal';
+import FilterModal from '@/shared/components/common/FilterModal';
+import { categories } from '@/features/inventory/constants/categories';
+import { foodData, type FoodItem } from '@/features/inventory/constants/foodImages';
+
+const CategoryPage = () => {
+  const { categoryId } = useParams();
+  const category = categories.find((c) => c.id === categoryId);
+  const items = category ? foodData[category.id] || [] : [];
+
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);

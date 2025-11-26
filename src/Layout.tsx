@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import TopNav from './components/layout/TopNav';
-import BottomNav from './components/layout/BottomNav';
+import TopNav from '@/shared/components/layout/TopNav';
+import BottomNav from '@/shared/components/layout/BottomNav';
 import { useEffect } from 'react';
 
 const Layout = () => {

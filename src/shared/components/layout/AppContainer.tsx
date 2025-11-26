@@ -1,4 +1,4 @@
-import { router } from '../../Router';
+import { router } from '@/Router';
 import { RouterProvider } from 'react-router-dom';
 import { registerSW } from 'virtual:pwa-register';
 import { SWPrompt } from '../feedback/SWPrompt';
