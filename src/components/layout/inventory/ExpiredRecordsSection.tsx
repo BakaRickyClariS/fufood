@@ -14,17 +14,15 @@ const categoryMapping: Record<string, string> = {
 
 const ExpiredRecordsSection: React.FC = () => {
   const expiredGroups = useMemo(() => {
-    const today = new Date();
     const groups: { category: string; items: FoodItem[] }[] = [];
 
     Object.entries(foodData).forEach(([key, items]) => {
       const expiredItems = items.filter((item) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
         const expireDate = new Date(item.expireAt);
-        // Check if expired (expireDate < today)
-        // Note: comparing time might be strict, usually compare dates.
-        // Here assuming expireAt is YYYY/MM/DD, new Date() is now.
-        // If expireAt is 2026/01/01, it expires AT THE END of that day or beginning?
-        // Usually "Expired" means current date > expire date.
+        expireDate.setHours(0, 0, 0, 0);
+        // 當過期日嚴格小於今天時，才算是已過期
         return expireDate < today;
       });
 
@@ -41,9 +39,7 @@ const ExpiredRecordsSection: React.FC = () => {
 
   if (expiredGroups.length === 0) {
     return (
-      <div className="text-center py-10 text-neutral-400">
-        目前沒有過期紀錄
-      </div>
+      <div className="text-center py-10 text-neutral-400">目前沒有過期紀錄</div>
     );
   }
 
@@ -53,7 +49,9 @@ const ExpiredRecordsSection: React.FC = () => {
         <div key={group.category}>
           <div className="flex items-center gap-2 mb-3">
             <div className="w-1 h-4 bg-[#D4E1A0] rounded-full" />
-            <h3 className="text-base font-bold text-neutral-600">{group.category}</h3>
+            <h3 className="text-base font-bold text-neutral-600">
+              {group.category}
+            </h3>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {group.items.map((item) => (

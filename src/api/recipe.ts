@@ -7,15 +7,15 @@ export type AnalyzeResponse = {
     attributes: string; // 屬性
     purchaseQuantity: number; // 購物數量
     unit: string; // 單位
-    
+
     // 日期設定
     purchaseDate: string; // 購物日期
     expiryDate: string; // 過期日期
-    
+
     // 低庫存提醒
     lowStockAlert: boolean; // 開啟通知（預設 true）
     lowStockThreshold: number; // 低庫存數量通知（預設 2）
-    
+
     // 備註
     notes: string; // 備註
   };
@@ -30,7 +30,7 @@ export const recognizeImage = async (
     throw new Error('VITE_RECIPE_API_URL is not defined');
   }
 
-  const response = await fetch(`${apiUrl}api/v1/recipe/analyze-image`, {
+  const response = await fetch(`${apiUrl}/recipe/analyze-image`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -41,7 +41,7 @@ export const recognizeImage = async (
   if (!response.ok) {
     throw new Error(`API Error: ${response.statusText}`);
   }
-  console.log('API Status:', response.status, response.statusText);
-  console.log('API Response:', response);
+  // console.log('API Status:', response.status, response.statusText);
+  // console.log('API Response:', response);
   return response.json();
 };
