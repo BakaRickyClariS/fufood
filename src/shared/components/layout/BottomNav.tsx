@@ -56,10 +56,21 @@ export default function MobileBottomNav({
   const navigate = useNavigate();
   const location = useLocation();
 
-  const activeTab = React.useMemo(
-    () => items.find((i) => i.href === location.pathname)?.id || items[0].id,
-    [location.pathname, items],
-  );
+  const activeTab = React.useMemo(() => {
+    // 1. 嘗試完全匹配
+    const exactMatch = items.find((i) => i.href === location.pathname);
+    if (exactMatch) return exactMatch.id;
+
+    // 2. 嘗試前綴匹配 (排除根路徑 '/')
+    // 例如: /inventory/category/123 應該匹配 /inventory
+    const prefixMatch = items.find(
+      (i) => i.href !== '/' && location.pathname.startsWith(i.href)
+    );
+    if (prefixMatch) return prefixMatch.id;
+
+    // 3. 默認回傳第一個 (通常是首頁)
+    return items[0].id;
+  }, [location.pathname, items]);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40">

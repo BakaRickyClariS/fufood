@@ -12,9 +12,9 @@ import { categories } from '@/features/inventory/constants/categories';
 import {
   foodData,
   type FoodItem,
-} from '@/features/inventory/constants/foodImages';
+} from '@/features/inventory/constants/foods';
 
-const CategoryPage = () => {
+const CategoryPage: React.FC = () => {
   const { categoryId } = useParams();
   const category = categories.find((c) => c.id === categoryId);
   const items = category ? foodData[category.id] || [] : [];

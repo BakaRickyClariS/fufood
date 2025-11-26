@@ -1,3 +1,10 @@
+import type { FoodItem } from '@/features/inventory/constants/foods';
+
+type FoodCardProps = {
+  item: FoodItem;
+  onClick?: () => void;
+}
+
 const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
   return (
     <div 

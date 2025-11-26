@@ -1,6 +1,6 @@
-import heroBanner from '../../assets/images/dashboard/hero-banner.png';
-import InventorySection from '@/features/inventory/components/layout/InventorySection';
-import RecipeSection from '@/features/recipe/components/RecipeSection';
+import heroBanner from '@/assets/images/dashboard/hero-banner.png';
+import InventorySection from '@/features/dashboard/components/InventorySection';
+import RecipeSection from '@/features/dashboard/components/RecipeSection';
 
 const Dashboard: React.FC = () => {
   return (

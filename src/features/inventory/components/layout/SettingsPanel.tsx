@@ -37,7 +37,7 @@ const CounterItem = ({ label, value, onChange }: { label: string; value: number;
   </div>
 );
 
-const InventorySettingsSection: React.FC = () => {
+const SettingsPanel: React.FC = () => {
   const [totalInventory, setTotalInventory] = useState(1);
   const [expiredCount, setExpiredCount] = useState(1);
   const [expiringSoonCount, setExpiringSoonCount] = useState(1);
@@ -93,4 +93,4 @@ const InventorySettingsSection: React.FC = () => {
   );
 };
 
-export default InventorySettingsSection;
+export default SettingsPanel;

@@ -1,6 +1,6 @@
 import React from 'react';
 import CommonItemCard from '@/features/inventory/components/ui/card/CommonItemCard';
-import { foodData } from '@/features/inventory/constants/foodImages';
+import { foodData } from '@/features/inventory/constants/foods';
 
 // const categoryMapping: Record<string, string> = {
 //   fruit: '蔬果類',
@@ -9,7 +9,7 @@ import { foodData } from '@/features/inventory/constants/foodImages';
 //   others: '其他',
 // };
 
-const CommonItemsSection: React.FC = () => {
+const CommonItemsPanel: React.FC = () => {
   // Select specific items to simulate "Common Items" based on the design/available data
   const commonItems = [
     {
@@ -57,4 +57,4 @@ const CommonItemsSection: React.FC = () => {
   );
 };
 
-export default CommonItemsSection;
+export default CommonItemsPanel;

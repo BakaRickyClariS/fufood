@@ -3,7 +3,7 @@ import CommonItemCard from '@/features/inventory/components/ui/card/CommonItemCa
 import {
   foodData,
   type FoodItem,
-} from '@/features/inventory/constants/foodImages';
+} from '@/features/inventory/constants/foods';
 
 const categoryMapping: Record<string, string> = {
   fruit: '蔬果類',
@@ -15,7 +15,7 @@ const categoryMapping: Record<string, string> = {
   meat: '肉類',
 };
 
-const ExpiredRecordsSection: React.FC = () => {
+const ExpiredRecordsPanel: React.FC = () => {
   const expiredGroups = useMemo(() => {
     const groups: { category: string; items: FoodItem[] }[] = [];
 
@@ -73,4 +73,4 @@ const ExpiredRecordsSection: React.FC = () => {
   );
 };
 
-export default ExpiredRecordsSection;
+export default ExpiredRecordsPanel;

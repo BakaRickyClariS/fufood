@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { X, Check } from 'lucide-react';
 import gsap from 'gsap';
 import { Button } from '@/shared/components/ui/button';
-import { type FoodItem } from '@/features/inventory/constants/foodImages';
+import { type FoodItem } from '@/features/inventory/constants/foods';
 
 type FoodDetailModalProps = {
   item: FoodItem;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, Calendar, Tag, Box, FileText } from 'lucide-react';
-import type { AnalyzeResponse } from '../../api/recipe';
+import type { AnalyzeResponse } from '@/features/food-scan/services/ocrService';
 
 const ScanResult: React.FC = () => {
   const location = useLocation();

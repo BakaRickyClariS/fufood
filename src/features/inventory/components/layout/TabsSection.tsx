@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import InventoryMainTabs from '../ui/tabs/InventoryMainTabs';
 import InventorySubTabs, { type SubTabType } from '../ui/tabs/InventorySubTabs';
-import CategorySection from '@/features/inventory/components/layout/CategoryPanel';
-import CommonItemsSection from '@/features/inventory/components/layout/CommonItemsSection';
-import ExpiredRecordsSection from '@/features/inventory/components/layout/ExpiredRecordsSection';
-import InventorySettingsSection from '@/features/inventory/components/layout/InventorySettingsSection';
+import OverviewPanel from '@/features/inventory/components/layout/OverviewPanel';
+import CommonItemsPanel from '@/features/inventory/components/layout/CommonItemsPanel';
+import ExpiredRecordsPanel from '@/features/inventory/components/layout/ExpiredRecordsPanel';
+import SettingsPanel from '@/features/inventory/components/layout/SettingsPanel';
 
 const TabsSection = () => {
   const [mainTab, setMainTab] = useState<'overview' | 'settings'>('overview');
@@ -21,12 +21,12 @@ const TabsSection = () => {
           {mainTab === 'overview' && (
             <>
               <InventorySubTabs active={subTab} onChange={setSubTab} />
-              {subTab === 'all' && <CategorySection />}
-              {subTab === 'common' && <CommonItemsSection />}
-              {subTab === 'expired' && <ExpiredRecordsSection />}
+              {subTab === 'all' && <OverviewPanel />}
+              {subTab === 'common' && <CommonItemsPanel />}
+              {subTab === 'expired' && <ExpiredRecordsPanel />}
             </>
           )}
-          {mainTab === 'settings' && <InventorySettingsSection />}
+          {mainTab === 'settings' && <SettingsPanel />}
         </div>
       </div>
     </section>
