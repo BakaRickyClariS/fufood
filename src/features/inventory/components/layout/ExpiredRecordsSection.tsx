@@ -1,6 +1,9 @@
 import React, { useMemo } from 'react';
-import CommonItemCard from '@/features/inventory/components/CommonItemCard';
-import { foodData, type FoodItem } from '@/features/inventory/constants/foodImages';
+import CommonItemCard from '@/features/inventory/components/ui/card/CommonItemCard';
+import {
+  foodData,
+  type FoodItem,
+} from '@/features/inventory/constants/foodImages';
 
 const categoryMapping: Record<string, string> = {
   fruit: '蔬果類',

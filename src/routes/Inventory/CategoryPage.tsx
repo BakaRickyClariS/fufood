@@ -2,14 +2,17 @@ import React, { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, Search, ListFilter } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
-import HeroCard from '@/shared/components/layout/HeroCard';
-import CategoryBanner from '@/features/inventory/components/CategoryBanner';
-import FoodCard from '@/features/inventory/components/FoodCard';
-import FoodDetailModal from '@/features/inventory/components/FoodDetailModal';
-import SearchModal from '@/shared/components/common/SearchModal';
-import FilterModal from '@/shared/components/common/FilterModal';
+import HeroCard from '@/features/inventory/components/ui/other/HeroSection';
+import CategoryBanner from '@/features/inventory/components/ui/other/CategoryBanner';
+import FoodCard from '@/features/inventory/components/ui/card/FoodCard';
+import FoodDetailModal from '@/features/inventory/components/ui/modal/FoodDetailModal';
+import SearchModal from '@/features/inventory/components/ui/modal/SearchModal';
+import FilterModal from '@/features/inventory/components/ui/modal/FilterModal';
 import { categories } from '@/features/inventory/constants/categories';
-import { foodData, type FoodItem } from '@/features/inventory/constants/foodImages';
+import {
+  foodData,
+  type FoodItem,
+} from '@/features/inventory/constants/foodImages';
 
 const CategoryPage = () => {
   const { categoryId } = useParams();
@@ -19,7 +22,7 @@ const CategoryPage = () => {
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [filterAttribute, setFilterAttribute] = useState<string | null>(null);
@@ -65,7 +68,10 @@ const CategoryPage = () => {
     setSearchQuery(query);
   };
 
-  const handleFilterApply = (status: string | null, attribute: string | null) => {
+  const handleFilterApply = (
+    status: string | null,
+    attribute: string | null,
+  ) => {
     setFilterStatus(status);
     setFilterAttribute(attribute);
   };
@@ -119,7 +125,9 @@ const CategoryPage = () => {
           </div>
           <ListFilter
             className={`h-6 w-6 ml-3 cursor-pointer transition-colors ${
-              filterStatus || filterAttribute ? 'text-[#EE5D50]' : 'text-neutral-900 hover:text-neutral-600'
+              filterStatus || filterAttribute
+                ? 'text-[#EE5D50]'
+                : 'text-neutral-900 hover:text-neutral-600'
             }`}
             onClick={() => setIsFilterOpen(true)}
           />

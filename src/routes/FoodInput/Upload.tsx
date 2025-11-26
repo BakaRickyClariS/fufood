@@ -126,7 +126,9 @@ const Upload: React.FC<UploadProps> = ({ onUpload }) => {
 
         // Validate data - if critical fields are missing, throw error to trigger fallback
         if (!analyzeResult.data || !analyzeResult.data.productName) {
-          console.warn('API returned empty or invalid data, triggering fallback');
+          console.warn(
+            'API returned empty or invalid data, triggering fallback',
+          );
           throw new Error('API returned empty data');
         }
 
@@ -135,6 +137,7 @@ const Upload: React.FC<UploadProps> = ({ onUpload }) => {
         });
       } catch (error) {
         // Mock Data Fallback
+        console.error('API Analyze Error:', error);
         const mockData: AnalyzeResponse['data'] = {
           productName: '鮮奶',
           category: '乳製品飲料類',

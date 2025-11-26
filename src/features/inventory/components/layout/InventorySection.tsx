@@ -1,4 +1,4 @@
-import InventoryCard from './InventoryCard';
+import InventoryCard from '../ui/card/InventoryCard';
 import totalImg from '@/assets/images/dashboard/inventory-total.png';
 import lowImg from '@/assets/images/dashboard/inventory-low.png';
 import expireImg from '@/assets/images/dashboard/inventory-expire.png';

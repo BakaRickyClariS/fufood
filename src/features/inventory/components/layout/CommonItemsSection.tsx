@@ -1,5 +1,5 @@
 import React from 'react';
-import CommonItemCard from '@/features/inventory/components/CommonItemCard';
+import CommonItemCard from '@/features/inventory/components/ui/card/CommonItemCard';
 import { foodData } from '@/features/inventory/constants/foodImages';
 
 // const categoryMapping: Record<string, string> = {
