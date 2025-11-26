@@ -30,7 +30,7 @@ export const recognizeImage = async (
     throw new Error('VITE_RECIPE_API_URL is not defined');
   }
 
-  const response = await fetch(`${apiUrl}/api/v1/recipe/analyze-image`, {
+  const response = await fetch(`${apiUrl}api/v1/recipe/analyze-image`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
