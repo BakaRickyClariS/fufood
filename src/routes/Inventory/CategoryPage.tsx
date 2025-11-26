@@ -1,21 +1,3 @@
-import React, { useState, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, Search, ListFilter } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import FoodCard from '@/components/ui/FoodCard';
-import HeroCard from '@/components/layout/HeroCard';
-import CategoryBanner from '@/components/layout/inventory/CategoryBanner';
-import FoodDetailModal from '@/components/ui/FoodDetailModal';
-import SearchModal from '@/components/ui/SearchModal';
-import FilterModal from '@/components/ui/FilterModal';
-import { categories } from '@/data/categories';
-import { foodData, type FoodItem } from '@/data/foodIImg';
-
-const CategoryPage: React.FC = () => {
-  const { categoryId } = useParams<{ categoryId: string }>();
-  const category = categories.find((c) => c.id === categoryId);
-  const items = categoryId ? foodData[categoryId] || [] : [];
-  
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);

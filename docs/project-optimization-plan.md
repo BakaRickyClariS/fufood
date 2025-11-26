@@ -736,8 +736,8 @@ export const CategoryList = () => {
 5. **更新 import 路徑**
    ```tsx
    // 修改前
-   import { Button } from '@/components/ui/button';
-   import { Card } from '@/components/ui/card';
+   import { Button } from '@/shared/components/ui/button';
+   import { Card } from '@/shared/components/ui/card';
    import { InventoryCard } from '@/components/ui/InventoryCard';
    
    // 修改後

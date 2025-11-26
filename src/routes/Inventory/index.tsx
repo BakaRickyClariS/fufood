@@ -1,6 +1,6 @@
-import HeroCard from '@/components/layout/HeroCard';
-import TabsSection from '@/components/layout/inventory/TabsSection';
-import MemberList from '@/components/layout/MemberList';
+import HeroCard from '@/shared/components/layout/HeroCard';
+import TabsSection from '@/features/inventory/components/TabsSection';
+import MemberList from '@/shared/components/layout/MemberList';
 
 const Inventory: React.FC = () => {
   return (
