@@ -1,11 +1,13 @@
-import { router } from '@/Router';
+import { router } from '@/routes';
 import { RouterProvider } from 'react-router-dom';
 import { registerSW } from 'virtual:pwa-register';
-import { SWPrompt } from '../feedback/SWPrompt';
+import { SWPrompt } from '@/shared/components/feedback/SWPrompt';
 import { useEffect, useRef, useState } from 'react';
-const AppContainer: React.FC = () => {
+
+const App: React.FC = () => {
   const [needRefresh, setNeedRefresh] = useState(false);
   const updateSW = useRef<(reloadPage?: boolean) => Promise<void> | void>(undefined);
+
   useEffect(() => {
     updateSW.current = registerSW({
       onNeedRefresh() {
@@ -28,4 +30,4 @@ const AppContainer: React.FC = () => {
   );
 };
 
-export default AppContainer;
+export default App;

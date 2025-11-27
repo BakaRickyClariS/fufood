@@ -1,11 +1,12 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import TopNav from '@/shared/components/layout/TopNav';
-import BottomNav from '@/shared/components/layout/BottomNav';
+import TopNav from './TopNav';
+import BottomNav from './BottomNav';
 import { useEffect } from 'react';
 
-const Layout = () => {
+const MainLayout = () => {
   const location = useLocation();
   const isDashboard = location.pathname === '/';
+
   useEffect(() => {
     if (isDashboard) {
       document.body.classList.add('body-dashboard-bg');
@@ -16,6 +17,7 @@ const Layout = () => {
       document.body.classList.remove('body-dashboard-bg');
     };
   }, [isDashboard]);
+
   return (
     <>
       <TopNav />
@@ -27,4 +29,4 @@ const Layout = () => {
   );
 };
 
-export default Layout;
+export default MainLayout;

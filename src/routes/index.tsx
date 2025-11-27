@@ -1,17 +1,17 @@
 import { createBrowserRouter } from 'react-router-dom';
-import Layout from './Layout';
-import Dashboard from './routes/Dashboard';
-import Inventory from './routes/Inventory';
-import Recipe from './routes/Recipe';
-import FoodInputRoutes from './routes/FoodInput';
-import AuthRoutes from './routes/Auth';
-import SettingsRoutes from './routes/Settings';
-import CategoryPage from './routes/Inventory/CategoryPage';
+import MainLayout from '@/shared/components/layout/MainLayout';
+import Dashboard from './Dashboard';
+import Inventory from './Inventory';
+import Recipe from './Recipe';
+import FoodInputRoutes from './FoodInput';
+import AuthRoutes from './Auth';
+import SettingsRoutes from './Settings';
+import CategoryPage from './Inventory/CategoryPage';
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Layout />,
+    element: <MainLayout />,
     children: [
       { index: true, element: <Dashboard /> },
       ...AuthRoutes,
