@@ -73,6 +73,7 @@ src/
 ### 現況優缺點分析
 
 #### ✅ 優點
+
 - 已有基本的資料夾分類（`components`、`routes`、`api` 等）
 - 使用 TypeScript 提供型別安全
 - 部分元件有子資料夾分類（如 `components/layout/inventory/`）
@@ -279,6 +280,7 @@ src/
 ##### Feature-based 模組化設計
 
 每個功能模組（`features/`）包含：
+
 - **components**: 該功能專屬的 UI 元件
 - **services**: API 請求邏輯
 - **hooks**: 該功能的自訂 hooks
@@ -316,6 +318,7 @@ UI 元件分為三個層級：
      - `features/food-scan/components/ScanResult.tsx`
 
 **決策流程圖**：
+
 ```
 需要新增 UI 元件？
 │
@@ -351,22 +354,22 @@ UI 元件分為三個層級：
 
 ##### 資料夾命名
 
-| 類型           | 命名規則       | 範例                                    |
-|----------------|----------------|-----------------------------------------|
-| 功能模組       | kebab-case     | `food-scan`, `inventory`, `user-profile` |
-| 元件資料夾     | PascalCase     | `LoginForm`, `RecipeCard`               |
-| 工具/服務      | camelCase 複數 | `utils`, `services`, `hooks`            |
+| 類型       | 命名規則       | 範例                                     |
+| ---------- | -------------- | ---------------------------------------- |
+| 功能模組   | kebab-case     | `food-scan`, `inventory`, `user-profile` |
+| 元件資料夾 | PascalCase     | `LoginForm`, `RecipeCard`                |
+| 工具/服務  | camelCase 複數 | `utils`, `services`, `hooks`             |
 
 ##### 檔案命名
 
-| 檔案類型           | 命名規則          | 範例                                   |
-|--------------------|-------------------|----------------------------------------|
-| React 元件         | PascalCase.tsx    | `LoginForm.tsx`, `RecipeCard.tsx`      |
-| Hooks              | use[Name].ts      | `useAuth.ts`, `useInventory.ts`        |
-| Service            | [name]Service.ts  | `authService.ts`, `recipeService.ts`   |
-| 型別定義           | [name].types.ts   | `auth.types.ts`, `recipe.types.ts`     |
-| 常數/配置          | [name]Constants.ts / [name]Config.ts | `authConstants.ts`, `appConfig.ts` |
-| 工具函式           | [name].ts         | `dateFormat.ts`, `validators.ts`       |
+| 檔案類型   | 命名規則                             | 範例                                 |
+| ---------- | ------------------------------------ | ------------------------------------ |
+| React 元件 | PascalCase.tsx                       | `LoginForm.tsx`, `RecipeCard.tsx`    |
+| Hooks      | use[Name].ts                         | `useAuth.ts`, `useInventory.ts`      |
+| Service    | [name]Service.ts                     | `authService.ts`, `recipeService.ts` |
+| 型別定義   | [name].types.ts                      | `auth.types.ts`, `recipe.types.ts`   |
+| 常數/配置  | [name]Constants.ts / [name]Config.ts | `authConstants.ts`, `appConfig.ts`   |
+| 工具函式   | [name].ts                            | `dateFormat.ts`, `validators.ts`     |
 
 #### 🔄 重新組織範例
 
@@ -435,29 +438,30 @@ import axios from 'axios';
 
 const CategoryPage = () => {
   const [items, setItems] = useState([]);
-  
+
   // ❌ API 邏輯混在元件內
   useEffect(() => {
-    axios.get('/api/inventory/categories')
-      .then(res => setItems(res.data))
-      .catch(err => console.error(err));
+    axios
+      .get('/api/inventory/categories')
+      .then((res) => setItems(res.data))
+      .catch((err) => console.error(err));
   }, []);
-  
+
   // ❌ 靜態資料混在元件內
   const categoryLabels = {
     vegetable: '蔬果類',
     meat: '肉類',
-    dairy: '乳製品'
+    dairy: '乳製品',
   };
-  
+
   // ❌ 格式化邏輯混在元件內
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('zh-TW');
   };
-  
+
   return (
     <div>
-      {items.map(item => (
+      {items.map((item) => (
         <div key={item.id}>
           <h3>{categoryLabels[item.category]}</h3>
           <p>{formatDate(item.expiryDate)}</p>
@@ -477,7 +481,7 @@ const CategoryPage = () => {
 export const CATEGORY_LABELS = {
   vegetable: '蔬果類',
   meat: '肉類',
-  dairy: '乳製品'
+  dairy: '乳製品',
 } as const;
 ```
 
@@ -501,7 +505,7 @@ export const inventoryService = {
   getCategories: async (): Promise<InventoryItem[]> => {
     const { data } = await apiClient.get('/inventory/categories');
     return data;
-  }
+  },
 };
 ```
 
@@ -515,7 +519,7 @@ import { inventoryService } from '../services/inventoryService';
 export const useInventory = () => {
   return useQuery({
     queryKey: ['inventory', 'categories'],
-    queryFn: inventoryService.getCategories
+    queryFn: inventoryService.getCategories,
   });
 };
 ```
@@ -530,12 +534,12 @@ import { formatDate } from '@/shared/utils/format/dateFormat';
 
 export const CategoryList = () => {
   const { data: items, isLoading } = useInventory();
-  
+
   if (isLoading) return <div>載入中...</div>;
-  
+
   return (
     <div>
-      {items?.map(item => (
+      {items?.map((item) => (
         <div key={item.id}>
           <h3>{CATEGORY_LABELS[item.category]}</h3>
           <p>{formatDate(item.expiryDate)}</p>
@@ -583,6 +587,7 @@ export const CategoryList = () => {
 > **目標**：建立新資料夾結構，不破壞現有程式碼
 
 1. **建立新資料夾結構**
+
    ```bash
    mkdir -p src/features
    mkdir -p src/shared/{components,hooks,utils,constants,types}
@@ -590,7 +595,7 @@ export const CategoryList = () => {
    ```
 
 2. **設定路徑別名**（減少遷移後的 import 路徑修改）
-   
+
    ```ts
    // tsconfig.json
    {
@@ -598,7 +603,7 @@ export const CategoryList = () => {
        "baseUrl": ".",
        "paths": {
          "@/*": ["src/*"],
-         "@/features/*": ["src/features/*"],
+         "@/modules/*": ["src/features/*"],
          "@/shared/*": ["src/shared/*"],
          "@/lib/*": ["src/lib/*"]
        }
@@ -609,16 +614,16 @@ export const CategoryList = () => {
    ```ts
    // vite.config.ts
    import path from 'path';
-   
+
    export default defineConfig({
      resolve: {
        alias: {
          '@': path.resolve(__dirname, './src'),
          '@/features': path.resolve(__dirname, './src/features'),
          '@/shared': path.resolve(__dirname, './src/shared'),
-         '@/lib': path.resolve(__dirname, './src/lib')
-       }
-     }
+         '@/lib': path.resolve(__dirname, './src/lib'),
+       },
+     },
    });
    ```
 
@@ -629,11 +634,13 @@ export const CategoryList = () => {
 #### 範例：遷移 Inventory 功能
 
 1. **建立功能模組資料夾**
+
    ```bash
    mkdir -p src/features/inventory/{components,services,hooks,store,types,constants}
    ```
 
 2. **移動元件**
+
    ```bash
    # 移動庫存相關元件
    mv src/components/ui/InventoryCard.tsx src/features/inventory/components/
@@ -643,25 +650,28 @@ export const CategoryList = () => {
    ```
 
 3. **移動 API 服務**
+
    ```bash
    mv src/api/inventory.ts src/features/inventory/services/inventoryService.ts
    ```
 
 4. **移動資料常數**
+
    ```bash
    mv src/data/categories.ts src/features/inventory/constants/
    mv src/data/foodIImg.ts src/features/inventory/constants/foodImages.ts
    ```
 
 5. **修正 import 路徑**
+
    ```tsx
    // 修改前
    import { InventoryCard } from '@/components/ui/InventoryCard';
    import { getInventory } from '@/api/inventory';
-   
+
    // 修改後
-   import { InventoryCard } from '@/features/inventory/components/InventoryCard';
-   import { inventoryService } from '@/features/inventory/services/inventoryService';
+   import { InventoryCard } from '@/modules/inventory/components/InventoryCard';
+   import { inventoryService } from '@/modules/inventory/services/inventoryService';
    ```
 
 6. **測試功能正常**
@@ -671,13 +681,15 @@ export const CategoryList = () => {
 ### 階段 3：共用元件遷移
 
 1. **建立新的共用元件資料夾結構**
+
    ```bash
    mkdir -p src/shared/components/{ui,common,layout,feedback}
    ```
 
 2. **分類並移動 UI 元件**
-   
+
    **a. shadcn/ui 原始元件**（全小寫檔名）
+
    ```bash
    # 移動 shadcn/ui 原始元件到 shared/components/ui/
    mv src/components/ui/button.tsx src/shared/components/ui/
@@ -688,13 +700,13 @@ export const CategoryList = () => {
    mv src/components/ui/dropdown-menu.tsx src/shared/components/ui/
    mv src/components/ui/nav-tabs.tsx src/shared/components/ui/
    ```
-   
+
    **b. 客製化共用元件**（PascalCase 檔名）
-   
+
    先判斷哪些元件是跨功能共用的：
    - `MemberAvatar.tsx` → `shared/components/common/` （多處使用）
    - `SearchModal.tsx`, `FilterModal.tsx` → 視使用範圍決定
-   
+
    ```bash
    # 移動跨功能共用的客製化元件
    mv src/components/ui/MemberAvatar.tsx src/shared/components/common/
@@ -702,10 +714,11 @@ export const CategoryList = () => {
    mv src/components/ui/SearchModal.tsx src/shared/components/common/
    mv src/components/ui/FilterModal.tsx src/shared/components/common/
    ```
-   
+
    **c. 功能專屬元件**（移至對應功能模組）
-   
+
    這些元件應該移到各自的功能模組：
+
    ```bash
    # 庫存相關元件
    mv src/components/ui/InventoryCard.tsx src/features/inventory/components/
@@ -715,13 +728,14 @@ export const CategoryList = () => {
    mv src/components/ui/InventoryMainTabs.tsx src/features/inventory/components/
    mv src/components/ui/InventorySubTabs.tsx src/features/inventory/components/
    mv src/components/ui/FoodDetailModal.tsx src/features/inventory/components/
-   
+
    # 食譜相關元件
    mv src/components/ui/RecipeCard.tsx src/features/recipe/components/
    mv src/components/ui/AiRecommendCard.tsx src/features/recipe/components/
    ```
 
 3. **移動版面元件**
+
    ```bash
    mv src/components/layout/TopNav.tsx src/shared/components/layout/
    mv src/components/layout/BottomNav.tsx src/shared/components/layout/
@@ -729,27 +743,29 @@ export const CategoryList = () => {
    ```
 
 4. **移動回饋元件**
+
    ```bash
    mv src/components/feedback/SWPrompt.tsx src/shared/components/feedback/
    ```
 
 5. **更新 import 路徑**
+
    ```tsx
    // 修改前
    import { Button } from '@/shared/components/ui/button';
    import { Card } from '@/shared/components/ui/card';
    import { InventoryCard } from '@/components/ui/InventoryCard';
-   
-   // 修改後
-   import { Button } from '@/shared/components/ui/button';  // shadcn 原始元件
-   import { Card } from '@/shared/components/ui/card';      // shadcn 原始元件
-   import { InventoryCard } from '@/features/inventory/components/InventoryCard';  // 功能專屬元件
-   ```
 
+   // 修改後
+   import { Button } from '@/shared/components/ui/button'; // shadcn 原始元件
+   import { Card } from '@/shared/components/ui/card'; // shadcn 原始元件
+   import { InventoryCard } from '@/modules/inventory/components/InventoryCard'; // 功能專屬元件
+   ```
 
 ### 階段 4：清理舊資料夾
 
 1. **確認所有檔案已遷移**
+
    ```bash
    # 檢查舊資料夾是否為空
    ls -la src/components
@@ -768,12 +784,14 @@ export const CategoryList = () => {
 > **時機**：確定要遷移至 Next.js 時再執行
 
 1. **建立 pages 資料夾**
+
    ```bash
    mkdir -p src/pages
    mkdir -p src/pages/{inventory,recipe,food-scan,settings}
    ```
 
 2. **建立路由檔案**
+
    ```bash
    # 根目錄頁面
    touch src/pages/_app.tsx
@@ -781,7 +799,7 @@ export const CategoryList = () => {
    touch src/pages/index.tsx
    touch src/pages/login.tsx
    touch src/pages/register.tsx
-   
+
    # 功能頁面
    touch src/pages/inventory/index.tsx
    touch src/pages/inventory/[categoryId].tsx
@@ -789,7 +807,8 @@ export const CategoryList = () => {
    touch src/pages/settings/{index,profile,notifications,subscription}.tsx
    ```
 
-3. **建立自訂 _app.tsx（全域設定）**
+3. **建立自訂 \_app.tsx（全域設定）**
+
    ```tsx
    // src/pages/_app.tsx
    import type { AppProps } from 'next/app';
@@ -798,7 +817,7 @@ export const CategoryList = () => {
    import { store } from '@/lib/redux/store';
    import { queryClient } from '@/lib/reactQuery';
    import '@/styles/globals.css';
-   
+
    export default function App({ Component, pageProps }: AppProps) {
      return (
        <Provider store={store}>
@@ -810,11 +829,12 @@ export const CategoryList = () => {
    }
    ```
 
-4. **建立自訂 _document.tsx（HTML 結構）**
+4. **建立自訂 \_document.tsx（HTML 結構）**
+
    ```tsx
    // src/pages/_document.tsx
    import { Html, Head, Main, NextScript } from 'next/document';
-   
+
    export default function Document() {
      return (
        <Html lang="zh-TW">
@@ -829,13 +849,14 @@ export const CategoryList = () => {
    ```
 
 5. **頁面元件引用功能模組**
+
    ```tsx
    // src/pages/inventory/index.tsx
-   import { CategoryList } from '@/features/inventory/components/CategoryList';
-   import { InventorySection } from '@/features/inventory/components/InventorySection';
+   import { CategoryList } from '@/modules/inventory/components/CategoryList';
+   import { InventorySection } from '@/modules/inventory/components/InventorySection';
    import { TopNav } from '@/shared/components/layout/TopNav';
    import { BottomNav } from '@/shared/components/layout/BottomNav';
-   
+
    export default function InventoryPage() {
      return (
        <>
@@ -852,23 +873,24 @@ export const CategoryList = () => {
    ```
 
 6. **動態路由範例**
+
    ```tsx
    // src/pages/inventory/[categoryId].tsx
    import { useRouter } from 'next/router';
-   import { CategoryDetail } from '@/features/inventory/components/CategoryDetail';
+   import { CategoryDetail } from '@/modules/inventory/components/CategoryDetail';
    import type { GetServerSideProps } from 'next';
-   
+
    interface CategoryPageProps {
      categoryId: string;
    }
-   
+
    export default function CategoryPage({ categoryId }: CategoryPageProps) {
      return <CategoryDetail categoryId={categoryId} />;
    }
-   
+
    export const getServerSideProps: GetServerSideProps = async (context) => {
      const { categoryId } = context.params!;
-     
+
      return {
        props: {
          categoryId,
@@ -924,6 +946,7 @@ export const CategoryList = () => {
 #### Q1: 如何決定元件應該放在 `shared/` 還是 `features/[feature]/`？
 
 **判斷標準**：
+
 - 如果元件在 **兩個以上功能** 中使用 → `shared/components/`
 - 如果元件只在 **單一功能** 中使用 → `features/[feature]/components/`
 - 基礎 UI 元件（Button、Card、Input）→ `shared/components/ui/`
@@ -931,6 +954,7 @@ export const CategoryList = () => {
 #### Q2: `utils` 與 `helpers` 有什麼差別？
 
 **建議區分**：
+
 - **`utils/`**: 獨立的工具函式（格式化、驗證、轉換）
   - `utils/format/dateFormat.ts`
   - `utils/validation/validators.ts`
@@ -940,6 +964,7 @@ export const CategoryList = () => {
 #### Q3: API 回應資料的轉換應該放在哪裡？
 
 **建議**：
+
 - 簡單轉換（如 camelCase ↔ snake_case）→ `services/` 內處理
 - 複雜轉換（如資料聚合、計算）→ 建立 `adapters/` 或 `transformers/` 資料夾
 
@@ -951,27 +976,28 @@ export const inventoryService = {
   getCategories: async () => {
     const { data } = await apiClient.get('/inventory/categories');
     return inventoryAdapter.toClient(data); // 轉換 API 資料格式
-  }
+  },
 };
 ```
 
 #### Q4: Redux store 應該如何組織？
 
 **建議**：
+
 - 功能專屬的 slice → `features/[feature]/store/[feature]Slice.ts`
 - 全域狀態（如使用者資訊、主題）→ `lib/redux/slices/`
 
 ```ts
 // src/lib/redux/store.ts
 import { configureStore } from '@reduxjs/toolkit';
-import authReducer from '@/features/auth/store/authSlice';
-import inventoryReducer from '@/features/inventory/store/inventorySlice';
+import authReducer from '@/modules/auth/store/authSlice';
+import inventoryReducer from '@/modules/inventory/store/inventorySlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    inventory: inventoryReducer
-  }
+    inventory: inventoryReducer,
+  },
 });
 ```
 

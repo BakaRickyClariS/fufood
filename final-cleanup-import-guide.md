@@ -14,6 +14,7 @@ Replace: from '@/shared/hooks/
 ```
 
 **Files affected:**
+
 - `useAuth.ts`
 - `useInventory.ts`
 - `useNotification.ts`
@@ -29,6 +30,7 @@ Replace: from '@/shared/types/
 ```
 
 **Subdirectories:**
+
 - `@/types/api/*` → `@/shared/types/api/*`
 - `@/types/components/*` → `@/shared/types/components/*`
 - `@/types/shared/*` → `@/shared/types/shared/*`
@@ -38,18 +40,21 @@ Replace: from '@/shared/types/
 ## 3. Utils (3 files - specific paths)
 
 ### formatDate
+
 ```
 Search: from '@/utils/formatDate'
 Replace: from '@/shared/utils/format/formatDate'
 ```
 
 ### validator
+
 ```
 Search: from '@/utils/validator'
 Replace: from '@/shared/utils/validation/validator'
 ```
 
 ### storage
+
 ```
 Search: from '@/utils/storage'
 Replace: from '@/shared/utils/helpers/storage'
@@ -60,24 +65,28 @@ Replace: from '@/shared/utils/helpers/storage'
 ## 4. Store Slices
 
 ### authSlice
+
 ```
 Search: from '@/store/authSlice'
-Replace: from '@/features/auth/store/authSlice'
+Replace: from '@/modules/auth/store/authSlice'
 ```
 
 ### inventorySlice
+
 ```
 Search: from '@/store/inventorySlice'
-Replace: from '@/features/inventory/store/inventorySlice'
+Replace: from '@/modules/inventory/store/inventorySlice'
 ```
 
 ### recipeSlice
+
 ```
 Search: from '@/store/recipeSlice'
-Replace: from '@/features/recipe/store/recipeSlice'
+Replace: from '@/modules/recipe/store/recipeSlice'
 ```
 
 ### uiSlice (KEEP AS IS)
+
 ```
 from '@/store/uiSlice'  ✅ No change needed
 ```
@@ -89,6 +98,7 @@ from '@/store/uiSlice'  ✅ No change needed
 After moving slices, update your store configuration:
 
 ### Old store configuration (if exists)
+
 ```typescript
 // src/lib/redux.ts or src/store/index.ts
 import authReducer from '@/store/authSlice';
@@ -98,12 +108,13 @@ import uiReducer from '@/store/uiSlice';
 ```
 
 ### New store configuration
+
 ```typescript
 // src/lib/redux.ts
-import authReducer from '@/features/auth/store/authSlice';
-import inventoryReducer from '@/features/inventory/store/inventorySlice';
-import recipeReducer from '@/features/recipe/store/recipeSlice';
-import uiReducer from '@/store/uiSlice';  // Global state remains here
+import authReducer from '@/modules/auth/store/authSlice';
+import inventoryReducer from '@/modules/inventory/store/inventorySlice';
+import recipeReducer from '@/modules/recipe/store/recipeSlice';
+import uiReducer from '@/store/uiSlice'; // Global state remains here
 
 export const store = configureStore({
   reducer: {
@@ -132,12 +143,15 @@ After updating imports:
 ## 🚨 Common Issues
 
 ### Issue: "Cannot find module '@/hooks/useAuth'"
+
 **Fix**: Update to `@/shared/hooks/useAuth`
 
 ### Issue: "Module not found: Error: Can't resolve '@/types/api/auth'"
+
 **Fix**: Update to `@/shared/types/api/auth`
 
 ### Issue: Store not working after update
+
 **Fix**: Check `lib/redux.ts` imports are updated to new paths
 
 ---
@@ -145,6 +159,7 @@ After updating imports:
 ## 💡 Batch Update Recommendation
 
 Execute replacements in this order:
+
 1. Hooks (most common)
 2. Types (many files)
 3. Utils (specific paths)

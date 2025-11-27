@@ -1,16 +1,17 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import type { AnalyzeResponse } from '@/features/food-scan/services/ocrService';
-import ScanResultCard from '@/features/food-scan/components/ScanResultCard';
+import type { AnalyzeResponse } from '@/modules/food-scan/services/ocrService';
+import ScanResultCard from '@/modules/food-scan/components/ScanResultCard';
 
 const ScanResult: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { result, imageUrl } = (location.state as {
-    result: AnalyzeResponse['data'];
-    imageUrl: string;
-  }) || {};
+  const { result, imageUrl } =
+    (location.state as {
+      result: AnalyzeResponse['data'];
+      imageUrl: string;
+    }) || {};
 
   if (!result) {
     return (

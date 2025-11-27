@@ -1,6 +1,6 @@
 import heroBanner from '@/assets/images/dashboard/hero-banner.png';
-import InventorySection from '@/features/dashboard/components/InventorySection';
-import RecipeSection from '@/features/dashboard/components/RecipeSection';
+import InventorySection from '@/modules/dashboard/components/InventorySection';
+import RecipeSection from '@/modules/dashboard/components/RecipeSection';
 
 const Dashboard: React.FC = () => {
   return (
@@ -8,7 +8,7 @@ const Dashboard: React.FC = () => {
       {/* Hero 區塊 */}
       <section>
         <div className="flex justify-center px-4 w-full">
-          <div className="flex flex-row justify-center max-w-[800px] w-full">
+          <div className="flex flex-row justify-center max-w-layout-container w-full">
             <div className="flex flex-col max-w-[150px] mr-[-70px] mt-5 w-full z-10">
               <h1 className="text-xl/7 font-bold text-primary-800">
                 Good Morning,

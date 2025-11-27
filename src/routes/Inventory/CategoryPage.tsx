@@ -2,17 +2,14 @@ import React, { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, Search, ListFilter } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
-import HeroCard from '@/features/inventory/components/ui/other/HeroSection';
-import CategoryBanner from '@/features/inventory/components/ui/other/CategoryBanner';
-import FoodCard from '@/features/inventory/components/ui/card/FoodCard';
-import FoodDetailModal from '@/features/inventory/components/ui/modal/FoodDetailModal';
-import SearchModal from '@/features/inventory/components/ui/modal/SearchModal';
-import FilterModal from '@/features/inventory/components/ui/modal/FilterModal';
-import { categories } from '@/features/inventory/constants/categories';
-import {
-  foodData,
-  type FoodItem,
-} from '@/features/inventory/constants/foods';
+import HeroCard from '@/modules/inventory/components/ui/other/HeroSection';
+import CategoryBanner from '@/modules/inventory/components/ui/other/CategoryBanner';
+import FoodCard from '@/modules/inventory/components/ui/card/FoodCard';
+import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
+import SearchModal from '@/modules/inventory/components/ui/modal/SearchModal';
+import FilterModal from '@/modules/inventory/components/ui/modal/FilterModal';
+import { categories } from '@/modules/inventory/constants/categories';
+import { foodData, type FoodItem } from '@/modules/inventory/constants/foods';
 
 const CategoryPage: React.FC = () => {
   const { categoryId } = useParams();
@@ -113,7 +110,7 @@ const CategoryPage: React.FC = () => {
         <CategoryBanner category={category} />
       </HeroCard>
 
-      <div className="px-4 mt-2 space-y-4">
+      <div className="px-4 mt-2 space-y-4 max-w-layout-container mx-auto">
         {/* Search Bar */}
         <div className="flex flex-row w-full cursor-pointer items-center">
           <div
