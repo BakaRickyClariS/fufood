@@ -57,6 +57,7 @@ src/
 | **settings** | 設定模組 | `ProfileForm`, `ThemeSwitcher` |
 
 **Module 內部結構通常包含：**
+- `README.md`: 該模組的詳細說明文件 (✨ New)
 - `components/`: 該功能專屬的 UI 元件
 - `hooks/`: 該功能專屬的 Logic Hooks
 - `services/`: API 呼叫與資料處理
