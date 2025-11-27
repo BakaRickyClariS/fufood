@@ -4,8 +4,8 @@ import { format, quality } from '@cloudinary/url-gen/actions/delivery';
 import { auto } from '@cloudinary/url-gen/qualifiers/format';
 import { auto as qAuto } from '@cloudinary/url-gen/qualifiers/quality';
 import { limitFit } from '@cloudinary/url-gen/actions/resize';
-import { recognizeImage } from '@/features/food-scan/services/ocrService';
-import type { AnalyzeResponse } from '@/features/food-scan/services/ocrService';
+import { recognizeImage } from '@/modules/food-scan/services/ocrService';
+import type { AnalyzeResponse } from '@/modules/food-scan/services/ocrService';
 
 interface UseImageUploadProps {
   onUploadSuccess?: (blob: Blob) => Promise<void>;
@@ -33,7 +33,7 @@ export const useImageUpload = ({
         formData.append('file', blob);
         formData.append(
           'upload_preset',
-          import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+          import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET,
         );
 
         const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
@@ -47,7 +47,7 @@ export const useImageUpload = ({
           {
             method: 'POST',
             body: formData,
-          }
+          },
         );
 
         if (!uploadResponse.ok) {
@@ -80,7 +80,7 @@ export const useImageUpload = ({
           // Validate data - if critical fields are missing, throw error to trigger fallback
           if (!analyzeResult.data || !analyzeResult.data.productName) {
             console.warn(
-              'API returned empty or invalid data, triggering fallback'
+              'API returned empty or invalid data, triggering fallback',
             );
             throw new Error('API returned empty data');
           }
@@ -116,7 +116,7 @@ export const useImageUpload = ({
         setIsUploading(false);
       }
     },
-    [onUploadSuccess, onAnalyzeSuccess]
+    [onUploadSuccess, onAnalyzeSuccess],
   );
 
   return {

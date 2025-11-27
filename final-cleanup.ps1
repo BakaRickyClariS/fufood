@@ -265,9 +265,9 @@ Write-Host "     from '@/utils/validator' -> '@/shared/utils/validation/validato
 Write-Host "     from '@/utils/storage' -> '@/shared/utils/helpers/storage'" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  4. Store Slices:" -ForegroundColor Yellow
-Write-Host "     from '@/store/authSlice' -> '@/features/auth/store/authSlice'" -ForegroundColor Gray
-Write-Host "     from '@/store/inventorySlice' -> '@/features/inventory/store/inventorySlice'" -ForegroundColor Gray
-Write-Host "     from '@/store/recipeSlice' -> '@/features/recipe/store/recipeSlice'" -ForegroundColor Gray
+Write-Host "     from '@/store/authSlice' -> '@/modules/auth/store/authSlice'" -ForegroundColor Gray
+Write-Host "     from '@/store/inventorySlice' -> '@/modules/inventory/store/inventorySlice'" -ForegroundColor Gray
+Write-Host "     from '@/store/recipeSlice' -> '@/modules/recipe/store/recipeSlice'" -ForegroundColor Gray
 Write-Host ""
 
 # Ask if want to show final structure

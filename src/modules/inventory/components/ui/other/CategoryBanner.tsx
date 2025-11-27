@@ -1,5 +1,5 @@
 import React from 'react';
-import type { CategoryItem } from '@/features/inventory/constants/categories';
+import type { CategoryItem } from '@/modules/inventory/constants/categories';
 
 type CategoryBannerProps = {
   category: CategoryItem;

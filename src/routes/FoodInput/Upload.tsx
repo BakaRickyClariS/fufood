@@ -1,10 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Webcam from 'react-webcam';
-import CameraOverlay from '@/features/food-scan/components/CameraOverlay';
-import InstructionsModal from '@/features/food-scan/components/InstructionsModal';
-import { useWebcam } from '@/features/food-scan/hooks/useWebcam';
-import { useImageUpload } from '@/features/food-scan/hooks/useImageUpload';
+import CameraOverlay from '@/modules/food-scan/components/CameraOverlay';
+import InstructionsModal from '@/modules/food-scan/components/InstructionsModal';
+import { useWebcam } from '@/modules/food-scan/hooks/useWebcam';
+import { useImageUpload } from '@/modules/food-scan/hooks/useImageUpload';
 
 type UploadProps = {
   onUpload?: (file: Blob) => Promise<void>;
@@ -18,14 +18,8 @@ const Upload: React.FC<UploadProps> = ({ onUpload }) => {
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const {
-    webcamRef,
-    img,
-    isCapturing,
-    capture,
-    retake,
-    setExternalImage,
-  } = useWebcam();
+  const { webcamRef, img, isCapturing, capture, retake, setExternalImage } =
+    useWebcam();
 
   const { isUploading, isAnalyzing, uploadImage } = useImageUpload({
     onUploadSuccess: onUpload,

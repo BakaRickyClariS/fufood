@@ -1,6 +1,6 @@
 import React from 'react';
-import CommonItemCard from '@/features/inventory/components/ui/card/CommonItemCard';
-import { foodData } from '@/features/inventory/constants/foods';
+import CommonItemCard from '@/modules/inventory/components/ui/card/CommonItemCard';
+import { foodData } from '@/modules/inventory/constants/foods';
 
 // const categoryMapping: Record<string, string> = {
 //   fruit: '蔬果類',

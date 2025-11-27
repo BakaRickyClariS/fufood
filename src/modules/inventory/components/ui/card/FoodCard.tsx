@@ -1,13 +1,13 @@
-import type { FoodItem } from '@/features/inventory/constants/foods';
+import type { FoodItem } from '@/modules/inventory/constants/foods';
 
 type FoodCardProps = {
   item: FoodItem;
   onClick?: () => void;
-}
+};
 
 const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
   return (
-    <div 
+    <div
       className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-md cursor-pointer transition-transform active:scale-95"
       onClick={onClick}
     >

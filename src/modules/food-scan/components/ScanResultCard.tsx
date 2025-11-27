@@ -1,13 +1,16 @@
 import React from 'react';
 import { Check, Tag, Box, Calendar, FileText } from 'lucide-react';
-import type { AnalyzeResponse } from '@/features/food-scan/services/ocrService';
+import type { AnalyzeResponse } from '@/modules/food-scan/services/ocrService';
 
 interface ScanResultCardProps {
   result: AnalyzeResponse['data'];
   imageUrl: string;
 }
 
-const ScanResultCard: React.FC<ScanResultCardProps> = ({ result, imageUrl }) => {
+const ScanResultCard: React.FC<ScanResultCardProps> = ({
+  result,
+  imageUrl,
+}) => {
   return (
     <div className="bg-white rounded-3xl shadow-sm p-6 mb-6 relative overflow-visible mt-12">
       {/* Floating Image */}
@@ -47,9 +50,7 @@ const ScanResultCard: React.FC<ScanResultCardProps> = ({ result, imageUrl }) => 
             <Box size={18} />
             <span className="text-sm font-medium">產品屬性</span>
           </div>
-          <span className="font-bold text-slate-800">
-            {result.attributes}
-          </span>
+          <span className="font-bold text-slate-800">{result.attributes}</span>
         </div>
 
         <div className="flex justify-between items-center py-2 border-b border-slate-100">

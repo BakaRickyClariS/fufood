@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { X, Check } from 'lucide-react';
 import gsap from 'gsap';
 import { Button } from '@/shared/components/ui/button';
-import { type FoodItem } from '@/features/inventory/constants/foods';
+import { type FoodItem } from '@/modules/inventory/constants/foods';
 
 type FoodDetailModalProps = {
   item: FoodItem;
@@ -26,7 +26,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
       tl.fromTo(
         overlayRef.current,
         { opacity: 0 },
-        { opacity: 1, duration: 0.3, ease: 'power2.out' }
+        { opacity: 1, duration: 0.3, ease: 'power2.out' },
       );
 
       // Animate modal (slide up)
@@ -34,7 +34,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
         modalRef.current,
         { y: '100%', opacity: 0 },
         { y: '0%', opacity: 1, duration: 0.5, ease: 'back.out(1.2)' },
-        '-=0.2'
+        '-=0.2',
       );
     }
   }, [isOpen]);
@@ -56,7 +56,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
     tl.to(
       overlayRef.current,
       { opacity: 0, duration: 0.3, ease: 'power2.in' },
-      '-=0.3'
+      '-=0.3',
     );
   };
 
@@ -72,7 +72,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
       />
 
       {/* Modal Content */}
-      <div 
+      <div
         ref={modalRef}
         className="relative w-full max-w-md bg-white rounded-t-3xl overflow-hidden shadow-2xl"
       >

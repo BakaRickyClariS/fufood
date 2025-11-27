@@ -1,6 +1,6 @@
 // src/data/autoLayoutEngine.ts
 
-import { categories } from '@/features/inventory/constants/categories';
+import { categories } from '@/modules/inventory/constants/categories';
 import { layoutPattern } from '@/shared/constants/layoutPattern';
 
 export function generateAutoLayout() {
