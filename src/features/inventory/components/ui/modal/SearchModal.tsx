@@ -18,7 +18,11 @@ const recentSearches = [
   '花椰菜',
 ];
 
-const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSearch }) => {
+const SearchModal: React.FC<SearchModalProps> = ({
+  isOpen,
+  onClose,
+  onSearch,
+}) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState('');
@@ -31,7 +35,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSearch }) 
       tl.fromTo(
         overlayRef.current,
         { opacity: 0 },
-        { opacity: 1, duration: 0.3, ease: 'power2.out' }
+        { opacity: 1, duration: 0.3, ease: 'power2.out' },
       );
 
       // Animate modal (slide up)
@@ -39,7 +43,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSearch }) 
         modalRef.current,
         { y: '100%', opacity: 0 },
         { y: '0%', opacity: 1, duration: 0.5, ease: 'back.out(1.2)' },
-        '-=0.2'
+        '-=0.2',
       );
     }
   }, [isOpen]);
@@ -61,7 +65,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSearch }) 
     tl.to(
       overlayRef.current,
       { opacity: 0, duration: 0.3, ease: 'power2.in' },
-      '-=0.3'
+      '-=0.3',
     );
   };
 
@@ -91,7 +95,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSearch }) 
       {/* Modal Content */}
       <div
         ref={modalRef}
-        className="relative w-full h-[90vh] bg-white rounded-t-3xl overflow-hidden shadow-2xl flex flex-col"
+        className="relative w-full h-[90vh] bg-white max-w-layout-container mx-auto rounded-t-3xl overflow-hidden shadow-2xl flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">

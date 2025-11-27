@@ -7,7 +7,7 @@ const RecipeSection = () => {
   return (
     <section className="w-full rounded-t-3xl overflow-hidden bg-white px-4 mt-6 pb-32">
       {/* 標題列 */}
-      <div className="flex justify-between items-center max-w-[800px] mx-auto mb-4">
+      <div className="flex justify-between items-center max-w-layout-container mx-auto mb-4">
         <p className="text-neutral-900 font-bold text-lg">推薦食譜</p>
         <button type="button" className="text-neutral-700 text-sm">
           查看更多
@@ -15,7 +15,7 @@ const RecipeSection = () => {
       </div>
 
       {/* 卡片排版 */}
-      <div className="grid grid-cols-2 gap-4 max-w-[800px] mx-auto">
+      <div className="grid grid-cols-2 gap-4 max-w-layout-container mx-auto">
         <RecipeCard
           cover={recipe1}
           tag="熱門"

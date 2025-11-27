@@ -12,12 +12,18 @@ type FilterModalProps = {
 const statusOptions = ['即將到期', '低庫存', '已過期', '有庫存'];
 const attributeOptions = ['葉菜類', '瓜果類', '菇菌類', '根莖類'];
 
-const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose, onApply }) => {
+const FilterModal: React.FC<FilterModalProps> = ({
+  isOpen,
+  onClose,
+  onApply,
+}) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
-  const [selectedAttribute, setSelectedAttribute] = useState<string | null>(null);
+  const [selectedAttribute, setSelectedAttribute] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     if (isOpen) {
@@ -27,7 +33,7 @@ const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose, onApply }) =
       tl.fromTo(
         overlayRef.current,
         { opacity: 0 },
-        { opacity: 1, duration: 0.3, ease: 'power2.out' }
+        { opacity: 1, duration: 0.3, ease: 'power2.out' },
       );
 
       // Animate modal (slide up)
@@ -35,7 +41,7 @@ const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose, onApply }) =
         modalRef.current,
         { y: '100%', opacity: 0 },
         { y: '0%', opacity: 1, duration: 0.5, ease: 'back.out(1.2)' },
-        '-=0.2'
+        '-=0.2',
       );
     }
   }, [isOpen]);
@@ -57,7 +63,7 @@ const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose, onApply }) =
     tl.to(
       overlayRef.current,
       { opacity: 0, duration: 0.3, ease: 'power2.in' },
-      '-=0.3'
+      '-=0.3',
     );
   };
 
@@ -85,7 +91,7 @@ const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose, onApply }) =
       {/* Modal Content */}
       <div
         ref={modalRef}
-        className="relative w-full bg-white rounded-t-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+        className="relative w-full bg-white max-w-layout-container mx-auto rounded-t-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4">

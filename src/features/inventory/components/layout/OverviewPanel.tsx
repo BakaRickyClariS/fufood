@@ -22,7 +22,7 @@ const OverviewPanel: React.FC = () => {
       <DynamicGridAreaStyles />
 
       <div
-        className="max-w-[800px] mx-auto grid gap-3"
+        className="max-w-layout-container mx-auto grid gap-3"
         style={{
           gridTemplateAreas: gridTemplate,
           gridTemplateColumns: '1fr 1fr',

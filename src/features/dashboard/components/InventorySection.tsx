@@ -7,7 +7,7 @@ const InventorySection = () => {
   return (
     <section className="w-full px-4 mt-4">
       {/* 上方標題 */}
-      <div className="flex justify-between max-w-[800px] mx-auto">
+      <div className="flex justify-between max-w-layout-container mx-auto">
         <p className="text-neutral-800 text-base font-semibold">庫存狀態</p>
         <p className="text-sm text-neutral-900 px-3 py-1.5 bg-primary-100 rounded-full">
           更新 今天10:00
@@ -15,7 +15,7 @@ const InventorySection = () => {
       </div>
 
       {/* 三個卡片 */}
-      <div className="grid grid-cols-2 gap-4 max-w-[800px] mx-auto mt-3">
+      <div className="grid grid-cols-2 gap-4 max-w-layout-container mx-auto mt-3">
         {/* 大卡片：總庫存 */}
         <div className="col-span-2">
           <InventoryCard

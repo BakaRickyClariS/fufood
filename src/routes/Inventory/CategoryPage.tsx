@@ -113,7 +113,7 @@ const CategoryPage: React.FC = () => {
         <CategoryBanner category={category} />
       </HeroCard>
 
-      <div className="px-4 mt-2 space-y-4">
+      <div className="px-4 mt-2 space-y-4 max-w-layout-container mx-auto">
         {/* Search Bar */}
         <div className="flex flex-row w-full cursor-pointer items-center">
           <div

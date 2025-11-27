@@ -14,7 +14,7 @@ const TabsSection = () => {
     <section
       className={mainTab === 'settings' ? 'bg-neutral-100 min-h-screen' : ''}
     >
-      <div className="max-w-[800px] mx-auto">
+      <div className="max-w-layout-container mx-auto">
         {/* 主 Tabs */}
         <InventoryMainTabs active={mainTab} onChange={setMainTab} />
         <div className="mx-4">
