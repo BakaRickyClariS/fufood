@@ -11,7 +11,7 @@ const ScanResultCard: React.FC<ScanResultCardProps> = ({
   result,
   imageUrl,
 }) => (
-  <div className="bg-white rounded-3xl shadow-sm p-6 mb-6 relative overflow-visible mt-12">
+  <div className="bg-white rounded-3xl p-6 relative overflow-visible mt-12">
     {/* Floating Image */}
     <div className="absolute -top-12 left-1/2 -translate-x-1/2">
       <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden bg-slate-100">
@@ -67,7 +67,7 @@ const ScanResultCard: React.FC<ScanResultCardProps> = ({
           <span className="text-sm font-medium">購物日期</span>
         </div>
         <span className="font-bold text-slate-800">
-          {new Date(result.purchaseDate).toLocaleDateString('zh-TW')}
+          {result.purchaseDate ? new Date(result.purchaseDate).toLocaleDateString('zh-TW') : '-'}
         </span>
       </div>
 
@@ -76,7 +76,7 @@ const ScanResultCard: React.FC<ScanResultCardProps> = ({
           <span className="text-sm font-medium pl-8">過期日期</span>
         </div>
         <span className="font-bold text-slate-800">
-          {new Date(result.expiryDate).toLocaleDateString('zh-TW')}
+          {result.expiryDate ? new Date(result.expiryDate).toLocaleDateString('zh-TW') : '-'}
         </span>
       </div>
 

@@ -22,6 +22,18 @@ export type AnalyzeResponse = {
   timestamp: string;
 };
 
+export type SubmitFoodItemRequest = AnalyzeResponse['data'] & {
+  imageUrl?: string;
+};
+
+export type SubmitFoodItemResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+  };
+};
+
 export const recognizeImage = async (
   imageUrl: string,
 ): Promise<AnalyzeResponse> => {
@@ -44,4 +56,22 @@ export const recognizeImage = async (
   // console.log('API Status:', response.status, response.statusText);
   // console.log('API Response:', response);
   return response.json();
+};
+
+export const submitFoodItem = async (
+  data: SubmitFoodItemRequest,
+): Promise<SubmitFoodItemResponse> => {
+  // 模擬 API 呼叫，實際專案中應替換為真實 API
+  console.log('Submitting food item:', data);
+  
+  // 模擬延遲
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  return {
+    success: true,
+    message: '成功歸納至倉庫',
+    data: {
+      id: Math.random().toString(36).substring(7),
+    },
+  };
 };
