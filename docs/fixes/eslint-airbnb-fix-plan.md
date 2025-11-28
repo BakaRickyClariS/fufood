@@ -1,3 +1,37 @@
+# ESLint Airbnb 安裝與設定修復計畫
+
+## 1. 問題分析
+- **錯誤原因**: `npm error ERESOLVE unable to resolve dependency tree`
+- **詳細說明**: 目前專案使用 **ESLint v9** (最新版)，但 `eslint-config-airbnb` (v19.0.4) 的 `peerDependencies` 仍然要求 **ESLint ^7.32.0 || ^8.2.0**。這是因為 Airbnb 設定檔尚未正式發布支援 ESLint 9 的版本。
+- **影響**: npm 預設會阻擋這種版本不相容的安裝，導致 `ERESOLVE` 錯誤。
+
+## 2. 解決方案
+我們將採取 **"強制相容模式"** 來解決此問題。這包含兩個部分：
+1.  **安裝層面**: 使用 `--legacy-peer-deps` 參數繞過 npm 的嚴格依賴檢查。這會允許安裝 ESLint 9 即使 Airbnb 聲稱它不支援。
+2.  **設定層面**: 使用 `@eslint/eslintrc` 的 `FlatCompat` 工具，讓舊版 Airbnb 設定 (`.eslintrc` 風格) 能在 ESLint 9 的 Flat Config (`eslint.config.ts`) 系統中運作。
+
+## 3. 執行步驟
+
+### 步驟 1: 安裝依賴 (修正指令)
+請使用以下指令安裝，重點是加入了 `--legacy-peer-deps`：
+
+```bash
+npm install -D eslint-config-airbnb eslint-plugin-import eslint-plugin-jsx-a11y @eslint/eslintrc eslint-import-resolver-typescript --legacy-peer-deps
+```
+
+> **說明**: `eslint-plugin-react` 和 `eslint-plugin-react-hooks` 已經在您的專案中，無需重複安裝。
+
+### 步驟 2: 設定 `eslint.config.ts`
+由於 Airbnb 規則與 TypeScript 及新的 Flat Config 格式不直接相容，我們需要大幅調整 `eslint.config.ts`。
+
+**主要修改點：**
+1.  引入 `FlatCompat` 來載入 `airbnb` 設定。
+2.  設定 `import/resolver` 讓 Airbnb 的 import 規則能看懂 TypeScript 的路徑別名 (`@/*`)。
+3.  修正 Airbnb 與 TypeScript 的規則衝突 (如 `no-use-before-define`)。
+
+**建議的 `eslint.config.ts` 內容：**
+
+```typescript
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import react from 'eslint-plugin-react';
@@ -20,24 +54,17 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: [
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/build/**',
-      '**/coverage/**',
-      '**/dev-dist/**',
-      '**/src/shared/components/ui/**',
-    ],
+    ignores: ['node_modules', 'dist', 'build', 'coverage', 'dev-dist'],
   },
   // 1. 透過 compat 載入 Airbnb 設定
   ...compat.extends('airbnb'),
-
+  
   // 2. 載入 ESLint 推薦設定
   eslint.configs.recommended,
-
+  
   // 3. 載入 TypeScript 推薦設定
   ...tseslint.configs.recommended,
-
+  
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     plugins: {
@@ -100,7 +127,7 @@ export default [
       '@typescript-eslint/no-use-before-define': ['error'],
       'no-shadow': 'off',
       '@typescript-eslint/no-shadow': ['error'],
-
+      
       // 關閉 import/extensions 強制副檔名檢查
       'import/extensions': [
         'error',
@@ -117,34 +144,20 @@ export default [
       'prettier/prettier': 'warn',
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'prefer-const': 'warn',
-
-      // --- Airbnb 規則調整（適應 TypeScript + 現代 React）---
-      'react/function-component-definition': 'off', // 允許箭頭函數組件
-      'react/require-default-props': 'off', // TypeScript 不需要 defaultProps
-      'react/button-has-type': 'off', // 按鈕類型由 TypeScript 處理
-      'react/jsx-props-no-spreading': 'off', // 允許屬性展開（常用於 UI 庫）
-      'import/prefer-default-export': 'off', // 允許 named exports
-      'no-plusplus': 'off', // 允許 ++ 運算符
-      'no-continue': 'off', // 允許 continue 語句
-      'no-nested-ternary': 'off', // 允許嵌套三元運算符
-      'no-promise-executor-return': 'off', // 允許 Promise executor 返回值
-      'import/no-unresolved': ['error', { ignore: ['^virtual:'] }], // 忽略 Vite 虛擬模組
-      'jsx-a11y/alt-text': 'warn', // 降級為警告
-      'jsx-a11y/click-events-have-key-events': 'warn', // 降級為警告
-      'jsx-a11y/no-static-element-interactions': 'warn', // 降級為警告
-      'jsx-a11y/control-has-associated-label': 'warn', // 降級為警告
-      'jsx-a11y/label-has-associated-control': 'warn', // 降級為警告
-      'react/no-array-index-key': 'warn', // 降級為警告
     },
   },
   // Prettier 放在最後以覆蓋衝突
   prettier,
-  {
-    files: ['vite.config.ts', 'vite.config.d.ts', '*.config.ts', 'test-*.js'],
-    rules: {
-      'import/no-extraneous-dependencies': 'off',
-      'no-underscore-dangle': 'off',
-      'no-console': 'off', // 測試檔案允許 console
-    },
-  },
 ];
+```
+
+### 步驟 3: 驗證
+執行以下指令確認安裝與設定是否成功：
+
+```bash
+npm run lint
+```
+
+## 4. 風險評估與後續
+- **相容性**: 雖然透過 `FlatCompat` 可以運作，但 ESLint 9 架構變動大，Airbnb 規則偶爾可能會有誤報（特別是 import 相關），上述設定已針對常見問題進行修正。
+- **未來維護**: 待 Airbnb 官方推出正式支援 ESLint 9 的版本（通常會是 `eslint-config-airbnb-vNext` 或類似名稱）後，建議移除 `FlatCompat` 並更新依賴。

@@ -172,7 +172,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
             className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white rounded-xl h-12 text-base font-medium shadow-lg shadow-orange-200"
             onClick={() => {
               // TODO: Implement consume logic
-              console.log('Consume item:', item.id);
+              // console.log('Consume item:', item.id);
             }}
           >
             確定消耗

@@ -1,7 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import TopNav from './TopNav';
 import BottomNav from './BottomNav';
-import { useEffect } from 'react';
 
 const MainLayout = () => {
   const location = useLocation();
