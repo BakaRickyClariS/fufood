@@ -1,25 +1,25 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, Search, ListFilter } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import FoodCard from '@/components/ui/FoodCard';
-import HeroCard from '@/components/layout/HeroCard';
-import CategoryBanner from '@/components/layout/inventory/CategoryBanner';
-import FoodDetailModal from '@/components/ui/FoodDetailModal';
-import SearchModal from '@/components/ui/SearchModal';
-import FilterModal from '@/components/ui/FilterModal';
-import { categories } from '@/data/categories';
-import { foodData, type FoodItem } from '@/data/foodIImg';
+import { Button } from '@/shared/components/ui/button';
+import HeroCard from '@/modules/inventory/components/ui/other/HeroSection';
+import CategoryBanner from '@/modules/inventory/components/ui/other/CategoryBanner';
+import FoodCard from '@/modules/inventory/components/ui/card/FoodCard';
+import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
+import SearchModal from '@/modules/inventory/components/ui/modal/SearchModal';
+import FilterModal from '@/modules/inventory/components/ui/modal/FilterModal';
+import { categories } from '@/modules/inventory/constants/categories';
+import { foodData, type FoodItem } from '@/modules/inventory/constants/foods';
 
 const CategoryPage: React.FC = () => {
-  const { categoryId } = useParams<{ categoryId: string }>();
+  const { categoryId } = useParams();
   const category = categories.find((c) => c.id === categoryId);
-  const items = categoryId ? foodData[categoryId] || [] : [];
-  
+  const items = category ? foodData[category.id] || [] : [];
+
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [filterAttribute, setFilterAttribute] = useState<string | null>(null);
@@ -65,7 +65,10 @@ const CategoryPage: React.FC = () => {
     setSearchQuery(query);
   };
 
-  const handleFilterApply = (status: string | null, attribute: string | null) => {
+  const handleFilterApply = (
+    status: string | null,
+    attribute: string | null,
+  ) => {
     setFilterStatus(status);
     setFilterAttribute(attribute);
   };
@@ -107,7 +110,7 @@ const CategoryPage: React.FC = () => {
         <CategoryBanner category={category} />
       </HeroCard>
 
-      <div className="px-4 mt-2 space-y-4">
+      <div className="px-4 mt-2 space-y-4 max-w-layout-container mx-auto">
         {/* Search Bar */}
         <div className="flex flex-row w-full cursor-pointer items-center">
           <div
@@ -119,7 +122,9 @@ const CategoryPage: React.FC = () => {
           </div>
           <ListFilter
             className={`h-6 w-6 ml-3 cursor-pointer transition-colors ${
-              filterStatus || filterAttribute ? 'text-[#EE5D50]' : 'text-neutral-900 hover:text-neutral-600'
+              filterStatus || filterAttribute
+                ? 'text-[#EE5D50]'
+                : 'text-neutral-900 hover:text-neutral-600'
             }`}
             onClick={() => setIsFilterOpen(true)}
           />
