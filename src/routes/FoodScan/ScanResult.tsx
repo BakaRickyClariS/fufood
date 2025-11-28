@@ -2,12 +2,8 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
-import type {
-  AnalyzeResponse,
-} from '@/modules/food-scan/services/ocrService';
-import {
-  submitFoodItem,
-} from '@/modules/food-scan/services/ocrService';
+import type { AnalyzeResponse } from '@/modules/food-scan/services/ocrService';
+import { submitFoodItem } from '@/modules/food-scan/services/ocrService';
 import ScanResultCard from '@/modules/food-scan/components/ScanResultCard';
 import ScanResultEditForm from '@/modules/food-scan/components/ScanResultEditForm';
 
@@ -90,8 +86,10 @@ const ScanResult: React.FC = () => {
     <div className="min-h-screen bg-neutral-100 flex flex-col">
       {/* Header */}
       <div className="bg-white p-4 flex items-center shadow-sm sticky top-0 z-10">
-        <button 
-          onClick={() => isEditing ? setIsEditing(false) : navigate('/upload')} 
+        <button
+          onClick={() =>
+            isEditing ? setIsEditing(false) : navigate('/upload')
+          }
           className="p-2 -ml-2"
         >
           <ArrowLeft size={24} className="text-slate-700" />
@@ -139,13 +137,13 @@ const ScanResult: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-3">
-            <button 
+            <button
               onClick={() => setIsEditing(true)}
               className="w-full bg-red-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-red-500/30 active:scale-[0.98] transition-transform"
             >
               編輯草稿
             </button>
-            <button 
+            <button
               onClick={handleDirectSubmit}
               disabled={isSubmitting}
               className="w-full bg-white text-slate-700 font-bold py-4 rounded-2xl border border-slate-200 active:bg-slate-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"

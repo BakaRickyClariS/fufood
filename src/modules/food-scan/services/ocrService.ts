@@ -63,7 +63,7 @@ export const submitFoodItem = async (
 ): Promise<SubmitFoodItemResponse> => {
   // 模擬 API 呼叫，實際專案中應替換為真實 API
   console.log('Submitting food item:', data);
-  
+
   // 模擬延遲
   await new Promise((resolve) => setTimeout(resolve, 1000));
 

@@ -143,7 +143,7 @@ const ScanResultEditForm: React.FC<ScanResultCardProps> = ({
         <div className="flex items-center gap-2 text-slate-800 font-bold border-l-4 border-red-400 pl-2">
           日期設定
         </div>
-        
+
         <div className="grid grid-cols-1 gap-4">
           <FormDatePicker
             label="歸納日期"
@@ -167,15 +167,13 @@ const ScanResultEditForm: React.FC<ScanResultCardProps> = ({
         <div className="flex items-center gap-2 text-slate-800 font-bold border-l-4 border-red-400 pl-2">
           低庫存提醒
         </div>
-        
-        <FormToggle
-          label="開啟通知"
-          name="lowStockAlert"
-          control={control}
-        />
-        
+
+        <FormToggle label="開啟通知" name="lowStockAlert" control={control} />
+
         <div className="flex items-center justify-between pt-2">
-          <span className="text-base font-bold text-slate-800">低於此數量時通知</span>
+          <span className="text-base font-bold text-slate-800">
+            低於此數量時通知
+          </span>
           <FormQuantity
             label=""
             name="lowStockThreshold"

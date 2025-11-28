@@ -67,7 +67,9 @@ const ScanResultCard: React.FC<ScanResultCardProps> = ({
           <span className="text-sm font-medium">購物日期</span>
         </div>
         <span className="font-bold text-slate-800">
-          {result.purchaseDate ? new Date(result.purchaseDate).toLocaleDateString('zh-TW') : '-'}
+          {result.purchaseDate
+            ? new Date(result.purchaseDate).toLocaleDateString('zh-TW')
+            : '-'}
         </span>
       </div>
 
@@ -76,7 +78,9 @@ const ScanResultCard: React.FC<ScanResultCardProps> = ({
           <span className="text-sm font-medium pl-8">過期日期</span>
         </div>
         <span className="font-bold text-slate-800">
-          {result.expiryDate ? new Date(result.expiryDate).toLocaleDateString('zh-TW') : '-'}
+          {result.expiryDate
+            ? new Date(result.expiryDate).toLocaleDateString('zh-TW')
+            : '-'}
         </span>
       </div>
 
