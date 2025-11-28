@@ -1,18 +1,85 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import FoodCard from '@/components/ui/FoodCard';
-import HeroCard from '@/components/layout/HeroCard';
-import CategoryBanner from '@/components/layout/inventory/CategoryBanner';
-import { categories } from '@/data/categories';
-import { foodData } from '@/data/foodIImg';
+import { ChevronLeft, Search, ListFilter } from 'lucide-react';
+import { Button } from '@/shared/components/ui/button';
+import HeroCard from '@/modules/inventory/components/ui/other/HeroSection';
+import CategoryBanner from '@/modules/inventory/components/ui/other/CategoryBanner';
+import FoodCard from '@/modules/inventory/components/ui/card/FoodCard';
+import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
+import SearchModal from '@/modules/inventory/components/ui/modal/SearchModal';
+import FilterModal from '@/modules/inventory/components/ui/modal/FilterModal';
+import { categories } from '@/modules/inventory/constants/categories';
+import { foodData, type FoodItem } from '@/modules/inventory/constants/foods';
 
 const CategoryPage: React.FC = () => {
-  const { categoryId } = useParams<{ categoryId: string }>();
-  const category = categories.find((c) => c.id === categoryId);
-  const items = categoryId ? foodData[categoryId] || [] : [];
+  const { categoryId } = useParams();
+  const category = useMemo(
+    () => categories.find((c) => c.id === categoryId),
+    [categoryId],
+  );
+  const items = useMemo(
+    () => (category ? foodData[category.id] || [] : []),
+    [category],
+  );
+
+  const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [filterAttribute, setFilterAttribute] = useState<string | null>(null);
+
+  const filteredItems = useMemo(
+    () =>
+      items.filter((item) => {
+        // 1. Search Filter
+        if (searchQuery && !item.name.includes(searchQuery)) {
+          return false;
+        }
+
+        // 2. Attribute Filter (Category)
+        if (filterAttribute && item.category !== filterAttribute) {
+          return false;
+        }
+
+        // 3. Status Filter
+        if (filterStatus) {
+          const today = new Date();
+          const expireDate = new Date(item.expireAt);
+          const diffTime = expireDate.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+          switch (filterStatus) {
+            case '已過期':
+              return diffDays < 0;
+            case '即將到期':
+              return diffDays >= 0 && diffDays <= 3;
+            case '低庫存':
+              return item.quantity <= 2;
+            case '有庫存':
+              return item.quantity > 0;
+            default:
+              return true;
+          }
+        }
+
+        return true;
+      }),
+    [items, searchQuery, filterAttribute, filterStatus],
+  );
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleFilterApply = (
+    status: string | null,
+    attribute: string | null,
+  ) => {
+    setFilterStatus(status);
+    setFilterAttribute(attribute);
+  };
 
   if (!category) {
     return (
@@ -51,49 +118,66 @@ const CategoryPage: React.FC = () => {
         <CategoryBanner category={category} />
       </HeroCard>
 
-      <div className="px-4 mt-2 space-y-4">
+      <div className="px-4 mt-2 space-y-4 max-w-layout-container mx-auto">
         {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-          <Input
-            placeholder="搜尋"
-            className="pl-9 bg-white border-none shadow-sm h-11 rounded-xl"
-          />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+        <div className="flex flex-row w-full cursor-pointer items-center">
+          <div
+            className="pl-2 bg-white border-none w-full shadow-sm py-1 rounded-xl flex items-center text-neutral-400 text-sm"
+            onClick={() => setIsSearchOpen(true)}
           >
-            <span className="sr-only">Filter</span>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M2 3H14M4.66667 8H11.3333M7.33333 13H8.66667"
-                stroke="#171717"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Button>
+            <Search className=" h-4 w-4 text-neutral-900" />
+            <p className="ml-3">{searchQuery || '搜尋'}</p>
+          </div>
+          <ListFilter
+            className={`h-6 w-6 ml-3 cursor-pointer transition-colors ${
+              filterStatus || filterAttribute
+                ? 'text-[#EE5D50]'
+                : 'text-neutral-900 hover:text-neutral-600'
+            }`}
+            onClick={() => setIsFilterOpen(true)}
+          />
         </div>
 
         {/* Item List */}
         <div className="grid grid-cols-2 gap-3">
-          {items.length > 0 ? (
-            items.map((item) => <FoodCard key={item.id} item={item} />)
+          {filteredItems.length > 0 ? (
+            filteredItems.map((item) => (
+              <FoodCard
+                key={item.id}
+                item={item}
+                onClick={() => setSelectedItem(item)}
+              />
+            ))
           ) : (
             <div className="col-span-2 text-center py-10 text-neutral-400">
-              目前沒有資料
+              沒有符合條件的項目
             </div>
           )}
         </div>
       </div>
+
+      {/* Detail Modal */}
+      {selectedItem && (
+        <FoodDetailModal
+          item={selectedItem}
+          isOpen={!!selectedItem}
+          onClose={() => setSelectedItem(null)}
+        />
+      )}
+
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onSearch={handleSearch}
+      />
+
+      {/* Filter Modal */}
+      <FilterModal
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onApply={handleFilterApply}
+      />
     </div>
   );
 };
