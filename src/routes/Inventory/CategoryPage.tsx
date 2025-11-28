@@ -13,7 +13,10 @@ import { foodData, type FoodItem } from '@/modules/inventory/constants/foods';
 
 const CategoryPage: React.FC = () => {
   const { categoryId } = useParams();
-  const category = categories.find((c) => c.id === categoryId);
+  const category = useMemo(
+    () => categories.find((c) => c.id === categoryId),
+    [categoryId],
+  );
   const items = useMemo(
     () => (category ? foodData[category.id] || [] : []),
     [category],
