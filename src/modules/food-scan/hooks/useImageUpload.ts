@@ -7,10 +7,10 @@ import { limitFit } from '@cloudinary/url-gen/actions/resize';
 import { recognizeImage } from '@/modules/food-scan/services/ocrService';
 import type { AnalyzeResponse } from '@/modules/food-scan/services/ocrService';
 
-interface UseImageUploadProps {
+type UseImageUploadProps = {
   onUploadSuccess?: (blob: Blob) => Promise<void>;
   onAnalyzeSuccess: (result: AnalyzeResponse['data'], imageUrl: string) => void;
-}
+};
 
 export const useImageUpload = ({
   onUploadSuccess,
@@ -56,7 +56,7 @@ export const useImageUpload = ({
         }
 
         const result = await uploadResponse.json();
-        console.log('上傳成功:', result);
+        // console.warn('上傳成功:', result);
 
         const myImage = cld.image(result.public_id);
         myImage
@@ -65,7 +65,7 @@ export const useImageUpload = ({
           .resize(limitFit().width(500).height(500));
 
         const optimizedUrl = myImage.toURL();
-        console.log('優化後的 URL:', optimizedUrl);
+        // console.warn('優化後的 URL:', optimizedUrl);
 
         if (onUploadSuccess) {
           await onUploadSuccess(blob);
@@ -75,7 +75,7 @@ export const useImageUpload = ({
         setIsAnalyzing(true);
         try {
           const analyzeResult = await recognizeImage(optimizedUrl);
-          console.log('API Analyze Result:', analyzeResult);
+          // console.warn('API Analyze Result:', analyzeResult);
 
           // Validate data - if critical fields are missing, throw error to trigger fallback
           if (!analyzeResult.data || !analyzeResult.data.productName) {

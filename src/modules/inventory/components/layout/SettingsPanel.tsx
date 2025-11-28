@@ -12,7 +12,15 @@ const categories = [
   '乾貨醬料類',
 ];
 
-const CounterItem = ({ label, value, onChange }: { label: string; value: number; onChange: (val: number) => void }) => (
+const CounterItem = ({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (val: number) => void;
+}) => (
   <div className="flex items-center justify-between py-4 border-b border-gray-100 last:border-0">
     <span className="text-base font-bold text-neutral-900">{label}</span>
     <div className="flex items-center gap-3">
@@ -50,7 +58,7 @@ const SettingsPanel: React.FC = () => {
           <h2 className="text-lg font-bold text-neutral-900">庫存排序設定</h2>
           <Info className="w-4 h-4 text-neutral-500" />
         </div>
-        
+
         <div className="bg-white rounded-[20px] p-4 space-y-2">
           {categories.map((category) => (
             <div
@@ -58,7 +66,9 @@ const SettingsPanel: React.FC = () => {
               className="flex items-center gap-4 bg-[#FFF5F5] p-4 rounded-xl"
             >
               <GripVertical className="w-5 h-5 text-neutral-400 cursor-grab" />
-              <span className="text-base font-bold text-neutral-900">{category}</span>
+              <span className="text-base font-bold text-neutral-900">
+                {category}
+              </span>
             </div>
           ))}
         </div>
@@ -67,7 +77,9 @@ const SettingsPanel: React.FC = () => {
       {/* Main Inventory Reminder Settings */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-bold text-neutral-900">主控庫存提醒設定</h2>
+          <h2 className="text-lg font-bold text-neutral-900">
+            主控庫存提醒設定
+          </h2>
           <Info className="w-4 h-4 text-neutral-400" />
         </div>
 

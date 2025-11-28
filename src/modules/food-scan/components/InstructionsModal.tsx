@@ -1,12 +1,12 @@
 import React from 'react';
 import { Info, Check } from 'lucide-react';
 
-interface InstructionsModalProps {
+type InstructionsModalProps = {
   isOpen: boolean;
   onClose: () => void;
   dontShowAgain: boolean;
   onDontShowAgainChange: (checked: boolean) => void;
-}
+};
 
 const InstructionsModal: React.FC<InstructionsModalProps> = ({
   isOpen,

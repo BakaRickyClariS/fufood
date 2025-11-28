@@ -1,9 +1,7 @@
-const Notifications = () => {
-  return (
-    <section>
-      <h1>Notifications</h1>
-    </section>
-  );
-};
+const Notifications = () => (
+  <section>
+    <h1>Notifications</h1>
+  </section>
+);
 
 export default Notifications;

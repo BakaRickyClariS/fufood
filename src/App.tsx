@@ -6,7 +6,8 @@ import { useEffect, useRef, useState } from 'react';
 
 const App: React.FC = () => {
   const [needRefresh, setNeedRefresh] = useState(false);
-  const updateSW = useRef<(reloadPage?: boolean) => Promise<void> | void>(undefined);
+  const updateSW =
+    useRef<(reloadPage?: boolean) => Promise<void> | void>(undefined);
 
   useEffect(() => {
     updateSW.current = registerSW({

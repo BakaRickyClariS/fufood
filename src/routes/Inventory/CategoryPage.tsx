@@ -13,8 +13,14 @@ import { foodData, type FoodItem } from '@/modules/inventory/constants/foods';
 
 const CategoryPage: React.FC = () => {
   const { categoryId } = useParams();
-  const category = categories.find((c) => c.id === categoryId);
-  const items = category ? foodData[category.id] || [] : [];
+  const category = useMemo(
+    () => categories.find((c) => c.id === categoryId),
+    [categoryId],
+  );
+  const items = useMemo(
+    () => (category ? foodData[category.id] || [] : []),
+    [category],
+  );
 
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -24,42 +30,44 @@ const CategoryPage: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [filterAttribute, setFilterAttribute] = useState<string | null>(null);
 
-  const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      // 1. Search Filter
-      if (searchQuery && !item.name.includes(searchQuery)) {
-        return false;
-      }
-
-      // 2. Attribute Filter (Category)
-      if (filterAttribute && item.category !== filterAttribute) {
-        return false;
-      }
-
-      // 3. Status Filter
-      if (filterStatus) {
-        const today = new Date();
-        const expireDate = new Date(item.expireAt);
-        const diffTime = expireDate.getTime() - today.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        switch (filterStatus) {
-          case '已過期':
-            return diffDays < 0;
-          case '即將到期':
-            return diffDays >= 0 && diffDays <= 3;
-          case '低庫存':
-            return item.quantity <= 2;
-          case '有庫存':
-            return item.quantity > 0;
-          default:
-            return true;
+  const filteredItems = useMemo(
+    () =>
+      items.filter((item) => {
+        // 1. Search Filter
+        if (searchQuery && !item.name.includes(searchQuery)) {
+          return false;
         }
-      }
 
-      return true;
-    });
-  }, [items, searchQuery, filterAttribute, filterStatus]);
+        // 2. Attribute Filter (Category)
+        if (filterAttribute && item.category !== filterAttribute) {
+          return false;
+        }
+
+        // 3. Status Filter
+        if (filterStatus) {
+          const today = new Date();
+          const expireDate = new Date(item.expireAt);
+          const diffTime = expireDate.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+          switch (filterStatus) {
+            case '已過期':
+              return diffDays < 0;
+            case '即將到期':
+              return diffDays >= 0 && diffDays <= 3;
+            case '低庫存':
+              return item.quantity <= 2;
+            case '有庫存':
+              return item.quantity > 0;
+            default:
+              return true;
+          }
+        }
+
+        return true;
+      }),
+    [items, searchQuery, filterAttribute, filterStatus],
+  );
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
