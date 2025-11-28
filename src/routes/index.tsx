@@ -3,7 +3,7 @@ import MainLayout from '@/shared/components/layout/MainLayout';
 import Dashboard from './Dashboard';
 import Inventory from './Inventory';
 import Recipe from './Recipe';
-import FoodInputRoutes from './FoodInput';
+import FoodScanRoutes from './FoodScan';
 import AuthRoutes from './Auth';
 import SettingsRoutes from './Settings';
 import CategoryPage from './Inventory/CategoryPage';
@@ -23,7 +23,7 @@ export const router = createBrowserRouter([
         ],
       },
       { path: 'recipe', element: <Recipe /> },
-      ...FoodInputRoutes,
+      ...FoodScanRoutes,
       ...SettingsRoutes,
     ],
   },
