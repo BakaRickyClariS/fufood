@@ -26,7 +26,6 @@ export default [
       '**/build/**',
       '**/coverage/**',
       '**/dev-dist/**',
-      'dev-dist/**',
       '**/src/shared/components/ui/**',
     ],
   },
