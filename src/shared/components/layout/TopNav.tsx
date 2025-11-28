@@ -9,7 +9,7 @@ import {
 import { useState } from 'react';
 import zoeImg from '@/assets/images/inventory/members-zo.png';
 
-export default function TopNav() {
+const TopNav = () => {
   const [selectedHome, setSelectedHome] = useState('My Home');
 
   const homeOptions = [
@@ -25,8 +25,8 @@ export default function TopNav() {
         <div className="flex items-center gap-3">
           {/* Free Badge */}
           <div className="flex items-center gap-1 bg-[#C48B6B] text-white px-2 py-1 rounded-md shadow-sm">
-             <ShieldCheck className="w-4 h-4 text-white" />
-             <span className="text-xs font-bold">Free</span>
+            <ShieldCheck className="w-4 h-4 text-white" />
+            <span className="text-xs font-bold">Free</span>
           </div>
 
           {/* Home Selector */}
@@ -45,11 +45,7 @@ export default function TopNav() {
                 <DropdownMenuItem
                   key={option.value}
                   onClick={() => setSelectedHome(option.label)}
-                  className={
-                    selectedHome === option.label
-                      ? 'bg-gray-100'
-                      : ''
-                  }
+                  className={selectedHome === option.label ? 'bg-gray-100' : ''}
                 >
                   {option.label}
                 </DropdownMenuItem>
@@ -63,15 +59,25 @@ export default function TopNav() {
 
         {/* Right: Home Icon + User Avatar */}
         <div className="flex items-center gap-3 shrink-0">
-          <Button variant="ghost" size="icon" className="text-neutral-900 hover:bg-transparent">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-neutral-900 hover:bg-transparent"
+          >
             <HousePlus className="w-6 h-6" />
           </Button>
 
           <div className="w-8 h-8 rounded-full overflow-hidden border border-gray-200">
-            <img src={zoeImg} alt="User" className="w-full h-full object-cover" />
+            <img
+              src={zoeImg}
+              alt="User"
+              className="w-full h-full object-cover"
+            />
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default TopNav;

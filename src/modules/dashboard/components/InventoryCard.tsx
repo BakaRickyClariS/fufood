@@ -16,20 +16,19 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
   boxShadow = '',
   borderColor = 'border-neutral-100',
   img,
-}) => {
-  return (
-    <Card
-      className={`flex flex-row items-center justify-between px-5 py-4 rounded-2xl border-2 relative overflow-hidden h-36 ${borderColor} ${boxShadow} ${bgColor}`}
-    >
-      <div className="flex flex-col w-full">
-        <p className="text-lg font-semibold text-primary-900">{title}</p>
-        <p className="mt-1 text-4xl font-bold text-neutral-900">{value}</p>
-      </div>
+}) => (
+  <Card
+    className={`flex flex-row items-center justify-between px-5 py-4 rounded-2xl border-2 relative overflow-hidden h-36 ${borderColor} ${boxShadow} ${bgColor}`}
+  >
+    <div className="flex flex-col w-full">
+      <p className="text-lg font-semibold text-primary-900">{title}</p>
+      <p className="mt-1 text-4xl font-bold text-neutral-900">{value}</p>
+    </div>
 
-      <img
-        src={img}
-        alt={title}
-        className=" absolute
+    <img
+      src={img}
+      alt={title}
+      className=" absolute
     bottom-0
     right-0
     max-h-full
@@ -37,9 +36,8 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
     object-contain
     z-0
     pointer-events-none"
-      />
-    </Card>
-  );
-};
+    />
+  </Card>
+);
 
 export default InventoryCard;

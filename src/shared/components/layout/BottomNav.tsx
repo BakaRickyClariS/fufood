@@ -48,11 +48,11 @@ const defaultNavItems: NavItem[] = [
   },
 ];
 
-export default function MobileBottomNav({
+const MobileBottomNav = ({
   items = defaultNavItems,
 }: {
   items?: NavItem[];
-}) {
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -64,7 +64,7 @@ export default function MobileBottomNav({
     // 2. 嘗試前綴匹配 (排除根路徑 '/')
     // 例如: /inventory/category/123 應該匹配 /inventory
     const prefixMatch = items.find(
-      (i) => i.href !== '/' && location.pathname.startsWith(i.href)
+      (i) => i.href !== '/' && location.pathname.startsWith(i.href),
     );
     if (prefixMatch) return prefixMatch.id;
 
@@ -187,4 +187,6 @@ export default function MobileBottomNav({
       )}
     </div>
   );
-}
+};
+
+export default MobileBottomNav;

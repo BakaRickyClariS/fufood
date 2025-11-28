@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import InventoryMainTabs from '../ui/tabs/InventoryMainTabs';
-import InventorySubTabs, { type SubTabType } from '../ui/tabs/InventorySubTabs';
 import OverviewPanel from '@/modules/inventory/components/layout/OverviewPanel';
 import CommonItemsPanel from '@/modules/inventory/components/layout/CommonItemsPanel';
 import ExpiredRecordsPanel from '@/modules/inventory/components/layout/ExpiredRecordsPanel';
 import SettingsPanel from '@/modules/inventory/components/layout/SettingsPanel';
+import InventorySubTabs, { type SubTabType } from '../ui/tabs/InventorySubTabs';
+import InventoryMainTabs from '../ui/tabs/InventoryMainTabs';
 
 const TabsSection = () => {
   const [mainTab, setMainTab] = useState<'overview' | 'settings'>('overview');
