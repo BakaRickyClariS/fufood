@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/shared/utils/styleUtils';
+import { useAuth } from '@/modules/auth';
 
 const AVATARS = [
   { id: 1, color: 'bg-red-200' },
@@ -17,13 +18,18 @@ const AVATARS = [
 
 const AvatarSelection = () => {
   const navigate = useNavigate();
+  const { login, isLoading } = useAuth();
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (selectedId) {
-      // Fake login
-      localStorage.setItem('token', 'fake-jwt-token');
-      navigate('/'); // Navigate to main app (Dashboard)
+      try {
+        // 使用 Mock 登入
+        await login({ email: 'test@example.com', password: 'password' });
+        navigate('/'); // Navigate to main app (Dashboard)
+      } catch (error) {
+        console.error('Login failed:', error);
+      }
     }
   };
 
@@ -61,9 +67,9 @@ const AvatarSelection = () => {
         <Button 
           className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white h-12 text-base rounded-xl shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleConfirm}
-          disabled={!selectedId}
+          disabled={!selectedId || isLoading}
         >
-          確認
+          {isLoading ? '處理中...' : '確認'}
         </Button>
       </div>
     </div>

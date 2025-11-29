@@ -2,39 +2,14 @@ import heroBanner from '@/assets/images/dashboard/hero-banner.png';
 import InventorySection from '@/modules/dashboard/components/InventorySection';
 import RecipeSection from '@/modules/dashboard/components/RecipeSection';
 
-import { useNavigate } from 'react-router-dom';
-import { Home, ChevronDown, ShieldCheck } from 'lucide-react';
+
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
+
 
   return (
     <>
-      {/* Header */}
-      <div className="flex justify-between items-center px-4 py-2 bg-stone-50">
-        <div className="flex items-center gap-2">
-          <div className="flex -space-x-2">
-             <div className="w-8 h-8 rounded-full bg-red-200 border-2 border-white" />
-             <div className="w-8 h-8 rounded-full bg-orange-200 border-2 border-white" />
-             <div className="w-8 h-8 rounded-full bg-amber-200 border-2 border-white" />
-          </div>
-          <button 
-            className="flex items-center gap-1 bg-white px-3 py-1.5 rounded-full shadow-sm"
-            onClick={() => navigate('/group/members')}
-          >
-            <span className="text-sm font-medium text-stone-700">My Home</span>
-            <ChevronDown className="w-4 h-4 text-stone-400" />
-          </button>
-        </div>
-        <div className="flex items-center gap-3">
-           <button onClick={() => navigate('/group/settings')}>
-             <Home className="w-6 h-6 text-stone-600" />
-           </button>
-           <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
-             <ShieldCheck className="w-5 h-5 text-[#EE5D50]" />
-           </div>
-        </div>
-      </div>
+
     {/* Hero 區塊 */}
     <section>
       <div className="flex justify-center px-4 w-full">

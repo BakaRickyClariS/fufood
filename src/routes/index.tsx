@@ -8,8 +8,7 @@ import FoodInputRoutes from './FoodInput';
 import AuthRoutes from './Auth';
 import SettingsRoutes from './Settings';
 import CategoryPage from './Inventory/CategoryPage';
-import GroupSettings from './Group/Settings';
-import GroupMembers from './Group/Members';
+
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem('token');
@@ -45,13 +44,7 @@ export const router = createBrowserRouter([
           { path: 'category/:categoryId', element: <CategoryPage /> },
         ],
       },
-      {
-        path: 'group',
-        children: [
-          { path: 'settings', element: <GroupSettings /> },
-          { path: 'members', element: <GroupMembers /> },
-        ],
-      },
+
       { path: 'recipe', element: <Recipe /> },
       ...FoodInputRoutes,
       ...SettingsRoutes,
