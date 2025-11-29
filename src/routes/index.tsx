@@ -1,6 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import MainLayout from '@/shared/components/layout/MainLayout';
-import StartPage from './Start';
 import Dashboard from './Dashboard';
 import Inventory from './Inventory';
 import Recipe from './Recipe';
@@ -11,9 +10,9 @@ import CategoryPage from './Inventory/CategoryPage';
 
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('accessToken');
   if (!token) {
-    return <Navigate to="/start" replace />;
+    return <Navigate to="/auth/login" replace />;
   }
   return <>{children}</>;
 };
@@ -31,7 +30,6 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ) 
       },
-      { path: 'start', element: <StartPage /> },
       { path: 'dashboard', element: <Dashboard /> },
       {
         path: 'auth',
