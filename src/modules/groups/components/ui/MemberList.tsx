@@ -10,19 +10,13 @@ type MemberListProps = {
 /**
  * 成員列表組件
  */
-export const MemberList: FC<MemberListProps> = ({ 
-  members, 
-  onRemoveMember 
-}) => {
-  return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-stone-100">
-      {members.map((member) => (
-        <MemberItem 
-          key={member.id} 
-          member={member} 
-          onRemove={onRemoveMember}
-        />
-      ))}
-    </div>
-  );
-};
+export const MemberList: FC<MemberListProps> = ({
+  members,
+  onRemoveMember,
+}) => (
+  <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-stone-100">
+    {members.map((member) => (
+      <MemberItem key={member.id} member={member} onRemove={onRemoveMember} />
+    ))}
+  </div>
+);

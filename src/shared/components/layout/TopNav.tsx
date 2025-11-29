@@ -17,7 +17,7 @@ import type { Group } from '@/modules/groups/types/group.types';
 
 const TopNav = () => {
   const [selectedHome] = useState('My Home');
-  
+
   // Modal States
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -73,12 +73,17 @@ const TopNav = () => {
                   <ChevronDown className="w-5 h-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64 p-4 rounded-2xl">
+              <DropdownMenuContent
+                align="start"
+                className="w-64 p-4 rounded-2xl"
+              >
                 {/* Current User Info */}
                 <div className="flex items-center gap-3 mb-4 pb-4 border-b border-stone-100">
                   <div className="w-10 h-10 rounded-full bg-red-200" />
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-stone-800">Jocelyn (你)</span>
+                    <span className="text-sm font-medium text-stone-800">
+                      Jocelyn (你)
+                    </span>
                     <span className="text-xs text-stone-400">擁有者</span>
                   </div>
                 </div>
@@ -88,21 +93,25 @@ const TopNav = () => {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-orange-200" />
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-stone-800">Zoe</span>
+                      <span className="text-sm font-medium text-stone-800">
+                        Zoe
+                      </span>
                       <span className="text-xs text-stone-400">組織者</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-amber-200" />
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-stone-800">Ricky</span>
+                      <span className="text-sm font-medium text-stone-800">
+                        Ricky
+                      </span>
                       <span className="text-xs text-stone-400">組織者</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Edit Button */}
-                <Button 
+                <Button
                   className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white h-10 rounded-xl text-sm"
                   onClick={() => {
                     // 這裡我們需要傳入當前群組，目前先用 mock

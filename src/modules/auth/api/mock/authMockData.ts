@@ -11,7 +11,7 @@ export const MOCK_USERS: User[] = [
 ];
 
 export const MOCK_TOKEN: AuthToken = {
-  accessToken: 'mock-jwt-token-' + Date.now(),
-  refreshToken: 'mock-refresh-token-' + Date.now(),
+  accessToken: `mock-jwt-token-${Date.now()}`,
+  refreshToken: `mock-refresh-token-${Date.now()}`,
   expiresIn: 3600,
 };

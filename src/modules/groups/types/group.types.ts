@@ -31,7 +31,9 @@ export type CreateGroupForm = Pick<Group, 'name' | 'color' | 'characterColor'>;
 /**
  * 群組更新表單型別
  */
-export type UpdateGroupForm = Partial<Pick<Group, 'name' | 'color' | 'characterColor'>>;
+export type UpdateGroupForm = Partial<
+  Pick<Group, 'name' | 'color' | 'characterColor'>
+>;
 
 /**
  * 成員邀請表單型別

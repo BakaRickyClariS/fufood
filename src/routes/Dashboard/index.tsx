@@ -2,14 +2,8 @@ import heroBanner from '@/assets/images/dashboard/hero-banner.png';
 import InventorySection from '@/modules/dashboard/components/InventorySection';
 import RecipeSection from '@/modules/dashboard/components/RecipeSection';
 
-
-
-const Dashboard: React.FC = () => {
-
-
-  return (
-    <>
-
+const Dashboard: React.FC = () => (
+  <>
     {/* Hero 區塊 */}
     <section>
       <div className="flex justify-center px-4 w-full">
@@ -40,7 +34,6 @@ const Dashboard: React.FC = () => {
     {/* 推薦食譜區塊 */}
     <RecipeSection />
   </>
-  );
-};
+);
 
 export default Dashboard;

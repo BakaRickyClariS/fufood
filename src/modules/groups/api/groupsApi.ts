@@ -1,9 +1,9 @@
-import type { 
-  Group, 
-  CreateGroupForm, 
+import type {
+  Group,
+  CreateGroupForm,
   UpdateGroupForm,
   GroupMember,
-  InviteMemberForm 
+  InviteMemberForm,
 } from '../../types/group.types';
 import { MOCK_GROUPS, MOCK_MEMBERS } from './mock/groupsMockData';
 
@@ -15,10 +15,10 @@ export const groupsApi = {
    */
   getAll: async (): Promise<Group[]> => {
     if (USE_MOCK) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       return MOCK_GROUPS;
     }
-    
+
     // TODO: 真實 API
     const response = await fetch('/api/groups');
     if (!response.ok) throw new Error('無法取得群組列表');
@@ -30,10 +30,10 @@ export const groupsApi = {
    */
   getMembers: async (groupId: string): Promise<GroupMember[]> => {
     if (USE_MOCK) {
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300));
       return MOCK_MEMBERS;
     }
-    
+
     // TODO: 真實 API
     const response = await fetch(`/api/groups/${groupId}/members`);
     if (!response.ok) throw new Error('無法取得成員列表');
@@ -45,7 +45,7 @@ export const groupsApi = {
    */
   create: async (data: CreateGroupForm): Promise<Group> => {
     if (USE_MOCK) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       return {
         id: Math.random().toString(36).substr(2, 9),
         ...data,
@@ -56,7 +56,7 @@ export const groupsApi = {
         updatedAt: new Date(),
       };
     }
-    
+
     // TODO: 真實 API
     const response = await fetch('/api/groups', {
       method: 'POST',
@@ -72,12 +72,12 @@ export const groupsApi = {
    */
   update: async (id: string, data: UpdateGroupForm): Promise<Group> => {
     if (USE_MOCK) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const group = MOCK_GROUPS.find(g => g.id === id);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const group = MOCK_GROUPS.find((g) => g.id === id);
       if (!group) throw new Error('群組不存在');
       return { ...group, ...data, updatedAt: new Date() };
     }
-    
+
     // TODO: 真實 API
     const response = await fetch(`/api/groups/${id}`, {
       method: 'PUT',
@@ -93,10 +93,10 @@ export const groupsApi = {
    */
   delete: async (id: string): Promise<void> => {
     if (USE_MOCK) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       return;
     }
-    
+
     // TODO: 真實 API
     const response = await fetch(`/api/groups/${id}`, {
       method: 'DELETE',
@@ -107,12 +107,15 @@ export const groupsApi = {
   /**
    * 邀請成員
    */
-  inviteMember: async (groupId: string, data: InviteMemberForm): Promise<void> => {
+  inviteMember: async (
+    groupId: string,
+    data: InviteMemberForm,
+  ): Promise<void> => {
     if (USE_MOCK) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       return;
     }
-    
+
     // TODO: 真實 API
     const response = await fetch(`/api/groups/${groupId}/members`, {
       method: 'POST',
@@ -127,10 +130,10 @@ export const groupsApi = {
    */
   removeMember: async (groupId: string, memberId: string): Promise<void> => {
     if (USE_MOCK) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       return;
     }
-    
+
     // TODO: 真實 API
     const response = await fetch(`/api/groups/${groupId}/members/${memberId}`, {
       method: 'DELETE',
@@ -142,15 +145,15 @@ export const groupsApi = {
    * 更新成員權限
    */
   updateMemberRole: async (
-    groupId: string, 
-    memberId: string, 
-    role: GroupMember['role']
+    groupId: string,
+    memberId: string,
+    role: GroupMember['role'],
   ): Promise<void> => {
     if (USE_MOCK) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       return;
     }
-    
+
     // TODO: 真實 API
     const response = await fetch(`/api/groups/${groupId}/members/${memberId}`, {
       method: 'PATCH',

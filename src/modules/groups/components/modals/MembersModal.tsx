@@ -6,10 +6,10 @@ import {
   DialogTitle,
 } from '@/shared/components/ui/dialog';
 import { Button } from '@/shared/components/ui/button';
+import { ChevronLeft } from 'lucide-react';
 import { MemberList } from '../ui/MemberList';
 import { useGroupMembers } from '../../hooks/useGroupMembers';
 import type { Group } from '../../types/group.types';
-import { ChevronLeft } from 'lucide-react';
 
 type MembersModalProps = {
   open: boolean;
@@ -37,11 +37,16 @@ export const MembersModal: FC<MembersModalProps> = ({
         <div className="flex flex-col h-full bg-stone-50">
           <DialogHeader className="flex-shrink-0 px-4 py-3 bg-white border-b border-stone-100 flex flex-row items-center justify-center relative">
             {onBack && (
-              <button onClick={onBack} className="absolute left-4 p-1 -ml-1 text-stone-600">
+              <button
+                onClick={onBack}
+                className="absolute left-4 p-1 -ml-1 text-stone-600"
+              >
                 <ChevronLeft className="w-6 h-6" />
               </button>
             )}
-            <DialogTitle className="text-lg font-bold text-stone-900">編輯成員</DialogTitle>
+            <DialogTitle className="text-lg font-bold text-stone-900">
+              編輯成員
+            </DialogTitle>
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col">
@@ -52,37 +57,42 @@ export const MembersModal: FC<MembersModalProps> = ({
                   <div className="inline-flex items-center gap-1 bg-[#E8DCC6] px-2 py-1 rounded-md text-xs text-[#8B5E3C] font-medium mb-2">
                     <span>{group.plan === 'free' ? 'Free' : 'Premium'}</span>
                   </div>
-                  <h2 className="text-xl font-bold text-[#EE5D50] mb-1">{group.name}</h2>
+                  <h2 className="text-xl font-bold text-[#EE5D50] mb-1">
+                    {group.name}
+                  </h2>
                   <p className="text-sm text-stone-500">管理員 {group.admin}</p>
                 </div>
-                
+
                 {/* Character Illustration (Placeholder) */}
-                <div className={`absolute right-[-20px] bottom-[-20px] w-40 h-40 ${group.characterColor} rounded-full opacity-80`} />
+                <div
+                  className={`absolute right-[-20px] bottom-[-20px] w-40 h-40 ${group.characterColor} rounded-full opacity-80`}
+                />
               </div>
 
               {/* Members List */}
               <div className="flex flex-col gap-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-stone-500 font-medium">成員 {members.length}</span>
-                  <button className="text-xs text-[#EE5D50] font-medium">刪除成員</button>
+                  <span className="text-sm text-stone-500 font-medium">
+                    成員 {members.length}
+                  </span>
+                  <button className="text-xs text-[#EE5D50] font-medium">
+                    刪除成員
+                  </button>
                 </div>
 
                 {isLoading ? (
-                  <div className="text-center py-8 text-stone-400">載入中...</div>
+                  <div className="text-center py-8 text-stone-400">
+                    載入中...
+                  </div>
                 ) : (
-                  <MemberList 
-                    members={members} 
-                    onRemoveMember={removeMember}
-                  />
+                  <MemberList members={members} onRemoveMember={removeMember} />
                 )}
               </div>
             </div>
 
             {/* Invite Button */}
             <div className="mt-6 pt-4">
-              <Button 
-                className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white h-12 text-base rounded-xl shadow-sm"
-              >
+              <Button className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white h-12 text-base rounded-xl shadow-sm">
                 邀請好友
               </Button>
             </div>

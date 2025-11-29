@@ -46,9 +46,11 @@ const AvatarSelection = () => {
               <button
                 key={avatar.id}
                 className={cn(
-                  "aspect-square rounded-full transition-all duration-200 relative",
+                  'aspect-square rounded-full transition-all duration-200 relative',
                   avatar.color,
-                  selectedId === avatar.id ? "ring-4 ring-[#EE5D50] scale-105" : "hover:opacity-80"
+                  selectedId === avatar.id
+                    ? 'ring-4 ring-[#EE5D50] scale-105'
+                    : 'hover:opacity-80',
                 )}
                 onClick={() => setSelectedId(avatar.id)}
               >
@@ -64,7 +66,7 @@ const AvatarSelection = () => {
       </div>
 
       <div className="mt-6 mb-8">
-        <Button 
+        <Button
           className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white h-12 text-base rounded-xl shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleConfirm}
           disabled={!selectedId || isLoading}

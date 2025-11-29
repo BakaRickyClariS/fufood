@@ -8,13 +8,12 @@ import AuthRoutes from './Auth';
 import SettingsRoutes from './Settings';
 import CategoryPage from './Inventory/CategoryPage';
 
-
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem('accessToken');
   if (!token) {
     return <Navigate to="/auth/login" replace />;
   }
-  return <>{children}</>;
+  return children;
 };
 
 export const router = createBrowserRouter([
@@ -22,13 +21,13 @@ export const router = createBrowserRouter([
     path: '/',
     element: <MainLayout />,
     children: [
-      { 
-        index: true, 
+      {
+        index: true,
         element: (
           <ProtectedRoute>
             <Dashboard />
           </ProtectedRoute>
-        ) 
+        ),
       },
       { path: 'dashboard', element: <Dashboard /> },
       {

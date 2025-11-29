@@ -22,9 +22,7 @@ export const MOCK_GROUPS: Group[] = [
     id: '2',
     name: 'JJ Home',
     admin: 'JJ',
-    members: [
-      { id: '4', name: 'JJ', role: 'owner', avatar: 'bg-blue-200' },
-    ],
+    members: [{ id: '4', name: 'JJ', role: 'owner', avatar: 'bg-blue-200' }],
     color: 'bg-blue-100',
     characterColor: 'bg-blue-400',
     plan: 'free',

@@ -5,13 +5,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/shared/components/ui/dialog';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
+import { ChevronLeft } from 'lucide-react';
 import { useGroups } from '../../hooks/useGroups';
 import type { Group } from '../../types/group.types';
-import { ChevronLeft } from 'lucide-react';
 
 type EditGroupModalProps = {
   open: boolean;
@@ -48,7 +47,7 @@ export const EditGroupModal: FC<EditGroupModalProps> = ({
       name,
       color,
     });
-    
+
     onClose();
   };
 
@@ -68,17 +67,25 @@ export const EditGroupModal: FC<EditGroupModalProps> = ({
         <div className="flex flex-col h-full bg-stone-50">
           <DialogHeader className="flex-shrink-0 px-4 py-3 bg-white border-b border-stone-100 flex flex-row items-center justify-center relative">
             {onBack && (
-              <button onClick={onBack} className="absolute left-4 p-1 -ml-1 text-stone-600">
+              <button
+                onClick={onBack}
+                className="absolute left-4 p-1 -ml-1 text-stone-600"
+              >
                 <ChevronLeft className="w-6 h-6" />
               </button>
             )}
-            <DialogTitle className="text-lg font-bold text-stone-900">修改群組內容</DialogTitle>
+            <DialogTitle className="text-lg font-bold text-stone-900">
+              修改群組內容
+            </DialogTitle>
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto px-4 py-6">
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
               <div className="flex flex-col gap-2">
-                <label htmlFor="editGroupName" className="text-sm font-medium text-stone-700">
+                <label
+                  htmlFor="editGroupName"
+                  className="text-sm font-medium text-stone-700"
+                >
                   群組名稱
                 </label>
                 <Input
@@ -96,27 +103,29 @@ export const EditGroupModal: FC<EditGroupModalProps> = ({
                   群組顏色
                 </label>
                 <div className="flex gap-2">
-                  {['bg-white', 'bg-red-50', 'bg-blue-50', 'bg-green-50'].map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      className={`w-8 h-8 rounded-full border ${c} ${color === c ? 'ring-2 ring-stone-400' : ''}`}
-                      onClick={() => setColor(c)}
-                    />
-                  ))}
+                  {['bg-white', 'bg-red-50', 'bg-blue-50', 'bg-green-50'].map(
+                    (c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        className={`w-8 h-8 rounded-full border ${c} ${color === c ? 'ring-2 ring-stone-400' : ''}`}
+                        onClick={() => setColor(c)}
+                      />
+                    ),
+                  )}
                 </div>
               </div>
 
               <div className="mt-auto pt-4 flex flex-col gap-3">
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={isLoading || !name.trim()}
                   className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white h-12 text-base rounded-xl shadow-sm"
                 >
                   {isLoading ? '儲存中...' : '儲存變更'}
                 </Button>
-                
-                <Button 
+
+                <Button
                   type="button"
                   variant="outline"
                   onClick={handleDelete}

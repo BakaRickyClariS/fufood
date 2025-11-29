@@ -34,7 +34,9 @@ const Login = () => {
       {/* Content */}
       <div className="flex flex-col gap-4 mb-12">
         <div className="flex justify-center mb-4">
-          <span className="text-2xl font-bold tracking-widest text-stone-400">...</span>
+          <span className="text-2xl font-bold tracking-widest text-stone-400">
+            ...
+          </span>
         </div>
 
         {error && (
@@ -43,7 +45,7 @@ const Login = () => {
           </div>
         )}
 
-        <Button 
+        <Button
           className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white h-12 text-base rounded-xl shadow-sm"
           onClick={handleLineLogin}
           disabled={isLoggingIn}
@@ -51,8 +53,8 @@ const Login = () => {
           {isLoggingIn ? '登入中...' : '使用LINE應用程式登入'}
         </Button>
 
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className="w-full border-stone-200 text-stone-700 h-12 text-base rounded-xl hover:bg-stone-50"
           onClick={handleEmailLogin}
           disabled={isLoggingIn}

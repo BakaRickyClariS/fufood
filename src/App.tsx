@@ -10,7 +10,7 @@ const App: React.FC = () => {
   const [needRefresh, setNeedRefresh] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const splashRef = useRef<HTMLDivElement>(null);
-  
+
   const updateSW =
     useRef<(reloadPage?: boolean) => Promise<void> | void>(undefined);
 
@@ -30,7 +30,7 @@ const App: React.FC = () => {
           ease: 'power2.inOut',
           onComplete: () => {
             setShowSplash(false);
-          }
+          },
         });
       }
     }, 2000); // 顯示至少 2 秒
@@ -45,7 +45,7 @@ const App: React.FC = () => {
           <SplashScreen />
         </div>
       )}
-      
+
       <RouterProvider router={router} />
       <SWPrompt
         show={needRefresh}

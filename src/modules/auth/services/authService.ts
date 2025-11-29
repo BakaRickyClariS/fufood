@@ -13,15 +13,16 @@ export const authService = {
     if (token.refreshToken) {
       localStorage.setItem('refreshToken', token.refreshToken);
     }
-    localStorage.setItem('tokenExpiry', String(Date.now() + token.expiresIn * 1000));
+    localStorage.setItem(
+      'tokenExpiry',
+      String(Date.now() + token.expiresIn * 1000),
+    );
   },
 
   /**
    * 取得儲存的 Token
    */
-  getToken: (): string | null => {
-    return localStorage.getItem('accessToken');
-  },
+  getToken: (): string | null => localStorage.getItem('accessToken'),
 
   /**
    * 清除 Token

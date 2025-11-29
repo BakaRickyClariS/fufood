@@ -27,41 +27,46 @@ export const useGroupMembers = (groupId: string) => {
   const inviteMember = async (form: InviteMemberForm) => {
     setIsLoading(true);
     try {
-        await groupsApi.inviteMember(groupId, { email: form.email });
-        // 實際情況可能需要重新 fetch 或更新列表
+      await groupsApi.inviteMember(groupId, { email: form.email });
+      // 實際情況可能需要重新 fetch 或更新列表
     } catch (err) {
-        setError(err as Error);
-        throw err;
+      setError(err as Error);
+      throw err;
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
   const removeMember = async (memberId: string) => {
     setIsLoading(true);
     try {
-        await groupsApi.removeMember(groupId, memberId);
-        setMembers(prev => prev.filter(m => m.id !== memberId));
+      await groupsApi.removeMember(groupId, memberId);
+      setMembers((prev) => prev.filter((m) => m.id !== memberId));
     } catch (err) {
-        setError(err as Error);
-        throw err;
+      setError(err as Error);
+      throw err;
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const updateMemberRole = async (memberId: string, role: GroupMember['role']) => {
+  const updateMemberRole = async (
+    memberId: string,
+    role: GroupMember['role'],
+  ) => {
     // TODO: 實作更新成員權限邏輯
     console.log('Updating member role:', memberId, role);
     setIsLoading(true);
     try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setMembers(prev => prev.map(m => m.id === memberId ? { ...m, role } : m));
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setMembers((prev) =>
+        prev.map((m) => (m.id === memberId ? { ...m, role } : m)),
+      );
     } catch (err) {
-        setError(err as Error);
-        throw err;
+      setError(err as Error);
+      throw err;
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
