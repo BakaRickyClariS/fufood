@@ -16,46 +16,9 @@ export const useGroups = () => {
 
   const fetchGroups = async () => {
     setIsLoading(true);
-    try {
-      // TODO: 實作 API 呼叫
-      // const data = await groupsApi.getAll();
-      // 目前使用 Mock 資料
-      // 模擬 API 延遲
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const mockGroups: Group[] = [
-        {
-          id: '1',
-          name: 'My Home',
-          admin: 'Jocelyn',
-          members: [
-            {
-              id: '1',
-              name: 'Jocelyn (你)',
-              role: 'owner',
-              avatar: 'bg-red-200',
-            },
-            {
-              id: '2',
-              name: 'Zoe',
-              role: 'organizer',
-              avatar: 'bg-orange-200',
-            },
-            {
-              id: '3',
-              name: 'Ricky',
-              role: 'organizer',
-              avatar: 'bg-amber-200',
-            },
-          ],
-          color: 'bg-red-100',
-          characterColor: 'bg-red-400',
-          plan: 'free',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
-      setGroups(mockGroups);
+        try {
+      const data = await groupsApi.getAll();
+      setGroups(data);
     } catch (err) {
       setError(err as Error);
     } finally {

@@ -5,18 +5,6 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import prettier from 'eslint-config-prettier';
 import prettierPlugin from 'eslint-plugin-prettier';
-import { FlatCompat } from '@eslint/eslintrc';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-// 模擬 __dirname (ESM 模組需要)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// 初始化 FlatCompat
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
 
 export default [
   {
@@ -29,14 +17,13 @@ export default [
       '**/src/shared/components/ui/**',
     ],
   },
-  // 1. 透過 compat 載入 Airbnb 設定
-  ...compat.extends('airbnb'),
 
-  // 2. 載入 ESLint 推薦設定
+  // 載入 ESLint 推薦設定
   eslint.configs.recommended,
 
-  // 3. 載入 TypeScript 推薦設定
+  // 載入 TypeScript 推薦設定
   ...tseslint.configs.recommended,
+
 
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
