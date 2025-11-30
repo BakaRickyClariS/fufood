@@ -48,7 +48,7 @@ const Login = () => {
         <Button
           className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white h-12 text-base rounded-xl shadow-sm"
           onClick={handleLineLogin}
-          disabled={isLoggingIn}
+          disabled={isLoggingIn || isLoading}
         >
           {isLoggingIn ? '登入中...' : '使用LINE應用程式登入'}
         </Button>
@@ -57,7 +57,7 @@ const Login = () => {
           variant="outline"
           className="w-full border-stone-200 text-stone-700 h-12 text-base rounded-xl hover:bg-stone-50"
           onClick={handleEmailLogin}
-          disabled={isLoggingIn}
+          disabled={isLoggingIn || isLoading}
         >
           使用電子郵件帳號登入
         </Button>
