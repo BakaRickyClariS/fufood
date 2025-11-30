@@ -49,6 +49,8 @@ const defaultNavItems: NavItem[] = [
   },
 ];
 
+import { useCameraControl } from '@/modules/food-scan/contexts/CameraContext';
+
 const MobileBottomNav = ({
   items = defaultNavItems,
 }: {
@@ -56,6 +58,7 @@ const MobileBottomNav = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const cameraControl = useCameraControl(); // 可能是 null
 
   const activeTab = React.useMemo(() => {
     // 1. 嘗試完全匹配
@@ -161,9 +164,9 @@ const MobileBottomNav = ({
         return (
           <button
             onClick={() => {
-              if (isCameraMode) {
+              if (isCameraMode && cameraControl) {
                 // 在相機模式下，觸發拍照事件
-                window.dispatchEvent(new Event('trigger-camera-capture'));
+                cameraControl.triggerCapture();
               } else if (fabItem) {
                 navigate(fabItem.href);
               }

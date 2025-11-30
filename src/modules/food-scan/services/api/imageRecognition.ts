@@ -41,17 +41,17 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     return response.json();
   };
 
-  const updateFoodItem = async (id: string, data: Partial<FoodItemInput>): Promise<FoodItemResponse> => {
+  const updateFoodItem = async (_id: string, _data: Partial<FoodItemInput>): Promise<FoodItemResponse> => {
       // Placeholder for real implementation
       throw new Error('Not implemented');
   };
 
-  const deleteFoodItem = async (id: string): Promise<{ success: boolean }> => {
+  const deleteFoodItem = async (_id: string): Promise<{ success: boolean }> => {
       // Placeholder for real implementation
       throw new Error('Not implemented');
   };
 
-  const getFoodItems = async (filters?: FoodItemFilters): Promise<FoodItem[]> => {
+  const getFoodItems = async (_filters?: FoodItemFilters): Promise<FoodItem[]> => {
       // Placeholder for real implementation
       throw new Error('Not implemented');
   };

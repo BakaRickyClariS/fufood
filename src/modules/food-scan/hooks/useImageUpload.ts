@@ -74,15 +74,12 @@ export const useImageUpload = (props?: UseImageUploadProps) => {
           return analyzeResult;
         } catch (error) {
           console.error('API Analyze Error:', error);
-          // Fallback to mock data
-          const { MOCK_SCAN_RESULTS } = await import('../services/mock/mockData');
-          const mockResult = MOCK_SCAN_RESULTS[Math.floor(Math.random() * MOCK_SCAN_RESULTS.length)];
-          
-          return {
-            success: true,
-            data: mockResult,
-            timestamp: new Date().toISOString()
-          };
+          setError(
+            error instanceof Error 
+              ? error.message 
+              : '圖片分析失敗，請稍後再試'
+          );
+          return null;
         } finally {
           setIsAnalyzing(false);
         }

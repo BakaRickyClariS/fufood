@@ -14,7 +14,7 @@ type CameraOverlayProps = {
 
 const CameraOverlay: React.FC<CameraOverlayProps> = ({
   status,
-  onCapture,
+  onCapture: _onCapture,
   onRetake,
   onGallerySelect,
   onConfirm,

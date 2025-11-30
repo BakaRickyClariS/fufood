@@ -15,7 +15,7 @@ export const MOCK_SCAN_RESULTS: ScanResult['data'][] = [
   },
   {
     productName: '雞蛋',
-    category: '蛋類',
+    category: '其他',
     attributes: '冷藏',
     purchaseQuantity: 10,
     unit: '顆',

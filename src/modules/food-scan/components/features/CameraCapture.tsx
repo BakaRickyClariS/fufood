@@ -10,10 +10,11 @@ const videoConstraints = {
   aspectRatio: 9 / 16, // Full screen mobile ratio
 };
 
+import { CameraProvider } from '../../contexts/CameraContext';
+
 export const CameraCapture: React.FC = () => {
   const navigate = useNavigate();
   const { webcamRef, img, isCapturing, capture, retake, setExternalImage } = useWebcam();
-  // @ts-ignore - useImageUpload will be refactored to return promise
   const { uploadImage, isUploading, isAnalyzing } = useImageUpload({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -22,20 +23,6 @@ export const CameraCapture: React.FC = () => {
     // capture() in useWebcam updates the 'img' state asynchronously.
     // We don't need to do anything else here, the UI will update based on 'img' presence.
   };
-
-  React.useEffect(() => {
-    const handleCaptureTrigger = () => {
-      // Only trigger if we are in capturing mode (no image captured yet)
-      if (isCapturing) {
-        handleCapture();
-      }
-    };
-
-    window.addEventListener('trigger-camera-capture', handleCaptureTrigger);
-    return () => {
-      window.removeEventListener('trigger-camera-capture', handleCaptureTrigger);
-    };
-  }, [isCapturing, capture]);
 
   const handleGallerySelect = () => {
     fileInputRef.current?.click();
@@ -56,10 +43,12 @@ export const CameraCapture: React.FC = () => {
 
   const handleConfirm = async () => {
     if (img) {
-      // @ts-ignore - useImageUpload will be refactored to return promise
       const result = await uploadImage(img);
       if (result) {
         navigate('/upload/scan-result', { state: { result: result.data, imageUrl: img } });
+      } else {
+        console.error('上傳或分析失敗');
+        // TODO: Add toast notification here
       }
     }
   };
@@ -72,41 +61,43 @@ export const CameraCapture: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full h-full bg-black">
-      {isCapturing ? (
-        <Webcam
-          ref={webcamRef}
-          audio={false}
-          screenshotFormat="image/jpeg"
-          videoConstraints={videoConstraints}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      ) : (
-        img && (
-          <img
-            src={img}
-            alt="Captured"
+    <CameraProvider onCapture={handleCapture}>
+      <div className="relative w-full h-full bg-black">
+        {isCapturing ? (
+          <Webcam
+            ref={webcamRef}
+            audio={false}
+            screenshotFormat="image/jpeg"
+            videoConstraints={videoConstraints}
             className="absolute inset-0 w-full h-full object-cover"
           />
-        )
-      )}
+        ) : (
+          img && (
+            <img
+              src={img}
+              alt="Captured"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )
+        )}
 
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept="image/*"
-        className="hidden"
-      />
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept="image/*"
+          className="hidden"
+        />
 
-      <CameraOverlay
-        status={getStatus()}
-        onCapture={capture}
-        onRetake={retake}
-        onGallerySelect={handleGallerySelect}
-        onConfirm={handleConfirm}
-        onClose={() => navigate(-1)}
-      />
-    </div>
+        <CameraOverlay
+          status={getStatus()}
+          onCapture={capture}
+          onRetake={retake}
+          onGallerySelect={handleGallerySelect}
+          onConfirm={handleConfirm}
+          onClose={() => navigate(-1)}
+        />
+      </div>
+    </CameraProvider>
   );
 };
