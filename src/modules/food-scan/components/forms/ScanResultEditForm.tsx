@@ -1,7 +1,7 @@
 import React from 'react';
-import { Check, Tag, Box, FileText } from 'lucide-react';
+import { Check, Tag, Box, FileText, Camera, Image as ImageIcon } from 'lucide-react';
 import type { Control, FieldErrors, UseFormRegister } from 'react-hook-form';
-import type { AnalyzeResponse } from '@/modules/food-scan/services/ocrService';
+import type { FoodItemInput } from '../../types';
 import FormInput from './FormInput';
 import FormSelect from './FormSelect';
 import FormQuantity from './FormQuantity';
@@ -9,29 +9,49 @@ import FormDatePicker from './FormDatePicker';
 import FormToggle from './FormToggle';
 import FormTextarea from './FormTextarea';
 
-type ScanResultCardProps = {
+type ScanResultEditFormProps = {
   imageUrl: string;
-  register: UseFormRegister<AnalyzeResponse['data']>;
-  control: Control<AnalyzeResponse['data']>;
-  errors: FieldErrors<AnalyzeResponse['data']>;
+  register: UseFormRegister<FoodItemInput>;
+  control: Control<FoodItemInput>;
+  errors: FieldErrors<FoodItemInput>;
+  onRetake?: () => void;
+  onPickImage?: () => void;
 };
 
-const ScanResultEditForm: React.FC<ScanResultCardProps> = ({
+const ScanResultEditForm: React.FC<ScanResultEditFormProps> = ({
   imageUrl,
   register,
   control,
   errors,
+  onRetake,
+  onPickImage,
 }) => (
   <div className="bg-white rounded-3xl p-6 relative overflow-visible mt-12 pb-8">
     {/* Floating Image */}
     <div className="absolute -top-12 left-1/2 -translate-x-1/2">
-      <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden bg-slate-100">
+      <div className="relative w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden bg-slate-100 group">
         <img
           src={imageUrl}
           alt="Product"
           className="w-full h-full object-cover"
         />
+        {/* Overlay for actions (optional, or place buttons outside) - Design shows buttons outside top right? No, design shows buttons floating nearby or integrated. 
+           Wait, user said "右上角缺少相機和圖庫按鈕" in "編輯草稿頁面". 
+           Looking at design: It seems they are floating buttons on the image or near it.
+           Let's place them absolutely relative to the image container or the card.
+        */}
       </div>
+      
+      {/* Camera/Gallery Actions - Positioned relative to the image */}
+      <div className="absolute -right-12 top-0 flex flex-col gap-2">
+         <button type="button" onClick={onRetake} className="w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-slate-600 hover:text-red-500">
+            <Camera size={16} />
+         </button>
+         <button type="button" onClick={onPickImage} className="w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-slate-600 hover:text-red-500">
+            <ImageIcon size={16} />
+         </button>
+      </div>
+
       {/* Success Badge */}
       <div className="absolute -bottom-2 -right-2 bg-green-500 text-white p-1.5 rounded-full border-2 border-white shadow-sm">
         <Check size={16} strokeWidth={3} />
@@ -146,7 +166,7 @@ const ScanResultEditForm: React.FC<ScanResultCardProps> = ({
 
         <div className="grid grid-cols-1 gap-4">
           <FormDatePicker
-            label="歸納日期"
+            label="入庫日期"
             name="purchaseDate"
             control={control}
             error={errors.purchaseDate?.message}

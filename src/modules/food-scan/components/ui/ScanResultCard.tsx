@@ -1,9 +1,9 @@
 import React from 'react';
 import { Check, Tag, Box, Calendar, FileText } from 'lucide-react';
-import type { AnalyzeResponse } from '@/modules/food-scan/services/ocrService';
+import type { FoodItemInput } from '../../types';
 
 type ScanResultCardProps = {
-  result: AnalyzeResponse['data'];
+  result: FoodItemInput;
   imageUrl: string;
 };
 

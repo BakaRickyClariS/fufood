@@ -7,6 +7,7 @@ import {
   Refrigerator,
   SlidersHorizontal,
   ScanLine,
+  Camera,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/nav-tabs';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -153,38 +154,51 @@ const MobileBottomNav = ({
       </div>
 
       {/* FAB 按鈕：絕對位置，不受 overflow-hidden 影響 */}
-      {items.find((i) => i.isFab) && (
-        <button
-          onClick={() => {
-            const fabItem = items.find((i) => i.isFab);
-            if (fabItem) navigate(fabItem.href);
-          }}
-          className="
-            absolute
-            left-1/2
-            transform
-            -translate-x-1/2
-            -top-2
-            w-20
-            h-20
-            rounded-full
-            bg-[radial-gradient(circle_at_30%_30%,#f58274,#ec5b4a)]
-            hover:bg-[radial-gradient(circle_at_30%_30%,#f67d6c,#e04c3b)]
-            flex
-            items-center
-            justify-center
-            text-black
-            border-4
-            border-primary-200
-            transition-all
-            duration-200
-            active:scale-95
-            z-50
-          "
-        >
-          {items.find((i) => i.isFab)?.icon}
-        </button>
-      )}
+      {items.find((i) => i.isFab) && (() => {
+        const fabItem = items.find((i) => i.isFab);
+        const isCameraMode = location.pathname === '/upload';
+
+        return (
+          <button
+            onClick={() => {
+              if (isCameraMode) {
+                // 在相機模式下，觸發拍照事件
+                window.dispatchEvent(new Event('trigger-camera-capture'));
+              } else if (fabItem) {
+                navigate(fabItem.href);
+              }
+            }}
+            className="
+              absolute
+              left-1/2
+              transform
+              -translate-x-1/2
+              -top-2
+              w-20
+              h-20
+              rounded-full
+              bg-[radial-gradient(circle_at_30%_30%,#f58274,#ec5b4a)]
+              hover:bg-[radial-gradient(circle_at_30%_30%,#f67d6c,#e04c3b)]
+              flex
+              items-center
+              justify-center
+              text-black
+              border-4
+              border-primary-200
+              transition-all
+              duration-200
+              active:scale-95
+              z-50
+            "
+          >
+            {isCameraMode ? (
+              <Camera className="w-8 h-8 text-white" />
+            ) : (
+              fabItem?.icon
+            )}
+          </button>
+        );
+      })()}
     </div>
   );
 };
