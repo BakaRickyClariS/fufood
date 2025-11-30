@@ -31,7 +31,7 @@ const FormQuantity = <T extends FieldValues>({
           <button
             type="button"
             onClick={() => onChange(Math.max(min, (value || 0) - 1))}
-            disabled={value <= min}
+            disabled={(value ?? 0) <= min}
             className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Minus size={16} strokeWidth={3} />
@@ -42,7 +42,7 @@ const FormQuantity = <T extends FieldValues>({
           <button
             type="button"
             onClick={() => onChange(Math.min(max, (value || 0) + 1))}
-            disabled={value >= max}
+            disabled={(value ?? 0) >= max}
             className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus size={16} strokeWidth={3} />
