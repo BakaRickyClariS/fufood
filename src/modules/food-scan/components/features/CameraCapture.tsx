@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import Webcam from 'react-webcam';
 import { useWebcam } from '../../hooks/useWebcam';
 import { useImageUpload } from '../../hooks/useImageUpload';
@@ -20,19 +20,35 @@ export const CameraCapture: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { triggerToken } = useSelector((state: RootState) => state.camera);
+  const [isReady, setIsReady] = useState(false);
   
   const { webcamRef, img, isCapturing, capture, retake, setExternalImage } = useWebcam();
   const { uploadImage, isUploading, isAnalyzing } = useImageUpload({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prevTriggerToken = useRef(triggerToken);
+  const pendingTriggerRef = useRef(false);
 
   // Listen for trigger token changes from Redux (BottomNav FAB button)
   useEffect(() => {
     if (triggerToken > prevTriggerToken.current) {
-      capture();
+      if (isReady) {
+        capture();
+        pendingTriggerRef.current = false;
+      } else {
+        // 相機尚未就緒，先記錄待觸發
+        pendingTriggerRef.current = true;
+      }
       prevTriggerToken.current = triggerToken;
     }
-  }, [triggerToken, capture]);
+  }, [triggerToken, capture, isReady]);
+
+  // 相機就緒後若有待觸發請求，立即拍一次
+  useEffect(() => {
+    if (isReady && pendingTriggerRef.current) {
+      capture();
+      pendingTriggerRef.current = false;
+    }
+  }, [isReady, capture]);
 
   // Sync local state to Redux when image captured
   useEffect(() => {
@@ -108,7 +124,13 @@ export const CameraCapture: React.FC = () => {
           ref={webcamRef}
           audio={false}
           screenshotFormat="image/jpeg"
+          screenshotQuality={0.92}
           videoConstraints={videoConstraints}
+          onUserMedia={() => setIsReady(true)}
+          onUserMediaError={(e) => {
+            console.error('Webcam error', e);
+            setIsReady(false);
+          }}
           className="absolute inset-0 w-full h-full object-cover"
         />
       ) : (
