@@ -53,6 +53,7 @@ const CameraOverlay: React.FC<CameraOverlayProps> = ({
       <div className="mt-8 flex items-center justify-center gap-8 pointer-events-auto">
         {/* Gallery Button */}
         <button
+          aria-label="開啟相簿"
           onClick={onGalleryClick}
           className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all"
         >
@@ -69,6 +70,7 @@ const CameraOverlay: React.FC<CameraOverlayProps> = ({
         {/* Capture/Action Button */}
         {isCapturing ? (
           <button
+            aria-label="拍照"
             onClick={onCapture}
             className="w-20 h-20 bg-white rounded-full p-1.5 shadow-xl transition-transform active:scale-95"
           >
@@ -77,12 +79,14 @@ const CameraOverlay: React.FC<CameraOverlayProps> = ({
         ) : (
           <div className="flex gap-4">
             <button
+              aria-label="重拍"
               onClick={onRetake}
               className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all"
             >
               <X size={24} />
             </button>
             <button
+              aria-label="確認上傳"
               onClick={onUpload}
               disabled={isUploading || isAnalyzing}
               className="w-20 h-20 bg-white rounded-full p-1.5 shadow-xl transition-transform active:scale-95 flex items-center justify-center"
