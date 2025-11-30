@@ -18,7 +18,7 @@ export default defineConfig({
         sourcemap: true,
       },
       manifest: {
-        name: 'fufood 憌蝞∪振',
+        name: 'fufood 食物管家',
         short_name: 'fufood',
         description: '輕鬆管理冰箱食材，追蹤到期並接收通知',
         theme_color: '#ec5b4a',
