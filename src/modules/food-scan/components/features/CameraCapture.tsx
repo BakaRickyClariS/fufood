@@ -11,9 +11,12 @@ import { setCapturedImage, retake as retakeAction, setUploadStatus } from '@/mod
 // Test image import
 import testImage from '@/assets/test/carrot.jpg';
 
-const videoConstraints = {
-  facingMode: 'environment',
-  aspectRatio: 9 / 16, // Full screen mobile ratio
+const videoConstraints: MediaTrackConstraints = {
+  facingMode: { ideal: 'environment' },
+  // 以直向 9:16 為主，請求較高解析度以避免放大後模糊
+  width: { min: 720, ideal: 1080, max: 1920 },
+  height: { min: 1280, ideal: 1920, max: 2560 },
+  aspectRatio: 9 / 16,
 };
 
 export const CameraCapture: React.FC = () => {
@@ -126,6 +129,8 @@ export const CameraCapture: React.FC = () => {
           screenshotFormat="image/jpeg"
           screenshotQuality={0.92}
           videoConstraints={videoConstraints}
+          forceScreenshotSourceSize
+          playsInline
           onUserMedia={() => setIsReady(true)}
           onUserMediaError={(e) => {
             console.error('Webcam error', e);
