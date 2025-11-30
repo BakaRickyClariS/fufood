@@ -26,7 +26,7 @@ export const CameraCapture: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
   
   const { webcamRef, img, isCapturing, capture, retake, setExternalImage } = useWebcam();
-  const { uploadImage, isUploading, isAnalyzing, error } = useImageUpload({});
+  const { uploadImage, isUploading, isAnalyzing } = useImageUpload({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prevTriggerToken = useRef(triggerToken);
   const pendingTriggerRef = useRef(false);

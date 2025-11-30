@@ -4,7 +4,7 @@ import type {
   UpdateGroupForm,
   GroupMember,
   InviteMemberForm,
-} from '../../types/group.types';
+} from '../types/group.types';
 import { MOCK_GROUPS, MOCK_MEMBERS } from './mock/groupsMockData';
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_API !== 'false';
