@@ -6,7 +6,7 @@ import { MOCK_SCAN_RESULTS } from './mockData';
 export const createMockFoodScanApi = (): FoodScanApi => {
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const recognizeImage = async (imageUrl: string): Promise<ScanResult> => {
+  const recognizeImage = async (_imageUrl: string): Promise<ScanResult> => {
     // 模擬網路延遲
     await delay(1500);
     
