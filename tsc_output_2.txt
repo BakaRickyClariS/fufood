@@ -1,3 +1,0 @@
-src/modules/food-scan/components/forms/FormQuantity.tsx(34,23): error TS18048: 'value' is possibly 'undefined'.
-src/modules/food-scan/components/forms/FormQuantity.tsx(45,23): error TS18048: 'value' is possibly 'undefined'.
-src/modules/food-scan/services/mock/mockFoodScanApi.ts(9,33): error TS6133: 'imageUrl' is declared but its value is never read.
