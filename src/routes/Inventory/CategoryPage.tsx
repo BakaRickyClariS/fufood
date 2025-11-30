@@ -1,71 +1,82 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, Search, ListFilter } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import FoodCard from '@/components/ui/FoodCard';
-import HeroCard from '@/components/layout/HeroCard';
-import CategoryBanner from '@/components/layout/inventory/CategoryBanner';
-import FoodDetailModal from '@/components/ui/FoodDetailModal';
-import SearchModal from '@/components/ui/SearchModal';
-import FilterModal from '@/components/ui/FilterModal';
-import { categories } from '@/data/categories';
-import { foodData, type FoodItem } from '@/data/foodIImg';
+import { Button } from '@/shared/components/ui/button';
+import HeroCard from '@/modules/inventory/components/ui/other/HeroSection';
+import CategoryBanner from '@/modules/inventory/components/ui/other/CategoryBanner';
+import FoodCard from '@/modules/inventory/components/ui/card/FoodCard';
+import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
+import SearchModal from '@/modules/inventory/components/ui/modal/SearchModal';
+import FilterModal from '@/modules/inventory/components/ui/modal/FilterModal';
+import { categories } from '@/modules/inventory/constants/categories';
+import { foodData, type FoodItem } from '@/modules/inventory/constants/foods';
 
 const CategoryPage: React.FC = () => {
-  const { categoryId } = useParams<{ categoryId: string }>();
-  const category = categories.find((c) => c.id === categoryId);
-  const items = categoryId ? foodData[categoryId] || [] : [];
-  
+  const { categoryId } = useParams();
+  const category = useMemo(
+    () => categories.find((c) => c.id === categoryId),
+    [categoryId],
+  );
+  const items = useMemo(
+    () => (category ? foodData[category.id] || [] : []),
+    [category],
+  );
+
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [filterAttribute, setFilterAttribute] = useState<string | null>(null);
 
-  const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      // 1. Search Filter
-      if (searchQuery && !item.name.includes(searchQuery)) {
-        return false;
-      }
-
-      // 2. Attribute Filter (Category)
-      if (filterAttribute && item.category !== filterAttribute) {
-        return false;
-      }
-
-      // 3. Status Filter
-      if (filterStatus) {
-        const today = new Date();
-        const expireDate = new Date(item.expireAt);
-        const diffTime = expireDate.getTime() - today.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        switch (filterStatus) {
-          case '已過期':
-            return diffDays < 0;
-          case '即將到期':
-            return diffDays >= 0 && diffDays <= 3;
-          case '低庫存':
-            return item.quantity <= 2;
-          case '有庫存':
-            return item.quantity > 0;
-          default:
-            return true;
+  const filteredItems = useMemo(
+    () =>
+      items.filter((item) => {
+        // 1. Search Filter
+        if (searchQuery && !item.name.includes(searchQuery)) {
+          return false;
         }
-      }
 
-      return true;
-    });
-  }, [items, searchQuery, filterAttribute, filterStatus]);
+        // 2. Attribute Filter (Category)
+        if (filterAttribute && item.category !== filterAttribute) {
+          return false;
+        }
+
+        // 3. Status Filter
+        if (filterStatus) {
+          const today = new Date();
+          const expireDate = new Date(item.expireAt);
+          const diffTime = expireDate.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+          switch (filterStatus) {
+            case '已過期':
+              return diffDays < 0;
+            case '即將到期':
+              return diffDays >= 0 && diffDays <= 3;
+            case '低庫存':
+              return item.quantity <= 2;
+            case '有庫存':
+              return item.quantity > 0;
+            default:
+              return true;
+          }
+        }
+
+        return true;
+      }),
+    [items, searchQuery, filterAttribute, filterStatus],
+  );
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
   };
 
-  const handleFilterApply = (status: string | null, attribute: string | null) => {
+  const handleFilterApply = (
+    status: string | null,
+    attribute: string | null,
+  ) => {
     setFilterStatus(status);
     setFilterAttribute(attribute);
   };
@@ -107,7 +118,7 @@ const CategoryPage: React.FC = () => {
         <CategoryBanner category={category} />
       </HeroCard>
 
-      <div className="px-4 mt-2 space-y-4">
+      <div className="px-4 mt-2 space-y-4 max-w-layout-container mx-auto">
         {/* Search Bar */}
         <div className="flex flex-row w-full cursor-pointer items-center">
           <div
@@ -119,7 +130,9 @@ const CategoryPage: React.FC = () => {
           </div>
           <ListFilter
             className={`h-6 w-6 ml-3 cursor-pointer transition-colors ${
-              filterStatus || filterAttribute ? 'text-[#EE5D50]' : 'text-neutral-900 hover:text-neutral-600'
+              filterStatus || filterAttribute
+                ? 'text-[#EE5D50]'
+                : 'text-neutral-900 hover:text-neutral-600'
             }`}
             onClick={() => setIsFilterOpen(true)}
           />
