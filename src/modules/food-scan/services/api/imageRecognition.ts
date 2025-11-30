@@ -1,30 +1,75 @@
-import type { FoodScanApi, ScanResult, FoodItemInput, FoodItemResponse, FoodItemFilters, FoodItem } from '../../types';
+import type {
+  FoodScanApi,
+  ScanResult,
+  FoodItemInput,
+  FoodItemResponse,
+  FoodItemFilters,
+  FoodItem,
+} from '../../types';
 
 export const createRealFoodScanApi = (): FoodScanApi => {
   const baseURL = import.meta.env.VITE_RECIPE_API_URL || '';
 
-  const transformScanResult = (data: any): ScanResult => {
-    // TODO: Implement actual transformation logic based on API response
+  if (!baseURL) {
+    throw new Error(
+      '缺少 VITE_RECIPE_API_URL。請在 .env 設定（例如：http://localhost:3000/api/v1 或 /api/v1），或於開發先設 VITE_USE_MOCK_API=true。',
+    );
+  }
+
+  // Normalize to avoid duplicate slashes
+  const joinUrl = (base: string, path: string) => `${base.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+
+  const transformScanResult = (resp: any): ScanResult => {
+    const payload = resp?.data ?? resp ?? {};
+
+    // Best-effort mapping to FoodItemInput; provide sensible defaults
+    const today = new Date().toISOString().slice(0, 10);
+    const mapped: FoodItemInput = {
+      productName: payload.productName ?? payload.name ?? '',
+      category: (payload.category ?? '其他') as FoodItemInput['category'],
+      attributes: (payload.attributes ?? '常溫') as FoodItemInput['attributes'],
+      purchaseQuantity: Number(payload.purchaseQuantity ?? 1),
+      unit: (payload.unit ?? '份') as FoodItemInput['unit'],
+      purchaseDate: payload.purchaseDate ?? today,
+      expiryDate: payload.expiryDate ?? '',
+      lowStockAlert: payload.lowStockAlert ?? true,
+      lowStockThreshold: Number(payload.lowStockThreshold ?? 2),
+      notes: payload.notes ?? '',
+      imageUrl: payload.imageUrl ?? '',
+    };
+
     return {
       success: true,
-      data: data, 
-      timestamp: new Date().toISOString()
+      data: mapped,
+      timestamp: new Date().toISOString(),
     };
   };
 
   const recognizeImage = async (imageUrl: string): Promise<ScanResult> => {
-    const response = await fetch(`${baseURL}/recipe/analyze-image`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageUrl }),
-    });
+    try {
+      const url = joinUrl(baseURL, '/recipe/analyze-image');
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl }),
+      });
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.statusText}`);
+      if (!response.ok) {
+        const body = await response.text().catch(() => '');
+        throw new Error(
+          `影像辨識失敗：HTTP ${response.status} ${response.statusText}.\n` +
+            `請求：POST ${url}\n` +
+            `${body ? `回應：${body}` : ''}\n` +
+            '請確認後端可連線、已開啟 CORS 或使用 Vite 代理，並檢查 VITE_RECIPE_API_URL。',
+        );
+      }
+
+      const data = await response.json();
+      return transformScanResult(data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(`FoodScan 分析錯誤：${message}`);
     }
-
-    const data = await response.json();
-    return transformScanResult(data);
   };
 
   const submitFoodItem = async (data: FoodItemInput): Promise<FoodItemResponse> => {

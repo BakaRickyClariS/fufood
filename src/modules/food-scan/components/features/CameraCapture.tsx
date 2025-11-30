@@ -1,28 +1,55 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import Webcam from 'react-webcam';
 import { useWebcam } from '../../hooks/useWebcam';
 import { useImageUpload } from '../../hooks/useImageUpload';
-import CameraOverlay, {type CameraOverlayStatus } from '../ui/CameraOverlay';
+import CameraOverlay, { type CameraOverlayStatus } from '../ui/CameraOverlay';
 import { useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState } from '@/store';
+import { setCapturedImage, retake as retakeAction, setUploadStatus } from '@/modules/food-scan/store/cameraSlice';
+
+// Test image import
+import testImage from '@/assets/test/carrot.jpg';
 
 const videoConstraints = {
   facingMode: 'environment',
   aspectRatio: 9 / 16, // Full screen mobile ratio
 };
 
-import { CameraProvider } from '../../contexts/CameraContext';
-
 export const CameraCapture: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { triggerToken } = useSelector((state: RootState) => state.camera);
+  
   const { webcamRef, img, isCapturing, capture, retake, setExternalImage } = useWebcam();
   const { uploadImage, isUploading, isAnalyzing } = useImageUpload({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const prevTriggerToken = useRef(triggerToken);
 
-  const handleCapture = () => {
-    capture();
-    // capture() in useWebcam updates the 'img' state asynchronously.
-    // We don't need to do anything else here, the UI will update based on 'img' presence.
-  };
+  // Listen for trigger token changes from Redux (BottomNav FAB button)
+  useEffect(() => {
+    if (triggerToken > prevTriggerToken.current) {
+      capture();
+      prevTriggerToken.current = triggerToken;
+    }
+  }, [triggerToken, capture]);
+
+  // Sync local state to Redux when image captured
+  useEffect(() => {
+    if (img) {
+      dispatch(setCapturedImage(img));
+    } else {
+      dispatch(retakeAction());
+    }
+  }, [img, dispatch]);
+
+  // Sync upload status to Redux
+  useEffect(() => {
+    if (isUploading) dispatch(setUploadStatus('uploading'));
+    else if (isAnalyzing) dispatch(setUploadStatus('analyzing'));
+    else if (img) dispatch(setUploadStatus('done'));
+    else dispatch(setUploadStatus('capturing'));
+  }, [isUploading, isAnalyzing, img, dispatch]);
 
   const handleGallerySelect = () => {
     fileInputRef.current?.click();
@@ -34,10 +61,24 @@ export const CameraCapture: React.FC = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64 = reader.result as string;
-        // Set the image to trigger preview mode (not upload yet)
         setExternalImage(base64);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleLoadTestImage = async () => {
+    try {
+      const response = await fetch(testImage);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        setExternalImage(base64);
+      };
+      reader.readAsDataURL(blob);
+    } catch (error) {
+      console.error('Failed to load test image:', error);
     }
   };
 
@@ -61,43 +102,51 @@ export const CameraCapture: React.FC = () => {
   };
 
   return (
-    <CameraProvider onCapture={handleCapture}>
-      <div className="relative w-full h-full bg-black">
-        {isCapturing ? (
-          <Webcam
-            ref={webcamRef}
-            audio={false}
-            screenshotFormat="image/jpeg"
-            videoConstraints={videoConstraints}
+    <div className="relative w-full h-full bg-black">
+      {isCapturing ? (
+        <Webcam
+          ref={webcamRef}
+          audio={false}
+          screenshotFormat="image/jpeg"
+          videoConstraints={videoConstraints}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      ) : (
+        img && (
+          <img
+            src={img}
+            alt="Captured"
             className="absolute inset-0 w-full h-full object-cover"
           />
-        ) : (
-          img && (
-            <img
-              src={img}
-              alt="Captured"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          )
-        )}
+        )
+      )}
 
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept="image/*"
-          className="hidden"
-        />
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="image/*"
+        className="hidden"
+      />
 
-        <CameraOverlay
-          status={getStatus()}
-          onCapture={capture}
-          onRetake={retake}
-          onGallerySelect={handleGallerySelect}
-          onConfirm={handleConfirm}
-          onClose={() => navigate(-1)}
-        />
-      </div>
-    </CameraProvider>
+      {/* Dev Only: Test Image Button */}
+      {import.meta.env.DEV && isCapturing && (
+        <button
+          onClick={handleLoadTestImage}
+          className="absolute top-24 right-4 z-50 bg-blue-500 text-white px-3 py-1 rounded text-xs opacity-70 hover:opacity-100"
+        >
+          載入測試圖片
+        </button>
+      )}
+
+      <CameraOverlay
+        status={getStatus()}
+        onCapture={capture}
+        onRetake={retake}
+        onGallerySelect={handleGallerySelect}
+        onConfirm={handleConfirm}
+        onClose={() => navigate(-1)}
+      />
+    </div>
   );
 };
