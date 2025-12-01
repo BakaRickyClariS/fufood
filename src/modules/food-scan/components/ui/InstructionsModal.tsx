@@ -1,5 +1,6 @@
 import React from 'react';
-import { Info, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
+import noticeImg from '@/assets/images/food-scan/notice.png';
 
 type InstructionsModalProps = {
   isOpen: boolean;
@@ -24,9 +25,8 @@ const InstructionsModal: React.FC<InstructionsModalProps> = ({
         </h2>
 
         <div className="flex justify-center mb-6">
-          {/* Placeholder Illustration */}
-          <div className="w-32 h-32 bg-slate-100 rounded-full flex items-center justify-center">
-            <Info size={48} className="text-slate-300" />
+          <div className="w-40 h-40 flex items-center justify-center">
+            <img src={noticeImg} alt="Instructions" className="w-full h-full object-contain" />
           </div>
         </div>
 

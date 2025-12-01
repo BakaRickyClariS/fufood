@@ -1,7 +1,7 @@
 import Upload from './Upload';
 import ScanResult from './ScanResult';
 
-const FoodInputRoutes = [
+const FoodScanRoutes = [
   {
     path: 'upload',
     element: <Upload />,
@@ -14,4 +14,4 @@ const FoodInputRoutes = [
   },
 ];
 
-export default FoodInputRoutes;
+export default FoodScanRoutes;
