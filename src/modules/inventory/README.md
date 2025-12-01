@@ -1,42 +1,278 @@
-# Inventory Module (庫存管理)
+# Inventory Module (庫存管理模組)
 
-## 簡介
-本模組是應用程式的核心資料管理中心，負責維護使用者的所有食材庫存。採用 Redux Toolkit 進行全域狀態管理，確保資料在不同頁面間的一致性。
+## 📋 目錄
+- [概述](#概述)
+- [目錄結構](#目錄結構)
+- [核心功能](#核心功能)
+- [型別定義 (Types)](#型別定義-types)
+- [API 規格](#api-規格)
+- [Hooks 詳解](#hooks-詳解)
+- [Services 服務層](#services-服務層)
+- [Redux Store](#redux-store)
+- [環境變數設定](#環境變數設定)
 
-## 核心功能
-1.  **庫存列表**: 依據分類 (Category) 或狀態 (一般/過期) 顯示食材。
-2.  **分類管理**: 提供不同食材類別的切換與篩選。
-3.  **狀態追蹤**: 自動計算食材過期日，並區分「一般物品」與「過期紀錄」。
-4.  **CRUD 操作**: 支援食材的新增、讀取、更新與刪除。
+---
 
-## 目錄結構說明
+## 概述
 
-### `components/` (UI 元件)
-- **`layout/`**: 
-  - 庫存頁面的主要佈局元件。
-  - 包含列表容器、分類導航列等結構性元件。
-- **`ui/`**: 
-  - **`FoodCard`**: 單一食材的顯示卡片，展示圖片、名稱、數量與到期日。
-  - **`CategoryTabs`**: 分類切換標籤。
-  - 其他庫存專用的微型元件。
+本模組負責管理使用者的**食材庫存**。提供庫存列表檢視、食材新增/編輯/刪除、過期狀態追蹤、以及庫存統計功能。支援多種篩選與排序方式，並透過 Redux 管理全域狀態。
 
-### `store/` (狀態管理)
-- **`inventorySlice.ts`**: 
-  - 定義 Inventory 的 Redux Slice。
-  - **State**: 包含 `items` (所有食材列表), `loading` (載入狀態), `error` (錯誤訊息)。
-  - **Actions**: `setItems`, `addItem`, `updateItem`, `removeItem` 等 Reducers。
-  - **Selectors**: 提供篩選特定分類或過期食材的 Selector 函式。
+### 核心功能
+1.  **庫存管理**: 新增、編輯、刪除食材
+2.  **狀態追蹤**: 自動計算過期狀態 (正常/即將過期/已過期/低庫存)
+3.  **分類檢視**: 依據 7 大類別檢視食材
+4.  **篩選排序**: 支援關鍵字搜尋、狀態篩選、多種排序方式
+5.  **統計分析**: 提供庫存總量、過期數量等統計資訊
+6.  **Mock 模式**: 支援離線開發與測試
 
-### `services/` (API 服務)
-- 負責與後端資料庫同步庫存資料。
-- 包含 `fetchInventory`, `addFoodItem`, `deleteFoodItem` 等 API 函式。
+---
 
-### `constants/` (常數定義)
-- 定義食材分類的列舉 (Enums) 或常數物件 (如：`CATEGORY_LABELS`)。
-- 定義過期狀態的判斷標準。
+## 目錄結構
 
-## 資料流向
-1.  應用程式啟動或進入庫存頁面 -> Dispatch `fetchInventory`。
-2.  `inventorySlice` 更新 Store 中的 `items`。
-3.  `InventoryPage` 透過 Selector 訂閱資料變更。
-4.  使用者操作 (如刪除) -> Dispatch `deleteItem` Action -> 更新 Store -> 同步呼叫 API 更新後端。
+\`\`\`
+inventory/
+├── api/                      # API 層
+│   ├── inventoryApi.ts      # API 介面
+│   ├── inventoryRealApi.ts  # 真實 API 實作
+│   ├── index.ts             # API 匯出
+│   └── mock/
+│       ├── inventoryMockApi.ts   # Mock API 實作
+│       └── inventoryMockData.ts  # Mock 資料
+├── components/               # UI 元件
+│   ├── layout/              # 佈局元件 (OverviewPanel, CommonItemsPanel...)
+│   └── ui/                  # 基礎元件 (FoodCard, CategoryCard...)
+├── hooks/                    # 自定義 Hooks
+│   ├── index.ts
+│   ├── useInventory.ts      # 庫存管理 Hook
+│   ├── useInventoryFilter.ts # 篩選 Hook
+│   ├── useInventoryStats.ts  # 統計 Hook
+│   └── useExpiryCheck.ts     # 過期檢查 Hook
+├── services/                 # 服務層
+│   ├── inventoryService.ts  # 業務邏輯封裝
+│   └── index.ts
+├── store/                    # Redux 狀態管理
+│   ├── inventorySlice.ts    # Inventory Slice
+│   └── index.ts
+├── types/                    # TypeScript 型別
+│   ├── inventory.types.ts   # 核心型別
+│   ├── api.types.ts         # API 型別
+│   ├── filter.types.ts      # 篩選型別
+│   └── index.ts
+└── index.ts                  # 模組匯出
+\`\`\`
+
+---
+
+## 型別定義 (Types)
+
+### FoodItem (食材項目)
+```typescript
+export type FoodItem = {
+  id: string;
+  name: string;
+  category: FoodCategory;
+  quantity: number;
+  unit: FoodUnit;
+  imageUrl?: string;
+  purchaseDate: string;     // YYYY-MM-DD
+  expiryDate: string;       // YYYY-MM-DD
+  lowStockAlert: boolean;
+  lowStockThreshold: number;
+  notes?: string;
+  groupId?: string;
+  createdAt: string;
+  updatedAt?: string;
+};
+```
+
+### InventoryStatus (庫存狀態)
+```typescript
+export type InventoryStatus = 'normal' | 'low-stock' | 'expired' | 'expiring-soon';
+```
+
+### FoodCategory (食材分類)
+```typescript
+export type FoodCategory = 
+  | '蔬果類' | '冷凍調理類' | '主食烘焙類' | '乳製品飲料類'
+  | '冷凍海鮮類' | '肉品類' | '其他';
+```
+
+---
+
+## API 規格
+
+### InventoryApi 介面
+
+```typescript
+export const inventoryApi = {
+  getItems: (params?: GetInventoryRequest) => Promise<GetInventoryResponse>;
+  getItem: (id: string) => Promise<FoodItem>;
+  addItem: (data: AddFoodItemRequest) => Promise<AddFoodItemResponse>;
+  updateItem: (id: string, data: UpdateFoodItemRequest) => Promise<UpdateFoodItemResponse>;
+  deleteItem: (id: string) => Promise<DeleteFoodItemResponse>;
+  batchOperation: (data: BatchOperationRequest) => Promise<{ success: boolean }>;
+  getStats: (groupId?: string) => Promise<InventoryStats>;
+  getCategories: () => Promise<CategoryInfo[]>;
+};
+```
+
+---
+
+### 1. **getItems** - 取得庫存列表
+
+#### 端點
+\`\`\`
+GET /api/inventory
+\`\`\`
+
+#### 請求參數 (Query Params)
+- `groupId`: 群組 ID
+- `category`: 分類
+- `status`: 狀態 (expired, expiring-soon, low-stock, normal)
+- `page`: 頁碼
+- `limit`: 每頁數量
+
+#### 回應格式
+```typescript
+{
+  items: FoodItem[];
+  total: number;
+  stats: InventoryStats;
+}
+```
+
+---
+
+### 2. **addItem** - 新增食材
+
+#### 端點
+\`\`\`
+POST /api/inventory
+\`\`\`
+
+#### 請求格式
+```typescript
+AddFoodItemRequest
+```
+
+#### 回應格式
+```typescript
+{
+  success: boolean;
+  message: string;
+  data: { id: string };
+}
+```
+
+---
+
+## Hooks 詳解
+
+### `useInventory.ts`
+
+```typescript
+const useInventory = (groupId?: string) => {
+  return {
+    items: FoodItem[];
+    isLoading: boolean;
+    error: Error | null;
+    addItem: (data: AddFoodItemRequest) => Promise<void>;
+    updateItem: (id: string, data: UpdateFoodItemRequest) => Promise<void>;
+    deleteItem: (id: string) => Promise<void>;
+    batchDelete: (ids: string[]) => Promise<void>;
+    refetch: () => Promise<void>;
+  };
+};
+```
+
+**功能**:
+- 管理庫存資料的 CRUD 操作
+- 自動處理載入狀態與錯誤
+- 提供批次操作功能
+
+---
+
+### `useInventoryFilter.ts`
+
+```typescript
+const useInventoryFilter = (items: FoodItem[]) => {
+  return {
+    filteredItems: FoodItem[];
+    filters: FilterOptions;
+    setFilter: (key: keyof FilterOptions, value: any) => void;
+    clearFilters: () => void;
+  };
+};
+```
+
+**功能**:
+- 前端篩選與排序邏輯
+- 支援分類、狀態、關鍵字篩選
+- 支援多種排序方式 (過期日、購買日、名稱、數量)
+
+---
+
+### `useExpiryCheck.ts`
+
+```typescript
+const useExpiryCheck = (item: FoodItem) => {
+  return {
+    isExpired: boolean;
+    isExpiringSoon: boolean;     // 3天內
+    daysUntilExpiry: number;
+    status: InventoryStatus;
+  };
+};
+```
+
+**功能**:
+- 計算單一食材的過期狀態
+- 判斷是否即將過期 (預設 3 天)
+- 判斷是否低庫存
+
+---
+
+## Redux Store
+
+### `inventorySlice.ts`
+
+**State**:
+```typescript
+type InventoryState = {
+  items: FoodItem[];
+  selectedItem: FoodItem | null;
+  filters: FilterOptions;
+  stats: InventoryStats | null;
+  isLoading: boolean;
+  error: string | null;
+};
+```
+
+**Actions**:
+- `setItems`, `addItem`, `updateItem`, `removeItem`
+- `setFilters`, `setStats`
+- `setSelectedItem`
+
+---
+
+## 環境變數設定
+
+### 必要環境變數
+
+```env
+# Mock 模式 (開發用)
+VITE_USE_MOCK_API=true
+```
+
+### 環境變數說明
+
+| 變數名稱 | 說明 | 範例 |
+|---------|------|------|
+| `VITE_USE_MOCK_API` | 是否使用 Mock API | `true` / `false` |
+| `VITE_RECIPE_API_URL` | 後端 API 網址 | `http://localhost:3000` |
+
+---
+
+## Mock 資料
+
+Mock 資料位於 `api/mock/inventoryMockData.ts`，包含各類別的範例食材，用於開發與測試。
