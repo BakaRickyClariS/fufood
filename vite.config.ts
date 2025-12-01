@@ -20,7 +20,7 @@ export default defineConfig({
       manifest: {
         name: 'fufood 食物管家',
         short_name: 'fufood',
-        description: '就是庫存管理，只是聚焦在冰箱食物的管理',
+        description: '輕鬆管理冰箱食材，追蹤到期並接收通知',
         theme_color: '#ec5b4a',
         background_color: '#ffffff',
         start_url: '.',
@@ -51,7 +51,14 @@ export default defineConfig({
       },
     }),
   ],
-  resolve: {
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
+  },  resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@/modules': path.resolve(__dirname, './src/modules'),
@@ -60,3 +67,6 @@ export default defineConfig({
     },
   },
 });
+
+
+
