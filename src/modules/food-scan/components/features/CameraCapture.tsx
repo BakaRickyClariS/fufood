@@ -1,13 +1,14 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useLayoutEffect } from 'react';
 import Webcam from 'react-webcam';
+import { useDispatch } from 'react-redux';
+import gsap from 'gsap';
 import { useWebcam } from '../../hooks/useWebcam';
 import { useImageUpload } from '../../hooks/useImageUpload';
 import CameraOverlay, { type CameraOverlayStatus } from '../ui/CameraOverlay';
 import { useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import type { RootState } from '@/store';
 import { setCapturedImage, retake as retakeAction, setUploadStatus } from '@/modules/food-scan/store/cameraSlice';
 import { useToast } from '@/shared/contexts/ToastContext';
+import { ScanFrame } from '../ui/ScanFrame';
 
 // Test image import
 import testImage from '@/assets/test/carrot.jpg';
@@ -24,8 +25,6 @@ const videoConstraints: MediaTrackConstraints = {
 export const CameraCapture: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { triggerToken } = useSelector((state: RootState) => state.camera);
-  const [isReady, setIsReady] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   
   const { webcamRef, img, isCapturing, capture: originalCapture, retake: originalRetake, setExternalImage } = useWebcam();
@@ -42,30 +41,44 @@ export const CameraCapture: React.FC = () => {
   const { uploadImage, isUploading, isAnalyzing } = useImageUpload({});
   const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const prevTriggerToken = useRef(triggerToken);
-  const pendingTriggerRef = useRef(false);
+
+  // GSAP Navigation Animations
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      // Entry animation: Slide out
+      gsap.to('.top-nav-wrapper', { 
+        yPercent: -100, 
+        duration: 0.5, 
+        ease: 'power3.inOut' 
+      });
+      gsap.to('.bottom-nav-wrapper', { 
+        yPercent: 120, 
+        duration: 0.5, 
+        ease: 'power3.inOut' 
+      });
+    });
+
+    return () => {
+      // Exit animation: Slide in (cleanup)
+      // We use gsap.to to animate them back when unmounting
+      gsap.to('.top-nav-wrapper', { 
+        yPercent: 0, 
+        duration: 0.5, 
+        ease: 'power3.inOut',
+        overwrite: true 
+      });
+      gsap.to('.bottom-nav-wrapper', { 
+        yPercent: 0, 
+        duration: 0.5, 
+        ease: 'power3.inOut',
+        overwrite: true
+      });
+      ctx.revert(); // Cleanup context
+    };
+  }, []);
 
   // Listen for trigger token changes from Redux (BottomNav FAB button)
-  useEffect(() => {
-    if (triggerToken > prevTriggerToken.current) {
-      if (isReady) {
-        capture();
-        pendingTriggerRef.current = false;
-      } else {
-        // 相機尚未就緒，先記錄待觸發
-        pendingTriggerRef.current = true;
-      }
-      prevTriggerToken.current = triggerToken;
-    }
-  }, [triggerToken, capture, isReady]);
-
-  // 相機就緒後若有待觸發請求，立即拍一次
-  useEffect(() => {
-    if (isReady && pendingTriggerRef.current) {
-      capture();
-      pendingTriggerRef.current = false;
-    }
-  }, [isReady, capture]);
+  // Removed triggerToken logic
 
   // Sync local state to Redux when image captured
   useEffect(() => {
@@ -153,10 +166,8 @@ export const CameraCapture: React.FC = () => {
           videoConstraints={videoConstraints}
           forceScreenshotSourceSize
           playsInline
-          onUserMedia={() => setIsReady(true)}
           onUserMediaError={(e) => {
             console.error('Webcam error', e);
-            setIsReady(false);
           }}
           className="absolute inset-0 w-full h-full object-cover"
         />
@@ -188,13 +199,15 @@ export const CameraCapture: React.FC = () => {
         </button>
       )}
 
+      <ScanFrame />
+
       <CameraOverlay
         status={getStatus()}
         onCapture={capture}
         onRetake={retake}
         onGallerySelect={handleGallerySelect}
         onConfirm={handleConfirm}
-        onClose={() => navigate(-1)}
+        onClose={() => navigate('/')}
         errorMessage={scanError || undefined}
       />
     </div>
