@@ -7,7 +7,6 @@ import {
   Refrigerator,
   SlidersHorizontal,
   ScanLine,
-  Camera,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/nav-tabs';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -50,8 +49,7 @@ const defaultNavItems: NavItem[] = [
 ];
 
 // import { useCameraControl } from '@/modules/food-scan/contexts/CameraContext'; // Removed
-import { useDispatch } from 'react-redux';
-import { triggerCapture } from '@/modules/food-scan/store/cameraSlice';
+// import { useCameraControl } from '@/modules/food-scan/contexts/CameraContext'; // Removed
 
 const MobileBottomNav = ({
   items = defaultNavItems,
@@ -60,7 +58,6 @@ const MobileBottomNav = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
   // const cameraControl = useCameraControl(); // Removed Context usage
 
   const activeTab = React.useMemo(() => {
@@ -80,7 +77,7 @@ const MobileBottomNav = ({
   }, [location.pathname, items]);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40">
+    <div className="bottom-nav-wrapper fixed bottom-0 left-0 right-0 z-40">
       {/* 外層容器：陰影 + 圓角只在上方 + 裁切 */}
       <div className="rounded-t-3xl overflow-hidden shadow-[0_-1px_12px_rgba(0,0,0,0.25)]">
         <div className="bg-white dark:bg-slate-950">
@@ -160,19 +157,14 @@ const MobileBottomNav = ({
       </div>
 
       {/* FAB 按鈕：絕對位置，不受 overflow-hidden 影響 */}
-      {items.find((i) => i.isFab) && (() => {
+      {(() => {
         const fabItem = items.find((i) => i.isFab);
-        const isCameraMode = location.pathname === '/upload';
+        if (!fabItem) return null;
 
         return (
           <button
             onClick={() => {
-              if (isCameraMode) {
-                // 在相機模式下，觸發拍照事件 (Redux)
-                dispatch(triggerCapture());
-              } else if (fabItem) {
-                navigate(fabItem.href);
-              }
+              navigate(fabItem.href);
             }}
             className="
               absolute
@@ -197,11 +189,7 @@ const MobileBottomNav = ({
               z-50
             "
           >
-            {isCameraMode ? (
-              <Camera className="w-8 h-8 text-white" />
-            ) : (
-              fabItem?.icon
-            )}
+            {fabItem.icon}
           </button>
         );
       })()}
