@@ -1,4 +1,4 @@
-import type { FoodItem } from '../../types';
+import type { FoodItem, CategoryInfo } from '../../types';
 import americanSoft from '@/assets/images/foods/americanSoft.png';
 import banana from '@/assets/images/foods/banana.png';
 import breakfastLeftover from '@/assets/images/foods/breakfastLeftover.png';
@@ -24,7 +24,7 @@ import mexicanPotato from '@/assets/images/foods/mexicanPotato.png';
 import frozenCauliflower from '@/assets/images/foods/frozenCauliflower.png';
 import chocoIceCream from '@/assets/images/foods/chocoIceCream.png';
 
-export const MOCK_FOOD_ITEMS: FoodItem[] = [
+export const MOCK_INVENTORY: FoodItem[] = [
   // 蔬果類
   {
     id: 'veg-1',
@@ -346,4 +346,43 @@ export const MOCK_FOOD_ITEMS: FoodItem[] = [
     lowStockThreshold: 1,
     createdAt: '2026-01-01T00:00:00.000Z'
   },
+];
+
+export const MOCK_CATEGORIES: CategoryInfo[] = [
+  {
+    id: 'cat-1',
+    title: '蔬果類',
+    count: 8,
+    imageUrl: cabbage,
+    bgColor: 'bg-green-100',
+    slogan: '新鮮蔬果',
+    description: ['每日五蔬果', '健康生活']
+  },
+  {
+    id: 'cat-2',
+    title: '冷凍調理類',
+    count: 6,
+    imageUrl: frozenCabbage,
+    bgColor: 'bg-blue-100',
+    slogan: '方便快速',
+    description: ['快速上桌', '美味不打折']
+  },
+  {
+    id: 'cat-3',
+    title: '主食烘焙類',
+    count: 5,
+    imageUrl: freshToast,
+    bgColor: 'bg-yellow-100',
+    slogan: '能量來源',
+    description: ['飽足感', '美味烘焙']
+  },
+  {
+    id: 'cat-4',
+    title: '其他',
+    count: 5,
+    imageUrl: lemonIce,
+    bgColor: 'bg-gray-100',
+    slogan: '各式點心',
+    description: ['甜蜜時光', '放鬆享受']
+  }
 ];

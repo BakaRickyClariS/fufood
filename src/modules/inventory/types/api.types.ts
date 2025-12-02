@@ -44,8 +44,32 @@ export type DeleteFoodItemResponse = {
 };
 
 // 批次操作請求
-export type BatchOperationRequest = {
-  itemIds: string[];
-  operation: 'delete' | 'update-category' | 'update-status';
-  data?: Record<string, any>;
+export type BatchAddInventoryRequest = {
+  items: Omit<FoodItem, 'id' | 'createdAt' | 'updatedAt'>[];
 };
+
+export type BatchUpdateInventoryRequest = {
+  items: Partial<FoodItem>[];
+};
+
+export type BatchDeleteInventoryRequest = {
+  ids: string[];
+};
+
+// 庫存設定
+export type InventorySettings = {
+  lowStockThreshold: number;
+  expiringSoonDays: number;
+  notifyOnExpiry: boolean;
+  notifyOnLowStock: boolean;
+};
+
+export type UpdateInventorySettingsRequest = Partial<InventorySettings>;
+
+export type InventorySummary = {
+  total: number;
+  expiring: number;
+  expired: number;
+  lowStock: number;
+};
+
