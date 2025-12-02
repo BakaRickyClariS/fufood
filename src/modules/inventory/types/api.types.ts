@@ -73,3 +73,9 @@ export type InventorySummary = {
   lowStock: number;
 };
 
+export type BatchOperationRequest = {
+  operation: 'delete' | 'update-category' | 'add' | 'update';
+  itemIds: string[];
+  data?: any;
+};
+

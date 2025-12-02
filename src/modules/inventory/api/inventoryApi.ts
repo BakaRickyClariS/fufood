@@ -9,7 +9,10 @@ import type {
   BatchOperationRequest,
   FoodItem,
   CategoryInfo,
-  InventoryStats
+  InventoryStats,
+  InventorySummary,
+  InventorySettings,
+  UpdateInventorySettingsRequest
 } from '../types';
 
 export type InventoryApi = {
@@ -36,4 +39,13 @@ export type InventoryApi = {
   
   // 取得分類資訊
   getCategories: () => Promise<CategoryInfo[]>;
+
+  // 取得庫存概況
+  getSummary: () => Promise<InventorySummary>;
+
+  // 取得庫存設定
+  getSettings: () => Promise<InventorySettings>;
+
+  // 更新庫存設定
+  updateSettings: (data: UpdateInventorySettingsRequest) => Promise<void>;
 };

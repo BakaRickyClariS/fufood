@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image as ImageIcon, X, Check } from 'lucide-react';
 
-export type CameraOverlayStatus = 'capturing' | 'uploading' | 'analyzing' | 'done';
+export type CameraOverlayStatus = 'capturing' | 'uploading' | 'analyzing' | 'done' | 'error';
 
 type CameraOverlayProps = {
   status: CameraOverlayStatus;
@@ -10,6 +10,7 @@ type CameraOverlayProps = {
   onGallerySelect: () => void;
   onConfirm: () => void;
   onClose: () => void;
+  errorMessage?: string;
 };
 
 const CameraOverlay: React.FC<CameraOverlayProps> = ({
@@ -19,6 +20,7 @@ const CameraOverlay: React.FC<CameraOverlayProps> = ({
   onGallerySelect,
   onConfirm,
   onClose,
+  errorMessage,
 }) => {
   const isCapturing = status === 'capturing';
   const isProcessing = status === 'uploading' || status === 'analyzing';
@@ -27,20 +29,24 @@ const CameraOverlay: React.FC<CameraOverlayProps> = ({
     <div className="absolute inset-0 z-10 pointer-events-none">
       {/* Top Status - Only show when not capturing (i.e. in preview or processing) */}
       {!isCapturing && (
-        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-20">
-          <div className="bg-green-500/90 text-white px-6 py-2 rounded-full font-bold text-sm shadow-lg backdrop-blur-sm">
+        <div className="absolute top-28 left-1/2 -translate-x-1/2 z-20">
+          <div className={`
+            px-6 py-2 rounded-full font-bold text-sm shadow-lg backdrop-blur-sm text-white
+            ${status === 'error' ? 'bg-red-500/90' : 'bg-green-500/90'}
+          `}>
             {status === 'uploading' && '上傳處理中...'}
             {status === 'analyzing' && 'AI 辨識中...'}
             {status === 'done' && '掃描完成'}
+            {status === 'error' && (errorMessage || '掃描失敗')}
             {/* If just previewing (not processing yet), show success message */}
-            {!isProcessing && status !== 'done' && '沒問題，掃描即將完成'}
+            {!isProcessing && status !== 'done' && status !== 'error' && '沒問題，掃描即將完成'}
           </div>
         </div>
       )}
 
       {/* Top Status for Capturing - Yellow Pill */}
       {isCapturing && (
-        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-20">
+        <div className="absolute top-28 left-1/2 -translate-x-1/2 z-20">
           <div className="bg-yellow-400/90 text-black px-6 py-2 rounded-full font-bold text-sm shadow-lg backdrop-blur-sm">
             請將食材放入框內
           </div>
@@ -77,19 +83,19 @@ const CameraOverlay: React.FC<CameraOverlayProps> = ({
               disabled={isProcessing}
               className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
             >
-              <X size={24} />
+              <X size={24} strokeWidth={3} />
             </button>
 
             {/* Confirm Button */}
             <button
               onClick={onConfirm}
               disabled={isProcessing}
-              className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center shadow-xl text-white hover:bg-green-600 transition-colors disabled:opacity-50"
+              className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-xl text-slate-700 hover:bg-green-600 transition-colors disabled:opacity-50"
             >
               {isProcessing ? (
-                <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-4 border-neutral-700 border-t-transparent rounded-full animate-spin" />
               ) : (
-                <Check size={40} strokeWidth={3} />
+                <Check size={24} strokeWidth={3} />
               )}
             </button>
           </div>

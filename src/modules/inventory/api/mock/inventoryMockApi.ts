@@ -10,9 +10,12 @@ import type {
   BatchOperationRequest,
   FoodItem,
   CategoryInfo,
-  InventoryStats
+  InventoryStats,
+  InventorySummary,
+  InventorySettings,
+  UpdateInventorySettingsRequest
 } from '../../types';
-import { MOCK_FOOD_ITEMS } from './inventoryMockData';
+import { MOCK_INVENTORY } from './inventoryMockData';
 import { categories } from '../../constants/categories'; // 暫時引用舊的 constants，之後會遷移
 
 export const createMockInventoryApi = (): InventoryApi => {
@@ -21,7 +24,7 @@ export const createMockInventoryApi = (): InventoryApi => {
   // 使用 localStorage 模擬持久化
   const getStoredItems = (): FoodItem[] => {
     const stored = localStorage.getItem('mock_inventory_items');
-    return stored ? JSON.parse(stored) : MOCK_FOOD_ITEMS;
+    return stored ? JSON.parse(stored) : MOCK_INVENTORY;
   };
 
   const setStoredItems = (items: FoodItem[]) => {
@@ -30,7 +33,7 @@ export const createMockInventoryApi = (): InventoryApi => {
 
   // 初始化 localStorage
   if (!localStorage.getItem('mock_inventory_items')) {
-    setStoredItems(MOCK_FOOD_ITEMS);
+    setStoredItems(MOCK_INVENTORY);
   }
 
   const getItems = async (params?: GetInventoryRequest): Promise<GetInventoryResponse> => {
@@ -199,6 +202,53 @@ export const createMockInventoryApi = (): InventoryApi => {
     }));
   };
 
+  const getSummary = async (): Promise<InventorySummary> => {
+    await delay(300);
+    const items = getStoredItems();
+    const today = new Date();
+    const threeDaysLater = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+    let expiredCount = 0;
+    let expiringCount = 0;
+    let lowStockCount = 0;
+
+    items.forEach(item => {
+      const expiry = new Date(item.expiryDate);
+      if (expiry < today) expiredCount++;
+      else if (expiry >= today && expiry <= threeDaysLater) expiringCount++;
+      if (item.lowStockAlert && item.quantity <= item.lowStockThreshold) lowStockCount++;
+    });
+
+    return {
+      total: items.length,
+      expiring: expiringCount,
+      expired: expiredCount,
+      lowStock: lowStockCount
+    };
+  };
+
+  const getSettings = async (): Promise<InventorySettings> => {
+    await delay(200);
+    // 從 localStorage 取得設定，或使用預設值
+    const stored = localStorage.getItem('mock_inventory_settings');
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    return {
+      lowStockThreshold: 2,
+      expiringSoonDays: 3,
+      notifyOnExpiry: true,
+      notifyOnLowStock: true
+    };
+  };
+
+  const updateSettings = async (data: UpdateInventorySettingsRequest): Promise<void> => {
+    await delay(300);
+    const current = await getSettings();
+    const updated = { ...current, ...data };
+    localStorage.setItem('mock_inventory_settings', JSON.stringify(updated));
+  };
+
   return {
     getItems,
     getItem,
@@ -207,6 +257,9 @@ export const createMockInventoryApi = (): InventoryApi => {
     deleteItem,
     batchOperation,
     getStats,
-    getCategories
+    getCategories,
+    getSummary,
+    getSettings,
+    updateSettings
   };
 };

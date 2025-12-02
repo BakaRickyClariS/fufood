@@ -7,16 +7,18 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/store';
 import { setCapturedImage, retake as retakeAction, setUploadStatus } from '@/modules/food-scan/store/cameraSlice';
+import { useToast } from '@/shared/contexts/ToastContext';
 
 // Test image import
 import testImage from '@/assets/test/carrot.jpg';
 
 const videoConstraints: MediaTrackConstraints = {
   facingMode: { ideal: 'environment' },
-  // 以直向 9:16 為主，請求較高解析度以避免放大後模糊
-  width: { min: 720, ideal: 1080, max: 1920 },
-  height: { min: 1280, ideal: 1920, max: 2560 },
-  aspectRatio: 9 / 16,
+  // 移除 min 限制，避免在不支援高解析度的設備上發生 OverconstrainedError
+  width: { ideal: 1080 },
+  height: { ideal: 1920 },
+  // 移除強制長寬比，讓瀏覽器自動適應
+  // aspectRatio: 9 / 16, 
 };
 
 export const CameraCapture: React.FC = () => {
@@ -24,9 +26,21 @@ export const CameraCapture: React.FC = () => {
   const dispatch = useDispatch();
   const { triggerToken } = useSelector((state: RootState) => state.camera);
   const [isReady, setIsReady] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
   
-  const { webcamRef, img, isCapturing, capture, retake, setExternalImage } = useWebcam();
+  const { webcamRef, img, isCapturing, capture: originalCapture, retake: originalRetake, setExternalImage } = useWebcam();
+  
+  const capture = () => {
+    setScanError(null);
+    originalCapture();
+  };
+
+  const retake = () => {
+    setScanError(null);
+    originalRetake();
+  };
   const { uploadImage, isUploading, isAnalyzing } = useImageUpload({});
+  const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prevTriggerToken = useRef(triggerToken);
   const pendingTriggerRef = useRef(false);
@@ -103,17 +117,25 @@ export const CameraCapture: React.FC = () => {
 
   const handleConfirm = async () => {
     if (img) {
-      const result = await uploadImage(img);
-      if (result) {
-        navigate('/upload/scan-result', { state: { result: result.data, imageUrl: img } });
-      } else {
-        console.error('上傳或分析失敗');
-        // TODO: Add toast notification here
+      setScanError(null); // Clear previous error
+      try {
+        const result = await uploadImage(img);
+        if (result) {
+           showToast('掃描成功！', 'success');
+           navigate('/upload/scan-result', { state: { result: result.data, imageUrl: img } });
+        } else {
+           const msg = '掃描失敗，請重試';
+           setScanError(msg);
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '掃描失敗，請重試';
+        setScanError(message);
       }
     }
   };
 
   const getStatus = (): CameraOverlayStatus => {
+    if (scanError) return 'error';
     if (isUploading) return 'uploading';
     if (isAnalyzing) return 'analyzing';
     if (isCapturing) return 'capturing';
@@ -173,6 +195,7 @@ export const CameraCapture: React.FC = () => {
         onGallerySelect={handleGallerySelect}
         onConfirm={handleConfirm}
         onClose={() => navigate(-1)}
+        errorMessage={scanError || undefined}
       />
     </div>
   );
