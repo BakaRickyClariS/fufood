@@ -1,13 +1,3 @@
-
-// Wait, I should check if these components exist. The package.json has @radix-ui/react-dialog but maybe not the wrapper components.
-// I'll implement a simple modal using fixed positioning if I can't find the components, or use the radix primitives directly if needed.
-// But to be safe and quick, I'll use a custom implementation or standard HTML/CSS modal for now, or assume the project has a UI library.
-// The plan mentions `src/components/ui` in the imports of my thought process, but I haven't checked if they exist.
-// Let's check `src/components/ui` first.
-
-// Actually, I'll use a simple custom modal for now to avoid dependency issues, or use the one from the plan if it implied existing components.
-// The plan didn't specify the implementation details of the modal, just the file.
-
 import type { ConsumptionItem } from '@/modules/recipe/types';
 import { X } from 'lucide-react';
 

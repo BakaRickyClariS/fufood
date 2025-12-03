@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import { recipeApi } from '@/modules/recipe/services';
 import type { Recipe, ConsumptionItem } from '@/modules/recipe/types';
 import { RecipeHeader } from '@/modules/recipe/components/layout/RecipeHeader';
@@ -9,6 +10,7 @@ import { CookingSteps } from '@/modules/recipe/components/ui/CookingSteps';
 import { ConsumptionModal } from '@/modules/recipe/components/ui/ConsumptionModal';
 import { ConsumptionEditor } from '@/modules/recipe/components/ui/ConsumptionEditor';
 import { useConsumption } from '@/modules/recipe/hooks';
+import { parseQuantity } from '@/modules/recipe/utils/parseQuantity';
 import { Clock, Users } from 'lucide-react';
 
 export const RecipeDetailView = () => {
@@ -32,13 +34,16 @@ export const RecipeDetailView = () => {
         const data = await recipeApi.getRecipeById(id);
         setRecipe(data);
         
-        // Initialize consumption items
-        const items: ConsumptionItem[] = data.ingredients.map(ing => ({
-          ingredientName: ing.name,
-          originalQuantity: ing.quantity,
-          consumedQuantity: 1, // Default to 1 unit or parse from quantity string if complex logic needed
-          unit: ing.unit || '份'
-        }));
+        // Initialize consumption items with parseQuantity
+        const items: ConsumptionItem[] = data.ingredients.map(ing => {
+          const parsed = parseQuantity(ing.quantity);
+          return {
+            ingredientName: ing.name,
+            originalQuantity: ing.quantity,
+            consumedQuantity: parsed.quantity,
+            unit: ing.unit || parsed.unit
+          };
+        });
         setConsumptionItems(items);
       } catch (err) {
         setError(err instanceof Error ? err.message : '載入食譜失敗');
@@ -62,10 +67,13 @@ export const RecipeDetailView = () => {
         timestamp: new Date().toISOString()
       });
       setShowConsumptionModal(false);
-      // Show success message or redirect
-      alert('消耗記錄已更新');
+      toast.success('消耗記錄已更新', {
+        description: addToShoppingList ? '已加入採買清單' : '已記錄消耗'
+      });
     } catch (err) {
-      alert('更新失敗');
+      toast.error('更新失敗', {
+        description: err instanceof Error ? err.message : '請稍後再試'
+      });
     }
   };
 
