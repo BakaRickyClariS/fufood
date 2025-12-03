@@ -2,8 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, Search, ListFilter } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
-import HeroCard from '@/modules/inventory/components/ui/other/HeroSection';
-import CategoryBanner from '@/modules/inventory/components/ui/other/CategoryBanner';
+
 import FoodCard from '@/modules/inventory/components/ui/card/FoodCard';
 import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
 import SearchModal from '@/modules/inventory/components/ui/modal/SearchModal';
@@ -113,10 +112,7 @@ const CategoryPage: React.FC = () => {
         <div className="w-10" /> {/* Spacer for centering */}
       </header>
 
-      {/* Hero Section */}
-      <HeroCard>
-        <CategoryBanner category={category} />
-      </HeroCard>
+
 
       <div className="px-4 mt-2 space-y-4 max-w-layout-container mx-auto">
         {/* Search Bar */}

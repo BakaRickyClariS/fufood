@@ -21,19 +21,45 @@ export const useMealPlan = () => {
   };
 
   const addMealPlan = async (data: MealPlanInput) => {
+    // Optimistic update: 立即建立暫時的計劃物件
+    const tempId = `temp-${Date.now()}`;
+    const optimisticPlan: MealPlan = {
+      id: tempId,
+      ...data,
+      recipeName: '載入中...', // 暫時名稱，等待 API 響應
+      status: 'planned' as const,
+      createdAt: new Date().toISOString(),
+    };
+
+    // 立即更新 UI
+    setMealPlans((prev: MealPlan[]) => [...prev, optimisticPlan]);
+
     try {
-      await recipeApi.addMealPlan(data);
-      await fetchMealPlans();
+      // 發送 API 請求
+      const actualPlan = await recipeApi.addMealPlan(data);
+      
+      // 成功後，用真實的計劃替換暫時的計劃
+      setMealPlans((prev: MealPlan[]) => 
+        prev.map((plan: MealPlan) => plan.id === tempId ? actualPlan : plan)
+      );
     } catch (err) {
+      // 失敗時回滾：移除樂觀添加的項目
+      setMealPlans((prev: MealPlan[]) => prev.filter((plan: MealPlan) => plan.id !== tempId));
       throw err;
     }
   };
 
   const deleteMealPlan = async (planId: string) => {
+    // Optimistic update: 立即從 UI 移除
+    const previousPlans = mealPlans;
+    setMealPlans((prev: MealPlan[]) => prev.filter((plan: MealPlan) => plan.id !== planId));
+
     try {
+      // 發送刪除 API 請求
       await recipeApi.deleteMealPlan(planId);
-      await fetchMealPlans();
     } catch (err) {
+      // 失敗時回滾：恢復之前的狀態
+      setMealPlans(previousPlans);
       throw err;
     }
   };

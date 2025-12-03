@@ -6,7 +6,7 @@ type RequestConfig = RequestInit & {
 
 async function request<T>(endpoint: string, config: RequestConfig = {}): Promise<{ data: T }> {
   const { params, ...customConfig } = config;
-  const headers = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(customConfig.headers as Record<string, string>),
   };
