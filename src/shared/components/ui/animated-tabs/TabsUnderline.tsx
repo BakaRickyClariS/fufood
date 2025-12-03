@@ -1,24 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
+import type { BaseTabsProps } from './types';
 
-type Tab = {
-  id: string;
-  label: string;
+type TabsUnderlineProps = BaseTabsProps & {
+  animated?: boolean;
 };
 
-type TabsHeaderProps = {
-  tabs: Tab[];
-  activeTab: string;
-  onTabChange: (tabId: string) => void;
-  className?: string;
-};
-
-export const TabsHeader = ({ tabs, activeTab, onTabChange, className = '' }: TabsHeaderProps) => {
+const TabsUnderline = ({ 
+  tabs, 
+  activeTab, 
+  onTabChange, 
+  className = '',
+  animated = true
+}: TabsUnderlineProps) => {
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const lineRef = useRef<HTMLDivElement>(null);
   const [isFirstRender, setIsFirstRender] = useState(true);
 
   useEffect(() => {
+    if (!animated) return;
+
     const activeIndex = tabs.findIndex(tab => tab.id === activeTab);
     const activeElement = tabsRef.current[activeIndex];
     const line = lineRef.current;
@@ -44,7 +45,7 @@ export const TabsHeader = ({ tabs, activeTab, onTabChange, className = '' }: Tab
         });
       }
     }
-  }, [activeTab, tabs, isFirstRender]);
+  }, [activeTab, tabs, isFirstRender, animated]);
 
   return (
     <div className={`flex justify-center items-center bg-white shadow-[0_6px_5px_-2px_rgba(0,0,0,0.06)] relative ${className}`}>
@@ -53,16 +54,22 @@ export const TabsHeader = ({ tabs, activeTab, onTabChange, className = '' }: Tab
           key={tab.id}
           ref={el => { tabsRef.current[index] = el; }}
           onClick={() => onTabChange(tab.id)}
-          className="relative font-semibold text-neutral-900 pt-4 pb-2 px-2 border-b-4 border-transparent z-10"
+          className={`relative font-semibold text-neutral-900 pt-4 pb-2 px-2 border-b-4 z-10 transition-colors
+            ${!animated && activeTab === tab.id ? 'border-primary-500' : 'border-transparent'}
+          `}
         >
           {tab.label}
         </button>
       ))}
       {/* Animated Bottom Border */}
-      <div 
-        ref={lineRef}
-        className="absolute bottom-0 h-1 bg-primary-500 opacity-0 pointer-events-none"
-      />
+      {animated && (
+        <div 
+          ref={lineRef}
+          className="absolute bottom-0 h-1 bg-primary-500 opacity-0 pointer-events-none"
+        />
+      )}
     </div>
   );
 };
+
+export default TabsUnderline;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TabsHeader } from '@/shared/components/ui/TabsHeader';
+import { Tabs } from '@/shared/components/ui/animated-tabs';
 import { CategoryGrid } from '@/shared/components/ui/CategoryGrid';
 import { AISearchCard } from '@/modules/recipe/components/ui/AISearchCard';
 import { RecipeList } from '@/modules/recipe/components/features/RecipeList';
@@ -34,7 +34,8 @@ const RecipeHome = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <TabsHeader 
+      <Tabs 
+        variant="underline"
         tabs={tabs} 
         activeTab={activeTab} 
         onTabChange={setActiveTab}
