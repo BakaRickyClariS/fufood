@@ -55,7 +55,7 @@ export const RecipeCardCarousel = ({
 
       <div 
         ref={scrollContainerRef}
-        className="overflow-x-auto scrollbar-hide px-4 flex gap-3 pb-2"
+        className="overflow-x-auto px-4 flex gap-3 pb-2"
       >
         {recipes.map((recipe) => (
           <div key={recipe.id} className="flex-shrink-0 w-40">

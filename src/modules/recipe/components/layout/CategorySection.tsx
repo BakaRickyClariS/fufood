@@ -32,7 +32,7 @@ export const CategorySection = ({ selectedCategory, onSelectCategory }: Category
 
       <div 
         ref={scrollContainerRef}
-        className="overflow-x-auto scrollbar-hide px-4 flex gap-4 pb-2"
+        className="overflow-x-auto px-4 flex gap-4 pb-2"
       >
         {RECIPE_CATEGORIES.map((category) => (
           <button
