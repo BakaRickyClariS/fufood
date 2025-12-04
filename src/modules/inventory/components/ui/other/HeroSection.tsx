@@ -7,7 +7,7 @@ type HeroCardProps = {
 const HeroCard: React.FC<HeroCardProps> = ({ children }) => (
   <div className="px-4 py-6 relative overflow-hidden max-w-layout-container mx-auto">
     <div className="absolute left-1/2 top-1/3 -translate-x-1/2 w-64 h-40 body-dashboard-bg blur-3xl" />
-    <div className="flex items-center bg-white rounded-2xl shadow-[0_6px_14px_-2px_rgba(0,0,0,0.06)] relative z-10 overflow-x-auto no-scrollbar">
+    <div className="flex items-center bg-white rounded-2xl shadow-[0_6px_14px_-2px_rgba(0,0,0,0.06)] relative z-10 overflow-x-auto">
       {children}
     </div>
   </div>
