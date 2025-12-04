@@ -28,7 +28,7 @@ export const RecipeCard = ({
   return (
     <div 
       className={cn(
-        "relative rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-xl transition-shadow",
+        "relative rounded-2xl overflow-hidden",
         "w-[200px] h-[200px] shrink-0",
         className
       )}
@@ -68,7 +68,7 @@ export const RecipeCard = ({
       </button>
       
       {/* 底部資訊區（黑底模糊背景） */}
-      <div className="absolute bottom-0 left-0 right-0 px-3 py-2.5 bg-black/60 backdrop-blur-md">
+      <div className="absolute bottom-0 left-0 right-0 px-3 py-2.5 bg-black/60 backdrop-blur-md rounded-b-2xl">
         {/* 分類標籤 */}
         {showCategoryBadge && (
           <span className="inline-block px-2 py-0.5 mb-1.5 bg-white/20 text-white text-[10px] font-medium rounded">

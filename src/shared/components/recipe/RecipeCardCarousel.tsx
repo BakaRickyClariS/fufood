@@ -68,7 +68,7 @@ export const RecipeCardCarousel = ({
         className="overflow-x-auto px-4 flex gap-3 pb-2"
       >
         {recipes.map((recipe) => (
-          <div key={recipe.id} className="flex-shrink-0 w-[200px]">
+          <div key={recipe.id} className="flex-shrink-0 w-[200px] cursor-pointer hover:shadow-xl transition-shadow">
             <RecipeCard 
               recipe={recipe} 
               onClick={handleRecipeClick}
