@@ -7,7 +7,6 @@ type RecipeCardGridProps = {
   recipes: RecipeListItem[];
   onRecipeClick?: (id: string) => void;
   showMoreLink?: string;
-  columns?: 2 | 3 | 4;
   showPopularTag?: boolean | ((index: number) => boolean);
   className?: string;
 };
@@ -17,7 +16,6 @@ export const RecipeCardGrid = ({
   recipes, 
   onRecipeClick,
   showMoreLink,
-  columns = 2,
   showPopularTag = false,
   className = ''
 }: RecipeCardGridProps) => {
@@ -45,11 +43,7 @@ export const RecipeCardGrid = ({
     return showPopularTag;
   };
 
-  const gridCols = {
-    2: 'grid-cols-2',
-    3: 'grid-cols-3',
-    4: 'grid-cols-4',
-  };
+
 
   if (recipes.length === 0) return null;
 
@@ -73,15 +67,14 @@ export const RecipeCardGrid = ({
         </div>
       )}
 
-      {/* 卡片 Grid */}
-      <div className={`grid ${gridCols[columns]} gap-4`}>
+      {/* 卡片 Flex 排列 */}
+      <div className="flex flex-row gap-4">
         {recipes.map((recipe, index) => (
           <RecipeCard
             key={recipe.id}
             recipe={recipe}
             onClick={handleRecipeClick}
             showPopularTag={shouldShowPopularTag(index)}
-            size="compact"
           />
         ))}
       </div>

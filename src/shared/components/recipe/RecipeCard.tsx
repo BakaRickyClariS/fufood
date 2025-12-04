@@ -8,7 +8,6 @@ type RecipeCardProps = {
   onClick: (id: string) => void;
   showPopularTag?: boolean;
   showCategoryBadge?: boolean;
-  size?: 'default' | 'compact';
   className?: string;
 };
 
@@ -17,7 +16,6 @@ export const RecipeCard = ({
   onClick, 
   showPopularTag = false,
   showCategoryBadge = true,
-  size = 'default',
   className = ''
 }: RecipeCardProps) => {
   const { toggleFavorite, isToggling } = useFavorite();
@@ -31,7 +29,7 @@ export const RecipeCard = ({
     <div 
       className={cn(
         "relative rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-xl transition-shadow",
-        size === 'compact' ? 'aspect-[4/3]' : 'aspect-square',
+        "w-[200px] h-[200px] shrink-0",
         className
       )}
       onClick={() => onClick(recipe.id)}
@@ -46,7 +44,7 @@ export const RecipeCard = ({
       {/* 熱門標籤 - 左上角 */}
       {showPopularTag && (
         <div className="absolute top-3 left-3">
-          <span className="px-3 py-1.5 bg-[#E85A4F] text-white text-sm font-medium rounded-lg">
+          <span className="px-3 py-1.5 bg-[#E85A4F] text-white text-[10px] font-medium rounded-lg">
             熱門
           </span>
         </div>
@@ -69,33 +67,28 @@ export const RecipeCard = ({
         />
       </button>
       
-      {/* 分類標籤 - 左下角（黑底模糊） */}
-      {showCategoryBadge && (
-        <div className="absolute bottom-16 left-3">
-          <span className="inline-block px-2.5 py-1 bg-black/50 backdrop-blur-sm text-white text-xs font-medium rounded">
+      {/* 底部資訊區（黑底模糊背景） */}
+      <div className="absolute bottom-0 left-0 right-0 px-3 py-2.5 bg-black/60 backdrop-blur-md">
+        {/* 分類標籤 */}
+        {showCategoryBadge && (
+          <span className="inline-block px-2 py-0.5 mb-1.5 bg-white/20 text-white text-[10px] font-medium rounded">
             {recipe.category}
           </span>
-        </div>
-      )}
-      
-      {/* 底部資訊區（黑底模糊背景） */}
-      <div className="absolute bottom-0 left-0 right-0 px-4 py-3 bg-black/60 backdrop-blur-md">
+        )}
+        
         {/* 食譜標題 */}
-        <h3 className={cn(
-          "text-white font-bold mb-1.5 line-clamp-1",
-          size === 'compact' ? 'text-base' : 'text-xl'
-        )}>
+        <h3 className="text-white font-bold mb-1 line-clamp-1 text-sm">
           {recipe.name}
         </h3>
         
         {/* 份量與時間 */}
-        <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-1.5">
-            <Users className="w-4 h-4 text-white" />
+        <div className="flex items-center gap-3 text-xs">
+          <div className="flex items-center gap-1">
+            <Users className="w-3.5 h-3.5 text-white" />
             <span className="text-white">{recipe.servings}人份</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Clock className="w-4 h-4 text-primary-500" />
+          <div className="flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5 text-primary-500" />
             <span className="text-primary-500">{recipe.cookTime}分鐘</span>
           </div>
         </div>

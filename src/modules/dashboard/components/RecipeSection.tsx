@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import recipe1 from '@/assets/images/dashboard/recipe-1.png';
 import recipe2 from '@/assets/images/dashboard/recipe-2.png';
-import { RecipeCardGrid } from '@/shared/components/recipe';
+import { RecipeCardCarousel } from '@/shared/components/recipe';
 import type { RecipeListItem, RecipeCategory } from '@/modules/recipe/types';
 import AiRecommendCard from './AiRecommendCard';
 
@@ -37,13 +37,13 @@ const RecipeSection = () => {
   return (
     <section className="w-full rounded-t-3xl overflow-hidden bg-white px-4 mt-6 pb-32">
       <div className="max-w-layout-container mx-auto">
-        <RecipeCardGrid
+        <RecipeCardCarousel
           title="推薦食譜"
           recipes={MOCK_RECIPES}
           onRecipeClick={handleRecipeClick}
+          showPopularTag={true}
           showMoreLink="/recipe"
-          columns={2}
-          showPopularTag={(index) => index === 0} // 只有第一張顯示熱門標籤
+          showScrollButton={false}
         />
       </div>
       <AiRecommendCard />
