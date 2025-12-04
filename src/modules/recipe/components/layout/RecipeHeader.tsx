@@ -2,11 +2,11 @@ import { ChevronLeft, Share2, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useFavorite } from '@/modules/recipe/hooks';
 
-interface RecipeHeaderProps {
+type RecipeHeaderProps = {
   title?: string;
   recipeId?: string;
   isFavorite?: boolean;
-}
+};
 
 export const RecipeHeader = ({ title, recipeId, isFavorite }: RecipeHeaderProps) => {
   const navigate = useNavigate();

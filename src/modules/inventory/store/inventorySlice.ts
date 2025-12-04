@@ -1,14 +1,14 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { FoodItem, FilterOptions, InventoryStats } from '../types';
 
-interface InventoryState {
+type InventoryState = {
   items: FoodItem[];
   selectedItem: FoodItem | null;
   filters: FilterOptions;
   stats: InventoryStats | null;
   isLoading: boolean;
   error: string | null;
-}
+};
 
 const initialState: InventoryState = {
   items: [],

@@ -2,11 +2,11 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export type CameraStatus = 'idle' | 'capturing' | 'uploading' | 'analyzing' | 'done';
 
-export interface CameraState {
+export type CameraState = {
   isCapturing: boolean;
   image: string | null;
   status: CameraStatus;
-}
+};
 
 const initialState: CameraState = {
   isCapturing: true,

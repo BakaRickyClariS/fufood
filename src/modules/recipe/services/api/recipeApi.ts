@@ -2,7 +2,7 @@ import type { Recipe, RecipeListItem, RecipeCategory, MealPlan } from '@/modules
 import type { ConsumptionConfirmation, MealPlanInput } from '@/modules/recipe/types';
 import { apiClient } from '@/services/apiClient';
 
-export interface RecipeApi {
+export type RecipeApi = {
   getRecipes(category?: RecipeCategory): Promise<RecipeListItem[]>;
   getRecipeById(id: string): Promise<Recipe>;
   toggleFavorite(id: string): Promise<{ isFavorite: boolean }>;
@@ -11,7 +11,7 @@ export interface RecipeApi {
   addMealPlan(data: MealPlanInput): Promise<MealPlan>;
   getMealPlans(): Promise<MealPlan[]>;
   deleteMealPlan(planId: string): Promise<{ success: boolean }>;
-}
+};
 
 export class RealRecipeApi implements RecipeApi {
   getRecipes = async (category?: RecipeCategory): Promise<RecipeListItem[]> => {

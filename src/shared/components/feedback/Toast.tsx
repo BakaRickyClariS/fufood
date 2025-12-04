@@ -21,11 +21,11 @@ const toastVariants = cva(
 
 export type ToastType = VariantProps<typeof toastVariants>['type'];
 
-export interface ToastProps extends VariantProps<typeof toastVariants> {
+export type ToastProps = VariantProps<typeof toastVariants> & {
   message: string;
   onClose: () => void;
   duration?: number;
-}
+};
 
 const icons = {
   success: CheckCircle,

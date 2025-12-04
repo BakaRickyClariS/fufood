@@ -1,13 +1,13 @@
 import type { ConsumptionItem } from '@/modules/recipe/types';
 import { X } from 'lucide-react';
 
-interface ConsumptionModalProps {
+type ConsumptionModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (addToShoppingList: boolean) => void;
   onEdit: () => void;
   items: ConsumptionItem[];
-}
+};
 
 export const ConsumptionModal = ({ isOpen, onClose, onConfirm, onEdit, items }: ConsumptionModalProps) => {
   if (!isOpen) return null;
