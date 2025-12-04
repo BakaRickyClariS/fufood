@@ -2,17 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import type { BaseTabsProps } from './types';
 
-type TabsUnderlineProps = BaseTabsProps & {
+type TabsUnderlineProps<TId extends string = string> = BaseTabsProps<TId> & {
   animated?: boolean;
 };
 
-const TabsUnderline = ({ 
+const TabsUnderline = <TId extends string = string>({ 
   tabs, 
   activeTab, 
   onTabChange, 
   className = '',
   animated = true
-}: TabsUnderlineProps) => {
+}: TabsUnderlineProps<TId>) => {
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const lineRef = useRef<HTMLDivElement>(null);
   const [isFirstRender, setIsFirstRender] = useState(true);

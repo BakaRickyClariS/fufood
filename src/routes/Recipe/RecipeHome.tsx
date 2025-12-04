@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { Tabs } from '@/shared/components/ui/animated-tabs';
+import { Tabs, type Tab } from '@/shared/components/ui/animated-tabs';
 import { AISearchCard } from '@/modules/recipe/components/ui/AISearchCard';
 import { RecipeList } from '@/modules/recipe/components/features/RecipeList';
 
-const RecipeHome = () => {
-  const [activeTab, setActiveTab] = useState('recommend');
+type RecipeTabId = 'recommend' | 'rules';
 
-  const tabs = [
+const RecipeHome = () => {
+  const [activeTab, setActiveTab] = useState<RecipeTabId>('recommend');
+
+  const tabs: Tab<RecipeTabId>[] = [
     { id: 'recommend', label: '食譜推薦' },
     { id: 'rules', label: '共享規則' },
   ];

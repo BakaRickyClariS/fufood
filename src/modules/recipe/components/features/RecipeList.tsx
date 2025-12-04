@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecipes } from '@/modules/recipe/hooks';
-import { CategorySection } from '@/modules/recipe/components/layout/CategorySection';
+import { CategoryGrid, type Category } from '@/shared/components/ui/CategoryGrid';
 import { RecipeCardCarousel } from '@/shared/components/recipe';
 import type { RecipeCategory, RecipeListItem } from '@/modules/recipe/types';
+import { RECIPE_CATEGORIES, CATEGORY_IMAGES } from '@/modules/recipe/constants/categories';
 
 // 烹飪時間分類
 const COOKING_TIME_SECTIONS = [
@@ -11,6 +12,13 @@ const COOKING_TIME_SECTIONS = [
   { id: 'easy', title: '輕鬆煮', minTime: 15, maxTime: 29 },
   { id: 'quick', title: '快速煮', minTime: 0, maxTime: 14 },
 ] as const;
+
+// 將 RECIPE_CATEGORIES 轉換為 CategoryGrid 需要的格式
+const categoryItems: Category<RecipeCategory>[] = RECIPE_CATEGORIES.map(cat => ({
+  id: cat,
+  label: cat,
+  icon: CATEGORY_IMAGES[cat]
+}));
 
 export const RecipeList = () => {
   const navigate = useNavigate();
@@ -60,9 +68,12 @@ export const RecipeList = () => {
   return (
     <div className="space-y-6">
       <div className="pl-0">
-        <CategorySection 
-          selectedCategory={selectedCategory} 
-          onSelectCategory={setSelectedCategory} 
+        <CategoryGrid 
+          categories={categoryItems}
+          selectedId={selectedCategory}
+          onCategoryClick={setSelectedCategory}
+          title="主題探索"
+          showScrollButton
         />
       </div>
 

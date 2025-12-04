@@ -2,17 +2,17 @@ import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import type { BaseTabsProps } from './types';
 
-type TabsPillProps = BaseTabsProps & {
+type TabsPillProps<TId extends string = string> = BaseTabsProps<TId> & {
   animated?: boolean;
 };
 
-const TabsPill = ({ 
+const TabsPill = <TId extends string = string>({ 
   tabs, 
   activeTab, 
   onTabChange, 
   className = '',
   animated = true
-}: TabsPillProps) => {
+}: TabsPillProps<TId>) => {
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const bgRef = useRef<HTMLDivElement>(null);
   const [isFirstRender, setIsFirstRender] = useState(true);

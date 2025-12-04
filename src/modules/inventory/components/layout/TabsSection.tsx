@@ -3,20 +3,21 @@ import OverviewPanel from '@/modules/inventory/components/layout/OverviewPanel';
 import CommonItemsPanel from '@/modules/inventory/components/layout/CommonItemsPanel';
 import ExpiredRecordsPanel from '@/modules/inventory/components/layout/ExpiredRecordsPanel';
 import SettingsPanel from '@/modules/inventory/components/layout/SettingsPanel';
-import { Tabs } from '@/shared/components/ui/animated-tabs';
+import { Tabs, type Tab } from '@/shared/components/ui/animated-tabs';
 
-type SubTabType = 'all' | 'common' | 'expired';
+type MainTabId = 'overview' | 'settings';
+type SubTabId = 'all' | 'common' | 'expired';
 
 const TabsSection = () => {
-  const [mainTab, setMainTab] = useState<'overview' | 'settings'>('overview');
-  const [subTab, setSubTab] = useState<SubTabType>('all');
+  const [mainTab, setMainTab] = useState<MainTabId>('overview');
+  const [subTab, setSubTab] = useState<SubTabId>('all');
 
-  const mainTabs = [
+  const mainTabs: Tab<MainTabId>[] = [
     { id: 'overview', label: '庫存總覽' },
     { id: 'settings', label: '管理設定' },
   ];
 
-  const subTabs = [
+  const subTabs: Tab<SubTabId>[] = [
     { id: 'all', label: '總覽' },
     { id: 'common', label: '常用項目' },
     { id: 'expired', label: '過期紀錄' },
@@ -32,7 +33,7 @@ const TabsSection = () => {
           variant="underline"
           tabs={mainTabs}
           activeTab={mainTab}
-          onTabChange={(id: string) => setMainTab(id as 'overview' | 'settings')}
+          onTabChange={setMainTab}
           animated
         />
         <div className="mx-4">
@@ -42,7 +43,7 @@ const TabsSection = () => {
                 variant="pill"
                 tabs={subTabs}
                 activeTab={subTab}
-                onTabChange={(id: string) => setSubTab(id as SubTabType)}
+                onTabChange={setSubTab}
                 animated
                 className="mt-8 mb-6"
               />
