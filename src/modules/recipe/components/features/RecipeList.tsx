@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecipes } from '@/modules/recipe/hooks';
 import { CategorySection } from '@/modules/recipe/components/layout/CategorySection';
-import { RecipeSection } from '@/modules/recipe/components/ui/RecipeSection';
+import { RecipeCardCarousel } from '@/shared/components/recipe';
 import type { RecipeCategory, RecipeListItem } from '@/modules/recipe/types';
 
 // 烹飪時間分類
@@ -68,7 +68,7 @@ export const RecipeList = () => {
 
       <div className="space-y-6 pb-20">
         {COOKING_TIME_SECTIONS.map(section => (
-          <RecipeSection
+          <RecipeCardCarousel
             key={section.id}
             title={section.title}
             recipes={groupedRecipes[section.id]}
@@ -78,7 +78,7 @@ export const RecipeList = () => {
 
         {/* 收藏食譜區塊 */}
         <div className="bg-neutral-100 py-4">
-          <RecipeSection
+          <RecipeCardCarousel
             title="收藏食譜"
             recipes={groupedRecipes.favorites}
             onRecipeClick={handleRecipeClick}

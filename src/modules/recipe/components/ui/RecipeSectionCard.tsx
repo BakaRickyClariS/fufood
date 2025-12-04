@@ -2,7 +2,7 @@ import type { RecipeListItem } from '@/modules/recipe/types';
 import { Clock, Users, Heart } from 'lucide-react';
 import { useFavorite } from '@/modules/recipe/hooks';
 
-interface RecipeSectionCardProps {
+type RecipeSectionCardProps = {
   recipe: RecipeListItem;
   onClick: (id: string) => void;
 }

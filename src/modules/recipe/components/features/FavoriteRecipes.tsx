@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { recipeApi } from '@/modules/recipe/services';
 import type { RecipeListItem } from '@/modules/recipe/types';
-import { RecipeCard } from '@/modules/recipe/components/ui/RecipeCard';
+import { RecipeCard } from '@/shared/components/recipe';
 import { RecipeHeader } from '@/modules/recipe/components/layout/RecipeHeader';
 
 export const FavoriteRecipes = () => {

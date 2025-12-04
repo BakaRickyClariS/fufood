@@ -3,7 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import type { RecipeListItem } from '@/modules/recipe/types';
 import { RecipeSectionCard } from './RecipeSectionCard';
 
-interface RecipeSectionProps {
+type RecipeSectionProps = {
   title: string;
   recipes: RecipeListItem[];
   onRecipeClick: (id: string) => void;
