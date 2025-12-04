@@ -5,6 +5,7 @@ import { SWPrompt } from '@/shared/components/feedback/SWPrompt';
 import { useEffect, useRef, useState } from 'react';
 import { SplashScreen } from '@/shared/components/SplashScreen';
 import { gsap } from 'gsap';
+import { Toaster } from 'sonner';
 
 const App: React.FC = () => {
   const [needRefresh, setNeedRefresh] = useState(false);
@@ -47,6 +48,7 @@ const App: React.FC = () => {
       )}
 
       <RouterProvider router={router} />
+      <Toaster position="top-center" richColors />
       <SWPrompt
         show={needRefresh}
         onUpdate={() => {

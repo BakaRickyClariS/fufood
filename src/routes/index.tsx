@@ -42,7 +42,7 @@ export const router = createBrowserRouter([
         ],
       },
 
-      { path: 'recipe', element: <Recipe /> },
+      ...Recipe,
       ...FoodScanRoutes,
       ...SettingsRoutes,
     ],
