@@ -151,8 +151,14 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    /* 全域隱藏所有捲軸 */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
-  body {
+  *::-webkit-scrollbar {
+    display: none;
+  }
+  html, body {
     @apply bg-background text-foreground;
   }
 }

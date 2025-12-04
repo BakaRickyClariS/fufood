@@ -30,7 +30,7 @@ export const CategoryGrid = ({
         </div>
       )}
       
-      <div className="overflow-x-auto pb-4 px-4 scrollbar-hide">
+      <div className="overflow-x-auto pb-4 px-4">
         <div className="flex gap-4">
           {categories.map((category) => (
             <button

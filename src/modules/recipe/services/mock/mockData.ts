@@ -4,7 +4,7 @@ export const MOCK_RECIPES: Recipe[] = [
   {
     id: 'recipe-001',
     name: '涼拌小黃瓜',
-    category: '慢火煮',
+    category: '中式料理',
     series: '慢火煮系列',
     imageUrl: '/src/assets/images/recipe/Spicy-cucumber-salad.png',
     servings: 2,
@@ -54,7 +54,7 @@ export const MOCK_RECIPES: Recipe[] = [
   {
     id: 'recipe-002',
     name: '鐵鍋煎餃',
-    category: '快速菜',
+    category: '日式料理',
     imageUrl: '/src/assets/images/recipe/Pan-fried-dumplings.png',
     servings: 2,
     cookTime: 20,
@@ -87,7 +87,7 @@ export const MOCK_RECIPES: Recipe[] = [
   {
     id: 'recipe-003',
     name: '青醬義大利麵蛤蠣',
-    category: '過火菜',
+    category: '義式料理',
     imageUrl: '/src/assets/images/recipe/Pesto-spaghetti-clams.png',
     servings: 2,
     cookTime: 25,
@@ -120,7 +120,7 @@ export const MOCK_RECIPES: Recipe[] = [
   {
     id: 'recipe-004',
     name: '雞絲飯',
-    category: '韓味系',
+    category: '韓式料理',
     imageUrl: '/src/assets/images/recipe/Shredded-chicken-rice.png',
     servings: 2,
     cookTime: 30,
@@ -153,7 +153,7 @@ export const MOCK_RECIPES: Recipe[] = [
   {
     id: 'recipe-005',
     name: '乾炒鮮蝦麵',
-    category: '輕食系',
+    category: '中式料理',
     imageUrl: '/src/assets/images/recipe/Stir-fried-shrimp-noodles.png',
     servings: 2,
     cookTime: 15,
