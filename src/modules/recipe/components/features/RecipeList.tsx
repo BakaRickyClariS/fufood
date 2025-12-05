@@ -54,7 +54,7 @@ export const RecipeList = () => {
   }, [recipes]);
 
   const handleRecipeClick = (id: string) => {
-    navigate(`/recipe/${id}`);
+    navigate(`/planning/recipes/${id}`);
   };
 
   if (error) {

@@ -22,7 +22,7 @@ export const AISearchCard = ({ remainingQueries = 3 }: AISearchCardProps) => {
     if (query.trim()) {
       params.append('q', query.trim());
     }
-    navigate(`/recipe/ai-query?${params.toString()}`);
+    navigate(`/planning/recipes/ai-query?${params.toString()}&from=recipes`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -70,7 +70,7 @@ export const AISearchCard = ({ remainingQueries = 3 }: AISearchCardProps) => {
               onClick={() => {
                 const params = new URLSearchParams();
                 params.append('q', tag);
-                navigate(`/recipe/ai-query?${params.toString()}`);
+                navigate(`/planning/recipes/ai-query?${params.toString()}`);
               }}
               className="px-5 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-600 hover:border-orange-300 hover:text-orange-600 hover:bg-orange-50 transition-all shadow-sm font-medium"
             >

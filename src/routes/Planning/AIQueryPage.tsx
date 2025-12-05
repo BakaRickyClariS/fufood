@@ -46,7 +46,7 @@ const AIQueryPage = ({ remainingQueries = 3 }: AIQueryPageProps) => {
         duration: 0.3,
         ease: 'power3.in',
         onComplete: () => {
-          navigate(-1);
+          navigate('/planning?tab=recipes');
         }
       });
     }

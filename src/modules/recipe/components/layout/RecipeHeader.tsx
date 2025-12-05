@@ -22,7 +22,7 @@ export const RecipeHeader = ({ title, recipeId, isFavorite }: RecipeHeaderProps)
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100">
       <div className="flex items-center justify-between px-4 h-14">
         <button 
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/planning?tab=recipes')}
           className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors"
         >
           <ChevronLeft className="w-6 h-6 text-gray-700" />

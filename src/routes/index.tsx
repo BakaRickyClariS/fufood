@@ -2,7 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import MainLayout from '@/shared/components/layout/MainLayout';
 import Dashboard from './Dashboard';
 import Inventory from './Inventory';
-import Recipe from './Recipe';
+import PlanningRoutes from './Planning';
 import FoodScanRoutes from './FoodScan';
 import AuthRoutes from './Auth';
 import SettingsRoutes from './Settings';
@@ -42,7 +42,7 @@ export const router = createBrowserRouter([
         ],
       },
 
-      ...Recipe,
+      ...PlanningRoutes,
       ...FoodScanRoutes,
       ...SettingsRoutes,
     ],
