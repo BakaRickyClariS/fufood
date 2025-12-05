@@ -2,11 +2,11 @@ import { useState } from 'react';
 import type { ConsumptionItem } from '@/modules/recipe/types';
 import { Minus, Plus, Save } from 'lucide-react';
 
-interface ConsumptionEditorProps {
+type ConsumptionEditorProps = {
   items: ConsumptionItem[];
   onSave: (items: ConsumptionItem[]) => void;
   onCancel: () => void;
-}
+};
 
 export const ConsumptionEditor = ({ items: initialItems, onSave, onCancel }: ConsumptionEditorProps) => {
   const [items, setItems] = useState<ConsumptionItem[]>(initialItems);

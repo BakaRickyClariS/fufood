@@ -20,11 +20,17 @@ const MainLayout = () => {
 
   return (
     <>
-      <TopNav />
+      <div className="sticky top-0 z-40">
+        <TopNav />
+      </div>
       <main>
         <Outlet />
       </main>
-      <BottomNav />
+      <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none">
+        <div className="pointer-events-auto">
+          <BottomNav />
+        </div>
+      </div>
     </>
   );
 };

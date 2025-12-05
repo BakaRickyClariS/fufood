@@ -1,0 +1,11 @@
+/**
+ * Camera 相關的工具樣式
+ */
+
+/**
+ * FAB (Floating Action Button) 漸層背景
+ * 用於相機拍照按鈕
+ */
+.bg-fab-gradient {
+  background: radial-gradient(circle at 30% 30%, #f58274, #ec5b4a);
+}

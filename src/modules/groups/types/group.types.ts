@@ -43,6 +43,10 @@ export type InviteMemberForm = {
   role?: GroupMember['role'];
 };
 
+export type JoinGroupForm = {
+  inviteCode: string;
+};
+
 /**
  * Modal 狀態型別
  */

@@ -8,76 +8,65 @@ import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailM
 import SearchModal from '@/modules/inventory/components/ui/modal/SearchModal';
 import FilterModal from '@/modules/inventory/components/ui/modal/FilterModal';
 import { categories } from '@/modules/inventory/constants/categories';
-import { foodData, type FoodItem } from '@/modules/inventory/constants/foods';
+import { useInventory, useInventoryFilter } from '@/modules/inventory/hooks';
+import type { FoodItem, FoodCategory } from '@/modules/inventory/types';
 
 const CategoryPage: React.FC = () => {
   const { categoryId } = useParams();
+  const { items: allItems, isLoading } = useInventory();
+  
   const category = useMemo(
     () => categories.find((c) => c.id === categoryId),
     [categoryId],
   );
-  const items = useMemo(
-    () => (category ? foodData[category.id] || [] : []),
-    [category],
-  );
+
+  // Filter items by category first
+  const categoryItems = useMemo(() => {
+    if (!category) return [];
+    // Extract category name from title (e.g., "蔬果類 (92)" -> "蔬果類")
+    const categoryName = category.title.split(' ')[0] as FoodCategory;
+    return allItems.filter(item => item.category === categoryName);
+  }, [allItems, category]);
+
+  const { filteredItems: hookFilteredItems, setFilter, filters } = useInventoryFilter(categoryItems);
 
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string | null>(null);
-  const [filterAttribute, setFilterAttribute] = useState<string | null>(null);
-
-  const filteredItems = useMemo(
-    () =>
-      items.filter((item) => {
-        // 1. Search Filter
-        if (searchQuery && !item.name.includes(searchQuery)) {
-          return false;
-        }
-
-        // 2. Attribute Filter (Category)
-        if (filterAttribute && item.category !== filterAttribute) {
-          return false;
-        }
-
-        // 3. Status Filter
-        if (filterStatus) {
-          const today = new Date();
-          const expireDate = new Date(item.expireAt);
-          const diffTime = expireDate.getTime() - today.getTime();
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-          switch (filterStatus) {
-            case '已過期':
-              return diffDays < 0;
-            case '即將到期':
-              return diffDays >= 0 && diffDays <= 3;
-            case '低庫存':
-              return item.quantity <= 2;
-            case '有庫存':
-              return item.quantity > 0;
-            default:
-              return true;
-          }
-        }
-
-        return true;
-      }),
-    [items, searchQuery, filterAttribute, filterStatus],
-  );
-
+  // Sync local state with hook filters
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
+    setFilter('searchQuery', query);
   };
 
   const handleFilterApply = (
     status: string | null,
-    attribute: string | null,
+    _attribute: string | null,
   ) => {
-    setFilterStatus(status);
-    setFilterAttribute(attribute);
+    // Map UI status to hook status
+    if (status) {
+      switch (status) {
+        case '已過期':
+          setFilter('status', 'expired');
+          break;
+        case '即將到期':
+          setFilter('status', 'expiring-soon');
+          break;
+        case '低庫存':
+          setFilter('status', 'low-stock');
+          break;
+        case '有庫存':
+          setFilter('status', 'normal');
+          break;
+        default:
+          setFilter('status', 'all');
+      }
+    } else {
+      setFilter('status', 'all');
+    }
+    
+    // Attribute filter is not used in hook for now, or could map to category if needed
+    // But we are already in a category page, so attribute filter might be redundant or for sub-categories
   };
 
   if (!category) {
@@ -122,11 +111,11 @@ const CategoryPage: React.FC = () => {
             onClick={() => setIsSearchOpen(true)}
           >
             <Search className=" h-4 w-4 text-neutral-900" />
-            <p className="ml-3">{searchQuery || '搜尋'}</p>
+            <p className="ml-3">{filters.searchQuery || '搜尋'}</p>
           </div>
           <ListFilter
             className={`h-6 w-6 ml-3 cursor-pointer transition-colors ${
-              filterStatus || filterAttribute
+              filters.status !== 'all'
                 ? 'text-[#EE5D50]'
                 : 'text-neutral-900 hover:text-neutral-600'
             }`}
@@ -136,8 +125,12 @@ const CategoryPage: React.FC = () => {
 
         {/* Item List */}
         <div className="grid grid-cols-2 gap-3">
-          {filteredItems.length > 0 ? (
-            filteredItems.map((item) => (
+          {isLoading ? (
+            <div className="col-span-2 text-center py-10 text-neutral-400">
+              載入中...
+            </div>
+          ) : hookFilteredItems.length > 0 ? (
+            hookFilteredItems.map((item) => (
               <FoodCard
                 key={item.id}
                 item={item}

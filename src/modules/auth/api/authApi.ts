@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 import type {
   LoginRequest,
   LoginResponse,
@@ -5,6 +6,9 @@ import type {
   RegisterResponse,
   LINELoginRequest,
   User,
+  RefreshTokenRequest,
+  RefreshTokenResponse,
+  UpdateProfileRequest,
 } from '../types';
 import { MOCK_USERS, MOCK_TOKEN } from './mock/authMockData';
 
@@ -17,40 +21,14 @@ export const authApi = {
    */
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     if (USE_MOCK) {
-      // Mock 實作
       await new Promise((resolve) => setTimeout(resolve, 800));
-
-      // 模擬驗證
-      if (data.email === 'test@example.com' && data.password === 'password') {
-        return {
-          user: MOCK_USERS[0],
-          token: MOCK_TOKEN,
-        };
-      }
-      // 為了方便測試，只要不是特定錯誤帳號都讓它過，或者嚴格一點
-      // 這裡簡單一點，只要有輸入就讓過，除了特定測試失敗的案例
-      if (data.email === 'fail@test.com') {
-        throw new Error('帳號或密碼錯誤');
-      }
-
+      if (data.email === 'fail@test.com') throw new Error('帳號或密碼錯誤');
       return {
-        user: {
-          ...MOCK_USERS[0],
-          email: data.email,
-        },
+        user: { ...MOCK_USERS[0], email: data.email },
         token: MOCK_TOKEN,
       };
     }
-
-    // TODO: 真實 API 呼叫
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) throw new Error('登入失敗');
-    return response.json();
+    return apiClient.post<LoginResponse>('/auth/login', data);
   },
 
   /**
@@ -59,53 +37,18 @@ export const authApi = {
   register: async (data: RegisterRequest): Promise<RegisterResponse> => {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      const newUser: User = {
-        id: Math.random().toString(36).substr(2, 9),
-        email: data.email,
-        name: data.name || '新使用者',
-        avatar: data.avatar || 'bg-blue-200',
-        createdAt: new Date(),
-      };
-
       return {
-        user: newUser,
+        user: {
+          id: Math.random().toString(36).substr(2, 9),
+          email: data.email,
+          name: data.name || '新使用者',
+          avatar: data.avatar || 'bg-blue-200',
+          createdAt: new Date(),
+        },
         token: MOCK_TOKEN,
       };
     }
-
-    // TODO: 真實 API 呼叫
-    const response = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) throw new Error('註冊失敗');
-    return response.json();
-  },
-
-  /**
-   * LINE 登入
-   */
-  loginWithLINE: async (data: LINELoginRequest): Promise<LoginResponse> => {
-    if (USE_MOCK) {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      return {
-        user: MOCK_USERS[0],
-        token: MOCK_TOKEN,
-      };
-    }
-
-    // TODO: 真實 API 呼叫
-    const response = await fetch('/api/auth/line', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) throw new Error('LINE 登入失敗');
-    return response.json();
+    return apiClient.post<RegisterResponse>('/auth/register', data);
   },
 
   /**
@@ -116,9 +59,21 @@ export const authApi = {
       await new Promise((resolve) => setTimeout(resolve, 300));
       return;
     }
+    return apiClient.post<void>('/auth/logout');
+  },
 
-    // TODO: 真實 API 呼叫
-    await fetch('/api/auth/logout', { method: 'POST' });
+  /**
+   * 刷新 Token
+   */
+  refreshToken: async (data: RefreshTokenRequest): Promise<RefreshTokenResponse> => {
+    if (USE_MOCK) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return {
+        accessToken: 'mock_new_access_token_' + Date.now(),
+        expiresIn: 3600,
+      };
+    }
+    return apiClient.post<RefreshTokenResponse>('/auth/refresh', data);
   },
 
   /**
@@ -129,10 +84,50 @@ export const authApi = {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return MOCK_USERS[0];
     }
+    return apiClient.get<User>('/auth/me');
+  },
 
-    // TODO: 真實 API 呼叫
-    const response = await fetch('/api/auth/me');
-    if (!response.ok) throw new Error('無法取得使用者資訊');
-    return response.json();
+  /**
+   * 驗證 Token
+   */
+  checkToken: async (): Promise<void> => {
+    if (USE_MOCK) {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return;
+    }
+    return apiClient.get<void>('/auth/check');
+  },
+
+  /**
+   * 更新個人資料
+   */
+  updateProfile: async (data: UpdateProfileRequest): Promise<User> => {
+    if (USE_MOCK) {
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      return { ...MOCK_USERS[0], ...data };
+    }
+    return apiClient.put<User>('/auth/update-profile', data);
+  },
+
+  /**
+   * LINE 登入導向
+   */
+  getLineLoginUrl: async (): Promise<{ url: string }> => {
+    if (USE_MOCK) {
+      return { url: 'http://localhost:5173/login/callback?code=mock_code' };
+    }
+    return apiClient.get<{ url: string }>('/auth/line/login');
+  },
+
+  /**
+   * LINE 登入 Callback
+   */
+  loginWithLINE: async (data: LINELoginRequest): Promise<LoginResponse> => {
+    if (USE_MOCK) {
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      return { user: MOCK_USERS[0], token: MOCK_TOKEN };
+    }
+    return apiClient.get<LoginResponse>('/auth/line/callback', { code: data.code });
   },
 };
+

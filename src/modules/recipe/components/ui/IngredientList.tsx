@@ -1,8 +1,8 @@
 import type { RecipeIngredient } from '@/modules/recipe/types';
 
-interface IngredientListProps {
+type IngredientListProps = {
   ingredients: RecipeIngredient[];
-}
+};
 
 export const IngredientList = ({ ingredients }: IngredientListProps) => {
   const prepIngredients = ingredients.filter(i => i.category === '準備材料');

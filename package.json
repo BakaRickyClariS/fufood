@@ -23,7 +23,6 @@
     "clsx": "^2.1.1",
     "gsap": "^3.13.0",
     "lucide-react": "^0.553.0",
-    "next-cloudinary": "^6.17.5",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.67.0",
@@ -31,7 +30,6 @@
     "react-router-dom": "^7.9.5",
     "react-webcam": "^7.2.0",
     "sonner": "^1.7.1",
-    "swiper": "^12.0.3",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.16"
   },

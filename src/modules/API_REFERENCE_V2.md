@@ -10,11 +10,11 @@
 
 ### 快速索引
 - [Auth (9個)](#1️⃣-auth-module-使用者認證模組) | [Groups (10個)](#2️⃣-groups-module-群組管理模組) | [Inventory (14個)](#3️⃣-inventory-module-庫存管理模組)
-- [Foods (5個)](#4️⃣-foods-module-食材主檔) | [Recipes (7個)](#5️⃣-recipes-module-食譜管理模組) | [Shopping Lists (6個)](#6️⃣-shopping-lists-module-購物清單模組)
+- [Foods (5個)](#4️⃣-foods-module-食材主檔) | [Recipes (8個)](#5️⃣-recipes-module-食譜管理模組) | [Shopping Lists (6個)](#6️⃣-shopping-lists-module-購物清單模組)
 - [AI Service (2個)](#7️⃣-ai-service-module-ai-服務模組) | [Notifications (2個)](#8️⃣-notifications-module-通知設定模組) 
 - [LINE Bot (2個)](#9️⃣-line-bot-module) | [Media (1個)](#🔟-media-upload-module-媒體上傳模組)
 
-### 完整 API 清單 (總計 58 個)
+### 完整 API 清單 (總計 60 個)
 
 | # | 模組 | Method | API Path | 功能說明 | 狀態 |
 |---|------|--------|----------|---------|------|
@@ -63,30 +63,31 @@
 | 39 | Foods | DELETE | `/api/v1/foods/{id}` | 刪除食材 | 🆕 |
 | **Recipes Module (食譜管理)** |
 | 40 | Recipes | GET | `/api/v1/recipes` | 取得所有食譜 | 🆕 |
-| 41 | Recipes | POST | `/api/v1/recipes/{id}/favorite` | 收藏/取消收藏食譜 | 🆕 |
-| 42 | Recipes | GET | `/api/v1/recipes/favorites` | 取得收藏食譜清單 | 🆕 |
-| 43 | Recipes | POST | `/api/v1/recipes/{id}/cook` | 食譜完成 → 扣除庫存食材 | 🆕 |
-| 44 | Recipes | POST | `/api/v1/recipes/plan` | 加入待烹煮計劃 (MealPlan) | 🆕 |
-| 45 | Recipes | GET | `/api/v1/recipes/plan` | 取得目前規劃的食譜計畫 | 🆕 |
-| 46 | Recipes | DELETE | `/api/v1/recipes/plan/{planId}` | 刪除待烹煮計畫 | 🆕 |
+| 41 | Recipes | GET | `/api/v1/recipes/{id}` | 取得單一食譜詳情 | 🆕 |
+| 42 | Recipes | POST | `/api/v1/recipes/{id}/favorite` | 收藏/取消收藏食譜 | 🆕 |
+| 43 | Recipes | GET | `/api/v1/recipes/favorites` | 取得收藏食譜清單 | 🆕 |
+| 44 | Recipes | POST | `/api/v1/recipes/{id}/cook` | 食譜完成 → 扣除庫存食材 | 🆕 |
+| 45 | Recipes | POST | `/api/v1/recipes/plan` | 加入待烹煮計劃 (MealPlan) | 🆕 |
+| 46 | Recipes | GET | `/api/v1/recipes/plan` | 取得目前規劃的食譜計畫 | 🆕 |
+| 47 | Recipes | DELETE | `/api/v1/recipes/plan/{planId}` | 刪除待烹煮計畫 | 🆕 |
 | **Shopping Lists Module (購物清單)** |
-| 47 | Shopping | GET | `/api/v1/shopping-lists` | 取得所有購物清單 | 🆕 |
-| 48 | Shopping | POST | `/api/v1/shopping-lists` | 建立購物清單 | 🆕 |
-| 49 | Shopping | GET | `/api/v1/shopping-lists/{id}` | 取得單一購物清單內容 | 🆕 |
-| 50 | Shopping | PUT | `/api/v1/shopping-lists/{id}` | 編輯購物清單 | 🆕 |
-| 51 | Shopping | DELETE | `/api/v1/shopping-lists/{id}` | 刪除購物清單 | 🆕 |
-| 52 | Shopping | POST | `/api/v1/shopping-lists/{id}/purchase` | 標記清單已購買 → 更新庫存 | 🆕 |
+| 48 | Shopping | GET | `/api/v1/shopping-lists` | 取得所有購物清單 | 🆕 |
+| 49 | Shopping | POST | `/api/v1/shopping-lists` | 建立購物清單 | 🆕 |
+| 50 | Shopping | GET | `/api/v1/shopping-lists/{id}` | 取得單一購物清單內容 | 🆕 |
+| 51 | Shopping | PUT | `/api/v1/shopping-lists/{id}` | 編輯購物清單 | 🆕 |
+| 52 | Shopping | DELETE | `/api/v1/shopping-lists/{id}` | 刪除購物清單 | 🆕 |
+| 53 | Shopping | POST | `/api/v1/shopping-lists/{id}/purchase` | 標記清單已購買 → 更新庫存 | 🆕 |
 | **AI Service Module (AI 服務)** |
-| 53 | AI | POST | `/api/v1/ai/analyze-image` | 上傳圖片 → GPT大模型 (OCR)  | ✅ |
-| 54 | AI | POST | `/api/v1/ai/recipe` | 傳入食材清單 → GPT 生成食譜 | 🆕 |
+| 54 | AI | POST | `/api/v1/ai/analyze-image` | 上傳圖片 → GPT大模型 (OCR)  | ✅ |
+| 55 | AI | POST | `/api/v1/ai/recipe` | 傳入食材清單 → GPT 生成食譜 | 🆕 |
 | **Notifications Module (通知設定)** |
-| 55 | Notify | GET | `/api/v1/notifications` | 取得使用者通知設定 | 🆕 |
-| 56 | Notify | POST | `/api/v1/notifications` | 建立/更新通知設定 | 🆕 |
+| 56 | Notify | GET | `/api/v1/notifications` | 取得使用者通知設定 | 🆕 |
+| 57 | Notify | POST | `/api/v1/notifications` | 建立/更新通知設定 | 🆕 |
 | **LINE Bot Module** |
-| 57 | LINE | POST | `/api/v1/line/webhook` | LINE Bot Webhook | 🆕 |
-| 58 | LINE | POST | `/api/v1/line/push` | 伺服器端主動推提醒 | 🆕 |
+| 58 | LINE | POST | `/api/v1/line/webhook` | LINE Bot Webhook | 🆕 |
+| 59 | LINE | POST | `/api/v1/line/push` | 伺服器端主動推提醒 | 🆕 |
 | **Media Upload Module (媒體上傳)** |
-| 59 | Media | POST | `/api/v1/media/upload` | 上傳食材圖片(回傳 URL) | 🆕 |
+| 60 | Media | POST | `/api/v1/media/upload` | 上傳食材圖片(回傳 URL) | 🆕 |
 
 **圖例**: ✅ 已實作 | 🆕 新增
 
@@ -271,7 +272,8 @@ type ApiErrorResponse = {
 提供食譜查詢、收藏以及烹煮計畫 (Meal Plan) 功能。
 
 ## API 規格
-- `GET /api/v1/recipes`: 列表
+- `GET /api/v1/recipes`: 列表 (支援 `?category=` 篩選)
+- `GET /api/v1/recipes/{id}`: **取得單一食譜詳情** 🆕
 - `POST /api/v1/recipes/{id}/favorite`: 收藏切換
 - `GET /api/v1/recipes/favorites`: 收藏列表
 - `POST /api/v1/recipes/{id}/cook`: **烹煮完成** (原 `used`) - 自動扣除庫存

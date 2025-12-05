@@ -74,12 +74,13 @@ export const useImageUpload = (props?: UseImageUploadProps) => {
           return analyzeResult;
         } catch (error) {
           console.error('API Analyze Error:', error);
-          setError(
-            error instanceof Error 
+          const errorMessage = error instanceof Error 
               ? error.message 
-              : '圖片分析失敗，請稍後再試'
-          );
-          return null;
+              : '圖片分析失敗，請稍後再試';
+          
+          setError(errorMessage);
+          // Re-throw error so the caller (CameraCapture) can handle it (e.g. show Toast)
+          throw error;
         } finally {
           setIsAnalyzing(false);
         }
