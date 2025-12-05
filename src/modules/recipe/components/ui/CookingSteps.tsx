@@ -1,9 +1,9 @@
 import type { CookingStep } from '@/modules/recipe/types';
 import { Clock } from 'lucide-react';
 
-interface CookingStepsProps {
+type CookingStepsProps = {
   steps: CookingStep[];
-}
+};
 
 export const CookingSteps = ({ steps }: CookingStepsProps) => {
   return (

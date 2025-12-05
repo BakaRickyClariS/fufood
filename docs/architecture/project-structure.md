@@ -2,22 +2,28 @@
 
 本文件旨在協助開發者快速理解 FuFood 專案的目錄結構與各資料夾用途。
 
-> **最後更新日期**: 2025-11-27
+> **最後更新日期**: 2025-12-05
 > **架構風格**: Feature-based (功能模組化) + Shared (共用資源)
 
 ---
 
 ## 📂 目錄結構總覽
 
+```
 src/
 ├── assets/                 # 靜態資源 (圖片、Icon 等)
 ├── modules/                # ✨ 功能模組 (核心業務邏輯)
 │   ├── auth/               # 身份驗證 (登入、註冊)
 │   ├── dashboard/          # 儀表板 (首頁概覽)
 │   ├── food-scan/          # 食材掃描 (OCR、圖片辨識)
+│   ├── foods/              # 食材主檔 (標準化食材資料)
+│   ├── groups/             # 群組管理 (家庭/共用群組)
 │   ├── inventory/          # 庫存管理 (食材列表、分類)
-│   ├── recipe/             # 食譜推薦 (AI 建議)
-│   └── settings/           # 系統設定 (個人資料、偏好)
+│   ├── media/              # 媒體上傳 (圖片上傳服務)
+│   ├── notifications/      # 通知設定 (推播、提醒)
+│   ├── recipe/             # 食譜模組 (食譜瀏覽、詳情)
+│   ├── settings/           # 系統設定 (個人資料、偏好)
+│   └── shopping-lists/     # 購物清單 (採買管理)
 ├── routes/                 # 🚀 頁面路由 (Page Components)
 │   ├── Auth/               # 驗證相關頁面
 │   ├── Dashboard/          # 儀表板頁面
@@ -27,8 +33,12 @@ src/
 │   ├── Settings/           # 設定頁面
 │   └── index.tsx           # 路由定義 (Router)
 ├── shared/                 # 🔄 共用資源 (跨功能使用)
-│   ├── components/         # 共用 UI 元件 (Buttons, Cards, Layouts)
-│   │   └── layout/         # 版面配置 (MainLayout, TopNav, BottomNav)
+│   ├── components/         # 共用 UI 元件
+│   │   ├── feedback/       # 回饋元件 (Toast, Alert)
+│   │   ├── forms/          # 表單元件 (Input, Select)
+│   │   ├── layout/         # 版面配置 (MainLayout, TopNav)
+│   │   ├── recipe/         # 食譜共用元件 (RecipeCard)
+│   │   └── ui/             # 基礎元件 (shadcn/ui)
 │   ├── constants/          # 共用常數 (Routes, API Endpoints)
 │   ├── hooks/              # 共用 Hooks (useWindowSize 等)
 │   ├── types/              # 共用 TypeScript 型別
@@ -52,9 +62,14 @@ src/
 | **auth** | 身份驗證模組 | `LoginForm`, `useAuth`, `authService` |
 | **dashboard** | 儀表板模組 | `OverviewPanel`, `RecentItems` |
 | **food-scan** | 食材掃描模組 | `CameraCapture`, `OcrService` |
+| **foods** | 食材主檔模組 | `FoodCategory`, `FoodSelector` |
+| **groups** | 群組管理模組 | `GroupList`, `MemberManage` |
 | **inventory** | 庫存管理模組 | `InventoryList`, `CategoryTabs`, `inventoryService` |
-| **recipe** | 食譜模組 | `RecipeCard`, `AiRecommendation` |
+| **media** | 媒體上傳模組 | `ImageUpload`, `mediaService` |
+| **notifications** | 通知設定模組 | `NotificationSettings`, `NotifyToggle` |
+| **recipe** | 食譜模組 | `RecipeCard`, `RecipeDetail`, `recipeService` |
 | **settings** | 設定模組 | `ProfileForm`, `ThemeSwitcher` |
+| **shopping-lists** | 購物清單模組 | `ShoppingList`, `AddItem` |
 
 **Module 內部結構通常包含：**
 - `README.md`: 該模組的詳細說明文件 (✨ New)
@@ -72,8 +87,10 @@ src/
 | 資料夾 | 說明 |
 | :--- | :--- |
 | **components/ui** | 基礎 UI 元件 (通常來自 shadcn/ui)，如 `button.tsx`, `input.tsx`。<br>⚠️ **注意：此資料夾只放安裝後未更改過的物件，且官方預設檔名皆為小寫。** |
-| **components/common** | 專案通用的複合元件，如 `PageHeader`, `LoadingSpinner` |
+| **components/feedback** | 使用者回饋元件，如 `Toast`, `Dialog`, `Alert` |
+| **components/forms** | 表單相關元件，如 `Input`, `Select`, `Checkbox` |
 | **components/layout** | 版面配置元件，如 `Navbar`, `Sidebar`, `Container` |
+| **components/recipe** | 食譜相關共用元件，如 `RecipeCard`, `RecipeCarousel` |
 | **utils** | 工具函式庫，如 `formatDate`, `validateEmail` |
 | **hooks** | 通用 Hooks，如 `useDebounce`, `useLocalStorage` |
 
@@ -100,7 +117,8 @@ src/
 
 2. **新增共用元件時**：
    - 如果是純 UI (無業務邏輯)，放 `shared/components/ui`。
-   - 如果帶有特定業務邏輯但跨功能使用，放 `shared/components/common`。
+   - 如果是特定類型的 UI (如表單、回饋)，放對應的子資料夾 (`forms`, `feedback`)。
+   - 如果帶有特定業務邏輯但跨功能使用，放 `shared/components/common` 或對應分類。
 
 3. **修改頁面時**：
    - 到 `src/routes/` 找到對應頁面。

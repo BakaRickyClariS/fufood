@@ -1,6 +1,6 @@
-interface RecipeSeriesTagProps {
+type RecipeSeriesTagProps = {
   series: string;
-}
+};
 
 export const RecipeSeriesTag = ({ series }: RecipeSeriesTagProps) => {
   return (

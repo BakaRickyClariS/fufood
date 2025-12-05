@@ -1,10 +1,10 @@
 import { Search } from 'lucide-react';
 
-interface SearchBarProps {
+type SearchBarProps = {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-}
+};
 
 export const SearchBar = ({ value, onChange, placeholder = '搜尋食譜...' }: SearchBarProps) => {
   return (

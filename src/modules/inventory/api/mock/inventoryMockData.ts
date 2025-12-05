@@ -1,0 +1,388 @@
+import type { FoodItem, CategoryInfo } from '../../types';
+import americanSoft from '@/assets/images/foods/americanSoft.png';
+import banana from '@/assets/images/foods/banana.png';
+import breakfastLeftover from '@/assets/images/foods/breakfastLeftover.png';
+import butterRoll from '@/assets/images/foods/butterRoll.png';
+import cabbage from '@/assets/images/foods/cabbage.png';
+import carrot from '@/assets/images/foods/carrot.png';
+import cauliflower from '@/assets/images/foods/cauliflower.png';
+import cinnamonRoll from '@/assets/images/foods/cinnamonRoll.png';
+import citrus from '@/assets/images/foods/citrus.png';
+import freshToast from '@/assets/images/foods/freshToast.png';
+import freshUdon from '@/assets/images/foods/freshUdon.png';
+import frozenBerries from '@/assets/images/foods/frozenBerries.png';
+import frozenCabbage from '@/assets/images/foods/frozenCabbage.png';
+import lemonIce from '@/assets/images/foods/iceCream.png';
+import lemonTart from '@/assets/images/foods/lemon.png';
+import mainlandAchoy from '@/assets/images/foods/mainlandAchoy.png';
+import persimmon from '@/assets/images/foods/persimmon.png';
+import rice from '@/assets/images/foods/rice.png';
+import skinOn from '@/assets/images/foods/skinOn.png';
+import strawBerries from '@/assets/images/foods/strawBerries.png';
+import edamame from '@/assets/images/foods/edamame.png';
+import mexicanPotato from '@/assets/images/foods/mexicanPotato.png';
+import frozenCauliflower from '@/assets/images/foods/frozenCauliflower.png';
+import chocoIceCream from '@/assets/images/foods/chocoIceCream.png';
+
+export const MOCK_INVENTORY: FoodItem[] = [
+  // 蔬果類
+  {
+    id: 'veg-1',
+    name: '大陸A菜',
+    category: '蔬果類',
+    quantity: 6,
+    unit: '把',
+    imageUrl: mainlandAchoy,
+    purchaseDate: '2026-01-01',
+    expiryDate: '2026-01-14',
+    lowStockAlert: true,
+    lowStockThreshold: 2,
+    notes: '好市多購入，季節限定',
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'veg-2',
+    name: '結球甘藍',
+    category: '蔬果類',
+    quantity: 24,
+    unit: '顆',
+    imageUrl: cabbage,
+    purchaseDate: '2026-01-01',
+    expiryDate: '2026-01-05',
+    lowStockAlert: true,
+    lowStockThreshold: 5,
+    notes: '有機種植',
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'veg-3',
+    name: '白花椰菜',
+    category: '蔬果類',
+    quantity: 1,
+    unit: '顆',
+    imageUrl: cauliflower,
+    purchaseDate: '2026-01-01',
+    expiryDate: '2026-01-14',
+    lowStockAlert: true,
+    lowStockThreshold: 1,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'veg-4',
+    name: '好市多香蕉',
+    category: '蔬果類',
+    quantity: 10,
+    unit: '根',
+    imageUrl: banana,
+    purchaseDate: '2025-12-28',
+    expiryDate: '2026-02-03',
+    lowStockAlert: true,
+    lowStockThreshold: 3,
+    createdAt: '2025-12-28T00:00:00.000Z'
+  },
+  {
+    id: 'veg-5',
+    name: '紅羅蔔',
+    category: '蔬果類',
+    quantity: 5,
+    unit: '根',
+    imageUrl: carrot,
+    purchaseDate: '2026-01-05',
+    expiryDate: '2026-01-13',
+    lowStockAlert: true,
+    lowStockThreshold: 2,
+    createdAt: '2026-01-05T00:00:00.000Z'
+  },
+  {
+    id: 'fruit-1',
+    name: '柑橘',
+    category: '蔬果類',
+    quantity: 3,
+    unit: '顆',
+    imageUrl: citrus,
+    purchaseDate: '2026-01-01',
+    expiryDate: '2026-01-31',
+    lowStockAlert: true,
+    lowStockThreshold: 1,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'fruit-2',
+    name: '柿子',
+    category: '蔬果類',
+    quantity: 3,
+    unit: '顆',
+    imageUrl: persimmon,
+    purchaseDate: '2026-01-03',
+    expiryDate: '2026-02-10',
+    lowStockAlert: true,
+    lowStockThreshold: 1,
+    createdAt: '2026-01-03T00:00:00.000Z'
+  },
+  {
+    id: 'fruit-3',
+    name: '苗栗內湖草莓',
+    category: '蔬果類',
+    quantity: 40,
+    unit: '顆',
+    imageUrl: strawBerries,
+    purchaseDate: '2026-01-06',
+    expiryDate: '2026-01-14',
+    lowStockAlert: true,
+    lowStockThreshold: 10,
+    createdAt: '2026-01-06T00:00:00.000Z'
+  },
+
+  // 冷凍調理類
+  {
+    id: 'frozen-1',
+    name: '帶皮薯條',
+    category: '冷凍調理類',
+    quantity: 50,
+    unit: '根',
+    imageUrl: skinOn,
+    purchaseDate: '2026-01-01',
+    expiryDate: '2026-01-10',
+    lowStockAlert: true,
+    lowStockThreshold: 10,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'frozen-2',
+    name: '冷凍富麗菜水餃',
+    category: '冷凍調理類',
+    quantity: 40,
+    unit: '顆',
+    imageUrl: frozenCabbage,
+    purchaseDate: '2025-11-01',
+    expiryDate: '2026-01-02',
+    lowStockAlert: true,
+    lowStockThreshold: 10,
+    createdAt: '2025-11-01T00:00:00.000Z'
+  },
+  {
+    id: 'frozen-3',
+    name: '冷凍莓果',
+    category: '冷凍調理類',
+    quantity: 30,
+    unit: '顆',
+    imageUrl: frozenBerries,
+    purchaseDate: '2026-01-05',
+    expiryDate: '2026-01-13',
+    lowStockAlert: true,
+    lowStockThreshold: 5,
+    createdAt: '2026-01-05T00:00:00.000Z'
+  },
+  {
+    id: 'frozen-4',
+    name: '冷凍毛豆',
+    category: '冷凍調理類',
+    quantity: 40,
+    unit: '顆',
+    imageUrl: edamame,
+    purchaseDate: '2025-12-25',
+    expiryDate: '2026-01-31',
+    lowStockAlert: true,
+    lowStockThreshold: 10,
+    createdAt: '2025-12-25T00:00:00.000Z'
+  },
+  {
+    id: 'frozen-5',
+    name: '墨西哥薯球',
+    category: '冷凍調理類',
+    quantity: 50,
+    unit: '顆',
+    imageUrl: mexicanPotato,
+    purchaseDate: '2026-01-01',
+    expiryDate: '2026-01-14',
+    lowStockAlert: true,
+    lowStockThreshold: 10,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'frozen-6',
+    name: '冷凍花椰菜',
+    category: '冷凍調理類',
+    quantity: 50,
+    unit: '顆',
+    imageUrl: frozenCauliflower,
+    purchaseDate: '2026-01-01',
+    expiryDate: '2026-01-14',
+    lowStockAlert: true,
+    lowStockThreshold: 10,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+
+  // 主食烘焙類
+  {
+    id: 'staple-1',
+    name: '原味生吐司',
+    category: '主食烘焙類',
+    quantity: 1,
+    unit: '條',
+    imageUrl: freshToast,
+    purchaseDate: '2026-01-01',
+    expiryDate: '2026-01-03',
+    lowStockAlert: true,
+    lowStockThreshold: 1,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'staple-2',
+    name: '早餐沒吃完的三明治',
+    category: '主食烘焙類',
+    quantity: 1,
+    unit: '個',
+    imageUrl: breakfastLeftover,
+    purchaseDate: '2026-01-01',
+    expiryDate: '2026-01-14',
+    lowStockAlert: true,
+    lowStockThreshold: 1,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'staple-3',
+    name: '米',
+    category: '主食烘焙類',
+    quantity: 1,
+    unit: '包',
+    imageUrl: rice,
+    purchaseDate: '2026-01-01',
+    expiryDate: '2027-01-05',
+    lowStockAlert: true,
+    lowStockThreshold: 1,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'staple-4',
+    name: '生烏龍麵',
+    category: '主食烘焙類',
+    quantity: 3,
+    unit: '包',
+    imageUrl: freshUdon,
+    purchaseDate: '2026-01-01',
+    expiryDate: '2026-01-21',
+    lowStockAlert: true,
+    lowStockThreshold: 1,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'staple-5',
+    name: '奶油餐包',
+    category: '主食烘焙類',
+    quantity: 12,
+    unit: '個',
+    imageUrl: butterRoll,
+    purchaseDate: '2026-01-05',
+    expiryDate: '2026-01-13',
+    lowStockAlert: true,
+    lowStockThreshold: 4,
+    createdAt: '2026-01-05T00:00:00.000Z'
+  },
+
+  // 其他
+  {
+    id: 'dessert-1',
+    name: '檸檬冰淇淋',
+    category: '其他',
+    quantity: 1,
+    unit: '桶',
+    imageUrl: lemonIce,
+    purchaseDate: '2026-12-01',
+    expiryDate: '2026-12-05',
+    lowStockAlert: true,
+    lowStockThreshold: 1,
+    createdAt: '2026-12-01T00:00:00.000Z'
+  },
+  {
+    id: 'dessert-2',
+    name: '桶裝巧克力冰淇淋',
+    category: '其他',
+    quantity: 1,
+    unit: '桶',
+    imageUrl: chocoIceCream,
+    purchaseDate: '2026-01-01',
+    expiryDate: '2026-03-06',
+    lowStockAlert: true,
+    lowStockThreshold: 1,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'dessert-3',
+    name: '肉桂捲',
+    category: '其他',
+    quantity: 9,
+    unit: '顆',
+    imageUrl: cinnamonRoll,
+    purchaseDate: '2026-01-01',
+    expiryDate: '2026-01-10',
+    lowStockAlert: true,
+    lowStockThreshold: 2,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'dessert-4',
+    name: '美式軟餅乾',
+    category: '其他',
+    quantity: 20,
+    unit: '片',
+    imageUrl: americanSoft,
+    purchaseDate: '2026-01-01',
+    expiryDate: '2026-01-14',
+    lowStockAlert: true,
+    lowStockThreshold: 5,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'dessert-5',
+    name: '檸檬塔',
+    category: '其他',
+    quantity: 2,
+    unit: '個',
+    imageUrl: lemonTart,
+    purchaseDate: '2026-01-01',
+    expiryDate: '2026-01-05',
+    lowStockAlert: true,
+    lowStockThreshold: 1,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+];
+
+export const MOCK_CATEGORIES: CategoryInfo[] = [
+  {
+    id: 'cat-1',
+    title: '蔬果類',
+    count: 8,
+    imageUrl: cabbage,
+    bgColor: 'bg-green-100',
+    slogan: '新鮮蔬果',
+    description: ['每日五蔬果', '健康生活']
+  },
+  {
+    id: 'cat-2',
+    title: '冷凍調理類',
+    count: 6,
+    imageUrl: frozenCabbage,
+    bgColor: 'bg-blue-100',
+    slogan: '方便快速',
+    description: ['快速上桌', '美味不打折']
+  },
+  {
+    id: 'cat-3',
+    title: '主食烘焙類',
+    count: 5,
+    imageUrl: freshToast,
+    bgColor: 'bg-yellow-100',
+    slogan: '能量來源',
+    description: ['飽足感', '美味烘焙']
+  },
+  {
+    id: 'cat-4',
+    title: '其他',
+    count: 5,
+    imageUrl: lemonIce,
+    bgColor: 'bg-gray-100',
+    slogan: '各式點心',
+    description: ['甜蜜時光', '放鬆享受']
+  }
+];

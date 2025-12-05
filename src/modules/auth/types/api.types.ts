@@ -26,3 +26,17 @@ export type LINELoginRequest = {
   code: string;
   redirectUri: string;
 };
+
+export type RefreshTokenRequest = {
+  refreshToken: string;
+};
+
+export type RefreshTokenResponse = {
+  accessToken: string;
+  expiresIn: number;
+};
+
+export type UpdateProfileRequest = {
+  name?: string;
+  avatar?: string;
+};
