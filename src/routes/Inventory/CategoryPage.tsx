@@ -41,7 +41,7 @@ const CategoryPage: React.FC = () => {
 
   const handleFilterApply = (
     status: string | null,
-    attribute: string | null,
+    _attribute: string | null,
   ) => {
     // Map UI status to hook status
     if (status) {

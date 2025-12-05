@@ -1,4 +1,4 @@
-import type { FoodItem, FoodCategory, InventoryStatus, InventoryStats, CategoryInfo } from './inventory.types';
+import type { FoodItem, FoodCategory, InventoryStatus, InventoryStats } from './inventory.types';
 
 // 取得庫存請求
 export type GetInventoryRequest = {

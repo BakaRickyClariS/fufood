@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import type { FoodItem, FilterOptions, FoodCategory, InventoryStatus } from '../types';
+import type { FoodItem, FilterOptions } from '../types';
 
 export const useInventoryFilter = (items: FoodItem[]) => {
   const [filters, setFilters] = useState<FilterOptions>({
