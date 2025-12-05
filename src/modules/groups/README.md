@@ -1,498 +1,664 @@
-# Groups 模組
+# Groups Module (群組管理模組)
+
+## 📋 目錄
+- [概述](#概述)
+- [目錄結構](#目錄結構)
+- [核心功能](#核心功能)
+- [型別定義 (Types)](#型別定義-types)
+- [API 規格](#api-規格)
+- [元件說明 (Components)](#元件說明-components)
+- [Hooks 詳解](#hooks-詳解)
+- [環境變數設定](#環境變數設定)
+
+---
 
 ## 概述
 
-Groups 模組負責處理群組管理相關功能，包含群組的 CRUD 操作、成員管理等。採用分層架構設計，支援 Mock 資料與真實 API 的無縫切換。
+本模組負責處理**家庭群組**的建立、管理與成員協作功能。支援多人共享食材庫存、群組設定、成員權限管理等功能，是 Fufood 的核心協作模組。
+
+### 核心功能
+1. **群組管理**: 建立、編輯、刪除群組
+2. **成員管理**: 邀請、移除成員
+3. **權限控制**: 擁有者 (Owner)、管理員 (Organizer)、成員 (Member) 三級權限
+4. **群組設定**: 自訂群組名稱、顏色、圖示
+5. **方案管理**: 免費版 (Free) 與進階版 (Premium) 方案
+6. **Mock 模式**: 支援離線開發與測試
+
+---
 
 ## 目錄結構
 
-```
-src/modules/groups/
-├── api/                    # API 層
-│   ├── mock/              # Mock 資料
-│   │   └── groupsMockData.ts
-│   ├── groupsApi.ts       # API 實作
-│   └── index.ts
-├── components/            # UI 組件
-│   ├── modals/           # Modal 組件
-│   │   ├── GroupSettingsModal.tsx
+\`\`\`
+groups/
+├── api/                      # API 層
+│   ├── groupsApi.ts         # API 實作
+│   ├── index.ts             # API 匯出
+│   └── mock/
+│       └── groupsMockData.ts  # Mock 資料
+├── components/               # UI 元件
+│   ├── modals/              # Modal 元件
 │   │   ├── CreateGroupModal.tsx
 │   │   ├── EditGroupModal.tsx
+│   │   ├── GroupSettingsModal.tsx
 │   │   └── MembersModal.tsx
-│   └── ui/               # 通用 UI 組件
+│   └── ui/                  # 基礎 UI 元件
 │       ├── GroupCard.tsx
 │       ├── MemberItem.tsx
 │       └── MemberList.tsx
-├── hooks/                 # Custom Hooks
-│   ├── useGroups.ts
-│   ├── useGroupMembers.ts
-│   └── index.ts
-├── types/                 # TypeScript 型別
-│   └── group.types.ts
-└── index.ts              # 統一匯出
-```
+├── hooks/                    # 自定義 Hooks
+│   ├── index.ts
+│   ├── useGroups.ts         # 群組 Hook
+│   └── useGroupMembers.ts   # 成員 Hook
+├── types/                    # TypeScript 型別
+│   └── group.types.ts       # 群組型別
+└── index.ts                  # 模組匯出
+\`\`\`
 
 ---
 
-## API 端點
+## 型別定義 (Types)
 
-### 環境變數控制
-
-所有 API 呼叫都透過環境變數 `VITE_USE_MOCK_API` 控制：
-- `true` (預設)：使用 Mock 資料
-- `false`：使用真實 API
-
----
-
-## 群組管理端點
-
-### 1. 取得所有群組
-
-**端點**：`GET /api/groups`
-
-**請求格式**：無 (使用 Header 中的 Token)
-
-**回應格式**：
+### GroupMember (群組成員)
 ```typescript
-[
-  {
-    id: string;
-    name: string;
-    admin: string;
-    members: GroupMember[];
-    color: string;              // Tailwind 背景色類別
-    characterColor: string;     // Tailwind 文字色類別
-    plan: 'free' | 'premium';
-    createdAt: Date;
-    updatedAt: Date;
-  }
-]
-```
-
-**狀態碼**：
-- `200 OK`：取得成功
-- `401 Unauthorized`：未登入
-- `500 Internal Server Error`：伺服器錯誤
-
-**Mock 行為**：
-- 回傳 3 個預設群組
-- 延遲 500ms
-
----
-
-### 2. 建立群組
-
-**端點**：`POST /api/groups`
-
-**請求格式**：
-```typescript
-{
-  name: string;              // 群組名稱
-  color: string;             // 背景色類別，如 'bg-red-100'
-  characterColor: string;    // 文字色類別，如 'bg-red-400'
-}
-```
-
-**回應格式**：
-```typescript
-{
+export type GroupMember = {
   id: string;
   name: string;
-  admin: string;
-  members: [];
-  color: string;
-  characterColor: string;
-  plan: 'free';
-  createdAt: Date;
-  updatedAt: Date;
-}
+  avatar: string;       // 頭像 URL 或顏色
+  role: 'owner' | 'organizer' | 'member';
+};
 ```
 
-**狀態碼**：
-- `201 Created`：建立成功
-- `400 Bad Request`：請求格式錯誤
-- `401 Unauthorized`：未登入
-- `403 Forbidden`：已達免費方案群組上限
-- `500 Internal Server Error`：伺服器錯誤
-
-**Mock 行為**：
-- 自動生成新的群組 ID
-- 設定當前使用者為 admin
-- 延遲 500ms
+**權限說明**:
+- `owner`: 擁有者，可執行所有操作
+- `organizer`: 管理員，可管理成員與編輯群組
+- `member`: 一般成員，僅可查看
 
 ---
 
-### 3. 更新群組
-
-**端點**：`PUT /api/groups/:id`
-
-**請求格式**：
+### Group (群組)
 ```typescript
-{
-  name?: string;
-  color?: string;
-  characterColor?: string;
-}
-```
-
-**回應格式**：
-```typescript
-{
+export type Group = {
   id: string;
   name: string;
-  admin: string;
+  admin: string;           // 建立者名稱
   members: GroupMember[];
-  color: string;
-  characterColor: string;
+  color: string;           // 群組主色
+  characterColor: string;  // 圖示/字元顏色
   plan: 'free' | 'premium';
   createdAt: Date;
   updatedAt: Date;
-}
+};
 ```
 
-**狀態碼**：
-- `200 OK`：更新成功
-- `400 Bad Request`：請求格式錯誤
-- `401 Unauthorized`：未登入
-- `403 Forbidden`：無權限修改
-- `404 Not Found`：群組不存在
-- `500 Internal Server Error`：伺服器錯誤
-
-**Mock 行為**：
-- 更新指定群組資料
-- 更新 `updatedAt` 時間戳
-- 延遲 500ms
-
 ---
 
-### 4. 刪除群組
-
-**端點**：`DELETE /api/groups/:id`
-
-**請求格式**：無
-
-**回應格式**：無內容
-
-**狀態碼**：
-- `204 No Content`：刪除成功
-- `401 Unauthorized`：未登入
-- `403 Forbidden`：無權限刪除（僅 owner 可刪除）
-- `404 Not Found`：群組不存在
-- `500 Internal Server Error`：伺服器錯誤
-
-**Mock 行為**：
-- 延遲 500ms
-- 永遠成功
-
----
-
-## 成員管理端點
-
-### 5. 取得群組成員
-
-**端點**：`GET /api/groups/:id/members`
-
-**請求格式**：無
-
-**回應格式**：
+### CreateGroupForm (建立群組表單)
 ```typescript
+export type CreateGroupForm = Pick<Group, 'name' | 'color' | 'characterColor'>;
+```
+
+**範例**:
+```typescript
+const form: CreateGroupForm = {
+  name: '我的家庭',
+  color: '#FF6B6B',
+  characterColor: '#FFFFFF',
+};
+```
+
+---
+
+### UpdateGroupForm (更新群組表單)
+```typescript
+export type UpdateGroupForm = Partial<
+  Pick<Group, 'name' | 'color' | 'characterColor'>
+>;
+```
+
+---
+
+### InviteMemberForm (邀請成員表單)
+```typescript
+export type InviteMemberForm = {
+  email: string;
+  role?: GroupMember['role'];  // 預設為 'member'
+};
+```
+
+---
+
+### GroupModalView (Modal 狀態)
+```typescript
+export type GroupModalView = 'list' | 'create' | 'edit' | 'members';
+```
+
+---
+
+## API 規格
+
+### GroupsApi 介面
+
+```typescript
+export const groupsApi = {
+  getAll: () => Promise<Group[]>;
+  getMembers: (groupId: string) => Promise<GroupMember[]>;
+  create: (data: CreateGroupForm) => Promise<Group>;
+  update: (id: string, data: UpdateGroupForm) => Promise<Group>;
+  delete: (id: string) => Promise<void>;
+  inviteMember: (groupId: string, data: InviteMemberForm) => Promise<void>;
+  removeMember: (groupId: string, memberId: string) => Promise<void>;
+  updateMemberRole: (groupId: string, memberId: string, role: GroupMember['role']) => Promise<void>;
+};
+```
+
+---
+
+### 1. **getAll** - 取得所有群組
+
+#### 端點
+\`\`\`
+GET /api/groups
+\`\`\`
+
+#### 請求格式
+無請求 body
+
+#### 回應格式
+```typescript
+Group[]
+```
+
+#### 回應範例
+```json
 [
   {
-    id: string;
-    name: string;
-    role: 'owner' | 'organizer' | 'member';
-    avatar: string;  // Tailwind 背景色類別
+    "id": "group-001",
+    "name": "我的家庭",
+    "admin": "Jocelyn",
+    "members": [
+      {
+        "id": "user-001",
+        "name": "Jocelyn",
+        "avatar": "bg-blue-200",
+        "role": "owner"
+      }
+    ],
+    "color": "#FF6B6B",
+    "characterColor": "#FFFFFF",
+    "plan": "free",
+    "createdAt": "2025-11-01T00:00:00.000Z",
+    "updatedAt": "2025-11-01T00:00:00.000Z"
   }
 ]
 ```
 
-**狀態碼**：
-- `200 OK`：取得成功
-- `401 Unauthorized`：未登入
-- `403 Forbidden`：非群組成員
-- `404 Not Found`：群組不存在
-- `500 Internal Server Error`：伺服器錯誤
+---
 
-**Mock 行為**：
-- 回傳預設的 3 位成員
-- 延遲 300ms
+### 2. **getMembers** - 取得群組成員
+
+#### 端點
+\`\`\`
+GET /api/groups/:groupId/members
+\`\`\`
+
+#### 請求格式
+無請求 body
+
+#### 回應格式
+```typescript
+GroupMember[]
+```
+
+#### 回應範例
+```json
+[
+  {
+    "id": "user-001",
+    "name": "Jocelyn",
+    "avatar": "bg-blue-200",
+    "role": "owner"
+  },
+  {
+    "id": "user-002",
+    "name": "張三",
+    "avatar": "bg-green-200",
+    "role": "member"
+  }
+]
+```
 
 ---
 
-### 6. 邀請成員
+### 3. **create** - 建立群組
 
-**端點**：`POST /api/groups/:id/members`
+#### 端點
+\`\`\`
+POST /api/groups
+\`\`\`
 
-**請求格式**：
+#### 請求格式
 ```typescript
+CreateGroupForm
+```
+
+#### 請求範例
+```json
 {
-  email: string;  // 被邀請人的 Email
+  "name": "新群組",
+  "color": "#4ECDC4",
+  "characterColor": "#FFFFFF"
 }
 ```
 
-**回應格式**：無內容
-
-**狀態碼**：
-- `201 Created`：邀請成功
-- `400 Bad Request`：請求格式錯誤或 Email 無效
-- `401 Unauthorized`：未登入
-- `403 Forbidden`：非 owner 或 organizer
-- `404 Not Found`：群組不存在
-- `409 Conflict`：使用者已是成員
-- `500 Internal Server Error`：伺服器錯誤
-
-**Mock 行為**：
-- 延遲 500ms
-- 永遠成功
-
----
-
-### 7. 移除成員
-
-**端點**：`DELETE /api/groups/:id/members/:memberId`
-
-**請求格式**：無
-
-**回應格式**：無內容
-
-**狀態碼**：
-- `204 No Content`：移除成功
-- `401 Unauthorized`：未登入
-- `403 Forbidden`：無權限移除（僅 owner/organizer 可移除）
-- `404 Not Found`：群組或成員不存在
-- `409 Conflict`：無法移除 owner
-- `500 Internal Server Error`：伺服器錯誤
-
-**Mock 行為**：
-- 延遲 500ms
-- 永遠成功
-
----
-
-### 8. 更新成員權限
-
-**端點**：`PATCH /api/groups/:id/members/:memberId`
-
-**請求格式**：
+#### 回應格式
 ```typescript
+Group
+```
+
+#### 回應範例
+```json
 {
-  role: 'organizer' | 'member';
+  "id": "group-002",
+  "name": "新群組",
+  "admin": "Jocelyn",
+  "members": [],
+  "color": "#4ECDC4",
+  "characterColor": "#FFFFFF",
+  "plan": "free",
+  "createdAt": "2025-12-01T10:54:00.000Z",
+  "updatedAt": "2025-12-01T10:54:00.000Z"
 }
 ```
 
-**回應格式**：無內容
+---
 
-**狀態碼**：
-- `200 OK`：更新成功
-- `400 Bad Request`：請求格式錯誤
-- `401 Unauthorized`：未登入
-- `403 Forbidden`：無權限修改（僅 owner 可修改）
-- `404 Not Found`：群組或成員不存在
-- `409 Conflict`：無法修改 owner 權限
-- `500 Internal Server Error`：伺服器錯誤
+### 4. **update** - 更新群組
 
-**Mock 行為**：
-- 延遲 500ms
-- 永遠成功
+#### 端點
+\`\`\`
+PUT /api/groups/:id
+\`\`\`
+
+#### 請求格式
+```typescript
+UpdateGroupForm
+```
+
+#### 請求範例
+```json
+{
+  "name": "更新的群組名稱",
+  "color": "#FF6B6B"
+}
+```
+
+#### 回應格式
+```typescript
+Group
+```
 
 ---
 
-## Hooks 使用
+### 5. **delete** - 刪除群組
 
-### useGroups
+#### 端點
+\`\`\`
+DELETE /api/groups/:id
+\`\`\`
 
+#### 請求格式
+無請求 body
+
+#### 回應格式
 ```typescript
-const {
-  groups,        // 群組列表
-  isLoading,     // 載入狀態
-  error,         // 錯誤訊息
-  createGroup,   // 建立群組
-  updateGroup,   // 更新群組
-  deleteGroup,   // 刪除群組
-  refetch,       // 重新取得資料
-} = useGroups();
+void
 ```
 
-**範例**：
+---
+
+### 6. **inviteMember** - 邀請成員
+
+#### 端點
+\`\`\`
+POST /api/groups/:groupId/members
+\`\`\`
+
+#### 請求格式
 ```typescript
+InviteMemberForm
+```
+
+#### 請求範例
+```json
+{
+  "email": "newmember@example.com",
+  "role": "member"
+}
+```
+
+#### 回應格式
+```typescript
+void
+```
+
+---
+
+### 7. **removeMember** - 移除成員
+
+#### 端點
+\`\`\`
+DELETE /api/groups/:groupId/members/:memberId
+\`\`\`
+
+#### 請求格式
+無請求 body
+
+#### 回應格式
+```typescript
+void
+```
+
+---
+
+### 8. **updateMemberRole** - 更新成員權限
+
+#### 端點
+\`\`\`
+PATCH /api/groups/:groupId/members/:memberId
+\`\`\`
+
+#### 請求格式
+```json
+{
+  "role": "organizer"
+}
+```
+
+#### 回應格式
+```typescript
+void
+```
+
+---
+
+## 元件說明 (Components)
+
+### 📋 modals/ (Modal 元件)
+
+#### `CreateGroupModal.tsx`
+- 建立新群組的 Modal
+- 包含表單: 群組名稱、顏色選擇器
+- 整合 `useGroups` Hook
+
+**功能**:
+- 輸入群組名稱
+- 選擇群組主色與圖示顏色
+- 提交建立請求
+- 顯示建立狀態與錯誤
+
+---
+
+#### `EditGroupModal.tsx`
+- 編輯群組資訊的 Modal
+- 預填現有群組資料
+- 整合 `useGroups` Hook
+
+**功能**:
+- 修改群組名稱
+- 更新群組顏色
+- 提交更新請求
+- 刪除群組 (僅擁有者)
+
+---
+
+#### `GroupSettingsModal.tsx`
+- 群組設定的 Modal
+- 顯示群組詳細資訊與設定選項
+
+**功能**:
+- 查看群組資訊
+- 管理訂閱方案
+- 離開群組
+- 刪除群組
+
+---
+
+#### `MembersModal.tsx`
+- 成員管理的 Modal
+- 顯示成員列表與邀請功能
+- 整合 `useGroupMembers` Hook
+
+**功能**:
+- 查看所有成員
+- 邀請新成員 (by Email)
+- 移除成員
+- 更新成員權限
+
+---
+
+### 🎨 ui/ (基礎 UI 元件)
+
+#### `GroupCard.tsx`
+```typescript
+type GroupCardProps = {
+  group: Group;
+  onClick?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+};
+```
+
+**功能**:
+- 顯示群組卡片
+- 群組名稱、成員數量、方案
+- 支援點擊、編輯、刪除事件
+
+---
+
+#### `MemberItem.tsx`
+```typescript
+type MemberItemProps = {
+  member: GroupMember;
+  onRoleChange?: (role: GroupMember['role']) => void;
+  onRemove?: () => void;
+  canManage?: boolean;
+};
+```
+
+**功能**:
+- 顯示成員項目
+- 頭像、名稱、權限標籤
+- 支援權限變更與移除 (需權限)
+
+---
+
+#### `MemberList.tsx`
+```typescript
+type MemberListProps = {
+  members: GroupMember[];
+  onRoleChange?: (memberId: string, role: GroupMember['role']) => void;
+  onRemove?: (memberId: string) => void;
+  currentUserRole?: GroupMember['role'];
+};
+```
+
+**功能**:
+- 顯示成員列表
+- 整合 `MemberItem`
+- 根據權限顯示操作按鈕
+
+---
+
+## Hooks 詳解
+
+### `useGroups.ts`
+
+```typescript
+const useGroups = () => {
+  return {
+    groups: Group[];
+    isLoading: boolean;
+    error: Error | null;
+    createGroup: (form: CreateGroupForm) => Promise<void>;
+    updateGroup: (id: string, form: UpdateGroupForm) => Promise<void>;
+    deleteGroup: (id: string) => Promise<void>;
+    refetch: () => Promise<void>;
+  };
+};
+```
+
+**功能**:
+- 管理所有群組資料
+- 自動載入群組列表
+- 提供 CRUD 操作方法
+- 狀態管理: `groups`, `isLoading`, `error`
+
+**使用範例**:
+```typescript
+const { groups, isLoading, createGroup, deleteGroup } = useGroups();
+
 // 建立群組
 await createGroup({
-  name: 'New Group',
-  color: 'bg-blue-100',
-  characterColor: 'bg-blue-400',
-});
-
-// 更新群組
-await updateGroup('group-id', {
-  name: 'Updated Name',
+  name: '我的家庭',
+  color: '#FF6B6B',
+  characterColor: '#FFFFFF',
 });
 
 // 刪除群組
-await deleteGroup('group-id');
+await deleteGroup('group-001');
 ```
+
+**初始化流程**:
+1. Component mount 時自動呼叫 `getAll()`
+2. 載入所有群組資料
+3. 更新 `groups` 狀態
 
 ---
 
-### useGroupMembers
+### `useGroupMembers.ts`
 
 ```typescript
-const {
-  members,         // 成員列表
-  isLoading,       // 載入狀態
-  error,           // 錯誤訊息
-  inviteMember,    // 邀請成員
-  removeMember,    // 移除成員
-  updateMemberRole,// 更新成員權限
-  refetch,         // 重新取得資料
-} = useGroupMembers(groupId);
+const useGroupMembers = (groupId: string) => {
+  return {
+    members: GroupMember[];
+    isLoading: boolean;
+    error: Error | null;
+    inviteMember: (form: InviteMemberForm) => Promise<void>;
+    removeMember: (memberId: string) => Promise<void>;
+    updateRole: (memberId: string, role: GroupMember['role']) => Promise<void>;
+    refetch: () => Promise<void>;
+  };
+};
 ```
 
-**範例**：
+**功能**:
+- 管理特定群組的成員資料
+- 自動載入成員列表
+- 提供成員管理方法
+- 狀態管理: `members`, `isLoading`, `error`
+
+**使用範例**:
 ```typescript
+const { members, inviteMember, removeMember, updateRole } = useGroupMembers('group-001');
+
 // 邀請成員
-await inviteMember({ email: 'user@example.com' });
+await inviteMember({
+  email: 'newmember@example.com',
+  role: 'member',
+});
 
 // 移除成員
-await removeMember('member-id');
+await removeMember('user-002');
 
-// 更新成員權限
-await updateMemberRole('member-id', 'organizer');
+// 更新權限
+await updateRole('user-002', 'organizer');
 ```
 
 ---
 
-## 資料格式定義
+## 環境變數設定
 
-### Group
-```typescript
-type Group = {
-  id: string;
-  name: string;
-  admin: string;
-  members: GroupMember[];
-  color: string;              // Tailwind 類別
-  characterColor: string;     // Tailwind 類別
-  plan: 'free' | 'premium';
-  createdAt: Date;
-  updatedAt: Date;
-};
+### 必要環境變數
+
+```env
+# Mock 模式 (開發用)
+VITE_USE_MOCK_API=true
 ```
 
-### GroupMember
-```typescript
-type GroupMember = {
-  id: string;
-  name: string;
-  role: 'owner' | 'organizer' | 'member';
-  avatar: string;  // Tailwind 類別
-};
-```
+### 環境變數說明
 
-### CreateGroupForm
-```typescript
-type CreateGroupForm = {
-  name: string;
-  color: string;
-  characterColor: string;
-};
-```
-
-### UpdateGroupForm
-```typescript
-type UpdateGroupForm = {
-  name?: string;
-  color?: string;
-  characterColor?: string;
-};
-```
-
-### InviteMemberForm
-```typescript
-type InviteMemberForm = {
-  email: string;
-};
-```
-
----
-
-## 權限說明
-
-### 角色層級
-1. **Owner（擁有者）**：
-   - 擁有所有權限
-   - 可以刪除群組
-   - 可以修改所有成員的權限
-   - 每個群組僅有一位 owner
-
-2. **Organizer（組織者）**：
-   - 可以邀請/移除成員（除了 owner）
-   - 可以編輯群組資訊
-   - 無法刪除群組
-
-3. **Member（成員）**：
-   - 可以查看群組資訊
-   - 可以查看成員列表
-   - 無編輯權限
-
-### 操作權限表
-
-| 操作 | Owner | Organizer | Member |
-|------|-------|-----------|--------|
-| 查看群組 | ✅ | ✅ | ✅ |
-| 編輯群組 | ✅ | ✅ | ❌ |
-| 刪除群組 | ✅ | ❌ | ❌ |
-| 查看成員 | ✅ | ✅ | ✅ |
-| 邀請成員 | ✅ | ✅ | ❌ |
-| 移除成員 | ✅ | ✅ (除 owner) | ❌ |
-| 修改權限 | ✅ | ❌ | ❌ |
-
----
-
-## 錯誤處理
-
-所有 API 錯誤都會拋出標準的 `Error` 物件：
-
-```typescript
-try {
-  await groupsApi.create(formData);
-} catch (error) {
-  if (error instanceof Error) {
-    console.error(error.message); // "建立群組失敗"
-  }
-}
-```
-
----
-
-## 切換真實 API
-
-1. 修改 `.env`：
-   ```env
-   VITE_USE_MOCK_API=false
-   VITE_API_BASE_URL=https://your-api.com/api
-   ```
-
-2. 確保後端 API 符合上述端點與資料格式
-
-3. 重新啟動開發伺服器：
-   ```bash
-   npm run dev
-   ```
-
----
-
-## 注意事項
-
-1. **群組上限**：免費方案限制建立群組數量
-2. **權限檢查**：所有操作都需要在後端進行權限驗證
-3. **成員邀請**：建議實作 Email 驗證機制
-4. **群組刪除**：建議加入二次確認機制
+| 變數名稱 | 說明 | 範例 |
+|---------|------|------|
+| `VITE_USE_MOCK_API` | 是否使用 Mock API | `true` / `false` |
 
 ---
 
 ## Mock 資料
 
-預設提供 3 個測試群組：
-- My Home (owner: Jocelyn, 3 members)
-- JJ Home (owner: JJ, 1 member)
-- Ricky Home (owner: Ricky, 1 member, premium)
+### MOCK_GROUPS
+```typescript
+export const MOCK_GROUPS: Group[] = [
+  {
+    id: 'group-001',
+    name: '我的家庭',
+    admin: 'Jocelyn',
+    members: [
+      { id: 'user-001', name: 'Jocelyn', avatar: 'bg-blue-200', role: 'owner' },
+      { id: 'user-002', name: '張三', avatar: 'bg-green-200', role: 'member' },
+    ],
+    color: '#FF6B6B',
+    characterColor: '#FFFFFF',
+    plan: 'free',
+    createdAt: new Date('2025-11-01'),
+    updatedAt: new Date('2025-11-01'),
+  },
+];
+```
+
+### MOCK_MEMBERS
+```typescript
+export const MOCK_MEMBERS: GroupMember[] = [
+  { id: 'user-001', name: 'Jocelyn', avatar: 'bg-blue-200', role: 'owner' },
+  { id: 'user-002', name: '張三', avatar: 'bg-green-200', role: 'organizer' },
+  { id: 'user-003', name: '李四', avatar: 'bg-yellow-200', role: 'member' },
+];
+```
+
+---
+
+## 權限矩陣
+
+| 操作 | Owner | Organizer | Member |
+|-----|-------|-----------|--------|
+| 查看群組 | ✅ | ✅ | ✅ |
+| 編輯群組 | ✅ | ✅ | ❌ |
+| 刪除群組 | ✅ | ❌ | ❌ |
+| 邀請成員 | ✅ | ✅ | ❌ |
+| 移除成員 | ✅ | ✅ | ❌ |
+| 變更權限 | ✅ | ❌ | ❌ |
+| 離開群組 | ❌ | ✅ | ✅ |
+
+---
+
+## 方案比較
+
+| 功能 | Free | Premium |
+|-----|------|---------|
+| 群組數量 | 1 個 | 無限制 |
+| 成員數量 | 5 人 | 無限制 |
+| 食材庫存 | 100 項 | 無限制 |
+| 歷史記錄 | 30 天 | 無限制 |
+| 優先支援 | ❌ | ✅ |
+
+---
+
+## 未來優化方向
+
+- [ ] 新增群組標籤/分類功能
+- [ ] 實作群組公告功能
+- [ ] 新增群組活動記錄
+- [ ] 支援群組範本 (Template)
+- [ ] 新增群組匯出功能
+- [ ] 實作成員活動統計
+- [ ] 新增群組邀請連結功能
+- [ ] 支援子群組 (Subgroups)

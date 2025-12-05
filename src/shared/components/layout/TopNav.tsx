@@ -52,7 +52,7 @@ const TopNav = () => {
 
   return (
     <>
-      <div className="sticky top-0 left-0 right-0 bg-white z-40 px-4 py-3">
+      <div className="top-nav-wrapper sticky top-0 left-0 right-0 bg-white z-40 px-4 py-3">
         <div className="flex items-center justify-between gap-2">
           {/* Left: Free Badge + Home Selector */}
           <div className="flex items-center gap-3">

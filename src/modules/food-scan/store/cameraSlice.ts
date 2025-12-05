@@ -2,27 +2,22 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export type CameraStatus = 'idle' | 'capturing' | 'uploading' | 'analyzing' | 'done';
 
-export interface CameraState {
+export type CameraState = {
   isCapturing: boolean;
   image: string | null;
   status: CameraStatus;
-  triggerToken: number;
-}
+};
 
 const initialState: CameraState = {
   isCapturing: true,
   image: null,
   status: 'idle',
-  triggerToken: 0,
 };
 
 const cameraSlice = createSlice({
   name: 'camera',
   initialState,
   reducers: {
-    triggerCapture: (state) => {
-      state.triggerToken += 1;
-    },
     setCapturedImage: (state, action: PayloadAction<string>) => {
       state.image = action.payload;
       state.isCapturing = false;
@@ -40,13 +35,11 @@ const cameraSlice = createSlice({
       state.isCapturing = true;
       state.image = null;
       state.status = 'idle';
-      state.triggerToken = 0;
     },
   },
 });
 
 export const { 
-  triggerCapture, 
   setCapturedImage, 
   retake, 
   setUploadStatus,

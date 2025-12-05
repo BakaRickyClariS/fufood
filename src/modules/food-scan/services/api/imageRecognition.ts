@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 import type {
   FoodScanApi,
   ScanResult,
@@ -8,17 +9,6 @@ import type {
 } from '../../types';
 
 export const createRealFoodScanApi = (): FoodScanApi => {
-  const baseURL = import.meta.env.VITE_RECIPE_API_URL || '';
-
-  if (!baseURL) {
-    throw new Error(
-      '缺少 VITE_RECIPE_API_URL。請在 .env 設定（例如：http://localhost:3000/api/v1 或 /api/v1），或於開發先設 VITE_USE_MOCK_API=true。',
-    );
-  }
-
-  // Normalize to avoid duplicate slashes
-  const joinUrl = (base: string, path: string) => `${base.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
-
   const transformScanResult = (resp: any): ScanResult => {
     const payload = resp?.data ?? resp ?? {};
 
@@ -47,24 +37,8 @@ export const createRealFoodScanApi = (): FoodScanApi => {
 
   const recognizeImage = async (imageUrl: string): Promise<ScanResult> => {
     try {
-      const url = joinUrl(baseURL, '/recipe/analyze-image');
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageUrl }),
-      });
-
-      if (!response.ok) {
-        const body = await response.text().catch(() => '');
-        throw new Error(
-          `影像辨識失敗：HTTP ${response.status} ${response.statusText}.\n` +
-            `請求：POST ${url}\n` +
-            `${body ? `回應：${body}` : ''}\n` +
-            '請確認後端可連線、已開啟 CORS 或使用 Vite 代理，並檢查 VITE_RECIPE_API_URL。',
-        );
-      }
-
-      const data = await response.json();
+      // Updated endpoint to match v2.1 spec
+      const data = await apiClient.post<any>('/ai/analyze-image', { imageUrl });
       return transformScanResult(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -73,32 +47,26 @@ export const createRealFoodScanApi = (): FoodScanApi => {
   };
 
   const submitFoodItem = async (data: FoodItemInput): Promise<FoodItemResponse> => {
-    const response = await fetch(`${baseURL}/food-items`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Submit Error: ${response.statusText}`);
-    }
-
-    return response.json();
+    // Updated endpoint to match v2.1 spec (Inventory Module)
+    return apiClient.post<FoodItemResponse>('/inventory', data);
   };
 
-  const updateFoodItem = async (_id: string, _data: Partial<FoodItemInput>): Promise<FoodItemResponse> => {
-      // Placeholder for real implementation
-      throw new Error('Not implemented');
+  const updateFoodItem = async (id: string, data: Partial<FoodItemInput>): Promise<FoodItemResponse> => {
+      return apiClient.put<FoodItemResponse>(`/inventory/${id}`, data);
   };
 
-  const deleteFoodItem = async (_id: string): Promise<{ success: boolean }> => {
-      // Placeholder for real implementation
-      throw new Error('Not implemented');
+  const deleteFoodItem = async (id: string): Promise<{ success: boolean }> => {
+      return apiClient.delete<{ success: boolean }>(`/inventory/${id}`);
   };
 
-  const getFoodItems = async (_filters?: FoodItemFilters): Promise<FoodItem[]> => {
-      // Placeholder for real implementation
-      throw new Error('Not implemented');
+  const getFoodItems = async (filters?: FoodItemFilters): Promise<FoodItem[]> => {
+      // Mapping filters to query params
+      const params: Record<string, any> = {};
+      if (filters?.category) params.category = filters.category;
+      if (filters?.status) params.status = filters.status;
+      
+      const response = await apiClient.get<{ items: FoodItem[] }>('/inventory', params);
+      return response.items;
   };
 
   return {
@@ -109,3 +77,4 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     getFoodItems,
   };
 };
+

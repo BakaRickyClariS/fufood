@@ -1,9 +1,11 @@
+import { apiClient } from '@/lib/apiClient';
 import type {
   Group,
   CreateGroupForm,
   UpdateGroupForm,
   GroupMember,
   InviteMemberForm,
+  JoinGroupForm,
 } from '../types/group.types';
 import { MOCK_GROUPS, MOCK_MEMBERS } from './mock/groupsMockData';
 
@@ -18,11 +20,20 @@ export const groupsApi = {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return MOCK_GROUPS;
     }
+    return apiClient.get<Group[]>('/groups');
+  },
 
-    // TODO: 真實 API
-    const response = await fetch('/api/groups');
-    if (!response.ok) throw new Error('無法取得群組列表');
-    return response.json();
+  /**
+   * 取得單一群組
+   */
+  getById: async (id: string): Promise<Group> => {
+    if (USE_MOCK) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const group = MOCK_GROUPS.find((g) => g.id === id);
+      if (!group) throw new Error('群組不存在');
+      return group;
+    }
+    return apiClient.get<Group>(`/groups/${id}`);
   },
 
   /**
@@ -33,11 +44,7 @@ export const groupsApi = {
       await new Promise((resolve) => setTimeout(resolve, 300));
       return MOCK_MEMBERS;
     }
-
-    // TODO: 真實 API
-    const response = await fetch(`/api/groups/${groupId}/members`);
-    if (!response.ok) throw new Error('無法取得成員列表');
-    return response.json();
+    return apiClient.get<GroupMember[]>(`/groups/${groupId}/members`); // Note: API spec doesn't explicitly list this, but it's common. If not, it might be part of getGroup
   },
 
   /**
@@ -54,17 +61,11 @@ export const groupsApi = {
         plan: 'free',
         createdAt: new Date(),
         updatedAt: new Date(),
-      };
+        color: data.color || 'blue',
+        characterColor: data.characterColor || 'blue',
+      } as Group;
     }
-
-    // TODO: 真實 API
-    const response = await fetch('/api/groups', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('建立群組失敗');
-    return response.json();
+    return apiClient.post<Group>('/groups', data);
   },
 
   /**
@@ -75,17 +76,9 @@ export const groupsApi = {
       await new Promise((resolve) => setTimeout(resolve, 500));
       const group = MOCK_GROUPS.find((g) => g.id === id);
       if (!group) throw new Error('群組不存在');
-      return { ...group, ...data, updatedAt: new Date() };
+      return { ...group, ...data, updatedAt: new Date() } as Group;
     }
-
-    // TODO: 真實 API
-    const response = await fetch(`/api/groups/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('更新群組失敗');
-    return response.json();
+    return apiClient.put<Group>(`/groups/${id}`, data);
   },
 
   /**
@@ -96,12 +89,7 @@ export const groupsApi = {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return;
     }
-
-    // TODO: 真實 API
-    const response = await fetch(`/api/groups/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('刪除群組失敗');
+    return apiClient.delete<void>(`/groups/${id}`);
   },
 
   /**
@@ -115,14 +103,29 @@ export const groupsApi = {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return;
     }
+    return apiClient.post<void>(`/groups/${groupId}/invite`, data);
+  },
 
-    // TODO: 真實 API
-    const response = await fetch(`/api/groups/${groupId}/members`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('邀請成員失敗');
+  /**
+   * 加入群組
+   */
+  join: async (groupId: string, data: JoinGroupForm): Promise<void> => {
+    if (USE_MOCK) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return;
+    }
+    return apiClient.post<void>(`/groups/${groupId}/join`, data);
+  },
+
+  /**
+   * 離開群組
+   */
+  leave: async (groupId: string): Promise<void> => {
+    if (USE_MOCK) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return;
+    }
+    return apiClient.delete<void>(`/groups/${groupId}/leave`);
   },
 
   /**
@@ -133,12 +136,7 @@ export const groupsApi = {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return;
     }
-
-    // TODO: 真實 API
-    const response = await fetch(`/api/groups/${groupId}/members/${memberId}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('移除成員失敗');
+    return apiClient.delete<void>(`/groups/${groupId}/remove/${memberId}`);
   },
 
   /**
@@ -153,13 +151,7 @@ export const groupsApi = {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return;
     }
-
-    // TODO: 真實 API
-    const response = await fetch(`/api/groups/${groupId}/members/${memberId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role }),
-    });
-    if (!response.ok) throw new Error('更新權限失敗');
+    return apiClient.patch<void>(`/groups/${groupId}/members/${memberId}`, { role });
   },
 };
+

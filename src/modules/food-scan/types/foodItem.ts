@@ -54,6 +54,7 @@ export type FoodItemResponse = {
 export type FoodItemFilters = {
   category?: FoodCategory;
   attribute?: FoodAttribute;
+  status?: string;          // Added for API compatibility
   isExpiringSoon?: boolean; // 即將過期
   isLowStock?: boolean;     // 低庫存
 };
