@@ -1,4 +1,4 @@
-// import { getAuthToken } from '../modules/auth/utils/authUtils';
+import { getAuthToken } from '../modules/auth/utils/authUtils';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
@@ -27,14 +27,20 @@ class ApiClient {
     }
 
     // Get token (if available)
-    const token = localStorage.getItem('auth_token');
+    const token = getAuthToken();
 
     const config: RequestInit = {
       ...customConfig,
       headers: {
         ...(body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...headers,
+        // 如果 body 是 FormData，不要合併自訂 headers 中的 Content-Type
+        // 讓瀏覽器自動設定正確的 multipart/form-data boundary
+        ...(headers && !(body instanceof FormData) ? headers : 
+            headers && body instanceof FormData ? 
+              Object.fromEntries(
+                Object.entries(headers).filter(([key]) => key.toLowerCase() !== 'content-type')
+              ) : {}),
       },
     };
 

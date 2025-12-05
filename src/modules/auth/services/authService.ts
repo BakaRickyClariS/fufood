@@ -1,4 +1,5 @@
 import { authApi } from '../api';
+import { getAuthToken, setAuthToken, removeAuthToken } from '../utils/authUtils';
 import type { LoginCredentials, RegisterData, User, AuthToken } from '../types';
 
 /**
@@ -7,9 +8,13 @@ import type { LoginCredentials, RegisterData, User, AuthToken } from '../types';
 export const authService = {
   /**
    * 儲存 Token 到 localStorage
+   * 使用 authUtils 統一管理 accessToken
    */
   saveToken: (token: AuthToken): void => {
-    localStorage.setItem('accessToken', token.accessToken);
+    // 使用 authUtils 儲存主要的 accessToken
+    setAuthToken(token.accessToken);
+    
+    // refreshToken 和 expiry 另外儲存
     if (token.refreshToken) {
       localStorage.setItem('refreshToken', token.refreshToken);
     }
@@ -21,17 +26,24 @@ export const authService = {
 
   /**
    * 取得儲存的 Token
+   * 使用 authUtils 讀取
    */
-  getToken: (): string | null => localStorage.getItem('accessToken'),
+  getToken: (): string | null => getAuthToken(),
 
   /**
    * 清除 Token
+   * 使用 authUtils 清除 accessToken
    */
   clearToken: (): void => {
-    localStorage.removeItem('accessToken');
+    removeAuthToken();
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('tokenExpiry');
   },
+
+  /**
+   * 取得 Refresh Token
+   */
+  getRefreshToken: (): string | null => localStorage.getItem('refreshToken'),
 
   /**
    * 檢查 Token 是否過期

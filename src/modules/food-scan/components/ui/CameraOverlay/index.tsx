@@ -71,10 +71,7 @@ const CameraOverlay: React.FC<CameraOverlayProps> = ({
           <button
             onClick={onCapture}
             disabled={isProcessing}
-            className="w-20 h-20 rounded-full flex items-center justify-center text-black border-4 border-primary-200 transition-all duration-200 active:scale-95 disabled:opacity-50"
-            style={{
-              background: 'radial-gradient(circle at 30% 30%, #f58274, #ec5b4a)'
-            }}
+            className="w-20 h-20 rounded-full flex items-center justify-center text-black border-4 border-primary-200 bg-fab-gradient transition-all duration-200 active:scale-95 disabled:opacity-50"
           >
             <Camera className="w-6 h-6" />
           </button>
