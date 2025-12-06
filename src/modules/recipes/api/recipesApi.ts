@@ -18,10 +18,13 @@ export type MealPlan = {
 
 export const recipesApi = {
   getRecipes: () => apiClient.get<Recipe[]>('/recipes'),
-  toggleFavorite: (id: string) => apiClient.post<void>(`/recipes/${id}/favorite`),
+  toggleFavorite: (id: string) =>
+    apiClient.post<void>(`/recipes/${id}/favorite`),
   getFavorites: () => apiClient.get<Recipe[]>('/recipes/favorites'),
   cookRecipe: (id: string) => apiClient.post<void>(`/recipes/${id}/cook`),
-  addToPlan: (data: Omit<MealPlan, 'id'>) => apiClient.post<MealPlan>('/recipes/plan', data),
+  addToPlan: (data: Omit<MealPlan, 'id'>) =>
+    apiClient.post<MealPlan>('/recipes/plan', data),
   getPlan: () => apiClient.get<MealPlan[]>('/recipes/plan'),
-  deletePlan: (planId: string) => apiClient.delete<void>(`/recipes/plan/${planId}`),
+  deletePlan: (planId: string) =>
+    apiClient.delete<void>(`/recipes/plan/${planId}`),
 };

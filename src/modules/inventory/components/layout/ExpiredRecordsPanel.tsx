@@ -9,24 +9,24 @@ const ExpiredRecordsPanel: React.FC = () => {
   const expiredGroups = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
-    const expiredItems = items.filter(item => {
+
+    const expiredItems = items.filter((item) => {
       const expiry = new Date(item.expiryDate);
       expiry.setHours(0, 0, 0, 0);
       return expiry < today;
     });
 
     const groups: Record<string, FoodItem[]> = {};
-    expiredItems.forEach(item => {
+    expiredItems.forEach((item) => {
       if (!groups[item.category]) {
         groups[item.category] = [];
       }
       groups[item.category].push(item);
     });
 
-    return Object.entries(groups).map(([category, items]) => ({
+    return Object.entries(groups).map(([category, groupItems]) => ({
       category,
-      items
+      items: groupItems,
     }));
   }, [items]);
 

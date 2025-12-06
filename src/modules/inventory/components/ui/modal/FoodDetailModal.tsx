@@ -121,10 +121,10 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
 
         {/* Image Section */}
         <div className="relative h-36 w-full rounded-b-3xl overflow-hidden">
-          <img 
-            src={item.imageUrl} 
-            alt={item.name} 
-            className="w-full h-full object-cover" 
+          <img
+            src={item.imageUrl}
+            alt={item.name}
+            className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 backdrop-blur-md h-15" />
           <div className="absolute top-0 translate-y-1/2 left-1/2 -translate-x-1/2 text-white font-bold text-lg tracking-wider">
@@ -180,8 +180,12 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
                 <span className="text-neutral-500 font-medium block mb-1">
                   剩餘天數
                 </span>
-                <span className={`font-medium ${daysUntilExpiry < 0 ? 'text-red-500' : 'text-neutral-900'}`}>
-                  {daysUntilExpiry < 0 ? `已過期 ${Math.abs(daysUntilExpiry)} 天` : `約 ${daysUntilExpiry} 天`}
+                <span
+                  className={`font-medium ${daysUntilExpiry < 0 ? 'text-red-500' : 'text-neutral-900'}`}
+                >
+                  {daysUntilExpiry < 0
+                    ? `已過期 ${Math.abs(daysUntilExpiry)} 天`
+                    : `約 ${daysUntilExpiry} 天`}
                 </span>
               </div>
             </div>

@@ -1,4 +1,3 @@
-
 /** 購物明細項目 */
 export type ShoppingItem = {
   id: string;
@@ -14,9 +13,9 @@ export type SharedListPost = {
   authorId: string;
   authorName: string;
   authorAvatar: string;
-  content: string;              // 說明文字（最多40字）
-  images: string[];             // 商品照片 URLs
-  items: ShoppingItem[];        // 購物明細
+  content: string; // 說明文字（最多40字）
+  images: string[]; // 商品照片 URLs
+  items: ShoppingItem[]; // 購物明細
   likesCount: number;
   commentsCount: number;
   isLiked: boolean;

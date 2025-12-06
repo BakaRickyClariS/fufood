@@ -4,7 +4,7 @@ import { sharedListApi } from '../services/api/sharedListApi';
 
 export const usePosts = (listId: string | undefined) => {
   const [posts, setPosts] = useState<SharedListPost[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPosts = useCallback(async () => {
@@ -25,7 +25,7 @@ export const usePosts = (listId: string | undefined) => {
     setIsLoading(true);
     try {
       const newPost = await sharedListApi.createPost(input);
-      setPosts(prev => [newPost, ...prev]);
+      setPosts((prev) => [newPost, ...prev]);
       return newPost;
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to create post';
@@ -35,6 +35,45 @@ export const usePosts = (listId: string | undefined) => {
       setIsLoading(false);
     }
   };
+
+  const toggleLike = useCallback(
+    async (postId: string) => {
+      if (!listId) return;
+
+      const currentPost = posts.find((post) => post.id === postId);
+      if (!currentPost) return;
+
+      const optimisticPost: SharedListPost = {
+        ...currentPost,
+        isLiked: !currentPost.isLiked,
+        likesCount: Math.max(
+          0,
+          currentPost.likesCount + (currentPost.isLiked ? -1 : 1),
+        ),
+      };
+
+      setPosts((prev) =>
+        prev.map((post) => (post.id === postId ? optimisticPost : post)),
+      );
+
+      try {
+        const updatedPost = await sharedListApi.togglePostLike(postId, listId);
+        setPosts((prev) =>
+          prev.map((post) => (post.id === postId ? updatedPost : post)),
+        );
+        return updatedPost;
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : 'Failed to toggle like status';
+        setError(msg);
+        setPosts((prev) =>
+          prev.map((post) => (post.id === postId ? currentPost : post)),
+        );
+        throw new Error(msg);
+      }
+    },
+    [listId, posts],
+  );
 
   useEffect(() => {
     fetchPosts();
@@ -46,5 +85,6 @@ export const usePosts = (listId: string | undefined) => {
     error,
     refetch: fetchPosts,
     createPost,
+    toggleLike,
   };
 };

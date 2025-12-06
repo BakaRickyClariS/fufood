@@ -11,13 +11,13 @@ type RecipeCardGridProps = {
   className?: string;
 };
 
-export const RecipeCardGrid = ({ 
+export const RecipeCardGrid = ({
   title,
-  recipes, 
+  recipes,
   onRecipeClick,
   showMoreLink,
   showPopularTag = false,
-  className = ''
+  className = '',
 }: RecipeCardGridProps) => {
   const navigate = useNavigate();
 
@@ -43,8 +43,6 @@ export const RecipeCardGrid = ({
     return showPopularTag;
   };
 
-
-
   if (recipes.length === 0) return null;
 
   return (
@@ -56,8 +54,8 @@ export const RecipeCardGrid = ({
             <h2 className="text-neutral-900 font-bold text-lg">{title}</h2>
           )}
           {showMoreLink && (
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={handleShowMore}
               className="text-neutral-700 text-sm"
             >

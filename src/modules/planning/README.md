@@ -177,6 +177,7 @@ const usePosts = (listId?: string) => {
     isLoading: boolean;
     error: string | null;
     createPost: (input: CreatePostInput) => Promise<void>;
+    toggleLike: (postId: string) => Promise<SharedListPost | void>;
     refetch: () => Promise<void>;
   };
 };

@@ -6,7 +6,11 @@ type SearchBarProps = {
   placeholder?: string;
 };
 
-export const SearchBar = ({ value, onChange, placeholder = '搜尋食譜...' }: SearchBarProps) => {
+export const SearchBar = ({
+  value,
+  onChange,
+  placeholder = '搜尋食譜...',
+}: SearchBarProps) => {
   return (
     <div className="relative">
       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

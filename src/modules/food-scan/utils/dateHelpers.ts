@@ -1,4 +1,7 @@
-export const calculateShelfLife = (purchaseDate: string, expiryDate: string): number => {
+export const calculateShelfLife = (
+  purchaseDate: string,
+  expiryDate: string,
+): number => {
   if (!purchaseDate || !expiryDate) return 0;
   const purchase = new Date(purchaseDate);
   const expiry = new Date(expiryDate);

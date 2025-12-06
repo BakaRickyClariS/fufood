@@ -14,7 +14,7 @@ import type { FoodItem, FoodCategory } from '@/modules/inventory/types';
 const CategoryPage: React.FC = () => {
   const { categoryId } = useParams();
   const { items: allItems, isLoading } = useInventory();
-  
+
   const category = useMemo(
     () => categories.find((c) => c.id === categoryId),
     [categoryId],
@@ -25,10 +25,14 @@ const CategoryPage: React.FC = () => {
     if (!category) return [];
     // Extract category name from title (e.g., "蔬果類 (92)" -> "蔬果類")
     const categoryName = category.title.split(' ')[0] as FoodCategory;
-    return allItems.filter(item => item.category === categoryName);
+    return allItems.filter((item) => item.category === categoryName);
   }, [allItems, category]);
 
-  const { filteredItems: hookFilteredItems, setFilter, filters } = useInventoryFilter(categoryItems);
+  const {
+    filteredItems: hookFilteredItems,
+    setFilter,
+    filters,
+  } = useInventoryFilter(categoryItems);
 
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -64,7 +68,7 @@ const CategoryPage: React.FC = () => {
     } else {
       setFilter('status', 'all');
     }
-    
+
     // Attribute filter is not used in hook for now, or could map to category if needed
     // But we are already in a category page, so attribute filter might be redundant or for sub-categories
   };
@@ -100,8 +104,6 @@ const CategoryPage: React.FC = () => {
         </h1>
         <div className="w-10" /> {/* Spacer for centering */}
       </header>
-
-
 
       <div className="px-4 mt-2 space-y-4 max-w-layout-container mx-auto">
         {/* Search Bar */}

@@ -25,17 +25,17 @@ export const SharedListCard = ({ list }: SharedListCardProps) => {
   };
 
   return (
-    <div 
+    <div
       onClick={handleClick}
       className="relative w-full h-32 rounded-xl overflow-hidden shadow-sm cursor-pointer active:scale-98 transition-transform mb-4"
     >
       {/* 背景圖 */}
-      <img 
-        src={list.coverImageUrl} 
-        alt={list.name} 
+      <img
+        src={list.coverImageUrl}
+        alt={list.name}
         className="absolute inset-0 w-full h-full object-cover"
       />
-      
+
       {/* 漸層遮罩 */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
@@ -46,8 +46,12 @@ export const SharedListCard = ({ list }: SharedListCardProps) => {
 
       {/* 日期標籤 */}
       <div className="absolute bottom-3 right-4 bg-red-100 text-red-500 rounded-xl px-3 py-1 flex flex-col items-center justify-center min-w-[3.5rem] shadow-sm">
-        <span className="text-xs font-medium text-red-400">{getDayOfWeek(list.scheduledDate)}</span>
-        <span className="text-lg font-bold leading-none">{getDayOfMonth(list.scheduledDate)}</span>
+        <span className="text-xs font-medium text-red-400">
+          {getDayOfWeek(list.scheduledDate)}
+        </span>
+        <span className="text-lg font-bold leading-none">
+          {getDayOfMonth(list.scheduledDate)}
+        </span>
       </div>
     </div>
   );

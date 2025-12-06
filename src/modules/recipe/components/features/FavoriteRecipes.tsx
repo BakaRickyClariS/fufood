@@ -32,19 +32,21 @@ export const FavoriteRecipes = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       <RecipeHeader title="我的收藏" />
-      
+
       <div className="p-4">
         {isLoading ? (
           <div className="text-center py-10 text-gray-500">載入中...</div>
         ) : favorites.length === 0 ? (
-          <div className="text-center py-10 text-gray-500">目前沒有收藏的食譜</div>
+          <div className="text-center py-10 text-gray-500">
+            目前沒有收藏的食譜
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {favorites.map(recipe => (
-              <RecipeCard 
-                key={recipe.id} 
-                recipe={recipe} 
-                onClick={handleRecipeClick} 
+            {favorites.map((recipe) => (
+              <RecipeCard
+                key={recipe.id}
+                recipe={recipe}
+                onClick={handleRecipeClick}
               />
             ))}
           </div>

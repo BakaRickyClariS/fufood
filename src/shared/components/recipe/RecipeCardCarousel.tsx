@@ -13,13 +13,13 @@ type RecipeCardCarouselProps = {
   showMoreLink?: string;
 };
 
-export const RecipeCardCarousel = ({ 
-  title, 
-  recipes, 
+export const RecipeCardCarousel = ({
+  title,
+  recipes,
   onRecipeClick,
   showPopularTag = false,
   showScrollButton = true,
-  showMoreLink
+  showMoreLink,
 }: RecipeCardCarouselProps) => {
   const navigate = useNavigate();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -45,7 +45,7 @@ export const RecipeCardCarousel = ({
       <div className="flex items-center justify-between px-4">
         <h2 className="text-lg font-bold text-gray-800">{title}</h2>
         {showMoreLink && (
-          <Link 
+          <Link
             to={showMoreLink}
             className="text-sm text-primary-500 hover:text-primary-600 font-medium"
           >
@@ -53,7 +53,7 @@ export const RecipeCardCarousel = ({
           </Link>
         )}
         {showScrollButton && !showMoreLink && (
-          <button 
+          <button
             onClick={scrollRight}
             className="p-1.5 rounded-full border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition-colors"
             aria-label="向右捲動"
@@ -63,14 +63,17 @@ export const RecipeCardCarousel = ({
         )}
       </div>
 
-      <div 
+      <div
         ref={scrollContainerRef}
         className="overflow-x-auto px-4 flex gap-3 pb-2"
       >
         {recipes.map((recipe) => (
-          <div key={recipe.id} className="flex-shrink-0 w-[200px] cursor-pointer hover:shadow-xl transition-shadow">
-            <RecipeCard 
-              recipe={recipe} 
+          <div
+            key={recipe.id}
+            className="flex-shrink-0 w-[200px] cursor-pointer hover:shadow-xl transition-shadow"
+          >
+            <RecipeCard
+              recipe={recipe}
               onClick={handleRecipeClick}
               showPopularTag={showPopularTag}
             />

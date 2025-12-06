@@ -9,8 +9,8 @@ const CommonItemsPanel: React.FC = () => {
   // Group items by category
   const groupedItems = React.useMemo(() => {
     const groups: Record<string, FoodItem[]> = {};
-    
-    items.forEach(item => {
+
+    items.forEach((item) => {
       if (!groups[item.category]) {
         groups[item.category] = [];
       }
@@ -19,13 +19,13 @@ const CommonItemsPanel: React.FC = () => {
 
     // Sort categories (optional, can be customized)
     const categoryOrder = ['蔬果類', '主食烘焙類', '冷凍調理類', '其他'];
-    
+
     return categoryOrder
-      .map(category => ({
+      .map((category) => ({
         category,
-        items: groups[category] || []
+        items: groups[category] || [],
       }))
-      .filter(group => group.items.length > 0);
+      .filter((group) => group.items.length > 0);
   }, [items]);
 
   if (isLoading) {

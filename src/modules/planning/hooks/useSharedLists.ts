@@ -55,7 +55,7 @@ export const useSharedLists = (year?: number, month?: number) => {
 
 export const useSharedListDetail = (id: string | undefined) => {
   const [list, setList] = useState<SharedList | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchList = useCallback(async () => {

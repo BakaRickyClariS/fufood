@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Tabs, type Tab } from '@/shared/components/ui/animated-tabs';
 import { useSharedLists } from '@/modules/planning/hooks/useSharedLists';
 import { MonthTimelinePicker } from '@/modules/planning/components/ui/MonthTimelinePicker';
+import { SharedListsProvider } from '@/modules/planning/contexts/SharedListsContext';
 
 type MainTabId = 'planning' | 'recipes';
 type SubTabId = 'in-progress' | 'pending-purchase' | 'completed';
@@ -19,14 +20,14 @@ type PlanningTabsSectionProps = {
 const PlanningTabsSection = ({ children }: PlanningTabsSectionProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // 取得共享清單資料（不帶參數取得全部，用於統計計畫數量）
-  const { lists } = useSharedLists();
+  // 取得共享清單資料
+  const sharedLists = useSharedLists();
 
-  // 統計每個月份的計畫數量
+  // 計算每月的清單數量供時間軸使用
   const planCountByMonth = useMemo(() => {
     const countMap = new Map<string, number>();
 
-    lists.forEach((list) => {
+    sharedLists.lists.forEach((list) => {
       if (list.scheduledDate) {
         const date = new Date(list.scheduledDate);
         const year = date.getFullYear();
@@ -37,14 +38,14 @@ const PlanningTabsSection = ({ children }: PlanningTabsSectionProps) => {
     });
 
     return countMap;
-  }, [lists]);
+  }, [sharedLists.lists]);
 
-  // 初始化為當前月份
+  // 預設為當前年月
   const now = new Date();
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
 
-  // 從 URL 參數取得 tab 狀態
+  // 從 URL 取得 tab 與狀態
   const mainTab = (searchParams.get('tab') as MainTabId) || 'planning';
   const subTab = (searchParams.get('status') as SubTabId) || 'in-progress';
 
@@ -69,8 +70,8 @@ const PlanningTabsSection = ({ children }: PlanningTabsSectionProps) => {
   };
 
   const mainTabs: Tab<MainTabId>[] = [
-    { id: 'planning', label: '共享規劃' },
-    { id: 'recipes', label: '食譜推薦' },
+    { id: 'planning', label: '採買規劃' },
+    { id: 'recipes', label: '食譜靈感' },
   ];
 
   const subTabs: Tab<SubTabId>[] = [
@@ -80,45 +81,47 @@ const PlanningTabsSection = ({ children }: PlanningTabsSectionProps) => {
   ];
 
   return (
-    <section>
-      <div className="max-w-layout-container mx-auto">
-        {/* 主 Tabs */}
-        <Tabs
-          variant="underline"
-          tabs={mainTabs}
-          activeTab={mainTab}
-          onTabChange={setMainTab}
-          animated
-        />
-        <div className="mx-4 mt-4">
-          {mainTab === 'planning' && (
-            <div className="mb-4">
-              {/* 月份選擇器 */}
+    <SharedListsProvider value={sharedLists}>
+      <section>
+        <div className="max-w-layout-container mx-auto">
+          {/* 主 Tabs */}
+          <Tabs
+            variant="underline"
+            tabs={mainTabs}
+            activeTab={mainTab}
+            onTabChange={setMainTab}
+            animated
+          />
+          <div className="mx-4 mt-4">
+            {mainTab === 'planning' && (
               <div className="mb-4">
-                <MonthTimelinePicker
-                  selectedYear={selectedYear}
-                  selectedMonth={selectedMonth}
-                  onMonthChange={handleMonthChange}
-                  planCountByMonth={planCountByMonth}
+                {/* 月份時間軸 */}
+                <div className="mb-4">
+                  <MonthTimelinePicker
+                    selectedYear={selectedYear}
+                    selectedMonth={selectedMonth}
+                    onMonthChange={handleMonthChange}
+                    planCountByMonth={planCountByMonth}
+                  />
+                </div>
+
+                <Tabs
+                  variant="pill"
+                  tabs={subTabs}
+                  activeTab={subTab}
+                  onTabChange={setSubTab}
+                  animated
+                  className="mb-6"
                 />
               </div>
+            )}
 
-              <Tabs
-                variant="pill"
-                tabs={subTabs}
-                activeTab={subTab}
-                onTabChange={setSubTab}
-                animated
-                className="mb-6"
-              />
-            </div>
-          )}
-
-          {/* 渲染子內容 */}
-          {children(mainTab, subTab, selectedYear, selectedMonth)}
+            {/* 子內容渲染 */}
+            {children(mainTab, subTab, selectedYear, selectedMonth)}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </SharedListsProvider>
   );
 };
 

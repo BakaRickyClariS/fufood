@@ -26,21 +26,20 @@ export const RECIPE_CATEGORIES: RecipeCategory[] = [
   '越南料理',
   '健康輕食',
   '甜點',
-  '飲品'
+  '飲品',
 ];
 
 export const CATEGORY_IMAGES: Record<RecipeCategory, string> = {
-  '中式料理': chineseImg,
-  '美式料理': americanImg,
-  '義式料理': italianImg,
-  '日式料理': japaneseImg,
-  '泰式料理': thaiImg,
-  '韓式料理': koreanImg,
-  '墨西哥料理': mexicanImg,
-  '川菜': sichuanImg,
-  '越南料理': vietnameseImg,
-  '健康輕食': healthyImg,
-  '甜點': sweetsImg,
-  '飲品': drinksImg
+  中式料理: chineseImg,
+  美式料理: americanImg,
+  義式料理: italianImg,
+  日式料理: japaneseImg,
+  泰式料理: thaiImg,
+  韓式料理: koreanImg,
+  墨西哥料理: mexicanImg,
+  川菜: sichuanImg,
+  越南料理: vietnameseImg,
+  健康輕食: healthyImg,
+  甜點: sweetsImg,
+  飲品: drinksImg,
 };
-

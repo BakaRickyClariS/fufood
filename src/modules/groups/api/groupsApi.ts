@@ -151,7 +151,8 @@ export const groupsApi = {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return;
     }
-    return apiClient.patch<void>(`/groups/${groupId}/members/${memberId}`, { role });
+    return apiClient.patch<void>(`/groups/${groupId}/members/${memberId}`, {
+      role,
+    });
   },
 };
-

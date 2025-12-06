@@ -1,4 +1,9 @@
-import type { FoodItem, FoodCategory, InventoryStatus, InventoryStats } from './inventory.types';
+import type {
+  FoodItem,
+  FoodCategory,
+  InventoryStatus,
+  InventoryStats,
+} from './inventory.types';
 
 // 取得庫存請求
 export type GetInventoryRequest = {
@@ -17,7 +22,10 @@ export type GetInventoryResponse = {
 };
 
 // 新增食材請求
-export type AddFoodItemRequest = Omit<FoodItem, 'id' | 'createdAt' | 'updatedAt'>;
+export type AddFoodItemRequest = Omit<
+  FoodItem,
+  'id' | 'createdAt' | 'updatedAt'
+>;
 
 // 新增食材回應
 export type AddFoodItemResponse = {
@@ -29,7 +37,9 @@ export type AddFoodItemResponse = {
 };
 
 // 更新食材請求
-export type UpdateFoodItemRequest = Partial<Omit<FoodItem, 'id' | 'createdAt' | 'updatedAt'>>;
+export type UpdateFoodItemRequest = Partial<
+  Omit<FoodItem, 'id' | 'createdAt' | 'updatedAt'>
+>;
 
 // 更新食材回應
 export type UpdateFoodItemResponse = {
@@ -78,4 +88,3 @@ export type BatchOperationRequest = {
   itemIds: string[];
   data?: any;
 };
-

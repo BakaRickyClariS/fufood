@@ -8,16 +8,21 @@ type ToastContextType = {
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
-export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [toast, setToast] = useState<{
     message: string;
     type: ToastType;
     duration?: number;
   } | null>(null);
 
-  const showToast = useCallback((message: string, type: ToastType = 'info', duration = 3000) => {
-    setToast({ message, type, duration });
-  }, []);
+  const showToast = useCallback(
+    (message: string, type: ToastType = 'info', duration = 3000) => {
+      setToast({ message, type, duration });
+    },
+    [],
+  );
 
   const hideToast = useCallback(() => {
     setToast(null);
