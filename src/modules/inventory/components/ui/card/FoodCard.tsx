@@ -8,14 +8,18 @@ type FoodCardProps = {
 
 const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
   const { status } = useExpiryCheck(item);
-  
+
   // Status colors
   const getStatusColor = () => {
     switch (status) {
-      case 'expired': return 'bg-red-500/90';
-      case 'expiring-soon': return 'bg-orange-500/90';
-      case 'low-stock': return 'bg-yellow-500/90';
-      default: return 'bg-[#A87B7B]/90';
+      case 'expired':
+        return 'bg-red-500/90';
+      case 'expiring-soon':
+        return 'bg-orange-500/90';
+      case 'low-stock':
+        return 'bg-yellow-500/90';
+      default:
+        return 'bg-[#A87B7B]/90';
     }
   };
 
@@ -38,7 +42,9 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
         {/* Header: Name and Quantity */}
         <div className="flex justify-between items-end text-lg text-white z-10">
           <h3 className="tracking-wide font-medium">{item.name}</h3>
-          <span className="tracking-widest font-bold">{item.quantity} {item.unit}</span>
+          <span className="tracking-widest font-bold">
+            {item.quantity} {item.unit}
+          </span>
         </div>
 
         {/* Divider */}
@@ -58,7 +64,9 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
 
           {/* Expiry Date */}
           <div className="flex items-center gap-2 z-10">
-            <span className={`px-2 py-1 ${getStatusColor()} text-[10px] rounded-full backdrop-blur-sm transition-colors duration-300`}>
+            <span
+              className={`px-2 py-1 ${getStatusColor()} text-[10px] rounded-full backdrop-blur-sm transition-colors duration-300`}
+            >
               過期
             </span>
             <span className="text-base tracking-wider font-light">

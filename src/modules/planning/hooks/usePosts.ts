@@ -25,7 +25,7 @@ export const usePosts = (listId: string | undefined) => {
     setIsLoading(true);
     try {
       const newPost = await sharedListApi.createPost(input);
-      setPosts(prev => [newPost, ...prev]);
+      setPosts((prev) => [newPost, ...prev]);
       return newPost;
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to create post';

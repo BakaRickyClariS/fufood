@@ -14,7 +14,7 @@ type CreatePostFeatureProps = {
 export const CreatePostFeature = ({ listId }: CreatePostFeatureProps) => {
   const navigate = useNavigate();
   const { createPost } = usePosts(listId);
-  
+
   const [content, setContent] = useState('');
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
@@ -23,7 +23,8 @@ export const CreatePostFeature = ({ listId }: CreatePostFeatureProps) => {
   // Mock 圖片選擇 (隨機選一張)
   const addMockImage = () => {
     if (selectedImages.length >= 3) return;
-    const randomImg = COVER_IMAGES[Math.floor(Math.random() * COVER_IMAGES.length)];
+    const randomImg =
+      COVER_IMAGES[Math.floor(Math.random() * COVER_IMAGES.length)];
     setSelectedImages([...selectedImages, randomImg]);
   };
 
@@ -33,7 +34,7 @@ export const CreatePostFeature = ({ listId }: CreatePostFeatureProps) => {
       toast.warning('說明文字不能超過 40 字');
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
       await createPost({
@@ -68,40 +69,51 @@ export const CreatePostFeature = ({ listId }: CreatePostFeatureProps) => {
       <div className="p-4 space-y-6">
         {/* Photo Upload */}
         <div className="flex gap-3 overflow-x-auto pb-2">
-           <button 
-             onClick={addMockImage}
-             disabled={selectedImages.length >= 3}
-             className="w-24 h-24 rounded-xl bg-neutral-50 border border-dashed border-neutral-300 flex flex-col items-center justify-center gap-1 text-neutral-400 flex-shrink-0 active:bg-neutral-100"
-           >
-             <ImageIcon className="w-6 h-6" />
-             <span className="text-xs">新增照片</span>
-           </button>
-           
-           {selectedImages.map((img, idx) => (
-             <div key={idx} className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
-               <img src={img} alt="Selected" className="w-full h-full object-cover" />
-               <button 
-                 onClick={() => setSelectedImages(selectedImages.filter((_, i) => i !== idx))}
-                 className="absolute top-1 right-1 w-5 h-5 bg-black/50 rounded-full text-white flex items-center justify-center text-xs"
-               >
-                 ×
-               </button>
-             </div>
-           ))}
+          <button
+            onClick={addMockImage}
+            disabled={selectedImages.length >= 3}
+            className="w-24 h-24 rounded-xl bg-neutral-50 border border-dashed border-neutral-300 flex flex-col items-center justify-center gap-1 text-neutral-400 flex-shrink-0 active:bg-neutral-100"
+          >
+            <ImageIcon className="w-6 h-6" />
+            <span className="text-xs">新增照片</span>
+          </button>
+
+          {selectedImages.map((img, idx) => (
+            <div
+              key={idx}
+              className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0"
+            >
+              <img
+                src={img}
+                alt="Selected"
+                className="w-full h-full object-cover"
+              />
+              <button
+                onClick={() =>
+                  setSelectedImages(selectedImages.filter((_, i) => i !== idx))
+                }
+                className="absolute top-1 right-1 w-5 h-5 bg-black/50 rounded-full text-white flex items-center justify-center text-xs"
+              >
+                ×
+              </button>
+            </div>
+          ))}
         </div>
 
         {/* Content Input */}
         <div>
-           <textarea
-             value={content}
-             onChange={(e) => setContent(e.target.value)}
-             placeholder="這東西超好用！大家要不要一起買？(限40字)"
-             rows={3}
-             className="w-full p-3 bg-neutral-50 rounded-xl border border-transparent focus:bg-white focus:border-red-400 focus:outline-none resize-none"
-           />
-           <div className={`text-right text-xs mt-1 ${content.length > 40 ? 'text-red-500' : 'text-neutral-400'}`}>
-             {content.length}/40
-           </div>
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="這東西超好用！大家要不要一起買？(限40字)"
+            rows={3}
+            className="w-full p-3 bg-neutral-50 rounded-xl border border-transparent focus:bg-white focus:border-red-400 focus:outline-none resize-none"
+          />
+          <div
+            className={`text-right text-xs mt-1 ${content.length > 40 ? 'text-red-500' : 'text-neutral-400'}`}
+          >
+            {content.length}/40
+          </div>
         </div>
 
         {/* Shopping Items */}
@@ -112,7 +124,9 @@ export const CreatePostFeature = ({ listId }: CreatePostFeatureProps) => {
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-neutral-100">
         <button
           onClick={handleSubmit}
-          disabled={isSubmitting || (content.length === 0 && items.length === 0)}
+          disabled={
+            isSubmitting || (content.length === 0 && items.length === 0)
+          }
           className="w-full py-3.5 bg-red-400 text-white rounded-xl font-bold shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-98 transition-all"
         >
           {isSubmitting ? '發布中...' : '分享發布'}

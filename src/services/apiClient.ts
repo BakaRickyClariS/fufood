@@ -4,7 +4,10 @@ type RequestConfig = RequestInit & {
   params?: Record<string, string>;
 };
 
-async function request<T>(endpoint: string, config: RequestConfig = {}): Promise<{ data: T }> {
+async function request<T>(
+  endpoint: string,
+  config: RequestConfig = {},
+): Promise<{ data: T }> {
   const { params, ...customConfig } = config;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -36,8 +39,12 @@ async function request<T>(endpoint: string, config: RequestConfig = {}): Promise
 }
 
 export const apiClient = {
-  get: <T>(url: string, config?: RequestConfig) => request<T>(url, { ...config, method: 'GET' }),
-  post: <T>(url: string, data?: any, config?: RequestConfig) => request<T>(url, { ...config, method: 'POST', body: JSON.stringify(data) }),
-  put: <T>(url: string, data?: any, config?: RequestConfig) => request<T>(url, { ...config, method: 'PUT', body: JSON.stringify(data) }),
-  delete: <T>(url: string, config?: RequestConfig) => request<T>(url, { ...config, method: 'DELETE' }),
+  get: <T>(url: string, config?: RequestConfig) =>
+    request<T>(url, { ...config, method: 'GET' }),
+  post: <T>(url: string, data?: any, config?: RequestConfig) =>
+    request<T>(url, { ...config, method: 'POST', body: JSON.stringify(data) }),
+  put: <T>(url: string, data?: any, config?: RequestConfig) =>
+    request<T>(url, { ...config, method: 'PUT', body: JSON.stringify(data) }),
+  delete: <T>(url: string, config?: RequestConfig) =>
+    request<T>(url, { ...config, method: 'DELETE' }),
 };

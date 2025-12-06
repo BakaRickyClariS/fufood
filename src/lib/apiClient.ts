@@ -13,7 +13,10 @@ class ApiClient {
     this.baseUrl = baseUrl;
   }
 
-  private async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+  private async request<T>(
+    endpoint: string,
+    options: RequestOptions = {},
+  ): Promise<T> {
     const { params, headers, body, ...customConfig } = options;
 
     // Build URL with query params
@@ -32,15 +35,21 @@ class ApiClient {
     const config: RequestInit = {
       ...customConfig,
       headers: {
-        ...(body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+        ...(body instanceof FormData
+          ? {}
+          : { 'Content-Type': 'application/json' }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         // 如果 body 是 FormData，不要合併自訂 headers 中的 Content-Type
         // 讓瀏覽器自動設定正確的 multipart/form-data boundary
-        ...(headers && !(body instanceof FormData) ? headers : 
-            headers && body instanceof FormData ? 
-              Object.fromEntries(
-                Object.entries(headers).filter(([key]) => key.toLowerCase() !== 'content-type')
-              ) : {}),
+        ...(headers && !(body instanceof FormData)
+          ? headers
+          : headers && body instanceof FormData
+            ? Object.fromEntries(
+                Object.entries(headers).filter(
+                  ([key]) => key.toLowerCase() !== 'content-type',
+                ),
+              )
+            : {}),
       },
     };
 
@@ -53,7 +62,7 @@ class ApiClient {
 
     try {
       const response = await fetch(url.toString(), config);
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `API Error: ${response.status}`);
@@ -71,20 +80,36 @@ class ApiClient {
     }
   }
 
-  get<T>(endpoint: string, params?: RequestOptions['params'], options?: Omit<RequestOptions, 'params'>) {
+  get<T>(
+    endpoint: string,
+    params?: RequestOptions['params'],
+    options?: Omit<RequestOptions, 'params'>,
+  ) {
     return this.request<T>(endpoint, { ...options, method: 'GET', params });
   }
 
-  post<T>(endpoint: string, body?: any, options?: RequestOptions) {
-    return this.request<T>(endpoint, { ...options, method: 'POST', body });
+  post<T>(endpoint: string, body?: unknown, options?: RequestOptions) {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'POST',
+      body: body as any,
+    });
   }
 
-  put<T>(endpoint: string, body?: any, options?: RequestOptions) {
-    return this.request<T>(endpoint, { ...options, method: 'PUT', body });
+  put<T>(endpoint: string, body?: unknown, options?: RequestOptions) {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'PUT',
+      body: body as any,
+    });
   }
 
-  patch<T>(endpoint: string, body?: any, options?: RequestOptions) {
-    return this.request<T>(endpoint, { ...options, method: 'PATCH', body });
+  patch<T>(endpoint: string, body?: unknown, options?: RequestOptions) {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'PATCH',
+      body: body as any,
+    });
   }
 
   delete<T>(endpoint: string, options?: RequestOptions) {

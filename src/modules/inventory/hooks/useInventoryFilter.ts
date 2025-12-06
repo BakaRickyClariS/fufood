@@ -7,7 +7,7 @@ export const useInventoryFilter = (items: FoodItem[]) => {
     status: 'all',
     searchQuery: '',
     sortBy: 'expiryDate',
-    sortOrder: 'asc'
+    sortOrder: 'asc',
   });
 
   const filteredItems = useMemo(() => {
@@ -15,22 +15,34 @@ export const useInventoryFilter = (items: FoodItem[]) => {
 
     // Category Filter
     if (filters.category && filters.category !== 'all') {
-      result = result.filter(item => item.category === filters.category);
+      result = result.filter((item) => item.category === filters.category);
     }
 
     // Status Filter
     if (filters.status && filters.status !== 'all') {
       const today = new Date();
-      const threeDaysLater = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000);
-      
-      result = result.filter(item => {
+      const threeDaysLater = new Date(
+        today.getTime() + 3 * 24 * 60 * 60 * 1000,
+      );
+
+      result = result.filter((item) => {
         const expiry = new Date(item.expiryDate);
         switch (filters.status) {
-          case 'expired': return expiry < today;
-          case 'expiring-soon': return expiry >= today && expiry <= threeDaysLater;
-          case 'low-stock': return item.lowStockAlert && item.quantity <= item.lowStockThreshold;
-          case 'normal': return expiry > threeDaysLater && (!item.lowStockAlert || item.quantity > item.lowStockThreshold);
-          default: return true;
+          case 'expired':
+            return expiry < today;
+          case 'expiring-soon':
+            return expiry >= today && expiry <= threeDaysLater;
+          case 'low-stock':
+            return (
+              item.lowStockAlert && item.quantity <= item.lowStockThreshold
+            );
+          case 'normal':
+            return (
+              expiry > threeDaysLater &&
+              (!item.lowStockAlert || item.quantity > item.lowStockThreshold)
+            );
+          default:
+            return true;
         }
       });
     }
@@ -38,21 +50,29 @@ export const useInventoryFilter = (items: FoodItem[]) => {
     // Search Filter
     if (filters.searchQuery) {
       const query = filters.searchQuery.toLowerCase();
-      result = result.filter(item => 
-        item.name.toLowerCase().includes(query) || 
-        item.notes?.toLowerCase().includes(query)
+      result = result.filter(
+        (item) =>
+          item.name.toLowerCase().includes(query) ||
+          item.notes?.toLowerCase().includes(query),
       );
     }
 
     // Sorting
     if (filters.sortBy) {
       result.sort((a, b) => {
-        let valA: any = a[filters.sortBy!];
-        let valB: any = b[filters.sortBy!];
+        let valA: string | number | boolean = a[
+          filters.sortBy as keyof FoodItem
+        ] as string | number | boolean;
+        let valB: string | number | boolean = b[
+          filters.sortBy as keyof FoodItem
+        ] as string | number | boolean;
 
-        if (filters.sortBy === 'expiryDate' || filters.sortBy === 'purchaseDate') {
-          valA = new Date(valA).getTime();
-          valB = new Date(valB).getTime();
+        if (
+          filters.sortBy === 'expiryDate' ||
+          filters.sortBy === 'purchaseDate'
+        ) {
+          valA = new Date(valA as string | number).getTime();
+          valB = new Date(valB as string | number).getTime();
         }
 
         if (valA < valB) return filters.sortOrder === 'asc' ? -1 : 1;
@@ -64,8 +84,11 @@ export const useInventoryFilter = (items: FoodItem[]) => {
     return result;
   }, [items, filters]);
 
-  const setFilter = (key: keyof FilterOptions, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+  const setFilter = <K extends keyof FilterOptions>(
+    key: K,
+    value: FilterOptions[K],
+  ) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   const clearFilters = () => {
@@ -74,7 +97,7 @@ export const useInventoryFilter = (items: FoodItem[]) => {
       status: 'all',
       searchQuery: '',
       sortBy: 'expiryDate',
-      sortOrder: 'asc'
+      sortOrder: 'asc',
     });
   };
 
@@ -82,6 +105,6 @@ export const useInventoryFilter = (items: FoodItem[]) => {
     filteredItems,
     filters,
     setFilter,
-    clearFilters
+    clearFilters,
   };
 };

@@ -32,27 +32,34 @@ export const CoverImagePicker = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[80vh] rounded-t-xl px-4 pt-6 pb-8 overflow-y-auto">
+      <SheetContent
+        side="bottom"
+        className="h-[80vh] rounded-t-xl px-4 pt-6 pb-8 overflow-y-auto"
+      >
         <SheetHeader className="mb-6 text-left">
           <div className="flex items-center gap-2">
             <div className="w-1 h-4 bg-red-400 rounded-full" />
             <SheetTitle>選擇圖庫照片</SheetTitle>
           </div>
         </SheetHeader>
-        
+
         <div className="grid grid-cols-3 gap-3 mb-20">
           {COVER_IMAGES.map((img, index) => {
             const isSelected = tempSelected === img;
             return (
-              <div 
+              <div
                 key={index}
                 onClick={() => setTempSelected(img)}
                 className={cn(
-                  "relative aspect-square rounded-xl overflow-hidden cursor-pointer border-2 transition-all",
-                  isSelected ? "border-red-400" : "border-transparent"
+                  'relative aspect-square rounded-xl overflow-hidden cursor-pointer border-2 transition-all',
+                  isSelected ? 'border-red-400' : 'border-transparent',
                 )}
               >
-                <img src={img} alt={`Cover ${index}`} className="w-full h-full object-cover" />
+                <img
+                  src={img}
+                  alt={`Cover ${index}`}
+                  className="w-full h-full object-cover"
+                />
                 {isSelected && (
                   <div className="absolute top-2 left-2 w-6 h-6 bg-red-400 rounded-full flex items-center justify-center shadow-sm">
                     <Check className="w-4 h-4 text-white" />

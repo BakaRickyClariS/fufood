@@ -8,9 +8,30 @@ import type {
   FoodItem,
 } from '../../types';
 
+// Internal type for raw API response
+interface RawScanResponse {
+  data?: any;
+  productName?: string;
+  name?: string;
+  category?: string;
+  attributes?: string;
+  purchaseQuantity?: number | string;
+  unit?: string;
+  purchaseDate?: string;
+  expiryDate?: string;
+  lowStockAlert?: boolean;
+  lowStockThreshold?: number | string;
+  notes?: string;
+  imageUrl?: string;
+}
+
 export const createRealFoodScanApi = (): FoodScanApi => {
-  const transformScanResult = (resp: any): ScanResult => {
-    const payload = resp?.data ?? resp ?? {};
+  const transformScanResult = (resp: unknown): ScanResult => {
+    // Cast to unknown first then RawScanResponse to be safe
+    const payload =
+      (resp as { data?: RawScanResponse })?.data ??
+      (resp as RawScanResponse) ??
+      {};
 
     // Best-effort mapping to FoodItemInput; provide sensible defaults
     const today = new Date().toISOString().slice(0, 10);
@@ -38,7 +59,9 @@ export const createRealFoodScanApi = (): FoodScanApi => {
   const recognizeImage = async (imageUrl: string): Promise<ScanResult> => {
     try {
       // Updated endpoint to match v2.1 spec
-      const data = await apiClient.post<any>('/ai/analyze-image', { imageUrl });
+      const data = await apiClient.post<RawScanResponse>('/ai/analyze-image', {
+        imageUrl,
+      });
       return transformScanResult(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -46,27 +69,37 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     }
   };
 
-  const submitFoodItem = async (data: FoodItemInput): Promise<FoodItemResponse> => {
+  const submitFoodItem = async (
+    data: FoodItemInput,
+  ): Promise<FoodItemResponse> => {
     // Updated endpoint to match v2.1 spec (Inventory Module)
     return apiClient.post<FoodItemResponse>('/inventory', data);
   };
 
-  const updateFoodItem = async (id: string, data: Partial<FoodItemInput>): Promise<FoodItemResponse> => {
-      return apiClient.put<FoodItemResponse>(`/inventory/${id}`, data);
+  const updateFoodItem = async (
+    id: string,
+    data: Partial<FoodItemInput>,
+  ): Promise<FoodItemResponse> => {
+    return apiClient.put<FoodItemResponse>(`/inventory/${id}`, data);
   };
 
   const deleteFoodItem = async (id: string): Promise<{ success: boolean }> => {
-      return apiClient.delete<{ success: boolean }>(`/inventory/${id}`);
+    return apiClient.delete<{ success: boolean }>(`/inventory/${id}`);
   };
 
-  const getFoodItems = async (filters?: FoodItemFilters): Promise<FoodItem[]> => {
-      // Mapping filters to query params
-      const params: Record<string, any> = {};
-      if (filters?.category) params.category = filters.category;
-      if (filters?.status) params.status = filters.status;
-      
-      const response = await apiClient.get<{ items: FoodItem[] }>('/inventory', params);
-      return response.items;
+  const getFoodItems = async (
+    filters?: FoodItemFilters,
+  ): Promise<FoodItem[]> => {
+    // Mapping filters to query params
+    const params: Record<string, string | number | boolean | undefined> = {};
+    if (filters?.category) params.category = filters.category;
+    if (filters?.status) params.status = filters.status;
+
+    const response = await apiClient.get<{ items: FoodItem[] }>(
+      '/inventory',
+      params,
+    );
+    return response.items;
   };
 
   return {
@@ -77,4 +110,3 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     getFoodItems,
   };
 };
-

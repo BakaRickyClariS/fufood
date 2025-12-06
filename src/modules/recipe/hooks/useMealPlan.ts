@@ -37,14 +37,16 @@ export const useMealPlan = () => {
     try {
       // 發送 API 請求
       const actualPlan = await recipeApi.addMealPlan(data);
-      
+
       // 成功後，用真實的計劃替換暫時的計劃
-      setMealPlans((prev: MealPlan[]) => 
-        prev.map((plan: MealPlan) => plan.id === tempId ? actualPlan : plan)
+      setMealPlans((prev: MealPlan[]) =>
+        prev.map((plan: MealPlan) => (plan.id === tempId ? actualPlan : plan)),
       );
     } catch (err) {
       // 失敗時回滾：移除樂觀添加的項目
-      setMealPlans((prev: MealPlan[]) => prev.filter((plan: MealPlan) => plan.id !== tempId));
+      setMealPlans((prev: MealPlan[]) =>
+        prev.filter((plan: MealPlan) => plan.id !== tempId),
+      );
       throw err;
     }
   };
@@ -52,7 +54,9 @@ export const useMealPlan = () => {
   const deleteMealPlan = async (planId: string) => {
     // Optimistic update: 立即從 UI 移除
     const previousPlans = mealPlans;
-    setMealPlans((prev: MealPlan[]) => prev.filter((plan: MealPlan) => plan.id !== planId));
+    setMealPlans((prev: MealPlan[]) =>
+      prev.filter((plan: MealPlan) => plan.id !== planId),
+    );
 
     try {
       // 發送刪除 API 請求
@@ -68,5 +72,12 @@ export const useMealPlan = () => {
     fetchMealPlans();
   }, []);
 
-  return { mealPlans, isLoading, error, addMealPlan, deleteMealPlan, refetch: fetchMealPlans };
+  return {
+    mealPlans,
+    isLoading,
+    error,
+    addMealPlan,
+    deleteMealPlan,
+    refetch: fetchMealPlans,
+  };
 };

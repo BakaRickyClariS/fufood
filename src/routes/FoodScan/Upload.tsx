@@ -4,7 +4,7 @@ import { useScanInstructions } from '@/modules/food-scan/hooks/useScanInstructio
 import InstructionsModal from '@/modules/food-scan/components/ui/InstructionsModal';
 
 const Upload: React.FC = () => {
-  const { showInstructions, dontShowAgain, setDontShowAgain, handleClose } = 
+  const { showInstructions, dontShowAgain, setDontShowAgain, handleClose } =
     useScanInstructions();
 
   return (

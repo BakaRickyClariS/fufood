@@ -14,7 +14,9 @@ export const CookingSteps = ({ steps }: CookingStepsProps) => {
             {step.stepNumber}
           </div>
           <div className="flex-1 pt-1">
-            <p className="text-gray-800 leading-relaxed mb-2">{step.description}</p>
+            <p className="text-gray-800 leading-relaxed mb-2">
+              {step.description}
+            </p>
             {step.time && (
               <div className="flex items-center gap-1.5 text-orange-600 text-sm font-medium">
                 <Clock className="w-4 h-4" />

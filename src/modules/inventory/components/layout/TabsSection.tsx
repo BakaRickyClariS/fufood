@@ -29,7 +29,7 @@ const TabsSection = () => {
     >
       <div className="max-w-layout-container mx-auto">
         {/* 主 Tabs */}
-        <Tabs 
+        <Tabs
           variant="underline"
           tabs={mainTabs}
           activeTab={mainTab}
@@ -39,7 +39,7 @@ const TabsSection = () => {
         <div className="mx-4">
           {mainTab === 'overview' && (
             <>
-              <Tabs 
+              <Tabs
                 variant="pill"
                 tabs={subTabs}
                 activeTab={subTab}

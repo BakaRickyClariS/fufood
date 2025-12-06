@@ -7,11 +7,7 @@ type AISearchCardProps = {
   remainingQueries?: number;
 };
 
-const SUGGESTION_TAGS = [
-  '台灣屬性的美食',
-  '晚餐想吃日式',
-  '聖誕節吃什麼'
-];
+const SUGGESTION_TAGS = ['台灣屬性的美食', '晚餐想吃日式', '聖誕節吃什麼'];
 
 export const AISearchCard = ({ remainingQueries = 3 }: AISearchCardProps) => {
   const navigate = useNavigate();
@@ -54,7 +50,7 @@ export const AISearchCard = ({ remainingQueries = 3 }: AISearchCardProps) => {
             placeholder="詢問FuFood.AI"
             className="w-full py-4 pl-12 pr-14 bg-white border-2 border-orange-100 rounded-full shadow-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition-all"
           />
-          <button 
+          <button
             onClick={handleSearch}
             className="absolute right-2 top-2 bottom-2 aspect-square bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center justify-center transition-colors shadow-md shadow-orange-200"
           >
