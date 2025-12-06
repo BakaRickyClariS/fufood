@@ -7,11 +7,7 @@ type AISearchCardProps = {
   remainingQueries?: number;
 };
 
-const SUGGESTION_TAGS = [
-  '台灣屬性的美食',
-  '晚餐想吃日式',
-  '聖誕節吃什麼'
-];
+const SUGGESTION_TAGS = ['台灣屬性的美食', '晚餐想吃日式', '聖誕節吃什麼'];
 
 export const AISearchCard = ({ remainingQueries = 3 }: AISearchCardProps) => {
   const navigate = useNavigate();
@@ -22,7 +18,7 @@ export const AISearchCard = ({ remainingQueries = 3 }: AISearchCardProps) => {
     if (query.trim()) {
       params.append('q', query.trim());
     }
-    navigate(`/recipe/ai-query?${params.toString()}`);
+    navigate(`/planning/recipes/ai-query?${params.toString()}&from=recipes`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -54,7 +50,7 @@ export const AISearchCard = ({ remainingQueries = 3 }: AISearchCardProps) => {
             placeholder="詢問FuFood.AI"
             className="w-full py-4 pl-12 pr-14 bg-white border-2 border-orange-100 rounded-full shadow-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition-all"
           />
-          <button 
+          <button
             onClick={handleSearch}
             className="absolute right-2 top-2 bottom-2 aspect-square bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center justify-center transition-colors shadow-md shadow-orange-200"
           >
@@ -70,7 +66,7 @@ export const AISearchCard = ({ remainingQueries = 3 }: AISearchCardProps) => {
               onClick={() => {
                 const params = new URLSearchParams();
                 params.append('q', tag);
-                navigate(`/recipe/ai-query?${params.toString()}`);
+                navigate(`/planning/recipes/ai-query?${params.toString()}`);
               }}
               className="px-5 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-600 hover:border-orange-300 hover:text-orange-600 hover:bg-orange-50 transition-all shadow-sm font-medium"
             >

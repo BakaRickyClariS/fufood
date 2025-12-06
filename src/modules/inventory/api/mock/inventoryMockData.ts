@@ -38,7 +38,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockAlert: true,
     lowStockThreshold: 2,
     notes: '好市多購入，季節限定',
-    createdAt: '2026-01-01T00:00:00.000Z'
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
     id: 'veg-2',
@@ -52,7 +52,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockAlert: true,
     lowStockThreshold: 5,
     notes: '有機種植',
-    createdAt: '2026-01-01T00:00:00.000Z'
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
     id: 'veg-3',
@@ -65,7 +65,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-01-14',
     lowStockAlert: true,
     lowStockThreshold: 1,
-    createdAt: '2026-01-01T00:00:00.000Z'
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
     id: 'veg-4',
@@ -78,7 +78,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-02-03',
     lowStockAlert: true,
     lowStockThreshold: 3,
-    createdAt: '2025-12-28T00:00:00.000Z'
+    createdAt: '2025-12-28T00:00:00.000Z',
   },
   {
     id: 'veg-5',
@@ -91,7 +91,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-01-13',
     lowStockAlert: true,
     lowStockThreshold: 2,
-    createdAt: '2026-01-05T00:00:00.000Z'
+    createdAt: '2026-01-05T00:00:00.000Z',
   },
   {
     id: 'fruit-1',
@@ -104,7 +104,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-01-31',
     lowStockAlert: true,
     lowStockThreshold: 1,
-    createdAt: '2026-01-01T00:00:00.000Z'
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
     id: 'fruit-2',
@@ -117,7 +117,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-02-10',
     lowStockAlert: true,
     lowStockThreshold: 1,
-    createdAt: '2026-01-03T00:00:00.000Z'
+    createdAt: '2026-01-03T00:00:00.000Z',
   },
   {
     id: 'fruit-3',
@@ -130,7 +130,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-01-14',
     lowStockAlert: true,
     lowStockThreshold: 10,
-    createdAt: '2026-01-06T00:00:00.000Z'
+    createdAt: '2026-01-06T00:00:00.000Z',
   },
 
   // 冷凍調理類
@@ -145,7 +145,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-01-10',
     lowStockAlert: true,
     lowStockThreshold: 10,
-    createdAt: '2026-01-01T00:00:00.000Z'
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
     id: 'frozen-2',
@@ -158,7 +158,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-01-02',
     lowStockAlert: true,
     lowStockThreshold: 10,
-    createdAt: '2025-11-01T00:00:00.000Z'
+    createdAt: '2025-11-01T00:00:00.000Z',
   },
   {
     id: 'frozen-3',
@@ -171,7 +171,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-01-13',
     lowStockAlert: true,
     lowStockThreshold: 5,
-    createdAt: '2026-01-05T00:00:00.000Z'
+    createdAt: '2026-01-05T00:00:00.000Z',
   },
   {
     id: 'frozen-4',
@@ -184,7 +184,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-01-31',
     lowStockAlert: true,
     lowStockThreshold: 10,
-    createdAt: '2025-12-25T00:00:00.000Z'
+    createdAt: '2025-12-25T00:00:00.000Z',
   },
   {
     id: 'frozen-5',
@@ -197,7 +197,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-01-14',
     lowStockAlert: true,
     lowStockThreshold: 10,
-    createdAt: '2026-01-01T00:00:00.000Z'
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
     id: 'frozen-6',
@@ -210,7 +210,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-01-14',
     lowStockAlert: true,
     lowStockThreshold: 10,
-    createdAt: '2026-01-01T00:00:00.000Z'
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
 
   // 主食烘焙類
@@ -225,7 +225,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-01-03',
     lowStockAlert: true,
     lowStockThreshold: 1,
-    createdAt: '2026-01-01T00:00:00.000Z'
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
     id: 'staple-2',
@@ -238,7 +238,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-01-14',
     lowStockAlert: true,
     lowStockThreshold: 1,
-    createdAt: '2026-01-01T00:00:00.000Z'
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
     id: 'staple-3',
@@ -251,7 +251,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2027-01-05',
     lowStockAlert: true,
     lowStockThreshold: 1,
-    createdAt: '2026-01-01T00:00:00.000Z'
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
     id: 'staple-4',
@@ -264,7 +264,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-01-21',
     lowStockAlert: true,
     lowStockThreshold: 1,
-    createdAt: '2026-01-01T00:00:00.000Z'
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
     id: 'staple-5',
@@ -277,7 +277,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-01-13',
     lowStockAlert: true,
     lowStockThreshold: 4,
-    createdAt: '2026-01-05T00:00:00.000Z'
+    createdAt: '2026-01-05T00:00:00.000Z',
   },
 
   // 其他
@@ -292,7 +292,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-12-05',
     lowStockAlert: true,
     lowStockThreshold: 1,
-    createdAt: '2026-12-01T00:00:00.000Z'
+    createdAt: '2026-12-01T00:00:00.000Z',
   },
   {
     id: 'dessert-2',
@@ -305,7 +305,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-03-06',
     lowStockAlert: true,
     lowStockThreshold: 1,
-    createdAt: '2026-01-01T00:00:00.000Z'
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
     id: 'dessert-3',
@@ -318,7 +318,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-01-10',
     lowStockAlert: true,
     lowStockThreshold: 2,
-    createdAt: '2026-01-01T00:00:00.000Z'
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
     id: 'dessert-4',
@@ -331,7 +331,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-01-14',
     lowStockAlert: true,
     lowStockThreshold: 5,
-    createdAt: '2026-01-01T00:00:00.000Z'
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
     id: 'dessert-5',
@@ -344,7 +344,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     expiryDate: '2026-01-05',
     lowStockAlert: true,
     lowStockThreshold: 1,
-    createdAt: '2026-01-01T00:00:00.000Z'
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
 ];
 
@@ -356,7 +356,7 @@ export const MOCK_CATEGORIES: CategoryInfo[] = [
     imageUrl: cabbage,
     bgColor: 'bg-green-100',
     slogan: '新鮮蔬果',
-    description: ['每日五蔬果', '健康生活']
+    description: ['每日五蔬果', '健康生活'],
   },
   {
     id: 'cat-2',
@@ -365,7 +365,7 @@ export const MOCK_CATEGORIES: CategoryInfo[] = [
     imageUrl: frozenCabbage,
     bgColor: 'bg-blue-100',
     slogan: '方便快速',
-    description: ['快速上桌', '美味不打折']
+    description: ['快速上桌', '美味不打折'],
   },
   {
     id: 'cat-3',
@@ -374,7 +374,7 @@ export const MOCK_CATEGORIES: CategoryInfo[] = [
     imageUrl: freshToast,
     bgColor: 'bg-yellow-100',
     slogan: '能量來源',
-    description: ['飽足感', '美味烘焙']
+    description: ['飽足感', '美味烘焙'],
   },
   {
     id: 'cat-4',
@@ -383,6 +383,6 @@ export const MOCK_CATEGORIES: CategoryInfo[] = [
     imageUrl: lemonIce,
     bgColor: 'bg-gray-100',
     slogan: '各式點心',
-    description: ['甜蜜時光', '放鬆享受']
-  }
+    description: ['甜蜜時光', '放鬆享受'],
+  },
 ];

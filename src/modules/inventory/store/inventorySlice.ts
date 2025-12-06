@@ -18,11 +18,11 @@ const initialState: InventoryState = {
     status: 'all',
     searchQuery: '',
     sortBy: 'expiryDate',
-    sortOrder: 'asc'
+    sortOrder: 'asc',
   },
   stats: null,
   isLoading: false,
-  error: null
+  error: null,
 };
 
 const inventorySlice = createSlice({
@@ -36,13 +36,15 @@ const inventorySlice = createSlice({
       state.items.push(action.payload);
     },
     updateItem: (state, action: PayloadAction<FoodItem>) => {
-      const index = state.items.findIndex(item => item.id === action.payload.id);
+      const index = state.items.findIndex(
+        (item) => item.id === action.payload.id,
+      );
       if (index !== -1) {
         state.items[index] = action.payload;
       }
     },
     removeItem: (state, action: PayloadAction<string>) => {
-      state.items = state.items.filter(item => item.id !== action.payload);
+      state.items = state.items.filter((item) => item.id !== action.payload);
     },
     setSelectedItem: (state, action: PayloadAction<FoodItem | null>) => {
       state.selectedItem = action.payload;
@@ -58,8 +60,8 @@ const inventorySlice = createSlice({
     },
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
-    }
-  }
+    },
+  },
 });
 
 export const {
@@ -71,15 +73,21 @@ export const {
   setFilters,
   setStats,
   setLoading,
-  setError
+  setError,
 } = inventorySlice.actions;
 
 // Selectors
-export const selectAllItems = (state: { inventory: InventoryState }) => state.inventory.items;
-export const selectInventoryLoading = (state: { inventory: InventoryState }) => state.inventory.isLoading;
-export const selectInventoryError = (state: { inventory: InventoryState }) => state.inventory.error;
-export const selectInventoryFilters = (state: { inventory: InventoryState }) => state.inventory.filters;
-export const selectInventoryStats = (state: { inventory: InventoryState }) => state.inventory.stats;
-export const selectSelectedItem = (state: { inventory: InventoryState }) => state.inventory.selectedItem;
+export const selectAllItems = (state: { inventory: InventoryState }) =>
+  state.inventory.items;
+export const selectInventoryLoading = (state: { inventory: InventoryState }) =>
+  state.inventory.isLoading;
+export const selectInventoryError = (state: { inventory: InventoryState }) =>
+  state.inventory.error;
+export const selectInventoryFilters = (state: { inventory: InventoryState }) =>
+  state.inventory.filters;
+export const selectInventoryStats = (state: { inventory: InventoryState }) =>
+  state.inventory.stats;
+export const selectSelectedItem = (state: { inventory: InventoryState }) =>
+  state.inventory.selectedItem;
 
 export default inventorySlice.reducer;

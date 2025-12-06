@@ -16,7 +16,7 @@ export const useGroups = () => {
 
   const fetchGroups = async () => {
     setIsLoading(true);
-        try {
+    try {
       const data = await groupsApi.getAll();
       setGroups(data);
     } catch (err) {

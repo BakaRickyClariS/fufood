@@ -8,4 +8,9 @@ export type FilterOptions = {
   sortOrder?: 'asc' | 'desc';
 };
 
-export type Tab = 'all' | 'expired' | 'expiring-soon' | 'low-stock' | 'common-items';
+export type Tab =
+  | 'all'
+  | 'expired'
+  | 'expiring-soon'
+  | 'low-stock'
+  | 'common-items';

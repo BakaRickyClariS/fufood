@@ -1,5 +1,12 @@
 import React from 'react';
-import { Check, Tag, Box, FileText, Camera, Image as ImageIcon } from 'lucide-react';
+import {
+  Check,
+  Tag,
+  Box,
+  FileText,
+  Camera,
+  Image as ImageIcon,
+} from 'lucide-react';
 import type { Control, FieldErrors, UseFormRegister } from 'react-hook-form';
 import type { FoodItemInput } from '../../types';
 import FormInput from './FormInput';
@@ -41,15 +48,23 @@ const ScanResultEditForm: React.FC<ScanResultEditFormProps> = ({
            Let's place them absolutely relative to the image container or the card.
         */}
       </div>
-      
+
       {/* Camera/Gallery Actions - Positioned relative to the image */}
       <div className="absolute -right-12 top-0 flex flex-col gap-2">
-         <button type="button" onClick={onRetake} className="w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-slate-600 hover:text-red-500">
-            <Camera size={16} />
-         </button>
-         <button type="button" onClick={onPickImage} className="w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-slate-600 hover:text-red-500">
-            <ImageIcon size={16} />
-         </button>
+        <button
+          type="button"
+          onClick={onRetake}
+          className="w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-slate-600 hover:text-red-500"
+        >
+          <Camera size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={onPickImage}
+          className="w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-slate-600 hover:text-red-500"
+        >
+          <ImageIcon size={16} />
+        </button>
       </div>
 
       {/* Success Badge */}

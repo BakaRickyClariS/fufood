@@ -1,6 +1,11 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-export type CameraStatus = 'idle' | 'capturing' | 'uploading' | 'analyzing' | 'done';
+export type CameraStatus =
+  | 'idle'
+  | 'capturing'
+  | 'uploading'
+  | 'analyzing'
+  | 'done';
 
 export type CameraState = {
   isCapturing: boolean;
@@ -39,11 +44,7 @@ const cameraSlice = createSlice({
   },
 });
 
-export const { 
-  setCapturedImage, 
-  retake, 
-  setUploadStatus,
-  resetCamera 
-} = cameraSlice.actions;
+export const { setCapturedImage, retake, setUploadStatus, resetCamera } =
+  cameraSlice.actions;
 
 export default cameraSlice.reducer;

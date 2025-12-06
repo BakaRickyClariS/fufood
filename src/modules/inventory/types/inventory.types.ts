@@ -1,4 +1,4 @@
-export type FoodCategory = 
+export type FoodCategory =
   | '蔬果類'
   | '冷凍調理類'
   | '主食烘焙類'
@@ -7,11 +7,28 @@ export type FoodCategory =
   | '肉品類'
   | '其他';
 
-export type FoodUnit = 
-  | '個' | '包' | '瓶' | '罐' | '盒' | '顆' | '根' | '把' | '條' | '桶' | '片'
-  | 'kg' | 'g' | 'L' | 'ml';
+export type FoodUnit =
+  | '個'
+  | '包'
+  | '瓶'
+  | '罐'
+  | '盒'
+  | '顆'
+  | '根'
+  | '把'
+  | '條'
+  | '桶'
+  | '片'
+  | 'kg'
+  | 'g'
+  | 'L'
+  | 'ml';
 
-export type InventoryStatus = 'normal' | 'low-stock' | 'expired' | 'expiring-soon';
+export type InventoryStatus =
+  | 'normal'
+  | 'low-stock'
+  | 'expired'
+  | 'expiring-soon';
 
 export type FoodItem = {
   id: string;
@@ -20,12 +37,12 @@ export type FoodItem = {
   quantity: number;
   unit: FoodUnit;
   imageUrl?: string;
-  purchaseDate: string;     // YYYY-MM-DD
-  expiryDate: string;       // YYYY-MM-DD
+  purchaseDate: string; // YYYY-MM-DD
+  expiryDate: string; // YYYY-MM-DD
   lowStockAlert: boolean;
   lowStockThreshold: number;
   notes?: string;
-  groupId?: string;         // 所屬群組
+  groupId?: string; // 所屬群組
   createdAt: string;
   updatedAt?: string;
 };
@@ -43,7 +60,7 @@ export type CategoryInfo = {
 export type InventoryStats = {
   totalItems: number;
   expiredCount: number;
-  expiringSoonCount: number;    // 3天內過期
+  expiringSoonCount: number; // 3天內過期
   lowStockCount: number;
   byCategory: Record<FoodCategory, number>;
 };

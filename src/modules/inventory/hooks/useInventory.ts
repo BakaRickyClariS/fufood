@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { inventoryApi } from '../api';
-import type { FoodItem, AddFoodItemRequest, UpdateFoodItemRequest } from '../types';
+import type {
+  FoodItem,
+  AddFoodItemRequest,
+  UpdateFoodItemRequest,
+} from '../types';
 
 export const useInventory = (groupId?: string) => {
   const [items, setItems] = useState<FoodItem[]>([]);
@@ -14,7 +18,9 @@ export const useInventory = (groupId?: string) => {
       const response = await inventoryApi.getItems({ groupId });
       setItems(response.items);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch inventory'));
+      setError(
+        err instanceof Error ? err : new Error('Failed to fetch inventory'),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -50,7 +56,7 @@ export const useInventory = (groupId?: string) => {
     setIsLoading(true);
     try {
       await inventoryApi.deleteItem(id);
-      setItems(prev => prev.filter(item => item.id !== id));
+      setItems((prev) => prev.filter((item) => item.id !== id));
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to delete item'));
       throw err;
@@ -64,11 +70,13 @@ export const useInventory = (groupId?: string) => {
     try {
       await inventoryApi.batchOperation({
         itemIds: ids,
-        operation: 'delete'
+        operation: 'delete',
       });
       await fetchItems(); // Refresh list
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to batch delete items'));
+      setError(
+        err instanceof Error ? err : new Error('Failed to batch delete items'),
+      );
       throw err;
     } finally {
       setIsLoading(false);
@@ -87,6 +95,6 @@ export const useInventory = (groupId?: string) => {
     updateItem,
     deleteItem,
     batchDelete,
-    refetch: fetchItems
+    refetch: fetchItems,
   };
 };

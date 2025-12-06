@@ -1,5 +1,10 @@
 import type { ScanResult } from '../../types/scanResult';
-import type { FoodItemInput, FoodItemResponse, FoodItemFilters, FoodItem } from '../../types/foodItem';
+import type {
+  FoodItemInput,
+  FoodItemResponse,
+  FoodItemFilters,
+  FoodItem,
+} from '../../types/foodItem';
 
 export type FoodScanApi = {
   /**
@@ -15,7 +20,10 @@ export type FoodScanApi = {
   /**
    * 更新食材項目
    */
-  updateFoodItem: (id: string, data: Partial<FoodItemInput>) => Promise<FoodItemResponse>;
+  updateFoodItem: (
+    id: string,
+    data: Partial<FoodItemInput>,
+  ) => Promise<FoodItemResponse>;
 
   /**
    * 刪除食材項目

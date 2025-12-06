@@ -7,7 +7,7 @@ const SUGGESTION_TAGS = [
   '冰箱剩餘食材食譜',
   '低卡路里晚餐',
   '快速早餐建議',
-  '適合小孩的便當'
+  '適合小孩的便當',
 ];
 
 type AIQueryPageProps = {
@@ -33,7 +33,7 @@ const AIQueryPage = ({ remainingQueries = 3 }: AIQueryPageProps) => {
       gsap.fromTo(
         containerRef.current,
         { x: '100%' },
-        { x: '0%', duration: 0.4, ease: 'power3.out' }
+        { x: '0%', duration: 0.4, ease: 'power3.out' },
       );
     }
   }, [searchParams]);
@@ -46,8 +46,8 @@ const AIQueryPage = ({ remainingQueries = 3 }: AIQueryPageProps) => {
         duration: 0.3,
         ease: 'power3.in',
         onComplete: () => {
-          navigate(-1);
-        }
+          navigate('/planning?tab=recipes');
+        },
       });
     }
   };
@@ -60,7 +60,7 @@ const AIQueryPage = ({ remainingQueries = 3 }: AIQueryPageProps) => {
 
     try {
       // TODO: Replace with actual API call to /api/v1/ai/recipe
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
       setResult(`這是針對「${text}」的食譜建議...\n\n[API 整合後顯示真實內容]`);
     } catch (error) {
       console.error('AI Query failed:', error);
@@ -71,7 +71,7 @@ const AIQueryPage = ({ remainingQueries = 3 }: AIQueryPageProps) => {
   };
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="fixed inset-0 bg-white z-[100] flex flex-col"
     >
@@ -98,10 +98,10 @@ const AIQueryPage = ({ remainingQueries = 3 }: AIQueryPageProps) => {
             <div className="w-20 h-20 bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 rounded-3xl mx-auto flex items-center justify-center shadow-xl shadow-orange-200/50 mb-6">
               <Sparkles className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">詢問 FuFood.ai</h1>
-            <p className="text-gray-500 text-sm mb-1">
-              讓 AI 為您推薦美味食譜
-            </p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              詢問 FuFood.ai
+            </h1>
+            <p className="text-gray-500 text-sm mb-1">讓 AI 為您推薦美味食譜</p>
             <p className="text-orange-500 text-sm font-bold">
               今天還可以詢問 {remainingQueries} 次
             </p>
@@ -139,7 +139,9 @@ const AIQueryPage = ({ remainingQueries = 3 }: AIQueryPageProps) => {
         {/* Suggestions */}
         {!result && !isLoading && (
           <div className="px-4 space-y-3">
-            <p className="text-sm text-gray-500 font-medium mb-4">試試這些問題</p>
+            <p className="text-sm text-gray-500 font-medium mb-4">
+              試試這些問題
+            </p>
             {SUGGESTION_TAGS.map((tag) => (
               <button
                 key={tag}

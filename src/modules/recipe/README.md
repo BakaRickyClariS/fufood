@@ -9,6 +9,7 @@
 - [Hooks 詳解](#hooks-詳解)
 - [元件結構](#元件結構)
 - [工具函式](#工具函式)
+- [路由設定](#路由設定)
 - [環境變數設定](#環境變數設定)
 
 ---
@@ -17,6 +18,8 @@
 
 本模組負責管理**食譜瀏覽、收藏、食材消耗與烹煮計劃**等功能。整合庫存模組實現食材扣除，並支援將缺料項目加入採買清單。
 
+> **路由變更**: 本模組已遷移至 `/planning/recipes/*` 路徑下，隸屬於 Planning 模組。
+
 ### 核心功能
 1.  **食譜瀏覽**: 支援關鍵字搜尋與 12 種分類篩選
 2.  **食譜詳情**: 顯示完整食材清單與烹煮步驟
@@ -24,7 +27,8 @@
 4.  **食材消耗**: 烹煮完成後，可選擇扣除庫存食材
 5.  **採買整合**: 缺料項目可一鍵加入採買清單
 6.  **烹煮計劃**: 安排未來的烹煮行程 (Meal Plan)
-7.  **Mock 模式**: 支援離線開發與測試
+7.  **AI 智慧搜尋**: 透過 AI 推薦食譜
+8.  **Mock 模式**: 支援離線開發與測試
 
 ---
 
@@ -38,8 +42,7 @@ recipe/
 │   │   ├── RecipeDetailView.tsx # 食譜詳情
 │   │   └── FavoriteRecipes.tsx  # 收藏頁面
 │   ├── layout/              # 版面配置
-│   │   ├── RecipeHeader.tsx     # 頂部導航
-│   │   └── SearchBar.tsx        # 搜尋列
+│   │   └── RecipeHeader.tsx     # 頂部導航
 │   └── ui/                  # 基礎元件
 │       ├── AISearchCard.tsx     # AI 搜尋卡片
 │       ├── HeroCard.tsx         # 主視覺卡片
@@ -67,12 +70,10 @@ recipe/
 │   ├── ingredient.ts        # 食材消耗型別
 │   └── mealPlan.ts          # 烹煮計劃型別
 ├── utils/                    # 工具函式
-│   ├── consumptionCalculator.ts # 消耗計算
-│   ├── parseQuantity.ts         # 數量解析
-│   └── recipeFormatter.ts       # 格式化工具
+│   ├── parseQuantity.ts     # 數量解析
+│   └── ...
 ├── constants/                # 常數定義
-│   ├── categories.ts        # 分類常數
-│   └── config.ts            # 模組設定
+│   └── categories.ts        # 分類常數與圖片
 └── README.md
 ```
 
@@ -99,19 +100,6 @@ export type Recipe = {
 };
 ```
 
-### RecipeListItem (食譜列表項目)
-```typescript
-export type RecipeListItem = {
-  id: string;
-  name: string;
-  category: RecipeCategory;
-  imageUrl: string;
-  servings: number;
-  cookTime: number;
-  isFavorite?: boolean;
-};
-```
-
 ### RecipeCategory (食譜分類)
 ```typescript
 export type RecipeCategory = 
@@ -120,46 +108,24 @@ export type RecipeCategory =
   | '越南料理' | '健康輕食' | '甜點' | '飲品';
 ```
 
-### RecipeIngredient (食譜食材)
-```typescript
-export type RecipeIngredient = {
-  name: string;              // 食材名稱
-  quantity: string;          // 數量（如 "3-4條"）
-  unit?: string;             // 單位
-  category: '準備材料' | '調味料';
-};
-```
-
-### ConsumptionConfirmation (消耗確認)
-```typescript
-export type ConsumptionConfirmation = {
-  recipeId: string;
-  recipeName: string;
-  items: ConsumptionItem[];
-  addToShoppingList: boolean;  // 是否加入採買清單
-  timestamp: string;
-};
-```
-
-### MealPlan (烹煮計劃)
-```typescript
-export type MealPlan = {
-  id: string;
-  recipeId: string;
-  recipeName: string;
-  scheduledDate: string;     // 預計烹煮日期
-  servings: number;
-  status: 'planned' | 'cooking' | 'completed';
-  createdAt: string;
-};
-```
-
 ---
 
 ## API 規格
 
-### RecipeApi 介面
+根據 [API_REFERENCE_V2.md](../API_REFERENCE_V2.md) 定義：
 
+| # | Method | API Path | 功能說明 | 狀態 |
+|---|--------|----------|---------|------|
+| 40 | GET | `/api/v1/recipes` | 取得所有食譜 | 🆕 |
+| 41 | GET | `/api/v1/recipes/{id}` | 取得單一食譜詳情 | 🆕 |
+| 42 | POST | `/api/v1/recipes/{id}/favorite` | 收藏/取消收藏食譜 | 🆕 |
+| 43 | GET | `/api/v1/recipes/favorites` | 取得收藏食譜清單 | 🆕 |
+| 44 | POST | `/api/v1/recipes/{id}/cook` | 食譜完成 → 扣除庫存食材 | 🆕 |
+| 45 | POST | `/api/v1/recipes/plan` | 加入待烹煮計劃 (MealPlan) | 🆕 |
+| 46 | GET | `/api/v1/recipes/plan` | 取得目前規劃的食譜計畫 | 🆕 |
+| 47 | DELETE | `/api/v1/recipes/plan/{planId}` | 刪除待烹煮計畫 | 🆕 |
+
+### RecipeApi 介面
 ```typescript
 export interface RecipeApi {
   getRecipes(category?: RecipeCategory): Promise<RecipeListItem[]>;
@@ -175,98 +141,9 @@ export interface RecipeApi {
 
 ---
 
-### 1. **getRecipes** - 取得食譜列表
-
-#### 端點
-```
-GET /api/v1/recipes
-```
-
-#### 請求參數 (Query Params)
-- `category`: 分類篩選 (可選)
-
-#### 回應格式
-```typescript
-RecipeListItem[]
-```
-
----
-
-### 2. **getRecipeById** - 取得單一食譜詳情
-
-#### 端點
-```
-GET /api/v1/recipes/{id}
-```
-
-#### 回應格式
-```typescript
-Recipe  // 含完整食材清單與烹煮步驟
-```
-
----
-
-### 3. **toggleFavorite** - 收藏/取消收藏
-
-#### 端點
-```
-POST /api/v1/recipes/{id}/favorite
-```
-
-#### 回應格式
-```typescript
-{ isFavorite: boolean }
-```
-
----
-
-### 4. **getFavorites** - 取得收藏列表
-
-#### 端點
-```
-GET /api/v1/recipes/favorites
-```
-
-#### 回應格式
-```typescript
-RecipeListItem[]
-```
-
----
-
-### 5. **confirmCook** - 烹煮完成 (扣除庫存)
-
-#### 端點
-```
-POST /api/v1/recipes/{id}/cook
-```
-
-#### 請求格式
-```typescript
-ConsumptionConfirmation
-```
-
-#### 回應格式
-```typescript
-{ success: boolean; message: string }
-```
-
----
-
-### 6-8. **MealPlan** 烹煮計劃 API
-
-| 方法 | 端點 | 說明 |
-|------|------|------|
-| `addMealPlan` | `POST /api/v1/recipes/plan` | 加入烹煮計劃 |
-| `getMealPlans` | `GET /api/v1/recipes/plan` | 取得計劃列表 |
-| `deleteMealPlan` | `DELETE /api/v1/recipes/plan/{planId}` | 刪除計劃 |
-
----
-
 ## Hooks 詳解
 
 ### `useRecipes.ts`
-
 ```typescript
 const useRecipes = (category?: RecipeCategory) => {
   return {
@@ -278,15 +155,7 @@ const useRecipes = (category?: RecipeCategory) => {
 };
 ```
 
-**功能**:
-- 根據分類查詢食譜列表
-- 自動處理載入狀態與錯誤
-- 支援手動重新載入
-
----
-
 ### `useFavorite.ts`
-
 ```typescript
 const useFavorite = () => {
   return {
@@ -296,14 +165,7 @@ const useFavorite = () => {
 };
 ```
 
-**功能**:
-- 切換食譜收藏狀態
-- 回傳最新的收藏狀態
-
----
-
 ### `useConsumption.ts`
-
 ```typescript
 const useConsumption = () => {
   return {
@@ -314,88 +176,37 @@ const useConsumption = () => {
 };
 ```
 
-**功能**:
-- 提交烹煮完成確認
-- 自動處理庫存扣除與採買清單整合
-
----
-
-### `useMealPlan.ts`
-
-```typescript
-const useMealPlan = () => {
-  return {
-    mealPlans: MealPlan[];
-    isLoading: boolean;
-    error: string | null;
-    addMealPlan: (data: MealPlanInput) => Promise<void>;
-    deleteMealPlan: (planId: string) => Promise<void>;
-    refetch: () => Promise<void>;
-  };
-};
-```
-
-**功能**:
-- 管理烹煮計劃的 CRUD 操作
-- 支援 **樂觀更新 (Optimistic Update)**
-- 自動回滾失敗操作
-
 ---
 
 ## 元件結構
 
-### Features 元件 (業務功能)
-| 元件 | 說明 |
-|------|------|
-| `RecipeList.tsx` | 食譜列表頁面，支援分類篩選 |
-| `RecipeDetailView.tsx` | 食譜詳情頁，顯示食材與步驟 |
-| `FavoriteRecipes.tsx` | 收藏食譜列表 |
-
-### Layout 元件 (版面配置)
-| 元件 | 說明 |
-|------|------|
-| `RecipeHeader.tsx` | 頂部導航列 |
-| `SearchBar.tsx` | 搜尋輸入框 |
-
-### UI 元件 (可重用)
-| 元件 | 說明 |
-|------|------|
-| `AISearchCard.tsx` | AI 智慧搜尋卡片 |
-| `HeroCard.tsx` | 主視覺大圖卡片 |
-| `RecipeSeriesTag.tsx` | 系列標籤 (如 "慢火煮系列") |
-| `IngredientList.tsx` | 食材清單展示 |
-| `CookingSteps.tsx` | 烹煮步驟展示 |
-| `ConsumptionModal.tsx` | 消耗確認彈窗 |
-| `ConsumptionEditor.tsx` | 消耗數量編輯器 |
+| 分類 | 元件 | 說明 |
+|------|------|------|
+| Features | `RecipeList.tsx` | 食譜列表頁面，支援分類篩選 |
+| Features | `RecipeDetailView.tsx` | 食譜詳情頁，顯示食材與步驟 |
+| Features | `FavoriteRecipes.tsx` | 收藏食譜列表 |
+| Layout | `RecipeHeader.tsx` | 頂部導航列，含返回與收藏按鈕 |
+| UI | `AISearchCard.tsx` | AI 智慧搜尋卡片 |
+| UI | `IngredientList.tsx` | 食材清單展示 |
+| UI | `CookingSteps.tsx` | 烹煮步驟展示 |
+| UI | `ConsumptionModal.tsx` | 消耗確認彈窗 |
 
 ---
 
-## 工具函式
+## 路由設定
 
-### `parseQuantity.ts`
-解析食譜中的數量字串（如 "3-4條"）為數值格式。
+本模組路由已整合至 Planning 模組：
 
-### `consumptionCalculator.ts`
-計算食材消耗數量，用於庫存扣除。
-
-### `recipeFormatter.ts`
-食譜資料格式化工具，用於顯示處理。
+| 路徑 | 元件 | 說明 |
+|------|------|------|
+| `/planning?tab=recipes` | PlanningHome | 食譜推薦 Tab |
+| `/planning/recipes/:id` | RecipeDetailView | 食譜詳情頁 |
+| `/planning/recipes/favorites` | FavoriteRecipes | 收藏食譜 |
+| `/planning/recipes/ai-query` | AIQueryPage | AI 智慧查詢 |
 
 ---
 
 ## 環境變數設定
-
-### 必要環境變數
-
-```env
-# Mock 模式 (開發用)
-VITE_USE_MOCK_API=true
-
-# API 基礎路徑
-VITE_API_BASE_URL=http://localhost:3000
-```
-
-### 環境變數說明
 
 | 變數名稱 | 說明 | 範例 |
 |---------|------|------|
@@ -406,12 +217,4 @@ VITE_API_BASE_URL=http://localhost:3000
 
 ## Mock 資料
 
-Mock 資料位於 `services/mock/mockData.ts`，包含：
-- 完整食譜範例 (`MOCK_RECIPES`)
-- 食譜列表項目 (`MOCK_RECIPE_LIST`)
-
-Mock API 使用 `localStorage` 模擬資料持久化，包括：
-- `recipe_favorites`: 收藏食譜 ID 列表
-- `recipe_consumptions`: 消耗記錄
-- `meal_plans`: 烹煮計劃列表
-- `shopping_list`: 採買清單
+Mock 資料位於 `services/mock/mockData.ts`，使用 `localStorage` 模擬資料持久化。

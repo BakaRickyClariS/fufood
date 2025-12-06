@@ -65,7 +65,9 @@ export const authApi = {
   /**
    * 刷新 Token
    */
-  refreshToken: async (data: RefreshTokenRequest): Promise<RefreshTokenResponse> => {
+  refreshToken: async (
+    data: RefreshTokenRequest,
+  ): Promise<RefreshTokenResponse> => {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return {
@@ -127,7 +129,8 @@ export const authApi = {
       await new Promise((resolve) => setTimeout(resolve, 800));
       return { user: MOCK_USERS[0], token: MOCK_TOKEN };
     }
-    return apiClient.get<LoginResponse>('/auth/line/callback', { code: data.code });
+    return apiClient.get<LoginResponse>('/auth/line/callback', {
+      code: data.code,
+    });
   },
 };
-

@@ -72,12 +72,13 @@ export const useImageUpload = (props?: UseImageUploadProps) => {
         try {
           const analyzeResult = await foodScanApi.recognizeImage(optimizedUrl);
           return analyzeResult;
-        } catch (error) {
-          console.error('API Analyze Error:', error);
-          const errorMessage = error instanceof Error 
-              ? error.message 
+        } catch (analyzeError) {
+          console.error('API Analyze Error:', analyzeError);
+          const errorMessage =
+            analyzeError instanceof Error
+              ? analyzeError.message
               : '圖片分析失敗，請稍後再試';
-          
+
           setError(errorMessage);
           // Re-throw error so the caller (CameraCapture) can handle it (e.g. show Toast)
           throw error;
@@ -99,6 +100,6 @@ export const useImageUpload = (props?: UseImageUploadProps) => {
     isUploading,
     isAnalyzing,
     uploadImage,
-    error
+    error,
   };
 };

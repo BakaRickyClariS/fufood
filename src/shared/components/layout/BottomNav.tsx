@@ -22,10 +22,10 @@ export type NavItem = {
 const defaultNavItems: NavItem[] = [
   { id: 'home', label: '首頁', icon: <Home className="w-5 h-5" />, href: '/' },
   {
-    id: 'recipe',
+    id: 'planning',
     label: '規劃',
     icon: <Grid2x2Plus className="w-5 h-5" />,
-    href: '/recipe',
+    href: '/planning',
   },
   {
     id: 'foodinput',
