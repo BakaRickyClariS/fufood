@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { ChevronLeft, Image as ImageIcon } from 'lucide-react';
 import { usePosts } from '@/modules/planning/hooks/usePosts';
 import { ShoppingItemEditor } from '../ui/ShoppingItemEditor';
@@ -29,7 +30,7 @@ export const CreatePostFeature = ({ listId }: CreatePostFeatureProps) => {
   const handleSubmit = async () => {
     if (!listId) return;
     if (content.length > 40) {
-      alert('說明文字不能超過 40 字');
+      toast.warning('說明文字不能超過 40 字');
       return;
     }
     
@@ -44,7 +45,7 @@ export const CreatePostFeature = ({ listId }: CreatePostFeatureProps) => {
       navigate(-1);
     } catch (err) {
       console.error(err);
-      alert('發布失敗');
+      toast.error('發布失敗');
     } finally {
       setIsSubmitting(false);
     }

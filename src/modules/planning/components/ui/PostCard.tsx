@@ -1,21 +1,13 @@
 import type { SharedListPost } from '@/modules/planning/types';
 import { MessageCircle, Heart, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
 
 type PostCardProps = {
   post: SharedListPost;
+  onToggleLike: (postId: string) => Promise<void> | void;
 };
 
-export const PostCard = ({ post }: PostCardProps) => {
-  const [isLiked, setIsLiked] = useState(post.isLiked);
-  const [likesCount, setLikesCount] = useState(post.likesCount);
-
-  const toggleLike = () => {
-    setIsLiked(!isLiked);
-    setLikesCount(prev => isLiked ? prev - 1 : prev + 1);
-  };
-
+export const PostCard = ({ post, onToggleLike }: PostCardProps) => {
   const getTimeAgo = (dateString: string) => {
     // 簡單實作，實際應使用 date-fns
     const diff = Date.now() - new Date(dateString).getTime();
@@ -83,9 +75,9 @@ export const PostCard = ({ post }: PostCardProps) => {
              <span className="text-sm font-medium">{post.commentsCount}</span>
            </button>
             {/* 按讚 */}
-           <button onClick={toggleLike} className="flex items-center gap-1">
-             <Heart className={cn("w-5 h-5 transition-colors", isLiked ? "fill-red-400 text-red-400" : "text-neutral-500")} />
-             <span className="text-sm font-medium text-neutral-500">{likesCount}</span>
+           <button onClick={() => onToggleLike(post.id)} className="flex items-center gap-1">
+             <Heart className={cn("w-5 h-5 transition-colors", post.isLiked ? "fill-red-400 text-red-400" : "text-neutral-500")} />
+             <span className="text-sm font-medium text-neutral-500">{post.likesCount}</span>
            </button>
          </div>
          {/* 右側加入購物清單 (模擬) */}

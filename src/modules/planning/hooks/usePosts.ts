@@ -36,6 +36,45 @@ export const usePosts = (listId: string | undefined) => {
     }
   };
 
+  const toggleLike = useCallback(
+    async (postId: string) => {
+      if (!listId) return;
+
+      const currentPost = posts.find((post) => post.id === postId);
+      if (!currentPost) return;
+
+      const optimisticPost: SharedListPost = {
+        ...currentPost,
+        isLiked: !currentPost.isLiked,
+        likesCount: Math.max(
+          0,
+          currentPost.likesCount + (currentPost.isLiked ? -1 : 1),
+        ),
+      };
+
+      setPosts((prev) =>
+        prev.map((post) => (post.id === postId ? optimisticPost : post)),
+      );
+
+      try {
+        const updatedPost = await sharedListApi.togglePostLike(postId, listId);
+        setPosts((prev) =>
+          prev.map((post) => (post.id === postId ? updatedPost : post)),
+        );
+        return updatedPost;
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : 'Failed to toggle like status';
+        setError(msg);
+        setPosts((prev) =>
+          prev.map((post) => (post.id === postId ? currentPost : post)),
+        );
+        throw new Error(msg);
+      }
+    },
+    [listId, posts],
+  );
+
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
@@ -46,5 +85,6 @@ export const usePosts = (listId: string | undefined) => {
     error,
     refetch: fetchPosts,
     createPost,
+    toggleLike,
   };
 };

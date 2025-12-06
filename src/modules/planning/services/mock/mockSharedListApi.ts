@@ -144,6 +144,31 @@ export class MockSharedListApi {
     return newPost;
   }
 
+  async togglePostLike(
+    postId: string,
+    listId: string,
+  ): Promise<SharedListPost> {
+    await delay(400);
+    const allPosts = getPosts();
+    const listPosts = allPosts[listId] || [];
+    const targetIndex = listPosts.findIndex((post) => post.id === postId);
+
+    if (targetIndex === -1) {
+      throw new Error('Post not found');
+    }
+
+    const target = listPosts[targetIndex];
+    const isLiked = !target.isLiked;
+    const likesCount = Math.max(0, target.likesCount + (isLiked ? 1 : -1));
+    const updatedPost: SharedListPost = { ...target, isLiked, likesCount };
+
+    listPosts[targetIndex] = updatedPost;
+    allPosts[listId] = listPosts;
+    savePosts(allPosts);
+
+    return updatedPost;
+  }
+
   async testReset() {
     localStorage.removeItem('mock_shared_lists');
     localStorage.removeItem('mock_posts');

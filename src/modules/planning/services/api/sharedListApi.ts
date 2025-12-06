@@ -16,6 +16,7 @@ export interface SharedListApi {
   createSharedList(input: CreateSharedListInput): Promise<SharedList>;
   getPosts(listId: string): Promise<SharedListPost[]>;
   createPost(input: CreatePostInput): Promise<SharedListPost>;
+  togglePostLike(postId: string, listId: string): Promise<SharedListPost>;
 }
 
 // 真實 API 實作
@@ -62,6 +63,17 @@ export class RealSharedListApi implements SharedListApi {
     const response = await apiClient.post<SharedListPost>(
       `/api/v1/shopping-lists/${input.listId}/posts`,
       input,
+    );
+    return response.data;
+  }
+
+  async togglePostLike(
+    postId: string,
+    listId: string,
+  ): Promise<SharedListPost> {
+    const response = await apiClient.post<SharedListPost>(
+      `/api/v1/posts/${postId}/like`,
+      { listId },
     );
     return response.data;
   }

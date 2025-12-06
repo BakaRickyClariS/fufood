@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { ChevronLeft, Camera, Bell } from 'lucide-react';
 import { useSharedLists } from '@/modules/planning/hooks/useSharedLists';
 import { CoverImagePicker } from '@/modules/planning/components/ui/CoverImagePicker';
@@ -35,7 +36,7 @@ const CreateSharedList = () => {
       navigate('/planning');
     } catch (error) {
       console.error(error);
-      alert('建立失敗，請稍後再試');
+      toast.error('建立失敗，請稍後再試');
     } finally {
       setIsSubmitting(false);
     }
