@@ -8,17 +8,34 @@ import type {
   CreatePostInput,
 } from '@/modules/planning/types/post';
 import { MOCK_SHARED_LISTS, MOCK_POSTS } from './mockSharedListData';
+import { mockRequestHandlers } from '@/utils/debug/mockRequestHandlers';
 
 // 模擬網路延遲
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// 記憶體快取 (當 memory_only 或 localStorage 無法使用時作為備援)
+let memoryLists: SharedList[] | null = null;
+let memoryPosts: Record<string, SharedListPost[]> | null = null;
+
 // 從 LocalStorage 載入或初始化
 const getLists = (): SharedList[] => {
+  // 檢查是否需要重置
+  if (mockRequestHandlers.shouldResetData()) {
+    mockRequestHandlers.resetData(['mock_shared_lists']);
+    memoryLists = null;
+  }
+
+  // 1. 優先嘗試讀取記憶體快取 (Memory Mode 需要)
+  if (mockRequestHandlers.shouldUseMemoryOnly() && memoryLists) {
+    return memoryLists;
+  }
+
   try {
-    const stored = localStorage.getItem('mock_shared_lists');
+    const stored = mockRequestHandlers.getItem('mock_shared_lists');
     if (stored) {
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed) && parsed.length > 0) {
+        memoryLists = parsed; // Sync to memory
         return parsed;
       }
     }
@@ -27,16 +44,28 @@ const getLists = (): SharedList[] => {
   }
 
   // 若無資料或解析失敗，寫入預設資料
-  localStorage.setItem('mock_shared_lists', JSON.stringify(MOCK_SHARED_LISTS));
-  return MOCK_SHARED_LISTS;
+  const defaults = [...MOCK_SHARED_LISTS]; // Clone to avoid mutation issues
+  mockRequestHandlers.setItem('mock_shared_lists', JSON.stringify(defaults));
+  memoryLists = defaults;
+  return defaults;
 };
 
 const getPosts = (): Record<string, SharedListPost[]> => {
+  if (mockRequestHandlers.shouldResetData()) {
+    mockRequestHandlers.resetData(['mock_posts']);
+    memoryPosts = null;
+  }
+
+  if (mockRequestHandlers.shouldUseMemoryOnly() && memoryPosts) {
+    return memoryPosts;
+  }
+
   try {
-    const stored = localStorage.getItem('mock_posts');
+    const stored = mockRequestHandlers.getItem('mock_posts');
     if (stored) {
       const parsed = JSON.parse(stored);
       if (typeof parsed === 'object' && parsed !== null) {
+        memoryPosts = parsed;
         return parsed;
       }
     }
@@ -44,16 +73,20 @@ const getPosts = (): Record<string, SharedListPost[]> => {
     console.warn('Failed to parse mock posts from localStorage, resetting.', e);
   }
 
-  localStorage.setItem('mock_posts', JSON.stringify(MOCK_POSTS));
-  return MOCK_POSTS;
+  const defaults = JSON.parse(JSON.stringify(MOCK_POSTS));
+  mockRequestHandlers.setItem('mock_posts', JSON.stringify(defaults));
+  memoryPosts = defaults;
+  return defaults;
 };
 
 const saveLists = (lists: SharedList[]) => {
-  localStorage.setItem('mock_shared_lists', JSON.stringify(lists));
+  memoryLists = lists;
+  mockRequestHandlers.setItem('mock_shared_lists', JSON.stringify(lists));
 };
 
 const savePosts = (posts: Record<string, SharedListPost[]>) => {
-  localStorage.setItem('mock_posts', JSON.stringify(posts));
+  memoryPosts = posts;
+  mockRequestHandlers.setItem('mock_posts', JSON.stringify(posts));
 };
 
 export class MockSharedListApi {

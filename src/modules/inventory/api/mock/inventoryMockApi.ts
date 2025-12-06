@@ -18,24 +18,46 @@ import type {
 import { MOCK_INVENTORY } from './inventoryMockData';
 import { categories } from '../../constants/categories'; // 暫時引用舊的 constants，之後會遷移
 
+import { mockRequestHandlers } from '@/utils/debug/mockRequestHandlers';
+
 export const createMockInventoryApi = (): InventoryApi => {
   const delay = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms));
 
-  // 使用 localStorage 模擬持久化
+  // Memory cache
+  let memoryItems: FoodItem[] | null = null;
+  let memorySettings: InventorySettings | null = null;
+
+  // 使用 mockRequestHandlers 模擬持久化
   const getStoredItems = (): FoodItem[] => {
-    const stored = localStorage.getItem('mock_inventory_items');
-    return stored ? JSON.parse(stored) : MOCK_INVENTORY;
+    if (mockRequestHandlers.shouldResetData()) {
+      mockRequestHandlers.resetData(['mock_inventory_items']);
+      memoryItems = null;
+    }
+
+    if (mockRequestHandlers.shouldUseMemoryOnly() && memoryItems) {
+      return memoryItems;
+    }
+
+    const stored = mockRequestHandlers.getItem('mock_inventory_items');
+    if (stored) {
+      memoryItems = JSON.parse(stored);
+      return memoryItems!;
+    }
+
+    // 初始化
+    mockRequestHandlers.setItem(
+      'mock_inventory_items',
+      JSON.stringify(MOCK_INVENTORY),
+    );
+    memoryItems = [...MOCK_INVENTORY];
+    return memoryItems;
   };
 
   const setStoredItems = (items: FoodItem[]) => {
-    localStorage.setItem('mock_inventory_items', JSON.stringify(items));
+    memoryItems = items;
+    mockRequestHandlers.setItem('mock_inventory_items', JSON.stringify(items));
   };
-
-  // 初始化 localStorage
-  if (!localStorage.getItem('mock_inventory_items')) {
-    setStoredItems(MOCK_INVENTORY);
-  }
 
   const getItems = async (
     params?: GetInventoryRequest,
@@ -258,17 +280,34 @@ export const createMockInventoryApi = (): InventoryApi => {
 
   const getSettings = async (): Promise<InventorySettings> => {
     await delay(200);
-    // 從 localStorage 取得設定，或使用預設值
-    const stored = localStorage.getItem('mock_inventory_settings');
-    if (stored) {
-      return JSON.parse(stored);
+
+    if (mockRequestHandlers.shouldResetData()) {
+      mockRequestHandlers.resetData(['mock_inventory_settings']);
+      memorySettings = null;
     }
-    return {
+
+    if (mockRequestHandlers.shouldUseMemoryOnly() && memorySettings) {
+      return memorySettings;
+    }
+
+    const stored = mockRequestHandlers.getItem('mock_inventory_settings');
+    if (stored) {
+      memorySettings = JSON.parse(stored);
+      return memorySettings!;
+    }
+
+    const defaults = {
       lowStockThreshold: 2,
       expiringSoonDays: 3,
       notifyOnExpiry: true,
       notifyOnLowStock: true,
     };
+    memorySettings = defaults;
+    mockRequestHandlers.setItem(
+      'mock_inventory_settings',
+      JSON.stringify(defaults),
+    );
+    return defaults;
   };
 
   const updateSettings = async (
@@ -277,7 +316,11 @@ export const createMockInventoryApi = (): InventoryApi => {
     await delay(300);
     const current = await getSettings();
     const updated = { ...current, ...data };
-    localStorage.setItem('mock_inventory_settings', JSON.stringify(updated));
+    memorySettings = updated;
+    mockRequestHandlers.setItem(
+      'mock_inventory_settings',
+      JSON.stringify(updated),
+    );
   };
 
   return {
