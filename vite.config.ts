@@ -21,7 +21,7 @@ export default defineConfig({
         name: 'fufood 食物管家',
         short_name: 'fufood',
         description: '輕鬆管理冰箱食材，追蹤到期並接收通知',
-        theme_color: '#ec5b4a',
+        theme_color: '#ffffff',
         background_color: '#ffffff',
         start_url: '.',
         display: 'standalone',
@@ -80,6 +80,3 @@ export default defineConfig({
     },
   },
 });
-
-
-

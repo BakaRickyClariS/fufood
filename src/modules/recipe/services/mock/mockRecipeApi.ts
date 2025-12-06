@@ -8,10 +8,34 @@ import type {
   MealPlanInput,
 } from '@/modules/recipe/types';
 import { MOCK_RECIPES, MOCK_RECIPE_LIST } from './mockData';
+import { mockRequestHandlers } from '@/utils/debug/mockRequestHandlers';
+
+// Memory cache
+let memoryFavorites: string[] | null = null;
+let memoryConsumptions: any[] | null = null;
+let memoryShoppingList: any[] | null = null;
+let memoryMealPlans: any[] | null = null;
 
 export class MockRecipeApi implements RecipeApi {
-  private delay = (ms: number) =>
-    new Promise((resolve) => setTimeout(resolve, ms));
+  private delay = (ms: number) => {
+    // Check reset on every call entry or just once? Ideally once but class is instantiated once?
+    // Actually MockApi is usually instantiated once.
+    // We can check reset in methods if we want instant reaction, or just rely on page reload.
+    // Page reload is the standard way to trigger reset via URL param.
+    if (mockRequestHandlers.shouldResetData()) {
+      mockRequestHandlers.resetData([
+        'recipe_favorites',
+        'recipe_consumptions',
+        'shopping_list',
+        'meal_plans',
+      ]);
+      memoryFavorites = null;
+      memoryConsumptions = null;
+      memoryShoppingList = null;
+      memoryMealPlans = null;
+    }
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  };
 
   getRecipes = async (category?: RecipeCategory): Promise<RecipeListItem[]> => {
     await this.delay(600);
@@ -44,17 +68,26 @@ export class MockRecipeApi implements RecipeApi {
 
     recipe.isFavorite = !recipe.isFavorite;
 
-    // 更新 localStorage
-    const favorites = JSON.parse(
-      localStorage.getItem('recipe_favorites') || '[]',
-    );
+    recipe.isFavorite = !recipe.isFavorite;
+
+    // 更新 localStorage / Memory
+    let favorites: string[] = [];
+    if (mockRequestHandlers.shouldUseMemoryOnly() && memoryFavorites) {
+      favorites = memoryFavorites;
+    } else {
+      const stored = mockRequestHandlers.getItem('recipe_favorites');
+      favorites = stored ? JSON.parse(stored) : [];
+    }
+
     if (recipe.isFavorite) {
-      favorites.push(id);
+      if (!favorites.includes(id)) favorites.push(id);
     } else {
       const index = favorites.indexOf(id);
       if (index > -1) favorites.splice(index, 1);
     }
-    localStorage.setItem('recipe_favorites', JSON.stringify(favorites));
+
+    memoryFavorites = favorites;
+    mockRequestHandlers.setItem('recipe_favorites', JSON.stringify(favorites));
 
     return { isFavorite: recipe.isFavorite };
   };
@@ -62,9 +95,17 @@ export class MockRecipeApi implements RecipeApi {
   getFavorites = async (): Promise<RecipeListItem[]> => {
     await this.delay(500);
 
-    const favorites = JSON.parse(
-      localStorage.getItem('recipe_favorites') || '[]',
-    );
+    await this.delay(500);
+
+    let favorites: string[] = [];
+    if (mockRequestHandlers.shouldUseMemoryOnly() && memoryFavorites) {
+      favorites = memoryFavorites;
+    } else {
+      const stored = mockRequestHandlers.getItem('recipe_favorites');
+      favorites = stored ? JSON.parse(stored) : [];
+      if (favorites.length > 0) memoryFavorites = favorites;
+    }
+
     return MOCK_RECIPE_LIST.filter((recipe) => favorites.includes(recipe.id));
   };
 
@@ -73,21 +114,36 @@ export class MockRecipeApi implements RecipeApi {
   ): Promise<{ success: boolean; message: string }> => {
     await this.delay(1000);
 
-    // Mock: 記錄消耗資料到 localStorage
-    const consumptions = JSON.parse(
-      localStorage.getItem('recipe_consumptions') || '[]',
-    );
+    // Mock: 記錄消耗資料
+    let consumptions: any[] = [];
+    if (mockRequestHandlers.shouldUseMemoryOnly() && memoryConsumptions) {
+      consumptions = memoryConsumptions;
+    } else {
+      const stored = mockRequestHandlers.getItem('recipe_consumptions');
+      consumptions = stored ? JSON.parse(stored) : [];
+    }
+
     consumptions.push({
       ...data,
       timestamp: new Date().toISOString(),
     });
-    localStorage.setItem('recipe_consumptions', JSON.stringify(consumptions));
+
+    memoryConsumptions = consumptions;
+    mockRequestHandlers.setItem(
+      'recipe_consumptions',
+      JSON.stringify(consumptions),
+    );
 
     // 如果選擇加入採買清單，記錄到 shopping list
     if (data.addToShoppingList) {
-      const shoppingList = JSON.parse(
-        localStorage.getItem('shopping_list') || '[]',
-      );
+      let shoppingList: any[] = [];
+      if (mockRequestHandlers.shouldUseMemoryOnly() && memoryShoppingList) {
+        shoppingList = memoryShoppingList;
+      } else {
+        const stored = mockRequestHandlers.getItem('shopping_list');
+        shoppingList = stored ? JSON.parse(stored) : [];
+      }
+
       data.items.forEach((item) => {
         shoppingList.push({
           name: item.ingredientName,
@@ -97,7 +153,12 @@ export class MockRecipeApi implements RecipeApi {
           recipeId: data.recipeId,
         });
       });
-      localStorage.setItem('shopping_list', JSON.stringify(shoppingList));
+
+      memoryShoppingList = shoppingList;
+      mockRequestHandlers.setItem(
+        'shopping_list',
+        JSON.stringify(shoppingList),
+      );
     }
 
     return {
@@ -126,24 +187,48 @@ export class MockRecipeApi implements RecipeApi {
       createdAt: new Date().toISOString(),
     };
 
-    const plans = JSON.parse(localStorage.getItem('meal_plans') || '[]');
+    let plans: MealPlan[] = [];
+    if (mockRequestHandlers.shouldUseMemoryOnly() && memoryMealPlans) {
+      plans = memoryMealPlans;
+    } else {
+      const stored = mockRequestHandlers.getItem('meal_plans');
+      plans = stored ? JSON.parse(stored) : [];
+    }
+
     plans.push(newPlan);
-    localStorage.setItem('meal_plans', JSON.stringify(plans));
+    memoryMealPlans = plans;
+    mockRequestHandlers.setItem('meal_plans', JSON.stringify(plans));
 
     return newPlan;
   };
 
   getMealPlans = async (): Promise<MealPlan[]> => {
     await this.delay(500);
-    return JSON.parse(localStorage.getItem('meal_plans') || '[]');
+    if (mockRequestHandlers.shouldUseMemoryOnly() && memoryMealPlans) {
+      return memoryMealPlans;
+    }
+    const stored = mockRequestHandlers.getItem('meal_plans');
+    const plans = stored ? JSON.parse(stored) : [];
+    if (plans.length > 0) memoryMealPlans = plans;
+    return plans;
   };
 
   deleteMealPlan = async (planId: string): Promise<{ success: boolean }> => {
     await this.delay(400);
 
-    const plans = JSON.parse(localStorage.getItem('meal_plans') || '[]');
+    await this.delay(400);
+
+    let plans: MealPlan[] = [];
+    if (mockRequestHandlers.shouldUseMemoryOnly() && memoryMealPlans) {
+      plans = memoryMealPlans;
+    } else {
+      const stored = mockRequestHandlers.getItem('meal_plans');
+      plans = stored ? JSON.parse(stored) : [];
+    }
+
     const filtered = plans.filter((plan: MealPlan) => plan.id !== planId);
-    localStorage.setItem('meal_plans', JSON.stringify(filtered));
+    memoryMealPlans = filtered;
+    mockRequestHandlers.setItem('meal_plans', JSON.stringify(filtered));
 
     return { success: true };
   };
