@@ -1,41 +1,38 @@
 import React, { useMemo } from 'react';
 import CommonItemCard from '@/modules/inventory/components/ui/card/CommonItemCard';
-import { foodData, type FoodItem } from '@/modules/inventory/constants/foods';
-
-const categoryMapping: Record<string, string> = {
-  fruit: '蔬果類',
-  bake: '主食烘焙類',
-  frozen: '冷凍調理類',
-  others: '其他',
-  milk: '乳製品飲料類',
-  seafood: '海鮮類',
-  meat: '肉類',
-};
+import { useInventory } from '@/modules/inventory/hooks';
+import type { FoodItem } from '@/modules/inventory/types';
 
 const ExpiredRecordsPanel: React.FC = () => {
+  const { items, isLoading } = useInventory();
+
   const expiredGroups = useMemo(() => {
-    const groups: { category: string; items: FoodItem[] }[] = [];
-
-    Object.entries(foodData).forEach(([key, items]) => {
-      const expiredItems = items.filter((item) => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const expireDate = new Date(item.expireAt);
-        expireDate.setHours(0, 0, 0, 0);
-        // 當過期日嚴格小於今天時，才算是已過期
-        return expireDate < today;
-      });
-
-      if (expiredItems.length > 0) {
-        groups.push({
-          category: categoryMapping[key] || key,
-          items: expiredItems,
-        });
-      }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const expiredItems = items.filter(item => {
+      const expiry = new Date(item.expiryDate);
+      expiry.setHours(0, 0, 0, 0);
+      return expiry < today;
     });
 
-    return groups;
-  }, []);
+    const groups: Record<string, FoodItem[]> = {};
+    expiredItems.forEach(item => {
+      if (!groups[item.category]) {
+        groups[item.category] = [];
+      }
+      groups[item.category].push(item);
+    });
+
+    return Object.entries(groups).map(([category, items]) => ({
+      category,
+      items
+    }));
+  }, [items]);
+
+  if (isLoading) {
+    return <div className="p-4 text-center">Loading...</div>;
+  }
 
   if (expiredGroups.length === 0) {
     return (
@@ -58,7 +55,7 @@ const ExpiredRecordsPanel: React.FC = () => {
               <CommonItemCard
                 key={item.id}
                 name={item.name}
-                image={item.img.src}
+                image={item.imageUrl || ''}
                 value={item.quantity}
                 label="庫存"
               />

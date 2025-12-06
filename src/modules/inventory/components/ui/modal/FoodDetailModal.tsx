@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from 'react';
-import { X, Check } from 'lucide-react';
+import { X, Check, AlertCircle, Clock } from 'lucide-react';
 import gsap from 'gsap';
 import { Button } from '@/shared/components/ui/button';
-import { type FoodItem } from '@/modules/inventory/constants/foods';
+import type { FoodItem } from '@/modules/inventory/types';
+import { useExpiryCheck } from '@/modules/inventory/hooks';
 
 type FoodDetailModalProps = {
   item: FoodItem;
@@ -17,6 +18,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const { status, daysUntilExpiry } = useExpiryCheck(item);
 
   useEffect(() => {
     if (isOpen) {
@@ -60,6 +62,39 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
     );
   };
 
+  const getStatusBadge = () => {
+    switch (status) {
+      case 'expired':
+        return (
+          <span className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-full flex items-center gap-1">
+            <AlertCircle className="w-3 h-3" />
+            已過期
+          </span>
+        );
+      case 'expiring-soon':
+        return (
+          <span className="px-3 py-1 bg-orange-500 text-white text-sm font-medium rounded-full flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            即將過期
+          </span>
+        );
+      case 'low-stock':
+        return (
+          <span className="px-3 py-1 bg-yellow-500 text-white text-sm font-medium rounded-full flex items-center gap-1">
+            <AlertCircle className="w-3 h-3" />
+            低庫存
+          </span>
+        );
+      default:
+        return (
+          <span className="px-3 py-1 bg-green-500 text-white text-sm font-medium rounded-full flex items-center gap-1">
+            <Check className="w-3 h-3" />
+            狀態良好
+          </span>
+        );
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -86,7 +121,11 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
 
         {/* Image Section */}
         <div className="relative h-36 w-full rounded-b-3xl overflow-hidden">
-          <img {...item.img} className="w-full h-full object-cover" />
+          <img 
+            src={item.imageUrl} 
+            alt={item.name} 
+            className="w-full h-full object-cover" 
+          />
           <div className="absolute inset-0 backdrop-blur-md h-15" />
           <div className="absolute top-0 translate-y-1/2 left-1/2 -translate-x-1/2 text-white font-bold text-lg tracking-wider">
             {item.category}
@@ -107,10 +146,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
             {/* Status */}
             <div className="flex items-center justify-between border-gray-100">
               <span className="text-neutral-500 font-medium">食材狀態</span>
-              <span className="px-3 py-1 bg-green-500 text-white text-sm font-medium rounded-full flex items-center gap-1">
-                <Check className="w-3 h-3" />
-                有庫存
-              </span>
+              {getStatusBadge()}
             </div>
 
             {/* Category */}
@@ -137,21 +173,23 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
                   入庫日期
                 </span>
                 <span className="text-neutral-900 font-medium">
-                  {item.addedAt}
+                  {item.purchaseDate}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-neutral-500 font-medium block mb-1">
-                  保存期限
+                  剩餘天數
                 </span>
-                <span className="text-neutral-900 font-medium">約5天</span>
+                <span className={`font-medium ${daysUntilExpiry < 0 ? 'text-red-500' : 'text-neutral-900'}`}>
+                  {daysUntilExpiry < 0 ? `已過期 ${Math.abs(daysUntilExpiry)} 天` : `約 ${daysUntilExpiry} 天`}
+                </span>
               </div>
             </div>
 
             <div className="flex items-center justify-between">
               <span className="text-neutral-500 font-medium">過期日期</span>
               <span className="text-neutral-900 font-medium">
-                {item.expireAt}
+                {item.expiryDate}
               </span>
             </div>
             <div className="w-full h-[1px] bg-gray-100" />

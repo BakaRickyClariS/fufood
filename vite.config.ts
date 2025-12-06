@@ -51,6 +51,18 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          redux: ['@reduxjs/toolkit', 'react-redux'],
+        },
+      },
+    },
+    target: 'es2015',
+    minify: 'esbuild',
+  },
   server: {
     proxy: {
       '/api': {
@@ -58,7 +70,8 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
-  },  resolve: {
+  },
+  resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@/modules': path.resolve(__dirname, './src/modules'),
