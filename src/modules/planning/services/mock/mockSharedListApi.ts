@@ -1,28 +1,49 @@
-import type { 
-  SharedList, 
-  SharedListItem, 
-  CreateSharedListInput
+import type {
+  SharedList,
+  SharedListItem,
+  CreateSharedListInput,
 } from '@/modules/planning/types/sharedList';
 import type {
-  SharedListPost, 
-  CreatePostInput 
+  SharedListPost,
+  CreatePostInput,
 } from '@/modules/planning/types/post';
 import { MOCK_SHARED_LISTS, MOCK_POSTS } from './mockSharedListData';
 
 // 模擬網路延遲
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // 從 LocalStorage 載入或初始化
 const getLists = (): SharedList[] => {
-  const stored = localStorage.getItem('mock_shared_lists');
-  if (stored) return JSON.parse(stored);
+  try {
+    const stored = localStorage.getItem('mock_shared_lists');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to parse mock lists from localStorage, resetting.', e);
+  }
+
+  // 若無資料或解析失敗，寫入預設資料
   localStorage.setItem('mock_shared_lists', JSON.stringify(MOCK_SHARED_LISTS));
   return MOCK_SHARED_LISTS;
 };
 
 const getPosts = (): Record<string, SharedListPost[]> => {
-  const stored = localStorage.getItem('mock_posts');
-  if (stored) return JSON.parse(stored);
+  try {
+    const stored = localStorage.getItem('mock_posts');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (typeof parsed === 'object' && parsed !== null) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to parse mock posts from localStorage, resetting.', e);
+  }
+
   localStorage.setItem('mock_posts', JSON.stringify(MOCK_POSTS));
   return MOCK_POSTS;
 };
@@ -36,10 +57,23 @@ const savePosts = (posts: Record<string, SharedListPost[]>) => {
 };
 
 export class MockSharedListApi {
-  async getSharedLists(): Promise<SharedListItem[]> {
+  async getSharedLists(
+    year?: number,
+    month?: number,
+  ): Promise<SharedListItem[]> {
     await delay(500);
     const lists = getLists();
-    return lists.map(list => ({
+
+    let filteredLists = lists;
+    if (year && month) {
+      filteredLists = lists.filter((list) => {
+        if (!list.scheduledDate) return false;
+        const date = new Date(list.scheduledDate);
+        return date.getFullYear() === year && date.getMonth() + 1 === month;
+      });
+    }
+
+    return filteredLists.map((list) => ({
       id: list.id,
       name: list.name,
       coverImageUrl: list.coverImageUrl,
@@ -51,7 +85,7 @@ export class MockSharedListApi {
   async getSharedListById(id: string): Promise<SharedList> {
     await delay(300);
     const lists = getLists();
-    const list = lists.find(l => l.id === id);
+    const list = lists.find((l) => l.id === id);
     if (!list) throw new Error('List not found');
     return list;
   }
@@ -81,7 +115,7 @@ export class MockSharedListApi {
     await delay(800);
     const allPosts = getPosts();
     const currentPosts = allPosts[input.listId] || [];
-    
+
     // 模擬當前使用者
     const mockUser = {
       id: 'current_user',
