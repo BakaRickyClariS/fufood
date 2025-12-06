@@ -8,18 +8,39 @@ import type {
 } from '../../types/foodItem';
 import { MOCK_SCAN_RESULTS } from './mockData';
 
+import { mockRequestHandlers } from '@/utils/debug/mockRequestHandlers';
+
 export const createMockFoodScanApi = (): FoodScanApi => {
   const delay = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms));
 
-  const recognizeImage = async (_imageUrl: string): Promise<ScanResult> => {
-    // 模擬網路延遲
-    await delay(1500);
+  let memoryItems: FoodItem[] | null = null;
 
-    // 隨機返回一個 mock 結果
+  const getStoredItems = (): FoodItem[] => {
+    if (mockRequestHandlers.shouldResetData()) {
+      mockRequestHandlers.resetData(['mock_food_items']);
+      memoryItems = null;
+    }
+    if (mockRequestHandlers.shouldUseMemoryOnly() && memoryItems) {
+      return memoryItems;
+    }
+    const stored = mockRequestHandlers.getItem('mock_food_items');
+    if (stored) {
+      memoryItems = JSON.parse(stored);
+      return memoryItems!;
+    }
+    return [];
+  };
+
+  const saveStoredItems = (items: FoodItem[]) => {
+    memoryItems = items;
+    mockRequestHandlers.setItem('mock_food_items', JSON.stringify(items));
+  };
+
+  const recognizeImage = async (_imageUrl: string): Promise<ScanResult> => {
+    await delay(1500);
     const mockResult =
       MOCK_SCAN_RESULTS[Math.floor(Math.random() * MOCK_SCAN_RESULTS.length)];
-
     return {
       success: true,
       data: mockResult,
@@ -38,12 +59,9 @@ export const createMockFoodScanApi = (): FoodScanApi => {
       createdAt: new Date().toISOString(),
     };
 
-    // 可選：存入 localStorage 模擬持久化
-    const existing = JSON.parse(
-      localStorage.getItem('mock_food_items') || '[]',
-    );
+    const existing = getStoredItems();
     existing.push(newItem);
-    localStorage.setItem('mock_food_items', JSON.stringify(existing));
+    saveStoredItems(existing);
 
     return {
       success: true,
@@ -57,7 +75,7 @@ export const createMockFoodScanApi = (): FoodScanApi => {
     data: Partial<FoodItemInput>,
   ): Promise<FoodItemResponse> => {
     await delay(800);
-    const items = JSON.parse(localStorage.getItem('mock_food_items') || '[]');
+    const items = getStoredItems();
     const index = items.findIndex((item: FoodItem) => item.id === id);
 
     if (index === -1) {
@@ -69,16 +87,16 @@ export const createMockFoodScanApi = (): FoodScanApi => {
       ...data,
       updatedAt: new Date().toISOString(),
     };
-    localStorage.setItem('mock_food_items', JSON.stringify(items));
+    saveStoredItems(items);
 
     return { success: true, message: '更新成功', data: { id } };
   };
 
   const deleteFoodItem = async (id: string): Promise<{ success: boolean }> => {
     await delay(500);
-    const items = JSON.parse(localStorage.getItem('mock_food_items') || '[]');
+    const items = getStoredItems();
     const filtered = items.filter((item: FoodItem) => item.id !== id);
-    localStorage.setItem('mock_food_items', JSON.stringify(filtered));
+    saveStoredItems(filtered);
 
     return { success: true };
   };
@@ -87,9 +105,7 @@ export const createMockFoodScanApi = (): FoodScanApi => {
     filters?: FoodItemFilters,
   ): Promise<FoodItem[]> => {
     await delay(600);
-    let items: FoodItem[] = JSON.parse(
-      localStorage.getItem('mock_food_items') || '[]',
-    );
+    let items = getStoredItems();
 
     if (filters?.category) {
       items = items.filter(
