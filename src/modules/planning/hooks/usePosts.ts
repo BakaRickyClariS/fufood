@@ -4,7 +4,7 @@ import { sharedListApi } from '../services/api/sharedListApi';
 
 export const usePosts = (listId: string | undefined) => {
   const [posts, setPosts] = useState<SharedListPost[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPosts = useCallback(async () => {
