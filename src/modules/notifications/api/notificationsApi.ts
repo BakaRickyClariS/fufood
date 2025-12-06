@@ -8,5 +8,6 @@ export type NotificationSettings = {
 
 export const notificationsApi = {
   getSettings: () => apiClient.get<NotificationSettings>('/notifications'),
-  updateSettings: (data: Partial<NotificationSettings>) => apiClient.post<void>('/notifications', data),
+  updateSettings: (data: Partial<NotificationSettings>) =>
+    apiClient.post<void>('/notifications', data),
 };

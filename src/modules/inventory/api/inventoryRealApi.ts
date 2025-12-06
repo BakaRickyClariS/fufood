@@ -22,7 +22,9 @@ export const createRealInventoryApi = (): InventoryApi => {
     /**
      * 取得庫存列表
      */
-    getItems: async (params?: GetInventoryRequest): Promise<GetInventoryResponse> => {
+    getItems: async (
+      params?: GetInventoryRequest,
+    ): Promise<GetInventoryResponse> => {
       return apiClient.get<GetInventoryResponse>('/inventory', params);
     },
 
@@ -43,7 +45,10 @@ export const createRealInventoryApi = (): InventoryApi => {
     /**
      * 更新食材
      */
-    updateItem: async (id: string, data: UpdateFoodItemRequest): Promise<UpdateFoodItemResponse> => {
+    updateItem: async (
+      id: string,
+      data: UpdateFoodItemRequest,
+    ): Promise<UpdateFoodItemResponse> => {
       return apiClient.put<UpdateFoodItemResponse>(`/inventory/${id}`, data);
     },
 
@@ -57,27 +62,35 @@ export const createRealInventoryApi = (): InventoryApi => {
     /**
      * 批次操作
      */
-    batchOperation: async (data: BatchOperationRequest): Promise<{ success: boolean }> => {
+    batchOperation: async (
+      data: BatchOperationRequest,
+    ): Promise<{ success: boolean }> => {
       // Map generic batch operation to specific API calls
       switch (data.operation) {
         case 'delete':
-          await apiClient.delete<void>('/inventory/batch', { body: JSON.stringify({ ids: data.itemIds }) } as any);
+          await apiClient.delete<void>('/inventory/batch', {
+            body: JSON.stringify({ ids: data.itemIds }),
+          } as any);
           break;
         case 'add':
-           // Assuming data.data contains items
-           if (data.data?.items) {
-             await apiClient.post<void>('/inventory/batch', { items: data.data.items });
-           }
-           break;
+          // Assuming data.data contains items
+          if (data.data?.items) {
+            await apiClient.post<void>('/inventory/batch', {
+              items: data.data.items,
+            });
+          }
+          break;
         case 'update':
-           if (data.data?.items) {
-             await apiClient.put<void>('/inventory/batch', { items: data.data.items });
-           }
-           break;
+          if (data.data?.items) {
+            await apiClient.put<void>('/inventory/batch', {
+              items: data.data.items,
+            });
+          }
+          break;
         default:
           console.warn('Unsupported batch operation:', data.operation);
       }
-      
+
       return { success: true };
     },
 
@@ -112,7 +125,9 @@ export const createRealInventoryApi = (): InventoryApi => {
     /**
      * 更新設定
      */
-    updateSettings: async (data: UpdateInventorySettingsRequest): Promise<void> => {
+    updateSettings: async (
+      data: UpdateInventorySettingsRequest,
+    ): Promise<void> => {
       return apiClient.put<void>('/inventory/settings', data);
     },
   };

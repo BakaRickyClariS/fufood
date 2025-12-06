@@ -8,7 +8,9 @@ export const MOCK_SCAN_RESULTS: ScanResult['data'][] = [
     purchaseQuantity: 1,
     unit: '瓶',
     purchaseDate: new Date().toISOString().split('T')[0],
-    expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0],
     lowStockAlert: true,
     lowStockThreshold: 2,
     notes: '常備品',
@@ -20,7 +22,9 @@ export const MOCK_SCAN_RESULTS: ScanResult['data'][] = [
     purchaseQuantity: 10,
     unit: '顆',
     purchaseDate: new Date().toISOString().split('T')[0],
-    expiryDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    expiryDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0],
     lowStockAlert: true,
     lowStockThreshold: 5,
     notes: '每週必買',
@@ -32,7 +36,9 @@ export const MOCK_SCAN_RESULTS: ScanResult['data'][] = [
     purchaseQuantity: 1,
     unit: '顆',
     purchaseDate: new Date().toISOString().split('T')[0],
-    expiryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    expiryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0],
     lowStockAlert: false,
     lowStockThreshold: 1,
     notes: '趁新鮮吃完',
@@ -44,7 +50,9 @@ export const MOCK_SCAN_RESULTS: ScanResult['data'][] = [
     purchaseQuantity: 500,
     unit: 'g',
     purchaseDate: new Date().toISOString().split('T')[0],
-    expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0],
     lowStockAlert: true,
     lowStockThreshold: 200,
     notes: '備用食材',
@@ -56,7 +64,9 @@ export const MOCK_SCAN_RESULTS: ScanResult['data'][] = [
     purchaseQuantity: 1,
     unit: '瓶',
     purchaseDate: new Date().toISOString().split('T')[0],
-    expiryDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    expiryDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0],
     lowStockAlert: true,
     lowStockThreshold: 1,
     notes: '',

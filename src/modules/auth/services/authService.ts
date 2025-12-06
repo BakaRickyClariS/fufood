@@ -1,5 +1,9 @@
 import { authApi } from '../api';
-import { getAuthToken, setAuthToken, removeAuthToken } from '../utils/authUtils';
+import {
+  getAuthToken,
+  setAuthToken,
+  removeAuthToken,
+} from '../utils/authUtils';
 import type { LoginCredentials, RegisterData, User, AuthToken } from '../types';
 
 /**
@@ -13,7 +17,7 @@ export const authService = {
   saveToken: (token: AuthToken): void => {
     // 使用 authUtils 儲存主要的 accessToken
     setAuthToken(token.accessToken);
-    
+
     // refreshToken 和 expiry 另外儲存
     if (token.refreshToken) {
       localStorage.setItem('refreshToken', token.refreshToken);

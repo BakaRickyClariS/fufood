@@ -32,7 +32,8 @@ export const MOCK_RECIPES: Recipe[] = [
     steps: [
       {
         stepNumber: 1,
-        description: '小黃瓜洗淨，用刀背拍扁後切段，用鹽抓勻靜置10分鐘瀝出水分。',
+        description:
+          '小黃瓜洗淨，用刀背拍扁後切段，用鹽抓勻靜置10分鐘瀝出水分。',
         time: '10分鐘',
       },
       {
@@ -63,7 +64,11 @@ export const MOCK_RECIPES: Recipe[] = [
     ingredients: [
       { name: '水餃', quantity: '12顆', category: '準備材料' },
       { name: '鮮蝦', quantity: '6隻', category: '準備材料' },
-      { name: '麵粉水', quantity: '適量（麵粉:水=1:10）', category: '準備材料' },
+      {
+        name: '麵粉水',
+        quantity: '適量（麵粉:水=1:10）',
+        category: '準備材料',
+      },
       { name: '油', quantity: '2大匙', category: '調味料' },
       { name: '白芝麻', quantity: '少許', category: '調味料' },
       { name: '蔥花', quantity: '少許', category: '調味料' },
@@ -114,7 +119,8 @@ export const MOCK_RECIPES: Recipe[] = [
     steps: [
       {
         stepNumber: 1,
-        description: '將小黃瓜拍扁後切段，用 S1/2S 茶匙鹽抓勻，靜置 15-20分鐘瀝出水。',
+        description:
+          '將小黃瓜拍扁後切段，用 S1/2S 茶匙鹽抓勻，靜置 15-20分鐘瀝出水。',
         time: '15-20分鐘',
       },
       {
@@ -276,12 +282,14 @@ export const MOCK_RECIPES: Recipe[] = [
   },
 ];
 
-export const MOCK_RECIPE_LIST: RecipeListItem[] = MOCK_RECIPES.map(recipe => ({
-  id: recipe.id,
-  name: recipe.name,
-  category: recipe.category,
-  imageUrl: recipe.imageUrl,
-  servings: recipe.servings,
-  cookTime: recipe.cookTime,
-  isFavorite: recipe.isFavorite,
-}));
+export const MOCK_RECIPE_LIST: RecipeListItem[] = MOCK_RECIPES.map(
+  (recipe) => ({
+    id: recipe.id,
+    name: recipe.name,
+    category: recipe.category,
+    imageUrl: recipe.imageUrl,
+    servings: recipe.servings,
+    cookTime: recipe.cookTime,
+    isFavorite: recipe.isFavorite,
+  }),
+);

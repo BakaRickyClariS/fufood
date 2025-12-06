@@ -7,22 +7,22 @@ export const ScanFrame: React.FC = () => {
     const updateSize = () => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      
+
       // Target: 3:4 aspect ratio
       // Max width: 80% of viewport or 400px (for desktop)
       // Max height: 65% of viewport
       const maxWidth = Math.min(viewportWidth * 0.8, 400);
       const maxHeight = viewportHeight * 0.65;
-      
+
       let width = maxWidth;
-      let height = width * 4 / 3;
-      
+      let height = (width * 4) / 3;
+
       // If height exceeds max height, scale down width
       if (height > maxHeight) {
         height = maxHeight;
-        width = height * 3 / 4;
+        width = (height * 3) / 4;
       }
-      
+
       setFrameSize({ width, height });
     };
 
@@ -35,13 +35,13 @@ export const ScanFrame: React.FC = () => {
 
   return (
     <div className="absolute inset-0 z-10 pointer-events-none flex justify-center pt-26 overflow-hidden">
-      <div 
+      <div
         className="relative rounded-[32px] transition-all duration-300 ease-out"
-        style={{ 
-          width: frameSize.width, 
+        style={{
+          width: frameSize.width,
           height: frameSize.height,
           // Use box-shadow to create the semi-transparent mask around the frame
-          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)' 
+          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)',
         }}
       >
         {/* Corner Indicators */}

@@ -6,7 +6,11 @@ import { useWebcam } from '../../hooks/useWebcam';
 import { useImageUpload } from '../../hooks/useImageUpload';
 import CameraOverlay, { type CameraOverlayStatus } from '../ui/CameraOverlay';
 import { useNavigate } from 'react-router-dom';
-import { setCapturedImage, retake as retakeAction, setUploadStatus } from '@/modules/food-scan/store/cameraSlice';
+import {
+  setCapturedImage,
+  retake as retakeAction,
+  setUploadStatus,
+} from '@/modules/food-scan/store/cameraSlice';
 import { useToast } from '@/shared/contexts/ToastContext';
 import { ScanFrame } from '../ui/ScanFrame';
 
@@ -19,16 +23,23 @@ const videoConstraints: MediaTrackConstraints = {
   width: { ideal: 1080 },
   height: { ideal: 1920 },
   // 移除強制長寬比，讓瀏覽器自動適應
-  // aspectRatio: 9 / 16, 
+  // aspectRatio: 9 / 16,
 };
 
 export const CameraCapture: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [scanError, setScanError] = useState<string | null>(null);
-  
-  const { webcamRef, img, isCapturing, capture: originalCapture, retake: originalRetake, setExternalImage } = useWebcam();
-  
+
+  const {
+    webcamRef,
+    img,
+    isCapturing,
+    capture: originalCapture,
+    retake: originalRetake,
+    setExternalImage,
+  } = useWebcam();
+
   const capture = () => {
     setScanError(null);
     originalCapture();
@@ -46,32 +57,32 @@ export const CameraCapture: React.FC = () => {
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       // Entry animation: Slide out
-      gsap.to('.top-nav-wrapper', { 
-        yPercent: -100, 
-        duration: 0.5, 
-        ease: 'power3.inOut' 
+      gsap.to('.top-nav-wrapper', {
+        yPercent: -100,
+        duration: 0.5,
+        ease: 'power3.inOut',
       });
-      gsap.to('.bottom-nav-wrapper', { 
-        yPercent: 120, 
-        duration: 0.5, 
-        ease: 'power3.inOut' 
+      gsap.to('.bottom-nav-wrapper', {
+        yPercent: 120,
+        duration: 0.5,
+        ease: 'power3.inOut',
       });
     });
 
     return () => {
       // Exit animation: Slide in (cleanup)
       // We use gsap.to to animate them back when unmounting
-      gsap.to('.top-nav-wrapper', { 
-        yPercent: 0, 
-        duration: 0.5, 
+      gsap.to('.top-nav-wrapper', {
+        yPercent: 0,
+        duration: 0.5,
         ease: 'power3.inOut',
-        overwrite: true 
+        overwrite: true,
       });
-      gsap.to('.bottom-nav-wrapper', { 
-        yPercent: 0, 
-        duration: 0.5, 
+      gsap.to('.bottom-nav-wrapper', {
+        yPercent: 0,
+        duration: 0.5,
         ease: 'power3.inOut',
-        overwrite: true
+        overwrite: true,
       });
       ctx.revert(); // Cleanup context
     };
@@ -134,14 +145,17 @@ export const CameraCapture: React.FC = () => {
       try {
         const result = await uploadImage(img);
         if (result) {
-           showToast('掃描成功！', 'success');
-           navigate('/upload/scan-result', { state: { result: result.data, imageUrl: img } });
+          showToast('掃描成功！', 'success');
+          navigate('/upload/scan-result', {
+            state: { result: result.data, imageUrl: img },
+          });
         } else {
-           const msg = '掃描失敗，請重試';
-           setScanError(msg);
+          const msg = '掃描失敗，請重試';
+          setScanError(msg);
         }
       } catch (error) {
-        const message = error instanceof Error ? error.message : '掃描失敗，請重試';
+        const message =
+          error instanceof Error ? error.message : '掃描失敗，請重試';
         setScanError(message);
       }
     }

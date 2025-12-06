@@ -28,17 +28,17 @@ const ScanResult: React.FC = () => {
 
   // Ensure result matches FoodItemInput type or cast it
   const initialData: FoodItemInput = {
-      productName: result.productName || '',
-      category: result.category || '其他',
-      attributes: result.attributes || '常溫',
-      purchaseQuantity: result.purchaseQuantity || 1,
-      unit: result.unit || '個',
-      purchaseDate: result.purchaseDate || new Date().toISOString().split('T')[0],
-      expiryDate: result.expiryDate || '',
-      lowStockAlert: result.lowStockAlert ?? true,
-      lowStockThreshold: result.lowStockThreshold || 2,
-      notes: result.notes || '',
-      imageUrl: imageUrl
+    productName: result.productName || '',
+    category: result.category || '其他',
+    attributes: result.attributes || '常溫',
+    purchaseQuantity: result.purchaseQuantity || 1,
+    unit: result.unit || '個',
+    purchaseDate: result.purchaseDate || new Date().toISOString().split('T')[0],
+    expiryDate: result.expiryDate || '',
+    lowStockAlert: result.lowStockAlert ?? true,
+    lowStockThreshold: result.lowStockThreshold || 2,
+    notes: result.notes || '',
+    imageUrl: imageUrl,
   };
 
   const handleConfirm = async () => {
@@ -71,8 +71,8 @@ const ScanResult: React.FC = () => {
   }
 
   return (
-    <ScanResultEditor 
-      initialData={initialData} 
+    <ScanResultEditor
+      initialData={initialData}
       imageUrl={imageUrl}
       onSuccess={() => navigate('/inventory')}
       onBack={() => setMode('preview')}

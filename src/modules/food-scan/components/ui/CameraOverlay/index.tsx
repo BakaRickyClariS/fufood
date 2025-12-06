@@ -1,7 +1,12 @@
 import React from 'react';
 import { Image as ImageIcon, X, Check, Camera } from 'lucide-react';
 
-export type CameraOverlayStatus = 'capturing' | 'uploading' | 'analyzing' | 'done' | 'error';
+export type CameraOverlayStatus =
+  | 'capturing'
+  | 'uploading'
+  | 'analyzing'
+  | 'done'
+  | 'error';
 
 type CameraOverlayProps = {
   status: CameraOverlayStatus;
@@ -34,15 +39,20 @@ const CameraOverlay: React.FC<CameraOverlayProps> = ({
             請將食材放入框內
           </div>
         ) : (
-          <div className={`
+          <div
+            className={`
             px-6 py-2 rounded-full font-bold text-sm shadow-lg backdrop-blur-sm text-white
             ${status === 'error' ? 'bg-red-500/90' : 'bg-green-500/90'}
-          `}>
+          `}
+          >
             {status === 'uploading' && '上傳處理中...'}
             {status === 'analyzing' && 'AI 辨識中...'}
             {status === 'done' && '掃描完成'}
             {status === 'error' && (errorMessage || '掃描失敗')}
-            {!isProcessing && status !== 'done' && status !== 'error' && '沒問題，掃描即將完成'}
+            {!isProcessing &&
+              status !== 'done' &&
+              status !== 'error' &&
+              '沒問題，掃描即將完成'}
           </div>
         )}
       </div>

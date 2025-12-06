@@ -52,4 +52,3 @@ const RecipeSection = () => {
 };
 
 export default RecipeSection;
-

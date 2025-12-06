@@ -11,12 +11,12 @@ type RecipeCardProps = {
   className?: string;
 };
 
-export const RecipeCard = ({ 
-  recipe, 
-  onClick, 
+export const RecipeCard = ({
+  recipe,
+  onClick,
   showPopularTag = false,
   showCategoryBadge = true,
-  className = ''
+  className = '',
 }: RecipeCardProps) => {
   const { toggleFavorite, isToggling } = useFavorite();
 
@@ -26,21 +26,21 @@ export const RecipeCard = ({
   };
 
   return (
-    <div 
+    <div
       className={cn(
-        "relative rounded-2xl overflow-hidden",
-        "w-[200px] h-[200px] shrink-0",
-        className
+        'relative rounded-2xl overflow-hidden',
+        'w-[200px] h-[200px] shrink-0',
+        className,
       )}
       onClick={() => onClick(recipe.id)}
     >
       {/* 背景圖片 */}
-      <img 
-        src={recipe.imageUrl} 
+      <img
+        src={recipe.imageUrl}
         alt={recipe.name}
         className="absolute inset-0 w-full h-full object-cover"
       />
-      
+
       {/* 熱門標籤 - 左上角 */}
       {showPopularTag && (
         <div className="absolute top-3 left-3">
@@ -49,7 +49,7 @@ export const RecipeCard = ({
           </span>
         </div>
       )}
-      
+
       {/* 愛心按鈕 - 右上角（無背景） */}
       <button
         onClick={handleFavoriteClick}
@@ -57,16 +57,16 @@ export const RecipeCard = ({
         className="absolute top-3 right-3 transition-transform hover:scale-110"
         aria-label={recipe.isFavorite ? '取消收藏' : '加入收藏'}
       >
-        <Heart 
+        <Heart
           className={cn(
-            "w-6 h-6",
-            recipe.isFavorite 
-              ? 'fill-white text-white' 
-              : 'text-white/90 stroke-2'
-          )} 
+            'w-6 h-6',
+            recipe.isFavorite
+              ? 'fill-white text-white'
+              : 'text-white/90 stroke-2',
+          )}
         />
       </button>
-      
+
       {/* 底部資訊區（黑底模糊背景） */}
       <div className="absolute bottom-0 left-0 right-0 px-3 py-2.5 bg-black/60 backdrop-blur-md rounded-b-2xl">
         {/* 分類標籤 */}
@@ -75,12 +75,12 @@ export const RecipeCard = ({
             {recipe.category}
           </span>
         )}
-        
+
         {/* 食譜標題 */}
         <h3 className="text-white font-bold mb-1 line-clamp-1 text-sm">
           {recipe.name}
         </h3>
-        
+
         {/* 份量與時間 */}
         <div className="flex items-center gap-3 text-xs">
           <div className="flex items-center gap-1">

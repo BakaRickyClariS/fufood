@@ -3,6 +3,8 @@ import tseslint from 'typescript-eslint';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
+import importPlugin from 'eslint-plugin-import';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
 import prettier from 'eslint-config-prettier';
 import prettierPlugin from 'eslint-plugin-prettier';
 
@@ -24,7 +26,6 @@ export default [
   // 載入 TypeScript 推薦設定
   ...tseslint.configs.recommended,
 
-
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     plugins: {
@@ -32,6 +33,8 @@ export default [
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
       '@typescript-eslint': tseslint.plugin,
+      import: importPlugin,
+      'jsx-a11y': jsxA11y,
       prettier: prettierPlugin,
     },
     languageOptions: {
