@@ -1,10 +1,16 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecipes } from '@/modules/recipe/hooks';
-import { CategoryGrid, type Category } from '@/shared/components/ui/CategoryGrid';
+import {
+  CategoryGrid,
+  type Category,
+} from '@/shared/components/ui/CategoryGrid';
 import { RecipeCardCarousel } from '@/shared/components/recipe';
 import type { RecipeCategory, RecipeListItem } from '@/modules/recipe/types';
-import { RECIPE_CATEGORIES, CATEGORY_IMAGES } from '@/modules/recipe/constants/categories';
+import {
+  RECIPE_CATEGORIES,
+  CATEGORY_IMAGES,
+} from '@/modules/recipe/constants/categories';
 
 // 烹飪時間分類
 const COOKING_TIME_SECTIONS = [
@@ -14,16 +20,20 @@ const COOKING_TIME_SECTIONS = [
 ] as const;
 
 // 將 RECIPE_CATEGORIES 轉換為 CategoryGrid 需要的格式
-const categoryItems: Category<RecipeCategory>[] = RECIPE_CATEGORIES.map(cat => ({
-  id: cat,
-  label: cat,
-  icon: CATEGORY_IMAGES[cat]
-}));
+const categoryItems: Category<RecipeCategory>[] = RECIPE_CATEGORIES.map(
+  (cat) => ({
+    id: cat,
+    label: cat,
+    icon: CATEGORY_IMAGES[cat],
+  }),
+);
 
 export const RecipeList = () => {
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState<RecipeCategory | undefined>();
-  
+  const [selectedCategory, setSelectedCategory] = useState<
+    RecipeCategory | undefined
+  >();
+
   const { recipes, isLoading, error } = useRecipes(selectedCategory);
 
   // 按烹飪時間分組
@@ -35,7 +45,7 @@ export const RecipeList = () => {
       favorites: [],
     };
 
-    recipes.forEach(recipe => {
+    recipes.forEach((recipe) => {
       // 收藏食譜
       if (recipe.isFavorite) {
         groups.favorites.push(recipe);
@@ -43,7 +53,10 @@ export const RecipeList = () => {
 
       // 按烹飪時間分類
       for (const section of COOKING_TIME_SECTIONS) {
-        if (recipe.cookTime >= section.minTime && recipe.cookTime <= section.maxTime) {
+        if (
+          recipe.cookTime >= section.minTime &&
+          recipe.cookTime <= section.maxTime
+        ) {
           groups[section.id].push(recipe);
           break;
         }
@@ -68,7 +81,7 @@ export const RecipeList = () => {
   return (
     <div className="space-y-6">
       <div className="pl-0">
-        <CategoryGrid 
+        <CategoryGrid
           categories={categoryItems}
           selectedId={selectedCategory}
           onCategoryClick={setSelectedCategory}
@@ -78,7 +91,7 @@ export const RecipeList = () => {
       </div>
 
       <div className="space-y-6 pb-20">
-        {COOKING_TIME_SECTIONS.map(section => (
+        {COOKING_TIME_SECTIONS.map((section) => (
           <RecipeCardCarousel
             key={section.id}
             title={section.title}

@@ -11,6 +11,7 @@ const App: React.FC = () => {
   const [needRefresh, setNeedRefresh] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const splashRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const updateSW =
     useRef<(reloadPage?: boolean) => Promise<void> | void>(undefined);
@@ -24,8 +25,10 @@ const App: React.FC = () => {
 
     // 載入畫面控制
     const timer = setTimeout(() => {
+      const tl = gsap.timeline();
+
       if (splashRef.current) {
-        gsap.to(splashRef.current, {
+        tl.to(splashRef.current, {
           opacity: 0,
           duration: 0.5,
           ease: 'power2.inOut',
@@ -33,6 +36,20 @@ const App: React.FC = () => {
             setShowSplash(false);
           },
         });
+      }
+
+      // 內容淡入
+      if (contentRef.current) {
+        // 在 Splash 淡出開始後 0.1 秒開始淡入內容
+        tl.to(
+          contentRef.current,
+          {
+            opacity: 1,
+            duration: 0.5,
+            ease: 'power2.out',
+          },
+          '<0.1', // 稍微重疊動畫
+        );
       }
     }, 2000); // 顯示至少 2 秒
 
@@ -47,7 +64,9 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <RouterProvider router={router} />
+      <div ref={contentRef} style={{ opacity: 0 }}>
+        <RouterProvider router={router} />
+      </div>
       <Toaster position="top-center" richColors />
       <SWPrompt
         show={needRefresh}
