@@ -320,7 +320,7 @@ void
 
 #### 端點
 \`\`\`
-POST /api/v1/groups/:groupId/invite
+POST /api/v1/groups/:groupId/members
 \`\`\`
 
 #### 請求格式
@@ -341,17 +341,13 @@ InviteMemberForm
 void
 ```
 
-#### 其他群組參與操作
-- `POST /api/v1/groups/:groupId/join`: 加入群組（可攜帶邀請碼）
-- `DELETE /api/v1/groups/:groupId/leave`: 離開群組
-
 ---
 
 ### 7. **removeMember** - 移除成員
 
 #### 端點
 \`\`\`
-DELETE /api/v1/groups/:groupId/remove/:memberId
+DELETE /api/v1/groups/:groupId/members/:memberId
 \`\`\`
 
 #### 請求格式
