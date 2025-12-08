@@ -23,8 +23,8 @@ const OverviewPanel: React.FC = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const data = await inventoryApi.getCategories();
-        setCategories(data);
+        const response = await inventoryApi.getCategories();
+        setCategories(response.data.categories);
       } catch (error) {
         console.error('Failed to fetch categories:', error);
       } finally {

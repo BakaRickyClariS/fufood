@@ -64,7 +64,7 @@ export const useInventoryStats = (items: FoodItem[]) => {
   const fetchStats = async (groupId?: string) => {
     try {
       const apiStats = await inventoryApi.getStats(groupId);
-      setStats(apiStats);
+      setStats(apiStats.data.stats);
     } catch (error) {
       console.error('Failed to fetch stats:', error);
     }

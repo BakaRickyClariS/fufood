@@ -2,20 +2,23 @@ import { apiClient } from '@/lib/apiClient';
 import type {
   FoodItem,
   GetInventoryRequest,
-  GetInventoryResponse,
   AddFoodItemRequest,
   AddFoodItemResponse,
   UpdateFoodItemRequest,
   UpdateFoodItemResponse,
   DeleteFoodItemResponse,
-  InventoryStats,
-  InventorySummary,
-  InventorySettings,
   UpdateInventorySettingsRequest,
-  CategoryInfo,
   BatchAddInventoryRequest,
   BatchUpdateInventoryRequest,
   BatchDeleteInventoryRequest,
+  GetInventoryResponse,
+  ExpiredItemsResponse,
+  FrequentItemsResponse,
+  InventoryStatsResponse,
+  InventorySummaryResponse,
+  InventoryCategoriesResponse,
+  InventorySettingsResponse,
+  ApiSuccess,
 } from '../types';
 import type { InventoryApi } from './inventoryApi';
 
@@ -35,8 +38,12 @@ export const createRealInventoryApi = (): InventoryApi => {
     /**
      * 取得單一食材
      */
-    getItem: async (id: string): Promise<FoodItem> => {
-      return apiClient.get<FoodItem>(`/inventory/${id}`);
+    getItem: async (
+      id: string,
+    ): Promise<ApiSuccess<{ item: FoodItem }>> => {
+      return apiClient.get<ApiSuccess<{ item: FoodItem }>>(
+        `/inventory/${id}`,
+      );
     },
 
     /**
@@ -68,11 +75,8 @@ export const createRealInventoryApi = (): InventoryApi => {
      */
     batchAdd: async (
       data: BatchAddInventoryRequest,
-    ): Promise<{ success: boolean; message?: string }> => {
-      return apiClient.post<{ success: boolean; message?: string }>(
-        '/inventory/batch',
-        data,
-      );
+    ): Promise<BatchOperationResponse> => {
+      return apiClient.post<BatchOperationResponse>('/inventory/batch', data);
     },
 
     /**
@@ -80,11 +84,8 @@ export const createRealInventoryApi = (): InventoryApi => {
      */
     batchUpdate: async (
       data: BatchUpdateInventoryRequest,
-    ): Promise<{ success: boolean; message?: string }> => {
-      return apiClient.put<{ success: boolean; message?: string }>(
-        '/inventory/batch',
-        data,
-      );
+    ): Promise<BatchOperationResponse> => {
+      return apiClient.put<BatchOperationResponse>('/inventory/batch', data);
     },
 
     /**
@@ -92,8 +93,8 @@ export const createRealInventoryApi = (): InventoryApi => {
      */
     batchDelete: async (
       data: BatchDeleteInventoryRequest,
-    ): Promise<{ success: boolean; message?: string }> => {
-      return apiClient.delete<{ success: boolean; message?: string }>(
+    ): Promise<BatchOperationResponse> => {
+      return apiClient.delete<BatchOperationResponse>(
         '/inventory/batch',
         {
           body: data,
@@ -104,8 +105,12 @@ export const createRealInventoryApi = (): InventoryApi => {
     /**
      * 取得常用項目
      */
-    getFrequentItems: async (limit?: number): Promise<FoodItem[]> => {
-      return apiClient.get<FoodItem[]>('/inventory/frequent', { limit });
+    getFrequentItems: async (
+      limit?: number,
+    ): Promise<FrequentItemsResponse> => {
+      return apiClient.get<FrequentItemsResponse>('/inventory/frequent', {
+        limit,
+      });
     },
 
     /**
@@ -114,39 +119,43 @@ export const createRealInventoryApi = (): InventoryApi => {
     getExpiredItems: async (
       page?: number,
       limit?: number,
-    ): Promise<{ items: FoodItem[]; total: number }> => {
-      return apiClient.get<{ items: FoodItem[]; total: number }>(
-        '/inventory/expired',
-        { page, limit },
-      );
+    ): Promise<ExpiredItemsResponse> => {
+      return apiClient.get<ExpiredItemsResponse>('/inventory/expired', {
+        page,
+        limit,
+      });
     },
 
     /**
      * 取得統計
      */
-    getStats: async (groupId?: string): Promise<InventoryStats> => {
-      return apiClient.get<InventoryStats>('/inventory/stats', { groupId });
+    getStats: async (
+      groupId?: string,
+    ): Promise<InventoryStatsResponse> => {
+      return apiClient.get<InventoryStatsResponse>('/inventory/stats', {
+        groupId,
+      });
     },
 
     /**
      * 取得概況
      */
-    getSummary: async (): Promise<InventorySummary> => {
-      return apiClient.get<InventorySummary>('/inventory/summary');
+    getSummary: async (): Promise<InventorySummaryResponse> => {
+      return apiClient.get<InventorySummaryResponse>('/inventory/summary');
     },
 
     /**
      * 取得分類
      */
-    getCategories: async (): Promise<CategoryInfo[]> => {
-      return apiClient.get<CategoryInfo[]>('/inventory/categories');
+    getCategories: async (): Promise<InventoryCategoriesResponse> => {
+      return apiClient.get<InventoryCategoriesResponse>('/inventory/categories');
     },
 
     /**
      * 取得設定
      */
-    getSettings: async (): Promise<InventorySettings> => {
-      return apiClient.get<InventorySettings>('/inventory/settings');
+    getSettings: async (): Promise<InventorySettingsResponse> => {
+      return apiClient.get<InventorySettingsResponse>('/inventory/settings');
     },
 
     /**
@@ -154,8 +163,11 @@ export const createRealInventoryApi = (): InventoryApi => {
      */
     updateSettings: async (
       data: UpdateInventorySettingsRequest,
-    ): Promise<void> => {
-      return apiClient.put<void>('/inventory/settings', data);
+    ): Promise<InventorySettingsResponse> => {
+      return apiClient.put<InventorySettingsResponse>(
+        '/inventory/settings',
+        data,
+      );
     },
   };
 };

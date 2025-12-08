@@ -16,7 +16,7 @@ export const useInventory = (groupId?: string) => {
     setError(null);
     try {
       const response = await inventoryApi.getInventory({ groupId });
-      setItems(response.items);
+      setItems(response.data.items);
     } catch (err) {
       setError(
         err instanceof Error ? err : new Error('Failed to fetch inventory'),
