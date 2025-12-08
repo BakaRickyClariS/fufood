@@ -40,6 +40,19 @@ export const MOCK_INVENTORY: FoodItem[] = [
     createdAt: '2023-01-01T00:00:00.000Z',
   },
   {
+    id: 'veg-expired-2',
+    name: '枯萎萵苣',
+    category: '蔬果類',
+    quantity: 2,
+    unit: '顆',
+    imageUrl: cabbage,
+    purchaseDate: '2024-04-20',
+    expiryDate: '2024-05-01',
+    lowStockAlert: true,
+    lowStockThreshold: 1,
+    createdAt: '2024-04-20T00:00:00.000Z',
+  },
+  {
     id: 'veg-1',
     name: '大陸A菜',
     category: '蔬果類',
@@ -241,6 +254,19 @@ export const MOCK_INVENTORY: FoodItem[] = [
 
   // 主食烘焙類
   {
+    id: 'staple-expired-1',
+    name: '乾硬佛卡夏',
+    category: '主食烘焙類',
+    quantity: 1,
+    unit: '條',
+    imageUrl: freshToast,
+    purchaseDate: '2024-01-10',
+    expiryDate: '2024-02-01',
+    lowStockAlert: false,
+    lowStockThreshold: 1,
+    createdAt: '2024-01-10T00:00:00.000Z',
+  },
+  {
     id: 'staple-1',
     name: '原味生吐司',
     category: '主食烘焙類',
@@ -372,13 +398,26 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockThreshold: 1,
     createdAt: '2026-01-01T00:00:00.000Z',
   },
+  {
+    id: 'dessert-expired-1',
+    name: '過期檸檬派',
+    category: '其他',
+    quantity: 1,
+    unit: '個',
+    imageUrl: lemonTart,
+    purchaseDate: '2024-05-01',
+    expiryDate: '2024-05-10',
+    lowStockAlert: false,
+    lowStockThreshold: 1,
+    createdAt: '2024-05-01T00:00:00.000Z',
+  },
 ];
 
 export const MOCK_CATEGORIES: CategoryInfo[] = [
   {
     id: 'cat-1',
     title: '蔬果類',
-    count: 8,
+    count: 10,
     imageUrl: cabbage,
     bgColor: 'bg-green-100',
     slogan: '新鮮蔬果',
@@ -387,7 +426,7 @@ export const MOCK_CATEGORIES: CategoryInfo[] = [
   {
     id: 'cat-2',
     title: '冷凍調理類',
-    count: 6,
+    count: 7,
     imageUrl: frozenCabbage,
     bgColor: 'bg-blue-100',
     slogan: '方便快速',
@@ -396,7 +435,7 @@ export const MOCK_CATEGORIES: CategoryInfo[] = [
   {
     id: 'cat-3',
     title: '主食烘焙類',
-    count: 5,
+    count: 6,
     imageUrl: freshToast,
     bgColor: 'bg-yellow-100',
     slogan: '能量來源',
@@ -405,7 +444,7 @@ export const MOCK_CATEGORIES: CategoryInfo[] = [
   {
     id: 'cat-4',
     title: '其他',
-    count: 5,
+    count: 6,
     imageUrl: lemonIce,
     bgColor: 'bg-gray-100',
     slogan: '各式點心',
