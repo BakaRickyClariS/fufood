@@ -175,7 +175,7 @@ export type FoodScanApi = {
 
 #### 端點
 ```
-POST {VITE_RECIPE_API_URL}/recipe/analyze-image
+POST /api/v1/ai/analyze-image
 ```
 
 #### 請求格式
@@ -240,7 +240,7 @@ POST {VITE_RECIPE_API_URL}/recipe/analyze-image
 throw new Error(
   `影像辨識失敗：HTTP ${status} ${statusText}.\n` +
   `請求：POST ${url}\n` +
-  `請確認後端可連線、已開啟 CORS 或使用 Vite 代理，並檢查 VITE_RECIPE_API_URL。`
+  `請確認後端可連線、已開啟 CORS 或使用 Vite 代理，並檢查 VITE_API_BASE_URL。`
 );
 ```
 
@@ -250,7 +250,7 @@ throw new Error(
 
 #### 端點
 ```
-POST {VITE_RECIPE_API_URL}/food-items
+POST /api/v1/inventory
 ```
 
 #### 請求格式
@@ -299,27 +299,18 @@ FoodItemInput  // 完整食材資料
 
 ---
 
-### 3. **updateFoodItem** - 更新食材 (未實作)
-```typescript
-updateFoodItem(id: string, data: Partial<FoodItemInput>): Promise<FoodItemResponse>
-```
-> ⚠️ 目前為 placeholder，呼叫會拋出 `Not implemented` 錯誤
+### 3. **updateFoodItem** - 更新食材
+`PUT /api/v1/inventory/{id}`
 
 ---
 
-### 4. **deleteFoodItem** - 刪除食材 (未實作)
-```typescript
-deleteFoodItem(id: string): Promise<{ success: boolean }>
-```
-> ⚠️ 目前為 placeholder，呼叫會拋出 `Not implemented` 錯誤
+### 4. **deleteFoodItem** - 刪除食材
+`DELETE /api/v1/inventory/{id}`
 
 ---
 
-### 5. **getFoodItems** - 取得食材列表 (未實作)
-```typescript
-getFoodItems(filters?: FoodItemFilters): Promise<FoodItem[]>
-```
-> ⚠️ 目前為 placeholder，呼叫會拋出 `Not implemented` 錯誤
+### 5. **getFoodItems** - 取得食材列表
+`GET /api/v1/inventory`（支援 category/status 等查詢參數）
 
 ---
 
@@ -591,7 +582,7 @@ VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
 VITE_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
 
 # API 端點
-VITE_RECIPE_API_URL=http://localhost:3000/api/v1
+VITE_API_BASE_URL=http://localhost:3000/api/v1
 
 # Mock 模式 (開發用)
 VITE_USE_MOCK_API=false
@@ -603,7 +594,7 @@ VITE_USE_MOCK_API=false
 |---------|------|------|
 | `VITE_CLOUDINARY_CLOUD_NAME` | Cloudinary Cloud 名稱 | `demo` |
 | `VITE_CLOUDINARY_UPLOAD_PRESET` | 上傳預設 | `ml_default` |
-| `VITE_RECIPE_API_URL` | 後端 API 基礎 URL | `http://localhost:3000/api/v1` |
+| `VITE_API_BASE_URL` | 後端 API 基礎 URL | `http://localhost:3000/api/v1` |
 | `VITE_USE_MOCK_API` | 是否使用 Mock API | `true` / `false` |
 
 ---

@@ -157,7 +157,7 @@ export const groupsApi = {
 
 #### 端點
 \`\`\`
-GET /api/groups
+GET /api/v1/groups
 \`\`\`
 
 #### 請求格式
@@ -198,7 +198,7 @@ Group[]
 
 #### 端點
 \`\`\`
-GET /api/groups/:groupId/members
+GET /api/v1/groups/:groupId/members
 \`\`\`
 
 #### 請求格式
@@ -233,7 +233,7 @@ GroupMember[]
 
 #### 端點
 \`\`\`
-POST /api/groups
+POST /api/v1/groups
 \`\`\`
 
 #### 請求格式
@@ -276,7 +276,7 @@ Group
 
 #### 端點
 \`\`\`
-PUT /api/groups/:id
+PUT /api/v1/groups/:id
 \`\`\`
 
 #### 請求格式
@@ -303,7 +303,7 @@ Group
 
 #### 端點
 \`\`\`
-DELETE /api/groups/:id
+DELETE /api/v1/groups/:id
 \`\`\`
 
 #### 請求格式
@@ -320,7 +320,7 @@ void
 
 #### 端點
 \`\`\`
-POST /api/groups/:groupId/members
+POST /api/v1/groups/:groupId/members
 \`\`\`
 
 #### 請求格式
@@ -347,7 +347,7 @@ void
 
 #### 端點
 \`\`\`
-DELETE /api/groups/:groupId/members/:memberId
+DELETE /api/v1/groups/:groupId/members/:memberId
 \`\`\`
 
 #### 請求格式
@@ -364,7 +364,7 @@ void
 
 #### 端點
 \`\`\`
-PATCH /api/groups/:groupId/members/:memberId
+PATCH /api/v1/groups/:groupId/members/:memberId
 \`\`\`
 
 #### 請求格式

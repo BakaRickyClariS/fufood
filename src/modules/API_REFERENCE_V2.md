@@ -22,31 +22,31 @@
 | 1 | Auth | POST | `/api/v1/auth/register` | 使用者註冊 | ✅ |
 | 2 | Auth | POST | `/api/v1/auth/login` | 使用者登入 | ✅ |
 | 3 | Auth | POST | `/api/v1/auth/logout` | 登出・清除 Cookie | ✅ |
-| 4 | Auth | POST | `/api/v1/auth/refresh` | 刷新 Access Token | 🆕 |
+| 4 | Auth | POST | `/api/v1/auth/refresh` | 刷新 Access Token | ✅ |
 | 5 | Auth | GET | `/api/v1/auth/me` | 取得目前登入使用者資料 | ✅ |
-| 6 | Auth | GET | `/api/v1/auth/check` | 驗證帳號Token | 🆕 |
-| 7 | Auth | GET | `/api/v1/auth/line/login` | 導向 LINE OAuth 登入頁 | 🆕 |
-| 8 | Auth | GET | `/api/v1/auth/line/callback` | LINE 登入成功後回呼 | 🆕 |
-| 9 | Auth | PUT | `/api/v1/auth/update-profile` | 更新使用者基本資料 | 🆕 |
+| 6 | Auth | GET | `/api/v1/auth/check` | 驗證帳號Token | ✅ |
+| 7 | Auth | GET | `/api/v1/auth/line/login` | 導向 LINE OAuth 登入頁 | ✅ |
+| 8 | Auth | GET | `/api/v1/auth/line/callback` | LINE 登入成功後回呼 | ✅ |
+| 9 | Auth | PUT | `/api/v1/auth/update-profile` | 更新使用者基本資料 | ✅ |
 | **Groups Module (群組管理)** |
 | 10 | Groups | GET | `/api/v1/groups` | 取得所有我參加的群組 | ✅ |
 | 11 | Groups | POST | `/api/v1/groups` | 建立新群組 | ✅ |
-| 12 | Groups | GET | `/api/v1/groups/{id}` | 取得單一群組資訊 | 🆕 |
+| 12 | Groups | GET | `/api/v1/groups/{id}` | 取得單一群組資訊 | ✅ |
 | 13 | Groups | PUT | `/api/v1/groups/{id}` | 更新群組資訊 | ✅ |
 | 14 | Groups | DELETE | `/api/v1/groups/{id}` | 刪除群組 | ✅ |
 | 15 | Groups | POST | `/api/v1/groups/{id}/invite` | 邀請成員 | ✅ |
-| 16 | Groups | POST | `/api/v1/groups/{id}/join` | 加入群組 | 🆕 |
-| 17 | Groups | DELETE | `/api/v1/groups/{id}/leave` | 離開群組 | 🆕 |
+| 16 | Groups | POST | `/api/v1/groups/{id}/join` | 加入群組 | ✅ |
+| 17 | Groups | DELETE | `/api/v1/groups/{id}/leave` | 離開群組 | ✅ |
 | 18 | Groups | DELETE | `/api/v1/groups/{id}/remove/{memberId}` | 移除群組成員 | ✅ |
 | 19 | Groups | PATCH | `/api/v1/groups/{id}/members/{memberId}` | 更新成員權限 | ✅ |
 | **Inventory Module (庫存管理)** |
 | 20 | Inventory | GET | `/api/v1/inventory` | 取得庫存列表 (支援分頁/篩選) | ✅ |
-| 21 | Inventory | GET | `/api/v1/inventory/summary` | 取得目前庫存概況 | 🆕 |
-| 22 | Inventory | GET | `/api/v1/inventory/expired` | 取得已過期食材清單 | 🆕 |
-| 23 | Inventory | GET | `/api/v1/inventory/frequent` | 取得常用食材清單 | 🆕 |
+| 21 | Inventory | GET | `/api/v1/inventory/summary` | 取得目前庫存概況 | ✅ |
+| 22 | Inventory | GET | `/api/v1/inventory/expired` | 取得已過期食材清單 | 🚧 未實作 |
+| 23 | Inventory | GET | `/api/v1/inventory/frequent` | 取得常用食材清單 | 🚧 未實作 |
 | 24 | Inventory | GET | `/api/v1/inventory/stats` | 取得庫存統計(食材進類) | ✅ |
-| 25 | Inventory | GET | `/api/v1/inventory/settings` | 取得庫存設定 | 🆕 |
-| 26 | Inventory | PUT | `/api/v1/inventory/settings` | 更新庫存管理設定 | 🆕 |
+| 25 | Inventory | GET | `/api/v1/inventory/settings` | 取得庫存設定 | ✅ |
+| 26 | Inventory | PUT | `/api/v1/inventory/settings` | 更新庫存管理設定 | ✅ |
 | 27 | Inventory | GET | `/api/v1/inventory/categories` | 取得分類資訊 | ✅ |
 | 28 | Inventory | GET | `/api/v1/inventory/{id}` | 取得單一食材詳情 | ✅ |
 | 29 | Inventory | POST | `/api/v1/inventory` | 新增食材 | ✅ |
@@ -56,38 +56,38 @@
 | 33 | Inventory | DELETE | `/api/v1/inventory/{id}` | 刪除食材 | ✅ |
 | 34 | Inventory | DELETE | `/api/v1/inventory/batch` | 批次刪除食材 | 🆕 |
 | **Foods Module (食材主檔)** |
-| 35 | Foods | GET | `/api/v1/foods/category/{catId}` | 取得使用者分類食材 | 🆕 |
-| 36 | Foods | GET | `/api/v1/foods/category/{catId}/{id}` | 取得分類內單一食材資訊 | 🆕 |
-| 37 | Foods | POST | `/api/v1/foods` | 新增食材(含圖片 URL) | 🆕 |
-| 38 | Foods | PUT | `/api/v1/foods/{id}` | 編輯食材資訊 | 🆕 |
-| 39 | Foods | DELETE | `/api/v1/foods/{id}` | 刪除食材 | 🆕 |
+| 35 | Foods | GET | `/api/v1/foods/category/{catId}` | 取得使用者分類食材 | ✅ |
+| 36 | Foods | GET | `/api/v1/foods/category/{catId}/{id}` | 取得分類內單一食材資訊 | ✅ |
+| 37 | Foods | POST | `/api/v1/foods` | 新增食材(含圖片 URL) | ✅ |
+| 38 | Foods | PUT | `/api/v1/foods/{id}` | 編輯食材資訊 | ✅ |
+| 39 | Foods | DELETE | `/api/v1/foods/{id}` | 刪除食材 | ✅ |
 | **Recipes Module (食譜管理)** |
-| 40 | Recipes | GET | `/api/v1/recipes` | 取得所有食譜 | 🆕 |
-| 41 | Recipes | GET | `/api/v1/recipes/{id}` | 取得單一食譜詳情 | 🆕 |
-| 42 | Recipes | POST | `/api/v1/recipes/{id}/favorite` | 收藏/取消收藏食譜 | 🆕 |
-| 43 | Recipes | GET | `/api/v1/recipes/favorites` | 取得收藏食譜清單 | 🆕 |
-| 44 | Recipes | POST | `/api/v1/recipes/{id}/cook` | 食譜完成 → 扣除庫存食材 | 🆕 |
-| 45 | Recipes | POST | `/api/v1/recipes/plan` | 加入待烹煮計劃 (MealPlan) | 🆕 |
-| 46 | Recipes | GET | `/api/v1/recipes/plan` | 取得目前規劃的食譜計畫 | 🆕 |
-| 47 | Recipes | DELETE | `/api/v1/recipes/plan/{planId}` | 刪除待烹煮計畫 | 🆕 |
+| 40 | Recipes | GET | `/api/v1/recipes` | 取得所有食譜 | ✅ |
+| 41 | Recipes | GET | `/api/v1/recipes/{id}` | 取得單一食譜詳情 | ✅ |
+| 42 | Recipes | POST | `/api/v1/recipes/{id}/favorite` | 收藏/取消收藏食譜 | ✅ |
+| 43 | Recipes | GET | `/api/v1/recipes/favorites` | 取得收藏食譜清單 | ✅ |
+| 44 | Recipes | POST | `/api/v1/recipes/{id}/cook` | 食譜完成 → 扣除庫存食材 | ✅ |
+| 45 | Recipes | POST | `/api/v1/recipes/plan` | 加入待烹煮計劃 (MealPlan) | ✅ |
+| 46 | Recipes | GET | `/api/v1/recipes/plan` | 取得目前規劃的食譜計畫 | ✅ |
+| 47 | Recipes | DELETE | `/api/v1/recipes/plan/{planId}` | 刪除待烹煮計畫 | ✅ |
 | **Shopping Lists Module (購物清單)** |
-| 48 | Shopping | GET | `/api/v1/shopping-lists` | 取得所有購物清單 | 🆕 |
-| 49 | Shopping | POST | `/api/v1/shopping-lists` | 建立購物清單 | 🆕 |
-| 50 | Shopping | GET | `/api/v1/shopping-lists/{id}` | 取得單一購物清單內容 | 🆕 |
-| 51 | Shopping | PUT | `/api/v1/shopping-lists/{id}` | 編輯購物清單 | 🆕 |
-| 52 | Shopping | DELETE | `/api/v1/shopping-lists/{id}` | 刪除購物清單 | 🆕 |
-| 53 | Shopping | POST | `/api/v1/shopping-lists/{id}/purchase` | 標記清單已購買 → 更新庫存 | 🆕 |
+| 48 | Shopping | GET | `/api/v1/shopping-lists` | 取得所有購物清單 | ✅ |
+| 49 | Shopping | POST | `/api/v1/shopping-lists` | 建立購物清單 | ✅ |
+| 50 | Shopping | GET | `/api/v1/shopping-lists/{id}` | 取得單一購物清單內容 | ✅ |
+| 51 | Shopping | PUT | `/api/v1/shopping-lists/{id}` | 編輯購物清單 | ✅ |
+| 52 | Shopping | DELETE | `/api/v1/shopping-lists/{id}` | 刪除購物清單 | ✅ |
+| 53 | Shopping | POST | `/api/v1/shopping-lists/{id}/purchase` | 標記清單已購買 → 更新庫存 | ✅ |
 | **AI Service Module (AI 服務)** |
 | 54 | AI | POST | `/api/v1/ai/analyze-image` | 上傳圖片 → GPT大模型 (OCR)  | ✅ |
-| 55 | AI | POST | `/api/v1/ai/recipe` | 傳入食材清單 → GPT 生成食譜 | 🆕 |
+| 55 | AI | POST | `/api/v1/ai/recipe` | 傳入食材清單 → GPT 生成食譜 | 🚧 未實作 |
 | **Notifications Module (通知設定)** |
-| 56 | Notify | GET | `/api/v1/notifications` | 取得使用者通知設定 | 🆕 |
-| 57 | Notify | POST | `/api/v1/notifications` | 建立/更新通知設定 | 🆕 |
+| 56 | Notify | GET | `/api/v1/notifications` | 取得使用者通知設定 | ✅ |
+| 57 | Notify | POST | `/api/v1/notifications` | 建立/更新通知設定 | ✅ |
 | **LINE Bot Module** |
-| 58 | LINE | POST | `/api/v1/line/webhook` | LINE Bot Webhook | 🆕 |
-| 59 | LINE | POST | `/api/v1/line/push` | 伺服器端主動推提醒 | 🆕 |
+| 58 | LINE | POST | `/api/v1/line/webhook` | LINE Bot Webhook | 🚧 |
+| 59 | LINE | POST | `/api/v1/line/push` | 伺服器端主動推提醒 | 🚧 |
 | **Media Upload Module (媒體上傳)** |
-| 60 | Media | POST | `/api/v1/media/upload` | 上傳食材圖片(回傳 URL) | 🆕 |
+| 60 | Media | POST | `/api/v1/media/upload` | 上傳食材圖片(回傳 URL) | ✅ |
 
 **圖例**: ✅ 已實作 | 🆕 新增
 
@@ -234,8 +234,8 @@ type ApiErrorResponse = {
 
 ### 21-27. 統計與設定
 - `GET /api/v1/inventory/summary`: 概況
-- `GET /api/v1/inventory/expired`: 過期清單
-- `GET /api/v1/inventory/frequent`: 常用清單
+- `GET /api/v1/inventory/expired`: 過期清單（目前尚未實作）
+- `GET /api/v1/inventory/frequent`: 常用清單（目前尚未實作）
 - `GET /api/v1/inventory/stats`: 統計
 - `GET /api/v1/inventory/settings`: 設定查詢
 - `PUT /api/v1/inventory/settings`: 設定更新
@@ -295,6 +295,8 @@ type ApiErrorResponse = {
 - `PUT /api/v1/shopping-lists/{id}`: 更新
 - `DELETE /api/v1/shopping-lists/{id}`: 刪除
 - `POST /api/v1/shopping-lists/{id}/purchase`: **購買完成** (原 `checkout`) - 將清單項目轉入庫存
+- `GET /api/v1/shopping-lists/{id}/posts` / `POST /api/v1/shopping-lists/{id}/posts`: 取得/建立貼文
+- `POST /api/v1/posts/{postId}/like`: 切換貼文按讚
 
 ---
 
@@ -311,7 +313,7 @@ type ApiErrorResponse = {
 
 ### 54. generateRecipe - AI 生成食譜
 `POST /api/v1/ai/recipe`
-**功能**: 傳入現有食材清單，AI 建議可烹煮的食譜。
+**功能**: 傳入現有食材清單，AI 建議可烹煮的食譜。（尚未實作，前端僅提供占位行為）
 
 ---
 
