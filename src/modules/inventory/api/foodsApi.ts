@@ -1,8 +1,6 @@
 import { apiClient } from '@/lib/apiClient';
 
-// Types (should be in a types file, but keeping here for simplicity for now or I should create a types file)
-// For now I'll define basic types here or use any if complex types are needed and not yet defined.
-// Ideally I should create src/modules/foods/types/index.ts
+// Types for Foods API
 
 export type Food = {
   id: string;
