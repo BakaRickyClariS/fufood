@@ -119,18 +119,39 @@ export type FoodCategory =
 
 ```typescript
 export const inventoryApi = {
-  getItems: (params?: GetInventoryRequest) => Promise<GetInventoryResponse>;
-  getItem: (id: string) => Promise<FoodItem>;
-  addItem: (data: AddFoodItemRequest) => Promise<AddFoodItemResponse>;
-  updateItem: (id: string, data: UpdateFoodItemRequest) => Promise<UpdateFoodItemResponse>;
-  deleteItem: (id: string) => Promise<DeleteFoodItemResponse>;
-  batchAdd: (data: BatchAddInventoryRequest) => Promise<{ success: boolean; message?: string }>;
-  batchUpdate: (data: BatchUpdateInventoryRequest) => Promise<{ success: boolean; message?: string }>;
-  batchDelete: (data: BatchDeleteInventoryRequest) => Promise<{ success: boolean; message?: string }>;
-  getFrequentItems: (limit?: number) => Promise<FoodItem[]>;
-  getExpiredItems: (page?: number, limit?: number) => Promise<{ items: FoodItem[]; total: number }>;
-  getStats: (groupId?: string) => Promise<InventoryStats>;
-  getCategories: () => Promise<CategoryInfo[]>;
+  getInventory: (
+    params?: GetInventoryRequest,
+  ) => Promise<{ status: true; data: { items: FoodItem[]; total: number; stats: InventoryStats } }>;
+  getItem: (id: string) => Promise<{ status: true; data: { item: FoodItem } }>;
+  addItem: (
+    data: AddFoodItemRequest,
+  ) => Promise<{ status: true; message: string; data: { id: string } }>;
+  updateItem: (
+    id: string,
+    data: UpdateFoodItemRequest,
+  ) => Promise<{ status: true; message: string; data: { id: string } }>;
+  deleteItem: (id: string) => Promise<{ status: true; message: string }>;
+  batchAdd: (
+    data: BatchAddInventoryRequest,
+  ) => Promise<{ status: true; message: string }>;
+  batchUpdate: (
+    data: BatchUpdateInventoryRequest,
+  ) => Promise<{ status: true; message: string }>;
+  batchDelete: (
+    data: BatchDeleteInventoryRequest,
+  ) => Promise<{ status: true; message: string }>;
+  getFrequentItems: (limit?: number) => Promise<{ status: true; data: { items: FoodItem[] } }>;
+  getExpiredItems: (
+    page?: number,
+    limit?: number,
+  ) => Promise<{ status: true; data: { items: FoodItem[]; total: number } }>;
+  getStats: (groupId?: string) => Promise<{ status: true; data: { stats: InventoryStats } }>;
+  getCategories: () => Promise<{ status: true; data: { categories: CategoryInfo[] } }>;
+  getSummary: () => Promise<{ status: true; data: { summary: InventorySummary } }>;
+  getSettings: () => Promise<{ status: true; data: { settings: InventorySettings } }>;
+  updateSettings: (
+    data: UpdateInventorySettingsRequest,
+  ) => Promise<{ status: true; message: string; data: { settings: InventorySettings } }>;
 };
 ```
 
@@ -159,7 +180,7 @@ export const foodsApi = {
 
 ---
 
-### 1. **getItems** - 取得庫存列表
+### 1. **getInventory** - 取得庫存列表
 
 #### 端點
 
@@ -179,9 +200,12 @@ GET /api/v1/inventory
 
 ```typescript
 {
-  items: FoodItem[];
-  total: number;
-  stats: InventoryStats;
+  status: true;
+  data: {
+    items: FoodItem[];
+    total: number;
+    stats: InventoryStats;
+  };
 }
 ```
 
@@ -205,7 +229,7 @@ AddFoodItemRequest;
 
 ```typescript
 {
-  success: boolean;
+  status: true;
   message: string;
   data: {
     id: string;

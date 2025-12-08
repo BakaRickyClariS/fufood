@@ -26,7 +26,17 @@
 | :----------------- | :--------- | :--------------------------- |
 | **200 OK**         | 請求成功   | 一般查詢、更新、刪除回傳內容 |
 | **201 Created**    | 建立成功   | 新增資源                     |
-| **204 No Content** | 無回應內容 | 請求成功但不需要回傳內容     |
+
+**成功回應格式（統一封裝）**  
+所有成功回應皆採用以下 envelope，`message` 可選，實際資料置於 `data`：
+
+```json
+{
+  "status": true,
+  "message": "可選的成功訊息",
+  "data": { /* 實際 payload，依各 API 定義 */ }
+}
+```
 
 **錯誤（Error）**: 統一錯誤格式
 
@@ -160,12 +170,15 @@ type Food = {
 - **Success Response**:
   ```json
   {
-    "items": [
-      /* FoodItem */
-    ],
-    "total": 100,
-    "stats": {
-      /* InventoryStats */
+    "status": true,
+    "data": {
+      "items": [
+        /* FoodItem */
+      ],
+      "total": 100,
+      "stats": {
+        /* InventoryStats */
+      }
     }
   }
   ```
@@ -174,7 +187,17 @@ type Food = {
 
 - **Method**: `GET`
 - **Path**: `/inventory/{id}`
-- **Success Response**: `FoodItem`
+- **Success Response**:
+  ```json
+  {
+    "status": true,
+    "data": {
+      "item": {
+        /* FoodItem */
+      }
+    }
+  }
+  ```
 
 ### 3.3 新增食材
 
@@ -184,7 +207,7 @@ type Food = {
 - **Success Response**:
   ```json
   {
-    "success": true,
+    "status": true,
     "message": "Created successfully",
     "data": { "id": "new-uuid" }
   }
@@ -197,7 +220,7 @@ type Food = {
 - **Request Body**: `UpdateFoodItemRequest` (`Partial<Omit<FoodItem, 'id' | 'createdAt' | 'updatedAt'>>`)
 - **Success Response**:
   ```json
-  { "success": true, "message": "Updated successfully" }
+  { "status": true, "message": "Updated successfully", "data": { "id": "<id>" } }
   ```
 
 ### 3.5 刪除食材
@@ -206,7 +229,7 @@ type Food = {
 - **Path**: `/inventory/{id}`
 - **Success Response**:
   ```json
-  { "success": true, "message": "Deleted successfully" }
+  { "status": true, "message": "Deleted successfully" }
   ```
 
 ### 3.6 批次操作
@@ -215,38 +238,68 @@ type Food = {
   - **Method**: `POST`
   - **Path**: `/inventory/batch`
   - **Request Body**: `BatchAddInventoryRequest` (`{ "items": [Omit<FoodItem, 'id' | 'createdAt' | 'updatedAt'>] }`)
-  - **Success Response**: `{ "success": true, "message": "Created successfully" }`
+  - **Success Response**: `{ "status": true, "message": "Created successfully" }`
 
 - **Batch Update**
   - **Method**: `PUT`
   - **Path**: `/inventory/batch`
   - **Request Body**: `BatchUpdateInventoryRequest` (`{ "items": [Partial<FoodItem> (需包含 id)] }`)
-  - **Success Response**: `{ "success": true, "message": "Updated successfully" }`
+  - **Success Response**: `{ "status": true, "message": "Updated successfully" }`
 
 - **Batch Delete**
   - **Method**: `DELETE`
   - **Path**: `/inventory/batch`
   - **Request Body**: `BatchDeleteInventoryRequest` (`{ "ids": ["id1", "id2"] }`)
-  - **Success Response**: `{ "success": true, "message": "Deleted successfully" }`
+  - **Success Response**: `{ "status": true, "message": "Deleted successfully" }`
 
 ### 3.7 取得庫存統計
 
 - **Method**: `GET`
 - **Path**: `/inventory/stats`
 - **Query Params**: `groupId?`
-- **Success Response**: `InventoryStats`
+- **Success Response**:
+  ```json
+  {
+    "status": true,
+    "data": {
+      "stats": {
+        /* InventoryStats */
+      }
+    }
+  }
+  ```
 
 ### 3.8 取得分類列表
 
 - **Method**: `GET`
 - **Path**: `/inventory/categories`
-- **Success Response**: `CategoryInfo[]`
+- **Success Response**:
+  ```json
+  {
+    "status": true,
+    "data": {
+      "categories": [
+        /* CategoryInfo */
+      ]
+    }
+  }
+  ```
 
 ### 3.9 取得庫存摘要
 
 - **Method**: `GET`
 - **Path**: `/inventory/summary`
-- **Success Response**: `InventorySummary`
+- **Success Response**:
+  ```json
+  {
+    "status": true,
+    "data": {
+      "summary": {
+        /* InventorySummary */
+      }
+    }
+  }
+  ```
 
 ### 3.10 取得過期/常用清單
 
@@ -257,10 +310,13 @@ type Food = {
   - **Success Response**:
     ```json
     {
-      "items": [
-        /* FoodItem */
-      ],
-      "total": 42
+      "status": true,
+      "data": {
+        "items": [
+          /* FoodItem */
+        ],
+        "total": 42
+      }
     }
     ```
 
@@ -268,12 +324,30 @@ type Food = {
   - **Method**: `GET`
   - **Path**: `/inventory/frequent`
   - **Query Params**: `limit?`
-  - **Success Response**: `FoodItem[]`
+  - **Success Response**:
+    ```json
+    {
+      "status": true,
+      "data": {
+        "items": [
+          /* FoodItem */
+        ]
+      }
+    }
+    ```
 
 ### 3.11 庫存設定
 
-- **GET** `/inventory/settings`: 取得設定，回傳 `InventorySettings`
+- **GET** `/inventory/settings`: 取得設定
+  - **Success Response**:
+    ```json
+    { "status": true, "data": { "settings": { /* InventorySettings */ } } }
+    ```
 - **PUT** `/inventory/settings`: 更新設定，Request Body: `UpdateInventorySettingsRequest`
+  - **Success Response**:
+    ```json
+    { "status": true, "message": "Updated successfully", "data": { "settings": { /* InventorySettings */ } } }
+    ```
 
 ---
 
@@ -283,30 +357,45 @@ type Food = {
 
 - **Method**: `GET`
 - **Path**: `/foods/category/{catId}`
-- **Success Response**: `Food[]`
+- **Success Response**:
+  ```json
+  { "status": true, "data": { "items": [ /* Food */ ] } }
+  ```
 
 ### 4.2 取得分類下單一食材
 
 - **Method**: `GET`
 - **Path**: `/foods/category/{catId}/{id}`
-- **Success Response**: `Food`
+- **Success Response**:
+  ```json
+  { "status": true, "data": { "food": { /* Food */ } } }
+  ```
 
 ### 4.3 新增食材主檔
 
 - **Method**: `POST`
 - **Path**: `/foods`
 - **Request Body**: `Omit<Food, 'id'>`
-- **Success Response**: `Food`
+- **Success Response**:
+  ```json
+  { "status": true, "message": "Created successfully", "data": { "food": { /* Food */ } } }
+  ```
 
 ### 4.4 更新食材主檔
 
 - **Method**: `PUT`
 - **Path**: `/foods/{id}`
 - **Request Body**: `Partial<Food>`
-- **Success Response**: `Food`
+- **Success Response**:
+  ```json
+  { "status": true, "message": "Updated successfully", "data": { "food": { /* Food */ } } }
+  ```
 
 ### 4.5 刪除食材主檔
 
 - **Method**: `DELETE`
 - **Path**: `/foods/{id}`
-- **Success Response**: `204 No Content`
+- **Success Response**:
+  ```json
+  { "status": true, "message": "Deleted successfully" }
+  ```

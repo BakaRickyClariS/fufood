@@ -135,7 +135,18 @@ type StandardQueryParams = {
 };
 ```
 
-### 3. 標準錯誤回應
+### 3. 標準成功回應
+所有成功回應皆使用統一封裝：
+
+```json
+{
+  "status": true,
+  "message": "可選的成功訊息",
+  "data": { /* 各端點的實際 payload */ }
+}
+```
+
+### 4. 標準錯誤回應
 所有 API 發生錯誤時，回傳統一格式：
 
 ```typescript
@@ -147,10 +158,9 @@ type ApiErrorResponse = {
 };
 ```
 
-### 4. 狀態碼規範
-- `200 OK`: 請求成功
-- `201 Created`: 資源建立成功
-- `204 No Content`: 請求成功但無回傳內容 (如刪除)
+### 5. 狀態碼規範
+- `200 OK`: 請求成功（回傳統一封裝）
+- `201 Created`: 資源建立成功（回傳統一封裝）
 - `400 Bad Request`: 請求格式錯誤
 - `401 Unauthorized`: 未認證或 Token 無效
 - `403 Forbidden`: 無權限存取
