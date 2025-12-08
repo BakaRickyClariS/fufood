@@ -118,29 +118,29 @@ export type ShoppingItem = {
 
 | # | Method | API Path | 功能說明 | 狀態 |
 |---|--------|----------|---------|------|
-| 48 | GET | `/api/v1/shopping-lists` | 取得所有購物清單 | 🆕 |
-| 49 | POST | `/api/v1/shopping-lists` | 建立購物清單 | 🆕 |
-| 50 | GET | `/api/v1/shopping-lists/{id}` | 取得單一購物清單內容 | 🆕 |
-| 51 | PUT | `/api/v1/shopping-lists/{id}` | 編輯購物清單 | 🆕 |
-| 52 | DELETE | `/api/v1/shopping-lists/{id}` | 刪除購物清單 | 🆕 |
-| 53 | POST | `/api/v1/shopping-lists/{id}/purchase` | 標記清單已購買 → 更新庫存 | 🆕 |
+| 48 | GET | `/api/v1/shopping-lists` | 取得所有購物清單（支援 year/month 查詢） | ✅ |
+| 49 | POST | `/api/v1/shopping-lists` | 建立購物清單 | ✅ |
+| 50 | GET | `/api/v1/shopping-lists/{id}` | 取得單一購物清單內容 | ✅ |
+| 51 | PUT | `/api/v1/shopping-lists/{id}` | 編輯購物清單 | ✅ |
+| 52 | DELETE | `/api/v1/shopping-lists/{id}` | 刪除購物清單 | ✅ |
+| 53 | POST | `/api/v1/shopping-lists/{id}/purchase` | 標記清單已購買 → 更新庫存 | ✅ |
+| 54 | GET/POST | `/api/v1/shopping-lists/{id}/posts` | 取得/建立清單內貼文 | ✅ |
+| 55 | POST | `/api/v1/posts/{postId}/like` | 貼文按讚切換 | ✅ |
 
-### 擴充 API (貼文功能 - 提議中)
+### 擴充 API（留言功能）- 規劃中
 | Method | API Path | 功能說明 |
 |--------|----------|---------|
-| GET | `/api/v1/shopping-lists/{id}/posts` | 取得清單內貼文 |
-| POST | `/api/v1/shopping-lists/{id}/posts` | 新增貼文 |
-| POST | `/api/v1/posts/{postId}/like` | 按讚 |
 | POST | `/api/v1/posts/{postId}/comments` | 留言 |
 
 ### SharedListApi 介面
 ```typescript
 export interface SharedListApi {
-  getSharedLists(): Promise<SharedListItem[]>;
+  getSharedLists(year?: number, month?: number): Promise<SharedListItem[]>;
   getSharedListById(id: string): Promise<SharedList>;
   createSharedList(input: CreateSharedListInput): Promise<SharedList>;
   getPosts(listId: string): Promise<SharedListPost[]>;
   createPost(input: CreatePostInput): Promise<SharedListPost>;
+  togglePostLike(postId: string, listId: string): Promise<SharedListPost>;
 }
 ```
 

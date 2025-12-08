@@ -160,7 +160,7 @@ export const foodsApi = {
 #### 端點
 
 \`\`\`
-GET /api/inventory
+GET /api/v1/inventory
 \`\`\`
 
 #### 請求參數 (Query Params)
@@ -188,7 +188,7 @@ GET /api/inventory
 #### 端點
 
 \`\`\`
-POST /api/inventory
+POST /api/v1/inventory
 \`\`\`
 
 #### 請求格式
@@ -208,6 +208,19 @@ AddFoodItemRequest;
   }
 }
 ```
+
+---
+
+### 3. 其他核心端點（皆採 `/api/v1` 前綴）
+
+- `GET /inventory/{id}`：取得單一食材詳情  
+- `PUT /inventory/{id}`：更新食材  
+- `DELETE /inventory/{id}`：刪除食材  
+- `POST /inventory/batch` / `PUT /inventory/batch` / `DELETE /inventory/batch`：批次新增/更新/刪除  
+- `GET /inventory/summary`：庫存概況  
+- `GET /inventory/stats`：庫存統計  
+- `GET /inventory/categories`：分類清單  
+- `GET /inventory/settings` / `PUT /inventory/settings`：取得/更新庫存設定
 
 ---
 
@@ -319,7 +332,7 @@ VITE_USE_MOCK_API=true
 | 變數名稱              | 說明              | 範例                    |
 | --------------------- | ----------------- | ----------------------- |
 | `VITE_USE_MOCK_API`   | 是否使用 Mock API | `true` / `false`        |
-| `VITE_RECIPE_API_URL` | 後端 API 網址     | `http://localhost:3000` |
+| `VITE_API_BASE_URL`   | 後端 API 網址     | `http://localhost:3000/api/v1` |
 
 ---
 

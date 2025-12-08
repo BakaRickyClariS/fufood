@@ -125,7 +125,7 @@ export const authApi = {
 
 #### 端點
 \`\`\`
-POST /api/auth/login
+POST /api/v1/auth/login
 \`\`\`
 
 #### 請求格式
@@ -181,7 +181,7 @@ type LoginResponse = {
 
 #### 端點
 \`\`\`
-POST /api/auth/register
+POST /api/v1/auth/register
 \`\`\`
 
 #### 請求格式
@@ -232,12 +232,13 @@ type RegisterResponse = {
 
 ---
 
-### 3. **loginWithLINE** - LINE 登入
+### 3. **lineLogin / loginWithLINE** - LINE 登入導向與回呼
 
 #### 端點
-\`\`\`
-POST /api/auth/line
-\`\`\`
+```
+GET /api/v1/auth/line/login
+GET /api/v1/auth/line/callback
+```
 
 #### 請求格式
 ```typescript
@@ -263,14 +264,41 @@ type LoginResponse = {
 };
 ```
 
----
-
-### 4. **logout** - 登出
+### 4. **refreshToken** - 刷新 Access Token
 
 #### 端點
-\`\`\`
-POST /api/auth/logout
-\`\`\`
+```
+POST /api/v1/auth/refresh
+```
+
+#### 請求格式
+```json
+{ "refreshToken": "..." }
+```
+
+#### 回應格式
+```json
+{ "accessToken": "...", "expiresIn": 3600 }
+```
+
+### 5. **checkToken** - 驗證 Token 狀態
+
+#### 端點
+```
+GET /api/v1/auth/check
+```
+
+#### 請求格式
+無請求 body（需攜帶 Authorization Header）
+
+---
+
+### 6. **logout** - 登出
+
+#### 端點
+```
+POST /api/v1/auth/logout
+```
 
 #### 請求格式
 無請求 body
@@ -282,12 +310,12 @@ void
 
 ---
 
-### 5. **getCurrentUser** - 取得當前使用者
+### 7. **getCurrentUser** - 取得當前使用者
 
 #### 端點
-\`\`\`
-GET /api/auth/me
-\`\`\`
+```
+GET /api/v1/auth/me
+```
 
 #### 請求格式
 無請求 body，需要在 Header 攜帶 Token
@@ -307,6 +335,26 @@ User
   "createdAt": "2025-12-01T10:00:00.000Z"
 }
 ```
+
+---
+
+### 8. **updateProfile** - 更新使用者資料
+
+#### 端點
+```
+PUT /api/v1/auth/update-profile
+```
+
+#### 請求格式
+```typescript
+type UpdateProfileRequest = {
+  name?: string;
+  avatar?: string;
+};
+```
+
+#### 回應格式
+`User`
 
 ---
 
