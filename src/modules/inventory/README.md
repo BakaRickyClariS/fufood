@@ -124,7 +124,11 @@ export const inventoryApi = {
   addItem: (data: AddFoodItemRequest) => Promise<AddFoodItemResponse>;
   updateItem: (id: string, data: UpdateFoodItemRequest) => Promise<UpdateFoodItemResponse>;
   deleteItem: (id: string) => Promise<DeleteFoodItemResponse>;
-  batchOperation: (data: BatchOperationRequest) => Promise<{ success: boolean }>;
+  batchAdd: (data: BatchAddInventoryRequest) => Promise<{ success: boolean; message?: string }>;
+  batchUpdate: (data: BatchUpdateInventoryRequest) => Promise<{ success: boolean; message?: string }>;
+  batchDelete: (data: BatchDeleteInventoryRequest) => Promise<{ success: boolean; message?: string }>;
+  getFrequentItems: (limit?: number) => Promise<FoodItem[]>;
+  getExpiredItems: (page?: number, limit?: number) => Promise<{ items: FoodItem[]; total: number }>;
   getStats: (groupId?: string) => Promise<InventoryStats>;
   getCategories: () => Promise<CategoryInfo[]>;
 };
@@ -216,7 +220,11 @@ AddFoodItemRequest;
 - `GET /inventory/{id}`：取得單一食材詳情  
 - `PUT /inventory/{id}`：更新食材  
 - `DELETE /inventory/{id}`：刪除食材  
-- `POST /inventory/batch` / `PUT /inventory/batch` / `DELETE /inventory/batch`：批次新增/更新/刪除  
+- `POST /inventory/batch`：批次新增  
+- `PUT /inventory/batch`：批次更新  
+- `DELETE /inventory/batch`：批次刪除  
+- `GET /inventory/frequent`：取得常用項目  
+- `GET /inventory/expired`：取得過期紀錄  
 - `GET /inventory/summary`：庫存概況  
 - `GET /inventory/stats`：庫存統計  
 - `GET /inventory/categories`：分類清單  

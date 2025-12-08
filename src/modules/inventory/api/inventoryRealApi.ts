@@ -13,7 +13,9 @@ import type {
   InventorySettings,
   UpdateInventorySettingsRequest,
   CategoryInfo,
-  BatchOperationRequest,
+  BatchAddInventoryRequest,
+  BatchUpdateInventoryRequest,
+  BatchDeleteInventoryRequest,
 } from '../types';
 import type { InventoryApi } from './inventoryApi';
 
@@ -22,9 +24,11 @@ export const createRealInventoryApi = (): InventoryApi => {
     /**
      * 取得庫存列表
      */
-    getItems: async (
+    getInventory: async (
       params?: GetInventoryRequest,
     ): Promise<GetInventoryResponse> => {
+      // Ensure path is correct based on agreed optimization plan (using base URL from client)
+      // If client has base URL /api/v1, then this should be /inventory
       return apiClient.get<GetInventoryResponse>('/inventory', params);
     },
 
@@ -60,38 +64,61 @@ export const createRealInventoryApi = (): InventoryApi => {
     },
 
     /**
-     * 批次操作
+     * 批次新增
      */
-    batchOperation: async (
-      data: BatchOperationRequest,
-    ): Promise<{ success: boolean }> => {
-      // Map generic batch operation to specific API calls
-      switch (data.operation) {
-        case 'delete':
-          await apiClient.delete<void>('/inventory/batch', {
-            body: JSON.stringify({ ids: data.itemIds }),
-          } as any);
-          break;
-        case 'add':
-          // Assuming data.data contains items
-          if (data.data?.items) {
-            await apiClient.post<void>('/inventory/batch', {
-              items: data.data.items,
-            });
-          }
-          break;
-        case 'update':
-          if (data.data?.items) {
-            await apiClient.put<void>('/inventory/batch', {
-              items: data.data.items,
-            });
-          }
-          break;
-        default:
-          console.warn('Unsupported batch operation:', data.operation);
-      }
+    batchAdd: async (
+      data: BatchAddInventoryRequest,
+    ): Promise<{ success: boolean; message?: string }> => {
+      return apiClient.post<{ success: boolean; message?: string }>(
+        '/inventory/batch',
+        data,
+      );
+    },
 
-      return { success: true };
+    /**
+     * 批次更新
+     */
+    batchUpdate: async (
+      data: BatchUpdateInventoryRequest,
+    ): Promise<{ success: boolean; message?: string }> => {
+      return apiClient.put<{ success: boolean; message?: string }>(
+        '/inventory/batch',
+        data,
+      );
+    },
+
+    /**
+     * 批次刪除
+     */
+    batchDelete: async (
+      data: BatchDeleteInventoryRequest,
+    ): Promise<{ success: boolean; message?: string }> => {
+      return apiClient.delete<{ success: boolean; message?: string }>(
+        '/inventory/batch',
+        {
+          body: data,
+        } as any,
+      );
+    },
+
+    /**
+     * 取得常用項目
+     */
+    getFrequentItems: async (limit?: number): Promise<FoodItem[]> => {
+      return apiClient.get<FoodItem[]>('/inventory/frequent', { limit });
+    },
+
+    /**
+     * 取得過期紀錄
+     */
+    getExpiredItems: async (
+      page?: number,
+      limit?: number,
+    ): Promise<{ items: FoodItem[]; total: number }> => {
+      return apiClient.get<{ items: FoodItem[]; total: number }>(
+        '/inventory/expired',
+        { page, limit },
+      );
     },
 
     /**

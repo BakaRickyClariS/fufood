@@ -27,6 +27,19 @@ import chocoIceCream from '@/assets/images/foods/chocoIceCream.png';
 export const MOCK_INVENTORY: FoodItem[] = [
   // 蔬果類
   {
+    id: 'veg-expired-1',
+    name: '過期青江菜',
+    category: '蔬果類',
+    quantity: 1,
+    unit: '把',
+    imageUrl: mainlandAchoy,
+    purchaseDate: '2023-01-01',
+    expiryDate: '2023-01-14',
+    lowStockAlert: false,
+    lowStockThreshold: 2,
+    createdAt: '2023-01-01T00:00:00.000Z',
+  },
+  {
     id: 'veg-1',
     name: '大陸A菜',
     category: '蔬果類',
@@ -134,6 +147,19 @@ export const MOCK_INVENTORY: FoodItem[] = [
   },
 
   // 冷凍調理類
+  {
+    id: 'frozen-expired-1',
+    name: '過期冷凍水餃',
+    category: '冷凍調理類',
+    quantity: 1,
+    unit: '包',
+    imageUrl: frozenCabbage,
+    purchaseDate: '2023-05-01',
+    expiryDate: '2023-11-01',
+    lowStockAlert: false,
+    lowStockThreshold: 1,
+    createdAt: '2023-05-01T00:00:00.000Z',
+  },
   {
     id: 'frozen-1',
     name: '帶皮薯條',

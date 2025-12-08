@@ -15,7 +15,7 @@ export const useInventory = (groupId?: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await inventoryApi.getItems({ groupId });
+      const response = await inventoryApi.getInventory({ groupId });
       setItems(response.items);
     } catch (err) {
       setError(
@@ -68,9 +68,8 @@ export const useInventory = (groupId?: string) => {
   const batchDelete = async (ids: string[]) => {
     setIsLoading(true);
     try {
-      await inventoryApi.batchOperation({
-        itemIds: ids,
-        operation: 'delete',
+      await inventoryApi.batchDelete({
+        ids: ids,
       });
       await fetchItems(); // Refresh list
     } catch (err) {
