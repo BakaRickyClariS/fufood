@@ -37,14 +37,24 @@ export class MockRecipeApi implements RecipeApi {
     return new Promise((resolve) => setTimeout(resolve, ms));
   };
 
-  getRecipes = async (category?: RecipeCategory): Promise<RecipeListItem[]> => {
+  getRecipes = async (params?: {
+    category?: RecipeCategory;
+    favorite?: boolean;
+  }): Promise<RecipeListItem[]> => {
     await this.delay(600);
 
-    if (!category) {
-      return MOCK_RECIPE_LIST;
+    let list = MOCK_RECIPE_LIST;
+
+    if (params?.category) {
+      list = list.filter((recipe) => recipe.category === params.category);
     }
 
-    return MOCK_RECIPE_LIST.filter((recipe) => recipe.category === category);
+    if (params?.favorite) {
+      const favorites = this.getFavoriteIds();
+      list = list.filter((recipe) => favorites.includes(recipe.id));
+    }
+
+    return list;
   };
 
   getRecipeById = async (id: string): Promise<Recipe> => {
@@ -58,7 +68,10 @@ export class MockRecipeApi implements RecipeApi {
     return recipe;
   };
 
-  toggleFavorite = async (id: string): Promise<{ isFavorite: boolean }> => {
+  toggleFavorite = async (
+    id: string,
+    shouldFavorite?: boolean,
+  ): Promise<{ isFavorite: boolean }> => {
     await this.delay(400);
 
     const recipe = MOCK_RECIPES.find((r) => r.id === id);
@@ -66,18 +79,14 @@ export class MockRecipeApi implements RecipeApi {
       throw new Error('食譜不存在');
     }
 
-    recipe.isFavorite = !recipe.isFavorite;
-
-    recipe.isFavorite = !recipe.isFavorite;
+    if (typeof shouldFavorite === 'boolean') {
+      recipe.isFavorite = shouldFavorite;
+    } else {
+      recipe.isFavorite = !recipe.isFavorite;
+    }
 
     // 更新 localStorage / Memory
-    let favorites: string[] = [];
-    if (mockRequestHandlers.shouldUseMemoryOnly() && memoryFavorites) {
-      favorites = memoryFavorites;
-    } else {
-      const stored = mockRequestHandlers.getItem('recipe_favorites');
-      favorites = stored ? JSON.parse(stored) : [];
-    }
+    let favorites = this.getFavoriteIds();
 
     if (recipe.isFavorite) {
       if (!favorites.includes(id)) favorites.push(id);
@@ -95,16 +104,7 @@ export class MockRecipeApi implements RecipeApi {
   getFavorites = async (): Promise<RecipeListItem[]> => {
     await this.delay(500);
 
-    await this.delay(500);
-
-    let favorites: string[] = [];
-    if (mockRequestHandlers.shouldUseMemoryOnly() && memoryFavorites) {
-      favorites = memoryFavorites;
-    } else {
-      const stored = mockRequestHandlers.getItem('recipe_favorites');
-      favorites = stored ? JSON.parse(stored) : [];
-      if (favorites.length > 0) memoryFavorites = favorites;
-    }
+    const favorites = this.getFavoriteIds();
 
     return MOCK_RECIPE_LIST.filter((recipe) => favorites.includes(recipe.id));
   };
@@ -232,4 +232,14 @@ export class MockRecipeApi implements RecipeApi {
 
     return { success: true };
   };
+
+  private getFavoriteIds(): string[] {
+    if (mockRequestHandlers.shouldUseMemoryOnly() && memoryFavorites) {
+      return memoryFavorites;
+    }
+    const stored = mockRequestHandlers.getItem('recipe_favorites');
+    const favorites = stored ? JSON.parse(stored) : [];
+    if (favorites.length > 0) memoryFavorites = favorites;
+    return favorites;
+  }
 }

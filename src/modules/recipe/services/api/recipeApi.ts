@@ -11,9 +11,15 @@ import type {
 import { apiClient } from '@/services/apiClient';
 
 export type RecipeApi = {
-  getRecipes(category?: RecipeCategory): Promise<RecipeListItem[]>;
+  getRecipes(params?: {
+    category?: RecipeCategory;
+    favorite?: boolean;
+  }): Promise<RecipeListItem[]>;
   getRecipeById(id: string): Promise<Recipe>;
-  toggleFavorite(id: string): Promise<{ isFavorite: boolean }>;
+  toggleFavorite(
+    id: string,
+    shouldFavorite?: boolean,
+  ): Promise<{ isFavorite: boolean }>;
   getFavorites(): Promise<RecipeListItem[]>;
   confirmCook(
     data: ConsumptionConfirmation,
@@ -24,10 +30,20 @@ export type RecipeApi = {
 };
 
 export class RealRecipeApi implements RecipeApi {
-  getRecipes = async (category?: RecipeCategory): Promise<RecipeListItem[]> => {
-    const query = category ? `?category=${encodeURIComponent(category)}` : '';
+  getRecipes = async (params?: {
+    category?: RecipeCategory;
+    favorite?: boolean;
+  }): Promise<RecipeListItem[]> => {
+    const query = [];
+    if (params?.category) {
+      query.push(`category=${encodeURIComponent(params.category)}`);
+    }
+    if (params?.favorite) {
+      query.push('favorite=true');
+    }
+    const queryString = query.length ? `?${query.join('&')}` : '';
     const response = await apiClient.get<RecipeListItem[]>(
-      `/api/v1/recipes${query}`,
+      `/api/v1/recipes${queryString}`,
     );
     return response.data;
   };
@@ -37,16 +53,26 @@ export class RealRecipeApi implements RecipeApi {
     return response.data;
   };
 
-  toggleFavorite = async (id: string): Promise<{ isFavorite: boolean }> => {
+  toggleFavorite = async (
+    id: string,
+    shouldFavorite?: boolean,
+  ): Promise<{ isFavorite: boolean }> => {
+    if (shouldFavorite === false) {
+      const response = await apiClient.delete<{ isFavorite: boolean }>(
+        `/api/v1/recipes/${id}/favorite`,
+      );
+      return response.data ?? { isFavorite: false };
+    }
+
     const response = await apiClient.post<{ isFavorite: boolean }>(
       `/api/v1/recipes/${id}/favorite`,
     );
-    return response.data;
+    return response.data ?? { isFavorite: true };
   };
 
   getFavorites = async (): Promise<RecipeListItem[]> => {
     const response = await apiClient.get<RecipeListItem[]>(
-      '/api/v1/recipes/favorites',
+      '/api/v1/recipes?favorite=true',
     );
     return response.data;
   };
@@ -54,11 +80,19 @@ export class RealRecipeApi implements RecipeApi {
   confirmCook = async (
     data: ConsumptionConfirmation,
   ): Promise<{ success: boolean; message: string }> => {
-    const response = await apiClient.post<{
+    const response = await apiClient.patch<{
       success: boolean;
       message: string;
-    }>(`/api/v1/recipes/${data.recipeId}/cook`, data);
-    return response.data;
+    }>(`/api/v1/recipes/${data.recipeId}`, {
+      status: 'cooked',
+      consumption: data,
+    });
+    return (
+      response.data ?? {
+        success: true,
+        message: '已更新食譜狀態',
+      }
+    );
   };
 
   addMealPlan = async (data: MealPlanInput): Promise<MealPlan> => {
