@@ -1,18 +1,16 @@
-# Inventory Module & Foods Module API Specification
-
-**版本**: v1.0
-**文件用途**: 供後端開發人員實作參考
-**涵蓋範圍**: Inventory (庫存管理) 與 Foods (食材主檔) 模組
+**版本**: v2.1（同步 `src/modules/API_REFERENCE_V2.md`）  
+**最後更新**: 2025-12-02  
+**涵蓋範圍**: Inventory（庫存管理）與 Foods（食材主檔）模組
 
 ---
 
-## 1. 基礎規範
+## 1. 基本規範
 
-### 1.1 認證 (Authentication)
+### 1.1 認證（Authentication）
 
-- **Access Token**: 放入 Header `Authorization: Bearer <access_token>` (亦支援 `httpOnly` Cookie)
-- **Refresh Token**: **必須**使用 `httpOnly` Cookie 傳遞以確保安全性
-- **Cookie 設定**: 需設定 `Secure` (HTTPS only) 與 `SameSite=Strict`
+- **Access Token**: Header `Authorization: Bearer <access_token>`（或 httpOnly Cookie）
+- **Refresh Token**: **必須**放在 httpOnly Cookie 以確保安全
+- **Cookie 建議**: `Secure`（HTTPS） + `SameSite=Strict`
 
 ### 1.2 Base URL
 
@@ -20,19 +18,27 @@
 /api/v1
 ```
 
-### 1.3 標準回應格式與狀態碼 (Standard Response & Status Codes)
+### 1.3 標準回應與狀態碼
 
-**成功回應 (Success)**:
+**成功（Success）**:
 
-| 狀態碼             | 描述     | 適用情境                          |
-| :----------------- | :------- | :-------------------------------- |
-| **200 OK**         | 請求成功 | 一般查詢、修改成功回傳資料時      |
-| **201 Created**    | 建立成功 | 資源建立成功 (如新增食材)         |
-| **204 No Content** | 無內容   | 請求成功但無回傳資料 (如刪除成功) |
+| 狀態碼             | 描述       | 常見使用情境                 |
+| :----------------- | :--------- | :--------------------------- |
+| **200 OK**         | 請求成功   | 一般查詢、更新、刪除回傳內容 |
+| **201 Created**    | 建立成功   | 新增資源                     |
 
-**錯誤回應 (Error)**:
+**成功回應格式（統一封裝）**  
+所有成功回應皆採用以下 envelope，`message` 可選，實際資料置於 `data`：
 
-標準錯誤格式：
+```json
+{
+  "status": true,
+  "message": "可選的成功訊息",
+  "data": { /* 實際 payload，依各 API 定義 */ }
+}
+```
+
+**錯誤（Error）**: 統一錯誤格式
 
 ```json
 {
@@ -46,42 +52,90 @@
 }
 ```
 
-| 狀態碼                        | 描述       | 適用情境                                 |
-| :---------------------------- | :--------- | :--------------------------------------- |
-| **400 Bad Request**           | 請求錯誤   | 參數格式錯誤、必填欄位缺失               |
-| **401 Unauthorized**          | 未認證     | Token 無效、逾時或未提供 (Cookie/Header) |
-| **403 Forbidden**             | 無權限     | 已認證但無權限存取該資源                 |
-| **404 Not Found**             | 找不到資源 | 請求的路徑或 ID 不存在                   |
-| **422 Unprocessable Entity**  | 驗證失敗   | 格式正確但邏輯驗證失敗 (如庫存不足)      |
-| **429 Too Many Requests**     | 請求過多   | 超過 API 若用的頻率限制                  |
-| **500 Internal Server Error** | 伺服器錯誤 | 系統內部發生非預期錯誤                   |
+| 狀態碼                        | 描述         | 常見使用情境       |
+| :---------------------------- | :----------- | :----------------- |
+| **400 Bad Request**           | 請求格式錯誤 | 缺少欄位或格式有誤 |
+| **401 Unauthorized**          | 未授權       | Token 無效或缺失   |
+| **403 Forbidden**             | 禁止存取     | 已登入但無權限     |
+| **404 Not Found**             | 找不到資源   | 路徑或 ID 不存在   |
+| **422 Unprocessable Entity**  | 驗證失敗     | 例如庫存不足       |
+| **429 Too Many Requests**     | 請求過多     | 觸發流量限制       |
+| **500 Internal Server Error** | 伺服器錯誤   | 系統內部異常       |
 
 ---
 
-## 2. 資料模型 (Data Models)
+## 2. 資料模型
 
-### 2.1 FoodItem (庫存食材)
+### 2.1 FoodItem（庫存食材）
 
 ```typescript
 type FoodItem = {
   id: string; // UUID
   name: string; // 食材名稱
-  category: string; // 分類 (參考 2.4)
+  category: FoodCategory; // 類別（見 2.7）
   quantity: number; // 數量
-  unit: string; // 單位 (個, g, ml, etc.)
+  unit: FoodUnit; // 單位
   imageUrl?: string; // 圖片 URL
   purchaseDate: string; // 購買日期 (YYYY-MM-DD)
-  expiryDate: string; // 過期日期 (YYYY-MM-DD)
+  expiryDate: string; // 保存期限 (YYYY-MM-DD)
   lowStockAlert: boolean; // 是否開啟低庫存提醒
-  lowStockThreshold: number; // 低庫存閥值
+  lowStockThreshold: number; // 低庫存門檻
   notes?: string; // 備註
-  groupId?: string; // 所屬群組 ID (若為個人則為 null 或 undefined)
+  groupId?: string; // 所屬群組 ID（個人則為 undefined）
   createdAt: string; // ISO 8601
-  updatedAt: string; // ISO 8601
+  updatedAt?: string; // ISO 8601
 };
 ```
 
-### 2.2 Food (食材主檔)
+### 2.2 CategoryInfo
+
+```typescript
+type CategoryInfo = {
+  id: string;
+  title: string;
+  count: number;
+  imageUrl: string;
+  bgColor: string;
+  slogan: string;
+  description: string[];
+};
+```
+
+### 2.3 InventoryStats（庫存統計）
+
+```typescript
+type InventoryStats = {
+  totalItems: number; // 總項目數
+  expiredCount: number; // 已過期數
+  expiringSoonCount: number; // 近效期數（預設 3 天內）
+  lowStockCount: number; // 低庫存數
+  byCategory: Record<FoodCategory, number>; // 各分類數量
+};
+```
+
+### 2.4 InventorySummary（庫存摘要）
+
+```typescript
+type InventorySummary = {
+  total: number;
+  expiring: number;
+  expired: number;
+  lowStock: number;
+};
+```
+
+### 2.5 InventorySettings（庫存設定）
+
+```typescript
+type InventorySettings = {
+  lowStockThreshold: number;
+  expiringSoonDays: number;
+  notifyOnExpiry: boolean;
+  notifyOnLowStock: boolean;
+};
+```
+
+### 2.6 Food（食材主檔）
 
 ```typescript
 type Food = {
@@ -90,71 +144,70 @@ type Food = {
   category: string;
   defaultUnit: string;
   imageUrl?: string;
-  nutritionInfo?: any; // 營養資訊 (JSON)
+  nutritionInfo?: any;
 };
 ```
 
-### 2.3 InventoryStats (庫存統計)
+### 2.7 FoodCategory（食材分類）
 
-```typescript
-type InventoryStats = {
-  totalItems: number; // 總項目數
-  totalQuantity: number; // 總數量
-  expiredCount: number; // 過期項目數
-  expiringSoonCount: number; // 即將過期項目數
-  value: number; // 預估總價值 (選填)
-  categoryBreakdown: Record<string, number>; // 各分類數量
-};
-```
-
-### 2.4 Categories (分類列舉)
-
-- 蔬果類
-- 冷凍調理類
-- 主食烘焙類
-- 乳製品飲料類
-- 冷凍海鮮類
-- 肉品類
+- 穀類
+- 調味料
+- 主食類
+- 乳製品與飲品
+- 肉類海鮮
+- 蔬果
 - 其他
 
 ---
 
-## 3. Inventory API (庫存管理)
+## 3. Inventory API（庫存管理）
 
 ### 3.1 取得庫存列表
 
 - **Method**: `GET`
 - **Path**: `/inventory`
-- **Query Params**:
-  - `groupId`: (Optional) 群組 ID
-  - `category`: (Optional) 分類篩選
-  - `status`: (Optional) `expired` | `expiring-soon` | `low-stock` | `normal`
-  - `page`: (Optional) 頁碼，預設 1
-  - `limit`: (Optional) 每頁筆數，預設 20
+- **Query Params**: `groupId?`, `category?`, `status? (expired | expiring-soon | low-stock | normal)`, `page?`, `limit?`
 - **Success Response**:
   ```json
   {
-    "items": [ ...FoodItem Objects ],
-    "total": 100,
-    "stats": { ...InventoryStats Object }
+    "status": true,
+    "data": {
+      "items": [
+        /* FoodItem */
+      ],
+      "total": 100,
+      "stats": {
+        /* InventoryStats */
+      }
+    }
   }
   ```
 
-### 3.2 取得單一食材詳情
+### 3.2 取得單一食材
 
 - **Method**: `GET`
 - **Path**: `/inventory/{id}`
-- **Success Response**: `FoodItem` Object
+- **Success Response**:
+  ```json
+  {
+    "status": true,
+    "data": {
+      "item": {
+        /* FoodItem */
+      }
+    }
+  }
+  ```
 
 ### 3.3 新增食材
 
 - **Method**: `POST`
 - **Path**: `/inventory`
-- **Request Body**: `Omit<FoodItem, 'id' | 'createdAt' | 'updatedAt'>`
+- **Request Body**: `AddFoodItemRequest` (`Omit<FoodItem, 'id' | 'createdAt' | 'updatedAt'>`)
 - **Success Response**:
   ```json
   {
-    "success": true,
+    "status": true,
     "message": "Created successfully",
     "data": { "id": "new-uuid" }
   }
@@ -164,104 +217,185 @@ type InventoryStats = {
 
 - **Method**: `PUT`
 - **Path**: `/inventory/{id}`
-- **Request Body**: `Partial<FoodItem>`
+- **Request Body**: `UpdateFoodItemRequest` (`Partial<Omit<FoodItem, 'id' | 'createdAt' | 'updatedAt'>>`)
 - **Success Response**:
   ```json
-  {
-    "success": true,
-    "message": "Updated successfully",
-    "data": { ...Updated FoodItem }
-  }
+  { "status": true, "message": "Updated successfully", "data": { "id": "<id>" } }
   ```
 
 ### 3.5 刪除食材
 
 - **Method**: `DELETE`
 - **Path**: `/inventory/{id}`
-- **Success Response**: `204 No Content` 或 `{ "success": true }`
+- **Success Response**:
+  ```json
+  { "status": true, "message": "Deleted successfully" }
+  ```
 
-### 3.6 批次操作 (新增/更新/刪除)
+### 3.6 批次操作
 
-- **Method**: `POST` / `PUT` / `DELETE`
-- **Path**: `/inventory/batch`
-- **Request Body**:
-  - POST (Batch Add): `{ "items": [ ...NewFoodItems ] }`
-  - PUT (Batch Update): `{ "items": [ ...UpdatedFoodItemsWithId ] }`
-  - DELETE (Batch Delete): `{ "ids": [ "id1", "id2" ] }`
-- **Success Response**: `{ "success": true }`
+- **Batch Add**
+  - **Method**: `POST`
+  - **Path**: `/inventory/batch`
+  - **Request Body**: `BatchAddInventoryRequest` (`{ "items": [Omit<FoodItem, 'id' | 'createdAt' | 'updatedAt'>] }`)
+  - **Success Response**: `{ "status": true, "message": "Created successfully" }`
+
+- **Batch Update**
+  - **Method**: `PUT`
+  - **Path**: `/inventory/batch`
+  - **Request Body**: `BatchUpdateInventoryRequest` (`{ "items": [Partial<FoodItem> (需包含 id)] }`)
+  - **Success Response**: `{ "status": true, "message": "Updated successfully" }`
+
+- **Batch Delete**
+  - **Method**: `DELETE`
+  - **Path**: `/inventory/batch`
+  - **Request Body**: `BatchDeleteInventoryRequest` (`{ "ids": ["id1", "id2"] }`)
+  - **Success Response**: `{ "status": true, "message": "Deleted successfully" }`
 
 ### 3.7 取得庫存統計
 
 - **Method**: `GET`
 - **Path**: `/inventory/stats`
-- **Query Params**: `groupId` (Optional)
-- **Success Response**: `InventoryStats` Object
+- **Query Params**: `groupId?`
+- **Success Response**:
+  ```json
+  {
+    "status": true,
+    "data": {
+      "stats": {
+        /* InventoryStats */
+      }
+    }
+  }
+  ```
 
 ### 3.8 取得分類列表
 
 - **Method**: `GET`
 - **Path**: `/inventory/categories`
-- **Success Response**: `CategoryInfo[]`
+- **Success Response**:
+  ```json
+  {
+    "status": true,
+    "data": {
+      "categories": [
+        /* CategoryInfo */
+      ]
+    }
+  }
+  ```
 
-### 3.9 取得庫存概況 (Summary)
+### 3.9 取得庫存摘要
 
 - **Method**: `GET`
 - **Path**: `/inventory/summary`
 - **Success Response**:
   ```json
   {
-    "total": 50,
-    "expiring": 3,
-    "expired": 1
+    "status": true,
+    "data": {
+      "summary": {
+        /* InventorySummary */
+      }
+    }
   }
   ```
 
 ### 3.10 取得過期/常用清單
 
-- **Method**: `GET`
-- **Path**: `/inventory/expired` (過期清單)
-- **Path**: `/inventory/frequent` (常用清單)
-- **Success Response**: `FoodItem[]`
+- **過期清單**
+  - **Method**: `GET`
+  - **Path**: `/inventory/expired`
+  - **Query Params**: `page?`, `limit?`
+  - **Success Response**:
+    ```json
+    {
+      "status": true,
+      "data": {
+        "items": [
+          /* FoodItem */
+        ],
+        "total": 42
+      }
+    }
+    ```
+
+- **常用清單**
+  - **Method**: `GET`
+  - **Path**: `/inventory/frequent`
+  - **Query Params**: `limit?`
+  - **Success Response**:
+    ```json
+    {
+      "status": true,
+      "data": {
+        "items": [
+          /* FoodItem */
+        ]
+      }
+    }
+    ```
 
 ### 3.11 庫存設定
 
 - **GET** `/inventory/settings`: 取得設定
-- **PUT** `/inventory/settings`: 更新設定 (Request Body: InventorySettings)
+  - **Success Response**:
+    ```json
+    { "status": true, "data": { "settings": { /* InventorySettings */ } } }
+    ```
+- **PUT** `/inventory/settings`: 更新設定，Request Body: `UpdateInventorySettingsRequest`
+  - **Success Response**:
+    ```json
+    { "status": true, "message": "Updated successfully", "data": { "settings": { /* InventorySettings */ } } }
+    ```
 
 ---
 
-## 4. Foods API (食材主檔)
+## 4. Foods API（食材主檔）
 
-**用途**: 提供食材的標準資料庫，讓使用者在新增庫存時可以快速選擇標準化的食材。
-
-### 4.1 取得分類下的食材
+### 4.1 取得分類下食材
 
 - **Method**: `GET`
 - **Path**: `/foods/category/{catId}`
-- **Success Response**: `Food[]`
+- **Success Response**:
+  ```json
+  { "status": true, "data": { "items": [ /* Food */ ] } }
+  ```
 
-### 4.2 取得單一食材主檔詳情
+### 4.2 取得分類下單一食材
 
 - **Method**: `GET`
 - **Path**: `/foods/category/{catId}/{id}`
-- **Success Response**: `Food` Object
+- **Success Response**:
+  ```json
+  { "status": true, "data": { "food": { /* Food */ } } }
+  ```
 
-### 4.3 新增食材主檔 (用戶自定義)
+### 4.3 新增食材主檔
 
 - **Method**: `POST`
 - **Path**: `/foods`
 - **Request Body**: `Omit<Food, 'id'>`
-- **Success Response**: `Food` Object
+- **Success Response**:
+  ```json
+  { "status": true, "message": "Created successfully", "data": { "food": { /* Food */ } } }
+  ```
 
 ### 4.4 更新食材主檔
 
 - **Method**: `PUT`
 - **Path**: `/foods/{id}`
 - **Request Body**: `Partial<Food>`
-- **Success Response**: `Food` Object
+- **Success Response**:
+  ```json
+  { "status": true, "message": "Updated successfully", "data": { "food": { /* Food */ } } }
+  ```
 
 ### 4.5 刪除食材主檔
 
 - **Method**: `DELETE`
 - **Path**: `/foods/{id}`
-- **Success Response**: `204 No Content`
+- **Success Response**:
+  ```json
+  { "status": true, "message": "Deleted successfully" }
+  ```
