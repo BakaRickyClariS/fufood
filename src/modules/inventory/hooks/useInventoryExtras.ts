@@ -11,7 +11,10 @@ export const useInventoryExtras = () => {
   const fetchFrequentItems = useCallback(async (limit = 10) => {
     setIsLoading(true);
     try {
-      const response = await inventoryApi.getFrequentItems(limit);
+      const response = await inventoryApi.getInventory({
+        status: 'frequent',
+        limit,
+      });
       setFrequentItems(response.data.items);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch frequent items'));
@@ -23,7 +26,11 @@ export const useInventoryExtras = () => {
   const fetchExpiredItems = useCallback(async (page = 1, limit = 20) => {
     setIsLoading(true);
     try {
-      const response = await inventoryApi.getExpiredItems(page, limit);
+      const response = await inventoryApi.getInventory({
+        status: 'expired',
+        page,
+        limit,
+      });
       setExpiredItems(response.data.items);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch expired items'));

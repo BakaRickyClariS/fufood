@@ -7,30 +7,36 @@ import type {
   UpdateFoodItemRequest,
   UpdateFoodItemResponse,
   DeleteFoodItemResponse,
-  BatchAddInventoryRequest,
-  BatchUpdateInventoryRequest,
   BatchDeleteInventoryRequest,
   FoodItem,
   CategoryInfo,
+  FoodCategory,
   InventoryStats,
   InventorySummary,
   InventorySettings,
   UpdateInventorySettingsRequest,
 } from '../../types';
 import { MOCK_INVENTORY } from './inventoryMockData';
-import { categories } from '../../constants/categories'; // 暫時引用舊的 constants，之後會遷移
-
+import { categories } from '../../constants/categories';
 import { mockRequestHandlers } from '@/utils/debug/mockRequestHandlers';
+
+const createCategoryCounters = (): Record<FoodCategory, number> => ({
+  蔬果類: 0,
+  冷凍調理類: 0,
+  主食烘焙類: 0,
+  乳製品飲料類: 0,
+  冷凍海鮮類: 0,
+  肉品類: 0,
+  其他: 0,
+});
 
 export const createMockInventoryApi = (): InventoryApi => {
   const delay = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms));
 
-  // Memory cache
   let memoryItems: FoodItem[] | null = null;
   let memorySettings: InventorySettings | null = null;
 
-  // 使用 mockRequestHandlers 模擬持久化
   const getStoredItems = (): FoodItem[] => {
     if (mockRequestHandlers.shouldResetData()) {
       mockRequestHandlers.resetData(['mock_inventory_items']);
@@ -47,7 +53,6 @@ export const createMockInventoryApi = (): InventoryApi => {
       return memoryItems!;
     }
 
-    // 初始化
     mockRequestHandlers.setItem(
       'mock_inventory_items',
       JSON.stringify(MOCK_INVENTORY),
@@ -64,10 +69,9 @@ export const createMockInventoryApi = (): InventoryApi => {
   const getInventory = async (
     params?: GetInventoryRequest,
   ): Promise<GetInventoryResponse> => {
-    await delay(500);
+    await delay(300);
     let items = getStoredItems();
 
-    // 篩選
     if (params?.groupId) {
       items = items.filter((item) => item.groupId === params.groupId);
     }
@@ -79,7 +83,6 @@ export const createMockInventoryApi = (): InventoryApi => {
       const threeDaysLater = new Date(
         today.getTime() + 3 * 24 * 60 * 60 * 1000,
       );
-
       items = items.filter((item) => {
         const expiry = new Date(item.expiryDate);
         switch (params.status) {
@@ -91,6 +94,8 @@ export const createMockInventoryApi = (): InventoryApi => {
             return (
               item.lowStockAlert && item.quantity <= item.lowStockThreshold
             );
+          case 'frequent':
+            return true; // mock 沒有頻率資料，直接交由分頁
           case 'normal':
             return (
               expiry > threeDaysLater &&
@@ -102,21 +107,12 @@ export const createMockInventoryApi = (): InventoryApi => {
       });
     }
 
-    // 統計
     const stats: InventoryStats = {
       totalItems: items.length,
       expiredCount: 0,
       expiringSoonCount: 0,
       lowStockCount: 0,
-      byCategory: {
-        蔬果類: 0,
-        冷凍調理類: 0,
-        主食烘焙類: 0,
-        乳製品飲料類: 0,
-        冷凍海鮮類: 0,
-        肉品類: 0,
-        其他: 0,
-      },
+      byCategory: createCategoryCounters(),
     };
 
     const today = new Date();
@@ -134,26 +130,39 @@ export const createMockInventoryApi = (): InventoryApi => {
       }
     });
 
-    // 分頁
     const page = params?.page || 1;
     const limit = params?.limit || 1000;
     const start = (page - 1) * limit;
     const paginatedItems = items.slice(start, start + limit);
 
-    return {
+    const base: GetInventoryResponse = {
       status: true,
       data: {
         items: paginatedItems,
         total: items.length,
-        stats,
       },
     };
+
+    if (params?.include?.includes('stats')) {
+      base.data.stats = stats;
+    }
+
+    if (params?.include?.includes('summary')) {
+      base.data.summary = {
+        total: items.length,
+        expiring: stats.expiringSoonCount,
+        expired: stats.expiredCount,
+        lowStock: stats.lowStockCount,
+      };
+    }
+
+    return base;
   };
 
   const getItem = async (
     id: string,
   ): Promise<{ status: true; data: { item: FoodItem } }> => {
-    await delay(300);
+    await delay(200);
     const items = getStoredItems();
     const item = items.find((i) => i.id === id);
     if (!item) throw new Error('Item not found');
@@ -163,7 +172,7 @@ export const createMockInventoryApi = (): InventoryApi => {
   const addItem = async (
     data: AddFoodItemRequest,
   ): Promise<AddFoodItemResponse> => {
-    await delay(800);
+    await delay(300);
     const items = getStoredItems();
     const newItem: FoodItem = {
       ...data,
@@ -185,7 +194,7 @@ export const createMockInventoryApi = (): InventoryApi => {
     id: string,
     data: UpdateFoodItemRequest,
   ): Promise<UpdateFoodItemResponse> => {
-    await delay(500);
+    await delay(300);
     const items = getStoredItems();
     const index = items.findIndex((i) => i.id === id);
     if (index === -1) throw new Error('Item not found');
@@ -205,7 +214,7 @@ export const createMockInventoryApi = (): InventoryApi => {
   };
 
   const deleteItem = async (id: string): Promise<DeleteFoodItemResponse> => {
-    await delay(500);
+    await delay(300);
     const items = getStoredItems();
     const filtered = items.filter((i) => i.id !== id);
     setStoredItems(filtered);
@@ -217,98 +226,21 @@ export const createMockInventoryApi = (): InventoryApi => {
     };
   };
 
-  const batchAdd = async (
-    data: BatchAddInventoryRequest,
-  ): Promise<{ status: true; message?: string; data: Record<string, never> }> => {
-    await delay(1000);
-    const items = getStoredItems();
-
-    // Generate IDs for new items
-    const newItems = data.items.map((item) => ({
-      ...item,
-      id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }));
-
-    // @ts-ignore - Ignore type check for quick mock implementation
-    const updatedItems = [...items, ...newItems];
-    setStoredItems(updatedItems);
-    return { status: true, data: {} };
-  };
-
-  const batchUpdate = async (
-    data: BatchUpdateInventoryRequest,
-  ): Promise<{ status: true; message?: string; data: Record<string, never> }> => {
-    await delay(1000);
-    const items = getStoredItems();
-    // Simple implementation: update if ID exists
-    // This is a simplified logic, real logic might be more complex
-    return { status: true, data: {} };
-  };
-
   const batchDelete = async (
     data: BatchDeleteInventoryRequest,
   ): Promise<{ status: true; message?: string; data: Record<string, never> }> => {
-    await delay(1000);
+    await delay(300);
     let items = getStoredItems();
     items = items.filter((i) => !data.ids.includes(i.id));
     setStoredItems(items);
     return { status: true, data: {} };
   };
 
-  const getFrequentItems = async (
-    limit?: number,
-  ): Promise<{ status: true; data: { items: FoodItem[] } }> => {
-    await delay(500);
-    const items = getStoredItems();
-    // Return top N items as frequent items (mock logic: just take first N)
-    return { status: true, data: { items: items.slice(0, limit || 5) } };
-  };
-
-  const getExpiredItems = async (
-    page?: number,
-    limit?: number,
-  ): Promise<{ status: true; data: { items: FoodItem[]; total: number } }> => {
-    await delay(500);
-    const items = getStoredItems();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const expiredItems = items.filter((item) => {
-      const expiry = new Date(item.expiryDate);
-      expiry.setHours(0, 0, 0, 0);
-      return expiry < today;
-    });
-
-    const p = page || 1;
-    const l = limit || 20;
-    const start = (p - 1) * l;
-    const paginated = expiredItems.slice(start, start + l);
-
-    return {
-      status: true,
-      data: {
-        items: paginated,
-        total: expiredItems.length,
-      },
-    };
-  };
-
-  const getStats = async (
-    _groupId?: string,
-  ): Promise<{ status: true; data: { stats: InventoryStats } }> => {
-    await delay(300);
-    const response = await getInventory();
-    return { status: true, data: { stats: response.data.stats } };
-  };
-
   const getCategories = async (): Promise<{
     status: true;
     data: { categories: CategoryInfo[] };
   }> => {
-    await delay(200);
-    // 轉換舊的 categories 格式
+    await delay(150);
     return {
       status: true,
       data: {
@@ -329,7 +261,7 @@ export const createMockInventoryApi = (): InventoryApi => {
     status: true;
     data: { summary: InventorySummary };
   }> => {
-    await delay(300);
+    await delay(150);
     const items = getStoredItems();
     const today = new Date();
     const threeDaysLater = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000);
@@ -363,7 +295,7 @@ export const createMockInventoryApi = (): InventoryApi => {
     status: true;
     data: { settings: InventorySettings };
   }> => {
-    await delay(200);
+    await delay(150);
 
     if (mockRequestHandlers.shouldResetData()) {
       mockRequestHandlers.resetData(['mock_inventory_settings']);
@@ -397,7 +329,7 @@ export const createMockInventoryApi = (): InventoryApi => {
   const updateSettings = async (
     data: UpdateInventorySettingsRequest,
   ): Promise<{ status: true; message?: string; data: { settings: InventorySettings } }> => {
-    await delay(300);
+    await delay(150);
     const current = await getSettings();
     const updated = { ...current.data.settings, ...data };
     memorySettings = updated;
@@ -418,12 +350,7 @@ export const createMockInventoryApi = (): InventoryApi => {
     addItem,
     updateItem,
     deleteItem,
-    batchAdd,
-    batchUpdate,
     batchDelete,
-    getFrequentItems,
-    getExpiredItems,
-    getStats,
     getCategories,
     getSummary,
     getSettings,

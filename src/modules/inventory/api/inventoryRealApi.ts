@@ -8,13 +8,8 @@ import type {
   UpdateFoodItemResponse,
   DeleteFoodItemResponse,
   UpdateInventorySettingsRequest,
-  BatchAddInventoryRequest,
-  BatchUpdateInventoryRequest,
   BatchDeleteInventoryRequest,
   GetInventoryResponse,
-  ExpiredItemsResponse,
-  FrequentItemsResponse,
-  InventoryStatsResponse,
   InventorySummaryResponse,
   InventoryCategoriesResponse,
   InventorySettingsResponse,
@@ -30,8 +25,6 @@ export const createRealInventoryApi = (): InventoryApi => {
     getInventory: async (
       params?: GetInventoryRequest,
     ): Promise<GetInventoryResponse> => {
-      // Ensure path is correct based on agreed optimization plan (using base URL from client)
-      // If client has base URL /api/v1, then this should be /inventory
       return apiClient.get<GetInventoryResponse>('/inventory', params);
     },
 
@@ -71,30 +64,12 @@ export const createRealInventoryApi = (): InventoryApi => {
     },
 
     /**
-     * 批次新增
-     */
-    batchAdd: async (
-      data: BatchAddInventoryRequest,
-    ): Promise<BatchOperationResponse> => {
-      return apiClient.post<BatchOperationResponse>('/inventory/batch', data);
-    },
-
-    /**
-     * 批次更新
-     */
-    batchUpdate: async (
-      data: BatchUpdateInventoryRequest,
-    ): Promise<BatchOperationResponse> => {
-      return apiClient.put<BatchOperationResponse>('/inventory/batch', data);
-    },
-
-    /**
-     * 批次刪除
+     * 批次刪除（可選）
      */
     batchDelete: async (
       data: BatchDeleteInventoryRequest,
-    ): Promise<BatchOperationResponse> => {
-      return apiClient.delete<BatchOperationResponse>(
+    ): Promise<ApiSuccess<Record<string, never>>> => {
+      return apiClient.delete<ApiSuccess<Record<string, never>>>(
         '/inventory/batch',
         {
           body: data,
@@ -103,56 +78,21 @@ export const createRealInventoryApi = (): InventoryApi => {
     },
 
     /**
-     * 取得常用項目
-     */
-    getFrequentItems: async (
-      limit?: number,
-    ): Promise<FrequentItemsResponse> => {
-      return apiClient.get<FrequentItemsResponse>('/inventory/frequent', {
-        limit,
-      });
-    },
-
-    /**
-     * 取得過期紀錄
-     */
-    getExpiredItems: async (
-      page?: number,
-      limit?: number,
-    ): Promise<ExpiredItemsResponse> => {
-      return apiClient.get<ExpiredItemsResponse>('/inventory/expired', {
-        page,
-        limit,
-      });
-    },
-
-    /**
-     * 取得統計
-     */
-    getStats: async (
-      groupId?: string,
-    ): Promise<InventoryStatsResponse> => {
-      return apiClient.get<InventoryStatsResponse>('/inventory/stats', {
-        groupId,
-      });
-    },
-
-    /**
-     * 取得概況
+     * 庫存概要（可選）
      */
     getSummary: async (): Promise<InventorySummaryResponse> => {
       return apiClient.get<InventorySummaryResponse>('/inventory/summary');
     },
 
     /**
-     * 取得分類
+     * 類別列表
      */
     getCategories: async (): Promise<InventoryCategoriesResponse> => {
       return apiClient.get<InventoryCategoriesResponse>('/inventory/categories');
     },
 
     /**
-     * 取得設定
+     * 庫存設定
      */
     getSettings: async (): Promise<InventorySettingsResponse> => {
       return apiClient.get<InventorySettingsResponse>('/inventory/settings');

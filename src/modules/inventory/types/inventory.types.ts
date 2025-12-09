@@ -28,7 +28,8 @@ export type InventoryStatus =
   | 'normal'
   | 'low-stock'
   | 'expired'
-  | 'expiring-soon';
+  | 'expiring-soon'
+  | 'frequent';
 
 export type FoodItem = {
   id: string;
