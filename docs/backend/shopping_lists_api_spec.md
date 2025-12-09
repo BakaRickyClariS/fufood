@@ -61,51 +61,50 @@ type SharedListPost = {
 ## 3. Shopping Lists API
 
 ### 3.1 取得清單列表
-- **GET** `/shopping-lists`
+- **GET** `/api/v1/shopping-lists`
 - Query: `year?`, `month?`
 - 200 → `ShoppingList[]`
 
 ### 3.2 建立清單
-- **POST** `/shopping-lists`
+- **POST** `/api/v1/shopping-lists`
 - Body: `{ name, items?, scheduledDate? }`
 - 201 → `ShoppingList`
 
 ### 3.3 取得清單詳情
-- **GET** `/shopping-lists/{id}`
+- **GET** `/api/v1/shopping-lists/{id}`
 - 200 → `ShoppingList`
 
-### 3.4 更新清單
-- **PUT** `/shopping-lists/{id}`
-- Body: `Partial<ShoppingList>`（含 items）
+### 3.4 更新/標記購買
+- **PATCH** `/api/v1/shopping-lists/{id}`
+- Body: `Partial<ShoppingList>`（含 items，或 `{ status: 'purchased' }`）
 - 200 → `ShoppingList`
 
 ### 3.5 刪除清單
-- **DELETE** `/shopping-lists/{id}`
+- **DELETE** `/api/v1/shopping-lists/{id}`
 - 204 或 `{ success: true }`
 
-### 3.6 標記購買完成
-- **POST** `/shopping-lists/{id}/purchase`
-- 200 → `{ success: true }`（可附上更新庫存結果）
+### 3.6 標記購買完成（已合併）
+- 由 3.4 `PATCH /api/v1/shopping-lists/{id}` + `{ status: 'purchased' }` 取代舊 `/purchase` 路由
 
 ---
 
 ## 4. 貼文牆 API（已實作）
 
 ### 4.1 取得貼文列表
-- **GET** `/shopping-lists/{id}/posts`
+- **GET** `/api/v1/shopping-lists/{id}/posts`
 - 200 → `SharedListPost[]`
 
 ### 4.2 建立貼文
-- **POST** `/shopping-lists/{id}/posts`
+- **POST** `/api/v1/shopping-lists/{id}/posts`
 - Body: `{ content, images?, items? }`
 - 201 → `SharedListPost`
 
 ### 4.3 貼文按讚切換
-- **POST** `/posts/{postId}/like`
+- **POST** `/api/v1/posts/{postId}/like`
 - Body: `{ listId }`
 - 200 → `SharedListPost`（更新後的狀態）
 
 ### 4.4 留言（規劃中）
-- **POST** `/posts/{postId}/comments`
+- **POST** `/api/v1/posts/{postId}/comments`
 - Body: `{ content }`
 - 201 → `{ id, content, author, createdAt }`

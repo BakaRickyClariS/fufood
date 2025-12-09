@@ -74,37 +74,34 @@ type ConsumptionConfirmation = {
 ## 3. Recipes API
 
 ### 3.1 取得食譜列表
-- **GET** `/recipes`
-- Query: `category?`
+- **GET** `/api/v1/recipes`
+- Query: `category?`, `favorite? (true/false)`
 - 200 → `Recipe[]`（或精簡列表型別）
 
 ### 3.2 取得單一食譜
-- **GET** `/recipes/{id}`
+- **GET** `/api/v1/recipes/{id}`
 - 200 → `Recipe`
 
 ### 3.3 收藏/取消收藏
-- **POST** `/recipes/{id}/favorite`
+- **POST** `/api/v1/recipes/{id}/favorite`（加入最愛）
+- **DELETE** `/api/v1/recipes/{id}/favorite`（取消最愛）
 - 200 → `{ isFavorite: boolean }`
 
-### 3.4 取得收藏清單
-- **GET** `/recipes/favorites`
-- 200 → `Recipe[]`
-
-### 3.5 食譜烹煮完成（扣庫存）
-- **POST** `/recipes/{id}/cook`
-- Body: `ConsumptionConfirmation`
+### 3.4 食譜烹煮完成（扣庫存/更新狀態）
+- **PATCH** `/api/v1/recipes/{id}`
+- Body: `ConsumptionConfirmation` 或 `{ status: 'cooked' }`
 - 200 → `{ success: boolean, message: string }`
 
-### 3.6 新增 Meal Plan
-- **POST** `/recipes/plan`
+### 3.5 新增 Meal Plan
+- **POST** `/api/v1/recipes/plan`
 - Body: `MealPlanInput`
 - 201 → `MealPlan`
 
-### 3.7 取得 Meal Plans
-- **GET** `/recipes/plan`
+### 3.6 取得 Meal Plans
+- **GET** `/api/v1/recipes/plan`
 - 200 → `MealPlan[]`
 
-### 3.8 刪除 Meal Plan
-- **DELETE** `/recipes/plan/{planId}`
+### 3.7 刪除 Meal Plan
+- **DELETE** `/api/v1/recipes/plan/{planId}`
 - 204 或 `{ success: true }`
 

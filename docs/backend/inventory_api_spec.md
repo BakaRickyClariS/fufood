@@ -166,7 +166,7 @@ type Food = {
 ### 3.1 取得庫存列表
 
 - **Method**: `GET`
-- **Path**: `/inventory`
+- **Path**: `/api/v1/inventory`
 - **Query Params**: `groupId?`, `category?`, `status? (expired | expiring-soon | low-stock | frequent | normal)`, `include? (summary,stats)`, `page?`, `limit?`
 - **Success Response**:
   ```json
@@ -190,7 +190,7 @@ type Food = {
 ### 3.2 取得單筆食材
 
 - **Method**: `GET`
-- **Path**: `/inventory/{id}`
+- **Path**: `/api/v1/inventory/{id}`
 - **Success Response**:
   ```json
   {
@@ -206,7 +206,7 @@ type Food = {
 ### 3.3 新增食材
 
 - **Method**: `POST`
-- **Path**: `/inventory`
+- **Path**: `/api/v1/inventory`
 - **Request Body**: `AddFoodItemRequest` (`Omit<FoodItem, 'id' | 'createdAt' | 'updatedAt'>`)
 - **Success Response**:
   ```json
@@ -220,7 +220,7 @@ type Food = {
 ### 3.4 更新食材
 
 - **Method**: `PUT`
-- **Path**: `/inventory/{id}`
+- **Path**: `/api/v1/inventory/{id}`
 - **Request Body**: `UpdateFoodItemRequest` (`Partial<Omit<FoodItem, 'id' | 'createdAt' | 'updatedAt'>>`)
 - **Success Response**:
   ```json
@@ -230,7 +230,7 @@ type Food = {
 ### 3.5 刪除食材
 
 - **Method**: `DELETE`
-- **Path**: `/inventory/{id}`
+- **Path**: `/api/v1/inventory/{id}`
 - **Success Response**:
   ```json
   { "status": true, "message": "Deleted successfully" }
@@ -240,26 +240,26 @@ type Food = {
 
 - **Batch Add**（暫緩）
   - **Method**: `POST`
-  - **Path**: `/inventory/batch`
+  - **Path**: `/api/v1/inventory/batch`
   - **Request Body**: `BatchAddInventoryRequest` (`{ "items": [Omit<FoodItem, 'id' | 'createdAt' | 'updatedAt'>] }`)
   - **Success Response**: `{ "status": true, "message": "Created successfully" }`
 
 - **Batch Update**（暫緩）
   - **Method**: `PUT`
-  - **Path**: `/inventory/batch`
+  - **Path**: `/api/v1/inventory/batch`
   - **Request Body**: `BatchUpdateInventoryRequest` (`{ "items": [Partial<FoodItem> (需包含 id)] }`)
   - **Success Response**: `{ "status": true, "message": "Updated successfully" }`
 
 - **Batch Delete**（可選）
   - **Method**: `DELETE`
-  - **Path**: `/inventory/batch`
+  - **Path**: `/api/v1/inventory/batch`
   - **Request Body**: `BatchDeleteInventoryRequest` (`{ "ids": ["id1", "id2"] }`)
   - **Success Response**: `{ "status": true, "message": "Deleted successfully" }`
 
 ### 3.7 取得庫存統計（含 include=stats）
 
 - **Method**: `GET`
-- **Path**: `/inventory`
+- **Path**: `/api/v1/inventory`
 - **Query Params**: `groupId?`, `include=stats`, `limit?`（可設小值避免大量資料）
 - **Success Response**:
   ```json
@@ -278,7 +278,7 @@ type Food = {
 ### 3.8 取得分類列表
 
 - **Method**: `GET`
-- **Path**: `/inventory/categories`
+- **Path**: `/api/v1/inventory/categories`
 - **Success Response**:
   ```json
   {
@@ -294,7 +294,7 @@ type Food = {
 ### 3.9 取得庫存摘要
 
 - **Method**: `GET`
-- **Path**: `/inventory/summary`（或 `include=summary` 隨列表取得）
+- **Path**: `/api/v1/inventory/summary`（或 `include=summary` 隨列表取得）
 - **Success Response**:
   ```json
   {
@@ -310,7 +310,7 @@ type Food = {
 ### 3.10 過期/常用清單（以 status 篩選）
 
 - **Method**: `GET`
-- **Path**: `/inventory`
+- **Path**: `/api/v1/inventory`
 - **Query Params**:
   - 過期：`status=expired`，`page?`, `limit?`
   - 常用：`status=frequent`，`limit?`
@@ -325,14 +325,14 @@ type Food = {
   }
   ```
 
-### 3.11 庫存設定
+- ### 3.11 庫存設定
 
-- **GET** `/inventory/settings`: 取得設定
+- **GET** `/api/v1/inventory/settings`: 取得設定
   - **Success Response**:
     ```json
     { "status": true, "data": { "settings": { /* InventorySettings */ } } }
     ```
-- **PUT** `/inventory/settings`: 更新設定，Request Body: `UpdateInventorySettingsRequest`
+- **PUT** `/api/v1/inventory/settings`: 更新設定，Request Body: `UpdateInventorySettingsRequest`
   - **Success Response**:
     ```json
     { "status": true, "message": "Updated successfully", "data": { "settings": { /* InventorySettings */ } } }
@@ -342,19 +342,20 @@ type Food = {
 
 ## 4. Foods API（食材主檔）
 
-### 4.1 取得分類下清單
+### 4.1 取得食材清單（以 category 查詢）
 
 - **Method**: `GET`
-- **Path**: `/foods/category/{catId}`
+- **Path**: `/api/v1/foods`
+- **Query**: `category?`
 - **Success Response**:
   ```json
   { "status": true, "data": { "items": [ /* Food */ ] } }
   ```
 
-### 4.2 取得分類下單一食材
+### 4.2 取得單一食材
 
 - **Method**: `GET`
-- **Path**: `/foods/category/{catId}/{id}`
+- **Path**: `/api/v1/foods/{id}`
 - **Success Response**:
   ```json
   { "status": true, "data": { "food": { /* Food */ } } }
@@ -363,7 +364,7 @@ type Food = {
 ### 4.3 新增食材主檔
 
 - **Method**: `POST`
-- **Path**: `/foods`
+- **Path**: `/api/v1/foods`
 - **Request Body**: `Omit<Food, 'id'>`
 - **Success Response**:
   ```json
@@ -373,7 +374,7 @@ type Food = {
 ### 4.4 更新食材主檔
 
 - **Method**: `PUT`
-- **Path**: `/foods/{id}`
+- **Path**: `/api/v1/foods/{id}`
 - **Request Body**: `Partial<Food>`
 - **Success Response**:
   ```json
@@ -383,7 +384,7 @@ type Food = {
 ### 4.5 刪除食材主檔
 
 - **Method**: `DELETE`
-- **Path**: `/foods/{id}`
+- **Path**: `/api/v1/foods/{id}`
 - **Success Response**:
   ```json
   { "status": true, "message": "Deleted successfully" }
