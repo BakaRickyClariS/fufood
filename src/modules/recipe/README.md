@@ -69,7 +69,7 @@ export type Recipe = {
 
 ## API 規格
 
-### 路由（對應 API_REFERENCE_V2）
+### 路由（對應 API_REFERENCE_V2 #33-#40）
 - `GET /api/v1/recipes`：列表，支援 `category`、`favorite=true`
 - `GET /api/v1/recipes/{id}`：詳情
 - `POST /api/v1/recipes/{id}/favorite`：加入最愛
@@ -175,4 +175,4 @@ const useMealPlan = () => ({
 
 --- 
 
-**備註**：烹煮動作統一使用 `PATCH /recipes/{id}`（例如 `{ status: 'cooked' }`），收藏列表改由 `GET /recipes?favorite=true`。***
+**備註**：烹煮動作統一使用 `PATCH /recipes/{id}`（例如 `{ status: 'cooked' }`），收藏列表改由 `GET /recipes?favorite=true`。

@@ -81,7 +81,7 @@ export type AuthState = {
 
 ## API 規格
 
-### 路由（對應 API_REFERENCE_V2）
+### 路由（對應 API_REFERENCE_V2 #1-#9）
 - `POST /api/v1/auth/register`：註冊
 - `POST /api/v1/auth/login`：登入
 - `POST /api/v1/auth/logout`：登出（清除 Cookie/Session）
@@ -159,4 +159,4 @@ const useAuth = () => {
 
 --- 
 
-**備註**：`/auth/check` 保留為輕量驗證，不回傳使用者資訊；`/auth/me` 則回傳完整使用者資料。***
+**備註**：`/auth/check` 保留為輕量驗證，不回傳使用者資訊；`/auth/me` 則回傳完整使用者資料。

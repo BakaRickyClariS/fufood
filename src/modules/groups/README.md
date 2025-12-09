@@ -75,7 +75,7 @@ export type InviteMemberForm = { email: string; role?: GroupMember['role'] }; //
 
 ## API 規格
 
-### 路由（對應 API_REFERENCE_V2）
+### 路由（對應 API_REFERENCE_V2 #10-#17）
 - `GET /api/v1/groups`：群組列表
 - `POST /api/v1/groups`：建立群組
 - `GET /api/v1/groups/{id}`：群組詳情
@@ -148,4 +148,4 @@ const useGroupMembers = (groupId: string) => ({
 ---
 
 ## Mock 資料
-- `groupsMockData.ts`：提供群組與成員範例，用於本地開發。***
+- `groupsMockData.ts`：提供群組與成員範例，用於本地開發。

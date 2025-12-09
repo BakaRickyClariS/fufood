@@ -81,11 +81,11 @@ export type FoodItemResponse = {
 
 ## API 規格
 
-### 路由（對應 API_REFERENCE_V2）
+### 路由（對應 API_REFERENCE_V2 #51-#52，及 Inventory #18-#22）
 - `POST /api/v1/ai/analyze-image`：影像辨識（OCR/食材）
 - `POST /api/v1/ai/recipe`：AI 產生食譜（可選，若未實作可標示 stub）
-- `POST /api/v1/inventory`：提交辨識後的食材至庫存
-- `PUT /api/v1/inventory/{id}` / `DELETE /api/v1/inventory/{id}`：更新/刪除庫存（由庫存模組實作）
+- `POST /api/v1/inventory`：提交辨識後的食材至庫存（#20）
+- `PUT /api/v1/inventory/{id}` / `DELETE /api/v1/inventory/{id}`：更新/刪除庫存（#21/#22，由庫存模組實作）
 
 ### FoodScanApi 介面
 ```typescript
@@ -144,4 +144,4 @@ Response: `{ success, message, data: { id } }`
 ---
 
 ## Mock 資料
-- `mockFoodScanApi.ts`、`mockData.ts`：提供影像辨識與提交庫存的模擬回應，用於本地開發。***
+- `mockFoodScanApi.ts`、`mockData.ts`：提供影像辨識與提交庫存的模擬回應，用於本地開發。
