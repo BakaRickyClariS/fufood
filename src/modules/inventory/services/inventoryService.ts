@@ -4,8 +4,8 @@ import type { GetInventoryRequest, FoodItem, InventoryStatus } from '../types';
 export const inventoryService = {
   // 包裝 API 呼叫
   getInventory: async (params?: GetInventoryRequest) => {
-    const response = await inventoryApi.getItems(params);
-    return response;
+    const response = await inventoryApi.getInventory(params);
+    return response.data;
   },
 
   // 本地計算邏輯：計算過期狀態
@@ -58,6 +58,7 @@ export const inventoryService = {
 
   // 取得分類資訊
   getCategories: async () => {
-    return await inventoryApi.getCategories();
+    const response = await inventoryApi.getCategories();
+    return response.data.categories;
   },
 };

@@ -5,6 +5,7 @@ type CommonItemCardProps = {
   image: string;
   value: number;
   label?: string;
+  onClick?: () => void;
 };
 
 const CommonItemCard: React.FC<CommonItemCardProps> = ({
@@ -12,8 +13,12 @@ const CommonItemCard: React.FC<CommonItemCardProps> = ({
   image,
   value,
   label = '上次購買',
+  onClick,
 }) => (
-  <div className="bg-white rounded-[20px] px-3 py-2 flex items-center gap-3 border border-neutral-200">
+  <div
+    className="bg-white rounded-[20px] px-3 py-2 flex items-center gap-3 border border-neutral-200 cursor-pointer hover:border-neutral-300 transition-colors"
+    onClick={onClick}
+  >
     <div className="w-14 h-14 rounded-full overflow-hidden shrink-0 bg-gray-100">
       <img src={image} alt={name} className="w-full h-full object-cover" />
     </div>
