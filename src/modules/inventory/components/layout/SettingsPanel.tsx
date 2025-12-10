@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { GripVertical, Info, Minus, Plus } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
+import LayoutAppearanceSection from '@/modules/inventory/components/ui/other/LayoutAppearanceSection';
 
 const categories = [
   '蔬果類',
@@ -52,6 +53,9 @@ const SettingsPanel: React.FC = () => {
 
   return (
     <div className="pb-24 space-y-8 px-1 mt-8">
+      {/* Inventory Layout Settings */}
+      <LayoutAppearanceSection />
+
       {/* Inventory Sort Settings */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
