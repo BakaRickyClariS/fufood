@@ -81,30 +81,28 @@ const SortableCategoryItem: React.FC<SortableCategoryItemProps> = ({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-4 ml-2 mb-2"
+      {...attributes}
+      {...listeners}
+      className="flex items-center gap-2 mb-3 cursor-grab active:cursor-grabbing touch-none group"
     >
-      <div
-        {...attributes}
-        {...listeners}
-        className="cursor-grab active:cursor-grabbing touch-none"
-      >
+      <div className="p-2 transition-colors">
         <svg
-          width="20"
-          height="20"
+          width="24"
+          height="24"
           viewBox="0 0 24 24"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           className="text-neutral-900"
         >
-          <circle cx="9" cy="5" r="1" fill="currentColor" />
-          <circle cx="9" cy="12" r="1" fill="currentColor" />
-          <circle cx="9" cy="19" r="1" fill="currentColor" />
-          <circle cx="15" cy="5" r="1" fill="currentColor" />
-          <circle cx="15" cy="12" r="1" fill="currentColor" />
-          <circle cx="15" cy="19" r="1" fill="currentColor" />
+          <circle cx="8" cy="4" r="2" fill="currentColor" />
+          <circle cx="8" cy="12" r="2" fill="currentColor" />
+          <circle cx="8" cy="20" r="2" fill="currentColor" />
+          <circle cx="16" cy="4" r="2" fill="currentColor" />
+          <circle cx="16" cy="12" r="2" fill="currentColor" />
+          <circle cx="16" cy="20" r="2" fill="currentColor" />
         </svg>
       </div>
-      <span className="text-base font-bold text-neutral-900 bg-primary-50 p-4 rounded-xl w-full">
+      <span className="text-base font-bold text-neutral-900 bg-primary-50 px-6 py-4 rounded-xl w-full select-none group-hover:bg-primary-100 transition-colors">
         {category.title}
       </span>
     </div>
