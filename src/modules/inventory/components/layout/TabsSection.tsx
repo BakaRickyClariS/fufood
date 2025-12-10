@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import OverviewPanel from '@/modules/inventory/components/layout/OverviewPanel';
 import CommonItemsPanel from '@/modules/inventory/components/layout/CommonItemsPanel';
 import ExpiredRecordsPanel from '@/modules/inventory/components/layout/ExpiredRecordsPanel';
@@ -9,8 +10,13 @@ type MainTabId = 'overview' | 'settings';
 type SubTabId = 'all' | 'common' | 'expired';
 
 const TabsSection = () => {
-  const [mainTab, setMainTab] = useState<MainTabId>('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const mainTab = (searchParams.get('tab') as MainTabId) || 'overview';
   const [subTab, setSubTab] = useState<SubTabId>('all');
+
+  const setMainTab = (id: MainTabId) => {
+    setSearchParams({ tab: id });
+  };
 
   const mainTabs: Tab<MainTabId>[] = [
     { id: 'overview', label: '庫存總覽' },
