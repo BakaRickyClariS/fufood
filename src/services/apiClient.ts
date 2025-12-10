@@ -2,6 +2,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 type RequestConfig = RequestInit & {
   params?: Record<string, string>;
+  body?: BodyInit | null;
 };
 
 async function request<T>(
@@ -41,10 +42,18 @@ async function request<T>(
 export const apiClient = {
   get: <T>(url: string, config?: RequestConfig) =>
     request<T>(url, { ...config, method: 'GET' }),
-  post: <T>(url: string, data?: any, config?: RequestConfig) =>
-    request<T>(url, { ...config, method: 'POST', body: JSON.stringify(data) }),
-  put: <T>(url: string, data?: any, config?: RequestConfig) =>
-    request<T>(url, { ...config, method: 'PUT', body: JSON.stringify(data) }),
+  post: <T, B = unknown>(url: string, data?: B, config?: RequestConfig) =>
+    request<T>(url, {
+      ...config,
+      method: 'POST',
+      body: data ? JSON.stringify(data) : null,
+    }),
+  put: <T, B = unknown>(url: string, data?: B, config?: RequestConfig) =>
+    request<T>(url, {
+      ...config,
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : null,
+    }),
   delete: <T>(url: string, config?: RequestConfig) =>
     request<T>(url, { ...config, method: 'DELETE' }),
 };

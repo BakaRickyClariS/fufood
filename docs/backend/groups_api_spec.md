@@ -53,47 +53,38 @@ type InviteMemberForm = {
 ## 3. Groups API
 
 ### 3.1 取得群組列表
-- **GET** `/groups`
+- **GET** `/api/v1/groups`
 - 200 → `Group[]`
 
 ### 3.2 建立群組
-- **POST** `/groups`
+- **POST** `/api/v1/groups`
 - Body: `{ name, color?, characterColor? }`
 - 201 → `Group`
 
 ### 3.3 取得群組詳情
-- **GET** `/groups/{id}`
+- **GET** `/api/v1/groups/{id}`
 - 200 → `Group`
 
 ### 3.4 更新群組
-- **PUT** `/groups/{id}`
+- **PUT** `/api/v1/groups/{id}`
 - Body: `{ name?, color?, characterColor? }`
 - 200 → `Group`
 
 ### 3.5 刪除群組
-- **DELETE** `/groups/{id}`
+- **DELETE** `/api/v1/groups/{id}`
 - 204 或 `{ success: true }`
 
-### 3.6 邀請成員
-- **POST** `/groups/{id}/invite`
-- Body: `InviteMemberForm`
+### 3.6 邀請/加入成員（合併路由）
+- **POST** `/api/v1/groups/{id}/members`
+- Body: `InviteMemberForm & { mode?: 'invite' | 'join'; inviteCode?: string }`
 - 204 或 `{ success: true }`
 
-### 3.7 加入群組
-- **POST** `/groups/{id}/join`
-- Body: 可攜帶 `{ inviteCode?: string }`
-- 204 或 `{ success: true }`
+### 3.7 離開/移除成員
+- **DELETE** `/api/v1/groups/{id}/members/{memberId}`
+- 204 或 `{ success: true }`（memberId 為自己代表離開）
 
-### 3.8 離開群組
-- **DELETE** `/groups/{id}/leave`
-- 204 或 `{ success: true }`
-
-### 3.9 移除成員
-- **DELETE** `/groups/{id}/remove/{memberId}`
-- 204 或 `{ success: true }`
-
-### 3.10 更新成員權限
-- **PATCH** `/groups/{id}/members/{memberId}`
+### 3.8 更新成員權限
+- **PATCH** `/api/v1/groups/{id}/members/{memberId}`
 - Body: `{ role: 'owner' | 'organizer' | 'member' }`
 - 204 或 `{ success: true }`
 

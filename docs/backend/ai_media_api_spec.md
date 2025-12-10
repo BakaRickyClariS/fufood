@@ -1,7 +1,7 @@
 # AI Service & Media Upload API Specification
 
 **版本**: v1.0  
-**涵蓋範圍**: AI 影像辨識、AI 食譜建議、媒體上傳
+**涵蓋範圍**: AI 影像辨識、AI 食譜建議、媒體上傳（對應 API_REFERENCE_V2 #51-#52、#57）
 
 ---
 
@@ -15,7 +15,7 @@
 ## 2. AI Service
 
 ### 2.1 影像辨識（OCR / 食材結構化）
-- **POST** `/ai/analyze-image`
+- **POST** `/api/v1/ai/analyze-image`
 - Body: `{ imageUrl: string }`
 - 200 → 
 ```json
@@ -39,7 +39,7 @@
 ```
 
 ### 2.2 AI 食譜建議（尚未實作）
-- **POST** `/ai/recipe`
+- **POST** `/api/v1/ai/recipe`
 - Body: `{ ingredients: string[] | FoodItemInput[] }`
 - 501/200 → 規劃中（前端目前為 placeholder）
 
@@ -48,7 +48,7 @@
 ## 3. Media Upload
 
 ### 3.1 上傳圖片
-- **POST** `/media/upload`
+- **POST** `/api/v1/media/upload`
 - Body: `FormData` with field `file`
 - 200 → `{ url: "https://..." }`
 

@@ -2,8 +2,11 @@ import { getAuthToken } from '../modules/auth/utils/authUtils';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
-type RequestOptions = RequestInit & {
+type ApiBody = BodyInit | Record<string, unknown> | null | undefined;
+
+type RequestOptions = Omit<RequestInit, 'body'> & {
   params?: Record<string, string | number | boolean | undefined>;
+  body?: ApiBody;
 };
 
 class ApiClient {
@@ -88,27 +91,27 @@ class ApiClient {
     return this.request<T>(endpoint, { ...options, method: 'GET', params });
   }
 
-  post<T>(endpoint: string, body?: unknown, options?: RequestOptions) {
+  post<T>(endpoint: string, body?: ApiBody, options?: RequestOptions) {
     return this.request<T>(endpoint, {
       ...options,
       method: 'POST',
-      body: body as any,
+      body,
     });
   }
 
-  put<T>(endpoint: string, body?: unknown, options?: RequestOptions) {
+  put<T>(endpoint: string, body?: ApiBody, options?: RequestOptions) {
     return this.request<T>(endpoint, {
       ...options,
       method: 'PUT',
-      body: body as any,
+      body,
     });
   }
 
-  patch<T>(endpoint: string, body?: unknown, options?: RequestOptions) {
+  patch<T>(endpoint: string, body?: ApiBody, options?: RequestOptions) {
     return this.request<T>(endpoint, {
       ...options,
       method: 'PATCH',
-      body: body as any,
+      body,
     });
   }
 

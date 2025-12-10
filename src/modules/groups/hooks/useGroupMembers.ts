@@ -1,16 +1,14 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { groupsApi } from '../api';
 import type { GroupMember, InviteMemberForm } from '../types/group.types';
 
-/**
- * 群組成員管理 Hook
- */
+// Manage group members: fetch list, invite, remove, update role
 export const useGroupMembers = (groupId: string) => {
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchMembers = async () => {
+  const fetchMembers = useCallback(async () => {
     if (!groupId) return;
 
     setIsLoading(true);
@@ -22,13 +20,13 @@ export const useGroupMembers = (groupId: string) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [groupId]);
 
   const inviteMember = async (form: InviteMemberForm) => {
     setIsLoading(true);
     try {
       await groupsApi.inviteMember(groupId, { email: form.email });
-      // 實際情況可能需要重新 fetch 或更新列表
+      await fetchMembers();
     } catch (err) {
       setError(err as Error);
       throw err;
@@ -54,8 +52,7 @@ export const useGroupMembers = (groupId: string) => {
     memberId: string,
     role: GroupMember['role'],
   ) => {
-    // TODO: 實作更新成員權限邏輯
-    console.log('Updating member role:', memberId, role);
+    // Placeholder until backend role update is available
     setIsLoading(true);
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -72,7 +69,7 @@ export const useGroupMembers = (groupId: string) => {
 
   useEffect(() => {
     fetchMembers();
-  }, [groupId]);
+  }, [fetchMembers]);
 
   return {
     members,

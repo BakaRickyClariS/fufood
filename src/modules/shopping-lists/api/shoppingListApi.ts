@@ -4,6 +4,7 @@ export type ShoppingList = {
   id: string;
   name: string;
   items: ShoppingListItem[];
+  status?: 'pending' | 'purchased';
 };
 
 export type ShoppingListItem = {
@@ -14,13 +15,17 @@ export type ShoppingListItem = {
 };
 
 export const shoppingListApi = {
-  getLists: () => apiClient.get<ShoppingList[]>('/shopping-lists'),
+  getLists: () => apiClient.get<ShoppingList[]>('/api/v1/shopping-lists'),
   createList: (data: { name: string }) =>
-    apiClient.post<ShoppingList>('/shopping-lists', data),
-  getList: (id: string) => apiClient.get<ShoppingList>(`/shopping-lists/${id}`),
+    apiClient.post<ShoppingList>('/api/v1/shopping-lists', data),
+  getList: (id: string) =>
+    apiClient.get<ShoppingList>(`/api/v1/shopping-lists/${id}`),
   updateList: (id: string, data: Partial<ShoppingList>) =>
-    apiClient.put<ShoppingList>(`/shopping-lists/${id}`, data),
-  deleteList: (id: string) => apiClient.delete<void>(`/shopping-lists/${id}`),
-  purchase: (id: string) =>
-    apiClient.post<void>(`/shopping-lists/${id}/purchase`),
+    apiClient.patch<ShoppingList>(`/api/v1/shopping-lists/${id}`, data),
+  deleteList: (id: string) =>
+    apiClient.delete<void>(`/api/v1/shopping-lists/${id}`),
+  markPurchased: (id: string) =>
+    apiClient.patch<ShoppingList>(`/api/v1/shopping-lists/${id}`, {
+      status: 'purchased',
+    }),
 };

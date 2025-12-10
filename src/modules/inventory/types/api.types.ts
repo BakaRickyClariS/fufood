@@ -18,6 +18,7 @@ export type GetInventoryRequest = {
   groupId?: string;
   category?: FoodCategory;
   status?: InventoryStatus;
+  include?: string; // e.g., "summary,stats"
   page?: number;
   limit?: number;
 };
@@ -26,7 +27,8 @@ export type GetInventoryRequest = {
 export type GetInventoryResponse = ApiSuccess<{
   items: FoodItem[];
   total: number;
-  stats: InventoryStats;
+  stats?: InventoryStats;
+  summary?: InventorySummary;
 }>;
 
 // 新增食材請求
@@ -89,12 +91,9 @@ export type InventoryStatsResponse = ApiSuccess<{ stats: InventoryStats }>;
 export type InventoryCategoriesResponse = ApiSuccess<{
   categories: CategoryInfo[];
 }>;
-export type InventorySummaryResponse = ApiSuccess<{ summary: InventorySummary }>;
+export type InventorySummaryResponse = ApiSuccess<{
+  summary: InventorySummary;
+}>;
 export type InventorySettingsResponse = ApiSuccess<{
   settings: InventorySettings;
-}>;
-export type FrequentItemsResponse = ApiSuccess<{ items: FoodItem[] }>;
-export type ExpiredItemsResponse = ApiSuccess<{
-  items: FoodItem[];
-  total: number;
 }>;
