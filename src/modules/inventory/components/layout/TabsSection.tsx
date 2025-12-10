@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import OverviewPanel from '@/modules/inventory/components/layout/OverviewPanel';
 import CommonItemsPanel from '@/modules/inventory/components/layout/CommonItemsPanel';
