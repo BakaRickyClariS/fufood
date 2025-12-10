@@ -7,13 +7,13 @@ import layoutCActive from '@/assets/images/inventory/layout-c-active.svg';
 
 export type LayoutType = 'layout-a' | 'layout-b' | 'layout-c';
 
-export interface LayoutConfig {
+export type LayoutConfig = {
   id: LayoutType;
   name: string;
   description?: string;
   imageDefault: string;
   imageActive: string;
-}
+};
 
 export const LAYOUT_CONFIGS: LayoutConfig[] = [
   {
