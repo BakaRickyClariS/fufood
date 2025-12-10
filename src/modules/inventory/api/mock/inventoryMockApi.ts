@@ -320,6 +320,7 @@ export const createMockInventoryApi = (): InventoryApi => {
       expiringSoonDays: 3,
       notifyOnExpiry: true,
       notifyOnLowStock: true,
+      layoutType: 'layout-a',
     };
     memorySettings = defaults;
     mockRequestHandlers.setItem(

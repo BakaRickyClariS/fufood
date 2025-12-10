@@ -76,6 +76,7 @@ export type InventorySettings = {
   expiringSoonDays: number;
   notifyOnExpiry: boolean;
   notifyOnLowStock: boolean;
+  layoutType?: 'layout-a' | 'layout-b' | 'layout-c';
 };
 
 export type UpdateInventorySettingsRequest = Partial<InventorySettings>;
