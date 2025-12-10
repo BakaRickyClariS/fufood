@@ -12,6 +12,7 @@ type UseImageUploadProps = {
 };
 
 export const useImageUpload = (props?: UseImageUploadProps) => {
+  const { onUploadSuccess } = props || {};
   const [isUploading, setIsUploading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,8 +62,8 @@ export const useImageUpload = (props?: UseImageUploadProps) => {
 
         const optimizedUrl = myImage.toURL();
 
-        if (props?.onUploadSuccess) {
-          await props.onUploadSuccess(blob);
+        if (onUploadSuccess) {
+          await onUploadSuccess(blob);
         }
 
         // Start Analysis
@@ -81,7 +82,7 @@ export const useImageUpload = (props?: UseImageUploadProps) => {
 
           setError(errorMessage);
           // Re-throw error so the caller (CameraCapture) can handle it (e.g. show Toast)
-          throw error;
+          throw analyzeError;
         } finally {
           setIsAnalyzing(false);
         }
@@ -93,7 +94,7 @@ export const useImageUpload = (props?: UseImageUploadProps) => {
         setIsUploading(false);
       }
     },
-    [props?.onUploadSuccess],
+    [onUploadSuccess],
   );
 
   return {

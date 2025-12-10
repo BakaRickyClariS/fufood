@@ -37,17 +37,33 @@ export const inventoryService = {
     sortBy: keyof FoodItem | 'expiryDate',
     order: 'asc' | 'desc',
   ) => {
-    return [...items].sort((a, b) => {
-      let valA: any = a[sortBy];
-      let valB: any = b[sortBy];
-
+    const getComparableValue = (
+      item: FoodItem,
+    ): string | number | undefined => {
+      const value = item[sortBy];
       if (
         sortBy === 'expiryDate' ||
         sortBy === 'purchaseDate' ||
         sortBy === 'createdAt'
       ) {
-        valA = new Date(valA).getTime();
-        valB = new Date(valB).getTime();
+        return typeof value === 'string'
+          ? new Date(value).getTime()
+          : undefined;
+      }
+
+      if (typeof value === 'number' || typeof value === 'string') {
+        return value;
+      }
+
+      return undefined;
+    };
+
+    return [...items].sort((a, b) => {
+      const valA = getComparableValue(a);
+      const valB = getComparableValue(b);
+
+      if (valA === undefined || valB === undefined) {
+        return 0;
       }
 
       if (valA < valB) return order === 'asc' ? -1 : 1;

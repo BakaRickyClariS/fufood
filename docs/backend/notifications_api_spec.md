@@ -28,11 +28,11 @@ type NotificationSettings = {
 ## 3. Notifications API
 
 ### 3.1 取得通知設定
-- **GET** `/notifications`
+- **GET** `/api/v1/notifications`
 - 200 → `NotificationSettings`
 
 ### 3.2 更新通知設定
-- **POST** `/notifications`
+- **POST** `/api/v1/notifications`
 - Body: `Partial<NotificationSettings>`
 - 200 → `{ success: true }` 或 204
 

@@ -58,42 +58,42 @@ type AuthToken = {
 ## 3. Auth API
 
 ### 3.1 註冊
-- **POST** `/auth/register`
+- **POST** `/api/v1/auth/register`
 - Body: `{ email, password, name?, avatar? }`
 - 201 → `{ user: User, token: AuthToken }`
 
 ### 3.2 登入
-- **POST** `/auth/login`
+- **POST** `/api/v1/auth/login`
 - Body: `{ email, password }`
 - 200 → `{ user: User, token: AuthToken }`
 
 ### 3.3 登出
-- **POST** `/auth/logout`
+- **POST** `/api/v1/auth/logout`
 - 204 或 `{ success: true }`，同時清除 Cookie。
 
 ### 3.4 刷新 Token
-- **POST** `/auth/refresh`
+- **POST** `/api/v1/auth/refresh`
 - Body: `{ refreshToken: string }`（亦可由 httpOnly Cookie 取得）
 - 200 → `{ accessToken, expiresIn }`
 
 ### 3.5 取得目前使用者
-- **GET** `/auth/me`
+- **GET** `/api/v1/auth/me`
 - 200 → `User`
 
 ### 3.6 檢查 Token
-- **GET** `/auth/check`
+- **GET** `/api/v1/auth/check`
 - 204 或 `{ success: true }`（需攜帶 Access Token）
 
 ### 3.7 LINE 登入導向
-- **GET** `/auth/line/login`
+- **GET** `/api/v1/auth/line/login`
 - 302 → LINE 授權頁 URL（或回傳 `{ url }`）
 
 ### 3.8 LINE 登入回呼
-- **GET** `/auth/line/callback?code=...&state=...`
+- **GET** `/api/v1/auth/line/callback?code=...&state=...`
 - 200 → `{ user, token }`
 
 ### 3.9 更新個人資料
-- **PUT** `/auth/update-profile`
+- **PUT** `/api/v1/auth/update-profile`
 - Body: `{ name?, avatar? }`
 - 200 → `User`
 

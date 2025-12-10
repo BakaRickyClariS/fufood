@@ -5,6 +5,6 @@ export const mediaApi = {
     const formData = new FormData();
     formData.append('file', file);
 
-    return apiClient.post<{ url: string }>('/media/upload', formData);
+    return apiClient.post<{ url: string }>('/api/v1/media/upload', formData);
   },
 };

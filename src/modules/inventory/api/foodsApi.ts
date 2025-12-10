@@ -8,7 +8,7 @@ export type Food = {
   category: string;
   defaultUnit: string;
   imageUrl?: string;
-  nutritionInfo?: any;
+  nutritionInfo?: Record<string, unknown>;
 };
 
 export const foodsApi = {
