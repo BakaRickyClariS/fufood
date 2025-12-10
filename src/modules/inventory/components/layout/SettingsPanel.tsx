@@ -10,6 +10,7 @@ import {
   useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import {
   arrayMove,
   SortableContext,
@@ -223,6 +224,7 @@ const SettingsPanel: React.FC = () => {
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
+              modifiers={[restrictToVerticalAxis]}
             >
               <SortableContext
                 items={sortedCategories.map((c) => c.id)}
