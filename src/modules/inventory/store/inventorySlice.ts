@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { FoodItem, FilterOptions, InventoryStats } from '../types';
+import type { LayoutType } from '../types/layoutTypes';
 
 type InventoryState = {
   items: FoodItem[];
@@ -8,6 +9,7 @@ type InventoryState = {
   stats: InventoryStats | null;
   isLoading: boolean;
   error: string | null;
+  currentLayout: LayoutType;
 };
 
 const initialState: InventoryState = {
@@ -23,6 +25,7 @@ const initialState: InventoryState = {
   stats: null,
   isLoading: false,
   error: null,
+  currentLayout: 'layout-a',
 };
 
 const inventorySlice = createSlice({
@@ -61,6 +64,9 @@ const inventorySlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
+    setLayout: (state, action: PayloadAction<LayoutType>) => {
+      state.currentLayout = action.payload;
+    },
   },
 });
 
@@ -74,6 +80,7 @@ export const {
   setStats,
   setLoading,
   setError,
+  setLayout,
 } = inventorySlice.actions;
 
 // Selectors
@@ -89,5 +96,11 @@ export const selectInventoryStats = (state: { inventory: InventoryState }) =>
   state.inventory.stats;
 export const selectSelectedItem = (state: { inventory: InventoryState }) =>
   state.inventory.selectedItem;
+export const selectCurrentLayout = (state: { inventory: InventoryState }) => {
+  if (!state.inventory) {
+    return 'layout-a';
+  }
+  return state.inventory.currentLayout;
+};
 
 export default inventorySlice.reducer;
