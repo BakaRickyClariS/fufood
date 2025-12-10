@@ -1,4 +1,4 @@
-import type { InventoryApi } from '../inventoryApi';
+﻿import type { InventoryApi } from '../inventoryApi';
 import type {
   GetInventoryRequest,
   GetInventoryResponse,
@@ -20,15 +20,13 @@ import { MOCK_INVENTORY } from './inventoryMockData';
 import { categories } from '../../constants/categories';
 import { mockRequestHandlers } from '@/utils/debug/mockRequestHandlers';
 
-const createCategoryCounters = (): Record<FoodCategory, number> => ({
-  蔬果類: 0,
-  冷凍調理類: 0,
-  主食烘焙類: 0,
-  乳製品飲料類: 0,
-  冷凍海鮮類: 0,
-  肉品類: 0,
-  其他: 0,
-});
+const createCategoryCounters = (): Record<FoodCategory, number> => {
+  const counters: Record<FoodCategory, number> = {};
+  MOCK_INVENTORY.forEach((item) => {
+    counters[item.category] = 0;
+  });
+  return counters;
+};
 
 export const createMockInventoryApi = (): InventoryApi => {
   const delay = (ms: number) =>
@@ -49,8 +47,9 @@ export const createMockInventoryApi = (): InventoryApi => {
 
     const stored = mockRequestHandlers.getItem('mock_inventory_items');
     if (stored) {
-      memoryItems = JSON.parse(stored);
-      return memoryItems!;
+      const parsed = JSON.parse(stored) as FoodItem[];
+      memoryItems = parsed;
+      return parsed;
     }
 
     mockRequestHandlers.setItem(
@@ -75,7 +74,7 @@ export const createMockInventoryApi = (): InventoryApi => {
     if (params?.groupId) {
       items = items.filter((item) => item.groupId === params.groupId);
     }
-    if (params?.category) {
+    if (params?.category && params.category !== 'all') {
       items = items.filter((item) => item.category === params.category);
     }
     if (params?.status) {
@@ -95,14 +94,13 @@ export const createMockInventoryApi = (): InventoryApi => {
               item.lowStockAlert && item.quantity <= item.lowStockThreshold
             );
           case 'frequent':
-            return true; // mock 沒有頻率資料，直接交由分頁
+            return true;
           case 'normal':
+          default:
             return (
               expiry > threeDaysLater &&
               (!item.lowStockAlert || item.quantity > item.lowStockThreshold)
             );
-          default:
-            return true;
         }
       });
     }
@@ -153,7 +151,7 @@ export const createMockInventoryApi = (): InventoryApi => {
         expiring: stats.expiringSoonCount,
         expired: stats.expiredCount,
         lowStock: stats.lowStockCount,
-      };
+      } as InventorySummary;
     }
 
     return base;
@@ -185,7 +183,7 @@ export const createMockInventoryApi = (): InventoryApi => {
 
     return {
       status: true,
-      message: '新增成功',
+      message: 'Added item',
       data: { id: newItem.id },
     };
   };
@@ -208,7 +206,7 @@ export const createMockInventoryApi = (): InventoryApi => {
 
     return {
       status: true,
-      message: '更新成功',
+      message: 'Updated item',
       data: { id },
     };
   };
@@ -221,14 +219,18 @@ export const createMockInventoryApi = (): InventoryApi => {
 
     return {
       status: true,
-      message: '刪除成功',
+      message: 'Deleted item',
       data: {},
     };
   };
 
   const batchDelete = async (
     data: BatchDeleteInventoryRequest,
-  ): Promise<{ status: true; message?: string; data: Record<string, never> }> => {
+  ): Promise<{
+    status: true;
+    message?: string;
+    data: Record<string, never>;
+  }> => {
     await delay(300);
     let items = getStoredItems();
     items = items.filter((i) => !data.ids.includes(i.id));
@@ -308,11 +310,12 @@ export const createMockInventoryApi = (): InventoryApi => {
 
     const stored = mockRequestHandlers.getItem('mock_inventory_settings');
     if (stored) {
-      memorySettings = JSON.parse(stored);
-      return { status: true, data: { settings: memorySettings! } };
+      const parsed = JSON.parse(stored) as InventorySettings;
+      memorySettings = parsed;
+      return { status: true, data: { settings: parsed } };
     }
 
-    const defaults = {
+    const defaults: InventorySettings = {
       lowStockThreshold: 2,
       expiringSoonDays: 3,
       notifyOnExpiry: true,
@@ -328,7 +331,11 @@ export const createMockInventoryApi = (): InventoryApi => {
 
   const updateSettings = async (
     data: UpdateInventorySettingsRequest,
-  ): Promise<{ status: true; message?: string; data: { settings: InventorySettings } }> => {
+  ): Promise<{
+    status: true;
+    message?: string;
+    data: { settings: InventorySettings };
+  }> => {
     await delay(150);
     const current = await getSettings();
     const updated = { ...current.data.settings, ...data };

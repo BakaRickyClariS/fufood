@@ -31,12 +31,8 @@ export const createRealInventoryApi = (): InventoryApi => {
     /**
      * 取得單一食材
      */
-    getItem: async (
-      id: string,
-    ): Promise<ApiSuccess<{ item: FoodItem }>> => {
-      return apiClient.get<ApiSuccess<{ item: FoodItem }>>(
-        `/inventory/${id}`,
-      );
+    getItem: async (id: string): Promise<ApiSuccess<{ item: FoodItem }>> => {
+      return apiClient.get<ApiSuccess<{ item: FoodItem }>>(`/inventory/${id}`);
     },
 
     /**
@@ -73,7 +69,7 @@ export const createRealInventoryApi = (): InventoryApi => {
         '/inventory/batch',
         {
           body: data,
-        } as any,
+        },
       );
     },
 
@@ -88,7 +84,9 @@ export const createRealInventoryApi = (): InventoryApi => {
      * 類別列表
      */
     getCategories: async (): Promise<InventoryCategoriesResponse> => {
-      return apiClient.get<InventoryCategoriesResponse>('/inventory/categories');
+      return apiClient.get<InventoryCategoriesResponse>(
+        '/inventory/categories',
+      );
     },
 
     /**

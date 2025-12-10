@@ -1,4 +1,4 @@
-import type { RecipeApi } from '../api/recipeApi';
+﻿import type { RecipeApi } from '../api/recipeApi';
 import type {
   Recipe,
   RecipeListItem,
@@ -12,16 +12,19 @@ import { mockRequestHandlers } from '@/utils/debug/mockRequestHandlers';
 
 // Memory cache
 let memoryFavorites: string[] | null = null;
-let memoryConsumptions: any[] | null = null;
-let memoryShoppingList: any[] | null = null;
-let memoryMealPlans: any[] | null = null;
+let memoryConsumptions: ConsumptionConfirmation[] | null = null;
+type ShoppingListItem = {
+  name: string;
+  quantity: number;
+  unit: string;
+  source: string;
+  recipeId: string;
+};
+let memoryShoppingList: ShoppingListItem[] | null = null;
+let memoryMealPlans: MealPlan[] | null = null;
 
 export class MockRecipeApi implements RecipeApi {
   private delay = (ms: number) => {
-    // Check reset on every call entry or just once? Ideally once but class is instantiated once?
-    // Actually MockApi is usually instantiated once.
-    // We can check reset in methods if we want instant reaction, or just rely on page reload.
-    // Page reload is the standard way to trigger reset via URL param.
     if (mockRequestHandlers.shouldResetData()) {
       mockRequestHandlers.resetData([
         'recipe_favorites',
@@ -62,7 +65,7 @@ export class MockRecipeApi implements RecipeApi {
 
     const recipe = MOCK_RECIPES.find((r) => r.id === id);
     if (!recipe) {
-      throw new Error('食譜不存在');
+      throw new Error('Recipe not found');
     }
 
     return recipe;
@@ -76,7 +79,7 @@ export class MockRecipeApi implements RecipeApi {
 
     const recipe = MOCK_RECIPES.find((r) => r.id === id);
     if (!recipe) {
-      throw new Error('食譜不存在');
+      throw new Error('Recipe not found');
     }
 
     if (typeof shouldFavorite === 'boolean') {
@@ -85,8 +88,7 @@ export class MockRecipeApi implements RecipeApi {
       recipe.isFavorite = !recipe.isFavorite;
     }
 
-    // 更新 localStorage / Memory
-    let favorites = this.getFavoriteIds();
+    const favorites = this.getFavoriteIds();
 
     if (recipe.isFavorite) {
       if (!favorites.includes(id)) favorites.push(id);
@@ -114,13 +116,15 @@ export class MockRecipeApi implements RecipeApi {
   ): Promise<{ success: boolean; message: string }> => {
     await this.delay(1000);
 
-    // Mock: 記錄消耗資料
-    let consumptions: any[] = [];
+    let consumptions: ConsumptionConfirmation[] = [];
     if (mockRequestHandlers.shouldUseMemoryOnly() && memoryConsumptions) {
       consumptions = memoryConsumptions;
     } else {
       const stored = mockRequestHandlers.getItem('recipe_consumptions');
-      consumptions = stored ? JSON.parse(stored) : [];
+      const parsed: unknown = stored ? JSON.parse(stored) : [];
+      consumptions = Array.isArray(parsed)
+        ? (parsed as ConsumptionConfirmation[])
+        : [];
     }
 
     consumptions.push({
@@ -134,14 +138,16 @@ export class MockRecipeApi implements RecipeApi {
       JSON.stringify(consumptions),
     );
 
-    // 如果選擇加入採買清單，記錄到 shopping list
     if (data.addToShoppingList) {
-      let shoppingList: any[] = [];
+      let shoppingList: ShoppingListItem[] = [];
       if (mockRequestHandlers.shouldUseMemoryOnly() && memoryShoppingList) {
         shoppingList = memoryShoppingList;
       } else {
         const stored = mockRequestHandlers.getItem('shopping_list');
-        shoppingList = stored ? JSON.parse(stored) : [];
+        const parsed: unknown = stored ? JSON.parse(stored) : [];
+        shoppingList = Array.isArray(parsed)
+          ? (parsed as ShoppingListItem[])
+          : [];
       }
 
       data.items.forEach((item) => {
@@ -164,8 +170,8 @@ export class MockRecipeApi implements RecipeApi {
     return {
       success: true,
       message: data.addToShoppingList
-        ? '已消耗並加入採買清單'
-        : '已完成消耗記錄',
+        ? 'Added to shopping list'
+        : 'Consumption recorded',
     };
   };
 
@@ -174,7 +180,7 @@ export class MockRecipeApi implements RecipeApi {
 
     const recipe = MOCK_RECIPES.find((r) => r.id === data.recipeId);
     if (!recipe) {
-      throw new Error('食譜不存在');
+      throw new Error('Recipe not found');
     }
 
     const newPlan: MealPlan = {
@@ -192,7 +198,8 @@ export class MockRecipeApi implements RecipeApi {
       plans = memoryMealPlans;
     } else {
       const stored = mockRequestHandlers.getItem('meal_plans');
-      plans = stored ? JSON.parse(stored) : [];
+      const parsed: unknown = stored ? JSON.parse(stored) : [];
+      plans = Array.isArray(parsed) ? (parsed as MealPlan[]) : [];
     }
 
     plans.push(newPlan);
@@ -208,7 +215,8 @@ export class MockRecipeApi implements RecipeApi {
       return memoryMealPlans;
     }
     const stored = mockRequestHandlers.getItem('meal_plans');
-    const plans = stored ? JSON.parse(stored) : [];
+    const parsed: unknown = stored ? JSON.parse(stored) : [];
+    const plans = Array.isArray(parsed) ? (parsed as MealPlan[]) : [];
     if (plans.length > 0) memoryMealPlans = plans;
     return plans;
   };
@@ -216,14 +224,13 @@ export class MockRecipeApi implements RecipeApi {
   deleteMealPlan = async (planId: string): Promise<{ success: boolean }> => {
     await this.delay(400);
 
-    await this.delay(400);
-
     let plans: MealPlan[] = [];
     if (mockRequestHandlers.shouldUseMemoryOnly() && memoryMealPlans) {
       plans = memoryMealPlans;
     } else {
       const stored = mockRequestHandlers.getItem('meal_plans');
-      plans = stored ? JSON.parse(stored) : [];
+      const parsed: unknown = stored ? JSON.parse(stored) : [];
+      plans = Array.isArray(parsed) ? (parsed as MealPlan[]) : [];
     }
 
     const filtered = plans.filter((plan: MealPlan) => plan.id !== planId);
@@ -238,7 +245,8 @@ export class MockRecipeApi implements RecipeApi {
       return memoryFavorites;
     }
     const stored = mockRequestHandlers.getItem('recipe_favorites');
-    const favorites = stored ? JSON.parse(stored) : [];
+    const parsed: unknown = stored ? JSON.parse(stored) : [];
+    const favorites = Array.isArray(parsed) ? (parsed as string[]) : [];
     if (favorites.length > 0) memoryFavorites = favorites;
     return favorites;
   }

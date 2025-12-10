@@ -1,28 +1,6 @@
-export type FoodCategory =
-  | '蔬果類'
-  | '冷凍調理類'
-  | '主食烘焙類'
-  | '乳製品飲料類'
-  | '冷凍海鮮類'
-  | '肉品類'
-  | '其他';
+﻿export type FoodCategory = string;
 
-export type FoodUnit =
-  | '個'
-  | '包'
-  | '瓶'
-  | '罐'
-  | '盒'
-  | '顆'
-  | '根'
-  | '把'
-  | '條'
-  | '桶'
-  | '片'
-  | 'kg'
-  | 'g'
-  | 'L'
-  | 'ml';
+export type FoodUnit = string;
 
 export type InventoryStatus =
   | 'normal'
@@ -61,7 +39,7 @@ export type CategoryInfo = {
 export type InventoryStats = {
   totalItems: number;
   expiredCount: number;
-  expiringSoonCount: number; // 3天內過期
+  expiringSoonCount: number; // 3 天內到期
   lowStockCount: number;
   byCategory: Record<FoodCategory, number>;
 };

@@ -17,7 +17,11 @@ export const useInventoryExtras = () => {
       });
       setFrequentItems(response.data.items);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch frequent items'));
+      setError(
+        err instanceof Error
+          ? err
+          : new Error('Failed to fetch frequent items'),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -33,7 +37,9 @@ export const useInventoryExtras = () => {
       });
       setExpiredItems(response.data.items);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch expired items'));
+      setError(
+        err instanceof Error ? err : new Error('Failed to fetch expired items'),
+      );
     } finally {
       setIsLoading(false);
     }
