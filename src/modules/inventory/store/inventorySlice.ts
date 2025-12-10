@@ -10,6 +10,8 @@ type InventoryState = {
   isLoading: boolean;
   error: string | null;
   currentLayout: LayoutType;
+  categoryOrder: string[];
+  settings: import('../types').InventorySettings | null;
 };
 
 const initialState: InventoryState = {
@@ -26,6 +28,8 @@ const initialState: InventoryState = {
   isLoading: false,
   error: null,
   currentLayout: 'layout-a',
+  categoryOrder: [],
+  settings: null,
 };
 
 const inventorySlice = createSlice({
@@ -67,6 +71,21 @@ const inventorySlice = createSlice({
     setLayout: (state, action: PayloadAction<LayoutType>) => {
       state.currentLayout = action.payload;
     },
+    setCategoryOrder: (state, action: PayloadAction<string[]>) => {
+      state.categoryOrder = action.payload;
+    },
+    setSettings: (
+      state,
+      action: PayloadAction<import('../types').InventorySettings>,
+    ) => {
+      state.settings = action.payload;
+      if (action.payload.layoutType) {
+        state.currentLayout = action.payload.layoutType;
+      }
+      if (action.payload.categoryOrder) {
+        state.categoryOrder = action.payload.categoryOrder;
+      }
+    },
   },
 });
 
@@ -81,6 +100,8 @@ export const {
   setLoading,
   setError,
   setLayout,
+  setCategoryOrder,
+  setSettings,
 } = inventorySlice.actions;
 
 // Selectors
@@ -102,5 +123,9 @@ export const selectCurrentLayout = (state: { inventory: InventoryState }) => {
   }
   return state.inventory.currentLayout;
 };
+export const selectCategoryOrder = (state: { inventory: InventoryState }) =>
+  state.inventory.categoryOrder;
+export const selectSettings = (state: { inventory: InventoryState }) =>
+  state.inventory.settings;
 
 export default inventorySlice.reducer;

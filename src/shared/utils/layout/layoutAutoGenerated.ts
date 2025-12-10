@@ -7,4 +7,3 @@ export const generateLayoutByType = (type: LayoutType) =>
   generateAutoLayout(type);
 
 export const getDefaultLayout = () => generateAutoLayout('layout-a');
-

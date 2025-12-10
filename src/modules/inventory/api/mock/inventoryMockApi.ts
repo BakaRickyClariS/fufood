@@ -243,19 +243,49 @@ export const createMockInventoryApi = (): InventoryApi => {
     data: { categories: CategoryInfo[] };
   }> => {
     await delay(150);
+
+    // 取得使用者設定的類別順序
+    const settingsResponse = await getSettings();
+    const categoryOrder = settingsResponse.data.settings.categoryOrder;
+
+    const allCategories = categories.map((c) => ({
+      id: c.id,
+      title: c.title,
+      count: c.value,
+      imageUrl: c.img,
+      bgColor: c.bgColor,
+      slogan: c.slogan,
+      description: c.description,
+    }));
+
+    // 如果有自訂順序，則根據順序排序
+    if (categoryOrder && categoryOrder.length > 0) {
+      const orderedCategories: CategoryInfo[] = [];
+
+      // 按照 categoryOrder 順序添加類別
+      categoryOrder.forEach((id) => {
+        const category = allCategories.find((c) => c.id === id);
+        if (category) {
+          orderedCategories.push(category);
+        }
+      });
+
+      // 添加不在 categoryOrder 中的類別（如果有新類別）
+      allCategories.forEach((category) => {
+        if (!categoryOrder.includes(category.id)) {
+          orderedCategories.push(category);
+        }
+      });
+
+      return {
+        status: true,
+        data: { categories: orderedCategories },
+      };
+    }
+
     return {
       status: true,
-      data: {
-        categories: categories.map((c) => ({
-          id: c.id,
-          title: c.title,
-          count: c.value,
-          imageUrl: c.img,
-          bgColor: c.bgColor,
-          slogan: c.slogan,
-          description: c.description,
-        })),
-      },
+      data: { categories: allCategories },
     };
   };
 
