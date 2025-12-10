@@ -58,7 +58,7 @@ const OverviewPanel: React.FC = () => {
           <div key={item.id} className={`grid-area-${item.id}`}>
             <CategoryCard
               id={item.id}
-              title={`${item.title} (${item.count})`}
+              title={`${item.title} | ${item.count}`}
               img={item.imageUrl}
               bgColor={item.bgColor}
               boxShadow="shadow-[0_6px_14px_-2px_rgba(0,0,0,0.06)]"

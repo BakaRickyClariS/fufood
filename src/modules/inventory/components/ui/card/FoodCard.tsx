@@ -52,9 +52,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
         {/* Header: Name and Quantity */}
         <div className="flex justify-between items-end text-lg text-white z-10">
           <h3 className="tracking-wide font-medium">{item.name}</h3>
-          <span className="tracking-widest font-bold">
-            {item.quantity} {item.unit}
-          </span>
+          <span className="tracking-widest font-bold">{item.quantity}</span>
         </div>
 
         {/* Divider */}
