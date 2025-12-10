@@ -57,38 +57,37 @@ const LayoutAppearanceSection = () => {
             return (
               <div
                 key={config.id}
-                className="flex flex-col items-center gap-3 cursor-pointer group"
+                className="flex flex-col items-center  cursor-pointer group"
                 onClick={() => handleSelectLayout(config.id)}
               >
                 <div
                   className={`
-                    relative w-full h-[156px] rounded-xl overflow-hidden border-2 transition-all duration-200 bg-neutral-50
-                    ${isSelected ? 'border-[#F58274] bg-[#FFF1F0]' : 'border-transparent group-hover:border-neutral-200'}
+                    relative w-full h-[156px] rounded-xl overflow-hidden transition-all duration-200
                   `}
                 >
                   <img
                     src={isSelected ? config.imageActive : config.imageDefault}
                     alt={config.name}
-                    className="w-full h-full object-contain p-2"
+                    className="w-full h-full object-contain"
                   />
                 </div>
                 {/* Radio Indicator - Moved outside and below image */}
-                <div className="flex items-center gap-2 mt-1">
-                  <div
-                    className={`
-                      w-5 h-5 rounded-full border flex items-center justify-center transition-colors
-                      ${isSelected ? 'bg-[#F58274] border-[#F58274]' : 'bg-white border-neutral-300'}
-                    `}
-                  >
-                    {isSelected && (
-                      <div className="w-2 h-2 bg-white rounded-full" />
-                    )}
-                  </div>
+                <div className="flex flex-col items-center gap-2 mt-4">
                   <span
                     className={`text-sm font-medium ${isSelected ? 'text-[#F58274]' : 'text-neutral-600'}`}
                   >
                     {config.name}
                   </span>
+                  <div
+                    className={`
+                      w-5 h-5 rounded-full border flex items-center justify-center transition-colors border-2
+                      ${isSelected ? 'bg-[#F58274] border-[#F58274]' : 'bg-white border-neutral-400'}
+                    `}
+                  >
+                    {isSelected && (
+                      <div className="w-3.5 h-3.5 bg-primary-400 rounded-full border-white border-2" />
+                    )}
+                  </div>
                 </div>
               </div>
             );

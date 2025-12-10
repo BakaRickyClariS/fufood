@@ -65,12 +65,9 @@ const SettingsPanel: React.FC = () => {
 
         <div className="bg-white rounded-[20px] p-4 space-y-2">
           {categories.map((category) => (
-            <div
-              key={category}
-              className="flex items-center gap-4 bg-[#FFF5F5] p-4 rounded-xl"
-            >
-              <GripVertical className="w-5 h-5 text-neutral-400 cursor-grab" />
-              <span className="text-base font-bold text-neutral-900">
+            <div key={category} className="flex items-center gap-4 ml-2">
+              <GripVertical className="w-5 h-5 text-neutral-900 cursor-grab" />
+              <span className="text-base font-bold text-neutral-900 bg-primary-50 p-4 rounded-xl w-full">
                 {category}
               </span>
             </div>
