@@ -23,10 +23,20 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
     }
   };
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onClick?.();
+    }
+  };
+
   return (
     <div
       className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-md cursor-pointer transition-transform active:scale-95"
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={handleKeyDown}
     >
       {/* Background Image */}
       <img
