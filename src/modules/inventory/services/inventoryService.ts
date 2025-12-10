@@ -4,8 +4,8 @@ import type { GetInventoryRequest, FoodItem, InventoryStatus } from '../types';
 export const inventoryService = {
   // 包裝 API 呼叫
   getInventory: async (params?: GetInventoryRequest) => {
-    const response = await inventoryApi.getItems(params);
-    return response;
+    const response = await inventoryApi.getInventory(params);
+    return response.data;
   },
 
   // 本地計算邏輯：計算過期狀態
@@ -37,17 +37,33 @@ export const inventoryService = {
     sortBy: keyof FoodItem | 'expiryDate',
     order: 'asc' | 'desc',
   ) => {
-    return [...items].sort((a, b) => {
-      let valA: any = a[sortBy];
-      let valB: any = b[sortBy];
-
+    const getComparableValue = (
+      item: FoodItem,
+    ): string | number | undefined => {
+      const value = item[sortBy];
       if (
         sortBy === 'expiryDate' ||
         sortBy === 'purchaseDate' ||
         sortBy === 'createdAt'
       ) {
-        valA = new Date(valA).getTime();
-        valB = new Date(valB).getTime();
+        return typeof value === 'string'
+          ? new Date(value).getTime()
+          : undefined;
+      }
+
+      if (typeof value === 'number' || typeof value === 'string') {
+        return value;
+      }
+
+      return undefined;
+    };
+
+    return [...items].sort((a, b) => {
+      const valA = getComparableValue(a);
+      const valB = getComparableValue(b);
+
+      if (valA === undefined || valB === undefined) {
+        return 0;
       }
 
       if (valA < valB) return order === 'asc' ? -1 : 1;
@@ -58,6 +74,7 @@ export const inventoryService = {
 
   // 取得分類資訊
   getCategories: async () => {
-    return await inventoryApi.getCategories();
+    const response = await inventoryApi.getCategories();
+    return response.data.categories;
   },
 };

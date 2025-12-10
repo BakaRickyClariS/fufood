@@ -9,8 +9,7 @@ import type {
 } from '../../types';
 
 // Internal type for raw API response
-interface RawScanResponse {
-  data?: any;
+type RawScanResponsePayload = {
   productName?: string;
   name?: string;
   category?: string;
@@ -23,7 +22,11 @@ interface RawScanResponse {
   lowStockThreshold?: number | string;
   notes?: string;
   imageUrl?: string;
-}
+};
+
+type RawScanResponse = RawScanResponsePayload & {
+  data?: RawScanResponsePayload;
+};
 
 export const createRealFoodScanApi = (): FoodScanApi => {
   const transformScanResult = (resp: unknown): ScanResult => {

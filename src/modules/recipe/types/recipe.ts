@@ -15,30 +15,30 @@ export type RecipeCategory =
 export type RecipeDifficulty = '簡單' | '中等' | '困難';
 
 export type RecipeIngredient = {
-  name: string; // 食材名稱
-  quantity: string; // 數量（如 "3-4條"）
-  unit?: string; // 單位（選填）
+  name: string; // ingredient name
+  quantity: string; // e.g. "3-4" or "100g"
+  unit?: string; // optional unit
   category: '準備材料' | '調味料';
 };
 
 export type CookingStep = {
-  stepNumber: number; // 步驟編號
-  description: string; // 步驟說明
-  time?: string; // 所需時間（如 "15-20分鐘"）
+  stepNumber: number;
+  description: string;
+  time?: string; // optional duration like "15-20min"
 };
 
 export type Recipe = {
   id: string;
-  name: string; // 食譜名稱
+  name: string;
   category: RecipeCategory;
-  series?: string; // 系列名稱（如 "慢火煮系列"）
-  imageUrl: string; // 食譜圖片
-  servings: number; // 幾人份
-  cookTime: number; // 烹煮時間（分鐘）
+  series?: string;
+  imageUrl: string;
+  servings: number;
+  cookTime: number;
   difficulty: RecipeDifficulty;
   ingredients: RecipeIngredient[];
   steps: CookingStep[];
-  isFavorite?: boolean; // 是否收藏
+  isFavorite?: boolean;
   createdAt: string;
   updatedAt?: string;
 };

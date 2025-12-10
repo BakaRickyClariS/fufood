@@ -114,33 +114,30 @@ export type ShoppingItem = {
 
 ## API 規格
 
-根據 [API_REFERENCE_V2.md](../API_REFERENCE_V2.md) 定義，本模組使用 Shopping Lists API：
+根據 [API_REFERENCE_V2.md](../API_REFERENCE_V2.md) 條目 #41-#50（Shopping Lists），並改用 PATCH 流程取代舊 `/purchase`：
 
-| # | Method | API Path | 功能說明 | 狀態 |
-|---|--------|----------|---------|------|
-| 48 | GET | `/api/v1/shopping-lists` | 取得所有購物清單 | 🆕 |
-| 49 | POST | `/api/v1/shopping-lists` | 建立購物清單 | 🆕 |
-| 50 | GET | `/api/v1/shopping-lists/{id}` | 取得單一購物清單內容 | 🆕 |
-| 51 | PUT | `/api/v1/shopping-lists/{id}` | 編輯購物清單 | 🆕 |
-| 52 | DELETE | `/api/v1/shopping-lists/{id}` | 刪除購物清單 | 🆕 |
-| 53 | POST | `/api/v1/shopping-lists/{id}/purchase` | 標記清單已購買 → 更新庫存 | 🆕 |
-
-### 擴充 API (貼文功能 - 提議中)
-| Method | API Path | 功能說明 |
-|--------|----------|---------|
-| GET | `/api/v1/shopping-lists/{id}/posts` | 取得清單內貼文 |
-| POST | `/api/v1/shopping-lists/{id}/posts` | 新增貼文 |
-| POST | `/api/v1/posts/{postId}/like` | 按讚 |
-| POST | `/api/v1/posts/{postId}/comments` | 留言 |
+| #  | Method | API Path | 功能說明 | 備註 |
+|----|--------|----------|---------|------|
+| 41 | GET | `/api/v1/shopping-lists` | 取得所有購物清單（支援 `year/month` 查詢） | — |
+| 42 | POST | `/api/v1/shopping-lists` | 建立購物清單 | — |
+| 43 | GET | `/api/v1/shopping-lists/{id}` | 取得單一購物清單內容 | — |
+| 44 | PATCH | `/api/v1/shopping-lists/{id}` | 編輯購物清單或標記 `{ status: 'purchased' }` | 取代舊 `/purchase` |
+| 45 | DELETE | `/api/v1/shopping-lists/{id}` | 刪除購物清單 | — |
+| 46 | GET | `/api/v1/shopping-lists/{id}/posts` | 取得清單貼文 | 社群功能 |
+| 47 | POST | `/api/v1/shopping-lists/{id}/posts` | 建立清單貼文 | 社群功能 |
+| 48 | POST | `/api/v1/posts/{postId}/like` | 貼文按讚切換 | 社群功能 |
+| 49 | GET | `/api/v1/posts/{postId}/comments` | 取得貼文留言 | 社群功能 |
+| 50 | POST | `/api/v1/posts/{postId}/comments` | 新增貼文留言 | 社群功能 |
 
 ### SharedListApi 介面
 ```typescript
 export interface SharedListApi {
-  getSharedLists(): Promise<SharedListItem[]>;
+  getSharedLists(year?: number, month?: number): Promise<SharedListItem[]>;
   getSharedListById(id: string): Promise<SharedList>;
   createSharedList(input: CreateSharedListInput): Promise<SharedList>;
   getPosts(listId: string): Promise<SharedListPost[]>;
   createPost(input: CreatePostInput): Promise<SharedListPost>;
+  togglePostLike(postId: string, listId: string): Promise<SharedListPost>;
 }
 ```
 

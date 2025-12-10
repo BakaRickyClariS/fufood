@@ -2,18 +2,18 @@ import { apiClient } from '@/lib/apiClient';
 import type {
   FoodItem,
   GetInventoryRequest,
-  GetInventoryResponse,
   AddFoodItemRequest,
   AddFoodItemResponse,
   UpdateFoodItemRequest,
   UpdateFoodItemResponse,
   DeleteFoodItemResponse,
-  InventoryStats,
-  InventorySummary,
-  InventorySettings,
   UpdateInventorySettingsRequest,
-  CategoryInfo,
-  BatchOperationRequest,
+  BatchDeleteInventoryRequest,
+  GetInventoryResponse,
+  InventorySummaryResponse,
+  InventoryCategoriesResponse,
+  InventorySettingsResponse,
+  ApiSuccess,
 } from '../types';
 import type { InventoryApi } from './inventoryApi';
 
@@ -22,7 +22,7 @@ export const createRealInventoryApi = (): InventoryApi => {
     /**
      * 取得庫存列表
      */
-    getItems: async (
+    getInventory: async (
       params?: GetInventoryRequest,
     ): Promise<GetInventoryResponse> => {
       return apiClient.get<GetInventoryResponse>('/inventory', params);
@@ -31,8 +31,8 @@ export const createRealInventoryApi = (): InventoryApi => {
     /**
      * 取得單一食材
      */
-    getItem: async (id: string): Promise<FoodItem> => {
-      return apiClient.get<FoodItem>(`/inventory/${id}`);
+    getItem: async (id: string): Promise<ApiSuccess<{ item: FoodItem }>> => {
+      return apiClient.get<ApiSuccess<{ item: FoodItem }>>(`/inventory/${id}`);
     },
 
     /**
@@ -60,66 +60,40 @@ export const createRealInventoryApi = (): InventoryApi => {
     },
 
     /**
-     * 批次操作
+     * 批次刪除（可選）
      */
-    batchOperation: async (
-      data: BatchOperationRequest,
-    ): Promise<{ success: boolean }> => {
-      // Map generic batch operation to specific API calls
-      switch (data.operation) {
-        case 'delete':
-          await apiClient.delete<void>('/inventory/batch', {
-            body: JSON.stringify({ ids: data.itemIds }),
-          } as any);
-          break;
-        case 'add':
-          // Assuming data.data contains items
-          if (data.data?.items) {
-            await apiClient.post<void>('/inventory/batch', {
-              items: data.data.items,
-            });
-          }
-          break;
-        case 'update':
-          if (data.data?.items) {
-            await apiClient.put<void>('/inventory/batch', {
-              items: data.data.items,
-            });
-          }
-          break;
-        default:
-          console.warn('Unsupported batch operation:', data.operation);
-      }
-
-      return { success: true };
+    batchDelete: async (
+      data: BatchDeleteInventoryRequest,
+    ): Promise<ApiSuccess<Record<string, never>>> => {
+      return apiClient.delete<ApiSuccess<Record<string, never>>>(
+        '/inventory/batch',
+        {
+          body: data,
+        },
+      );
     },
 
     /**
-     * 取得統計
+     * 庫存概要（可選）
      */
-    getStats: async (groupId?: string): Promise<InventoryStats> => {
-      return apiClient.get<InventoryStats>('/inventory/stats', { groupId });
+    getSummary: async (): Promise<InventorySummaryResponse> => {
+      return apiClient.get<InventorySummaryResponse>('/inventory/summary');
     },
 
     /**
-     * 取得概況
+     * 類別列表
      */
-    getSummary: async (): Promise<InventorySummary> => {
-      return apiClient.get<InventorySummary>('/inventory/summary');
+    getCategories: async (): Promise<InventoryCategoriesResponse> => {
+      return apiClient.get<InventoryCategoriesResponse>(
+        '/inventory/categories',
+      );
     },
 
     /**
-     * 取得分類
+     * 庫存設定
      */
-    getCategories: async (): Promise<CategoryInfo[]> => {
-      return apiClient.get<CategoryInfo[]>('/inventory/categories');
-    },
-
-    /**
-     * 取得設定
-     */
-    getSettings: async (): Promise<InventorySettings> => {
-      return apiClient.get<InventorySettings>('/inventory/settings');
+    getSettings: async (): Promise<InventorySettingsResponse> => {
+      return apiClient.get<InventorySettingsResponse>('/inventory/settings');
     },
 
     /**
@@ -127,8 +101,11 @@ export const createRealInventoryApi = (): InventoryApi => {
      */
     updateSettings: async (
       data: UpdateInventorySettingsRequest,
-    ): Promise<void> => {
-      return apiClient.put<void>('/inventory/settings', data);
+    ): Promise<InventorySettingsResponse> => {
+      return apiClient.put<InventorySettingsResponse>(
+        '/inventory/settings',
+        data,
+      );
     },
   };
 };

@@ -60,11 +60,17 @@ export const useInventoryStats = (items: FoodItem[]) => {
     calculateStats();
   }, [calculateStats]);
 
-  // Optional: Fetch from API if needed
+  // Optional: Fetch from API if needed (include=stats)
   const fetchStats = async (groupId?: string) => {
     try {
-      const apiStats = await inventoryApi.getStats(groupId);
-      setStats(apiStats);
+      const apiStats = await inventoryApi.getInventory({
+        groupId,
+        include: 'stats',
+        limit: 1,
+      });
+      if (apiStats.data.stats) {
+        setStats(apiStats.data.stats);
+      }
     } catch (error) {
       console.error('Failed to fetch stats:', error);
     }

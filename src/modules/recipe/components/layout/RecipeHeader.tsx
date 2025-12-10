@@ -18,7 +18,7 @@ export const RecipeHeader = ({
 
   const handleFavoriteClick = async () => {
     if (recipeId) {
-      await toggleFavorite(recipeId);
+      await toggleFavorite(recipeId, isFavorite);
     }
   };
 

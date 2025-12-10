@@ -11,7 +11,7 @@ export const useRecipes = (category?: RecipeCategory) => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await recipeApi.getRecipes(category);
+      const data = await recipeApi.getRecipes({ category });
       setRecipes(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : '載入食譜失敗');

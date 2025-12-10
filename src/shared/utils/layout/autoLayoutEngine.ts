@@ -1,9 +1,10 @@
 // src/data/autoLayoutEngine.ts
 
 import { categories } from '@/modules/inventory/constants/categories';
-import { layoutPattern } from '@/shared/constants/layoutPattern';
+import { layoutPatterns } from '@/shared/constants/layoutPatterns';
+import type { LayoutType } from '@/modules/inventory/types/layoutTypes';
 
-export function generateAutoLayout() {
+export function generateAutoLayout(layoutType: LayoutType = 'layout-a') {
   const COLUMN_COUNT = 2; // 兩欄
   const grid: string[][] = [];
 
@@ -50,8 +51,11 @@ export function generateAutoLayout() {
     }
   };
 
+  const currentPattern = layoutPatterns[layoutType];
+
   categories.forEach((item) => {
-    const { w, h } = layoutPattern[item.id];
+    const pattern = currentPattern[item.id] || { w: 1, h: 1 }; // Default fallback
+    const { w, h } = pattern;
     const pos = findPosition(w, h);
     fill(pos.x, pos.y, w, h, item.id);
   });

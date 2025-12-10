@@ -6,21 +6,21 @@ import type {
   UpdateFoodItemRequest,
   UpdateFoodItemResponse,
   DeleteFoodItemResponse,
-  BatchOperationRequest,
+  BatchDeleteInventoryRequest,
   FoodItem,
-  CategoryInfo,
-  InventoryStats,
-  InventorySummary,
-  InventorySettings,
+  ApiSuccess,
+  InventoryCategoriesResponse,
+  InventorySummaryResponse,
+  InventorySettingsResponse,
   UpdateInventorySettingsRequest,
 } from '../types';
 
 export type InventoryApi = {
-  // 取得庫存列表
-  getItems: (params?: GetInventoryRequest) => Promise<GetInventoryResponse>;
+  // 取得庫存列表（支援 status/include）
+  getInventory: (params?: GetInventoryRequest) => Promise<GetInventoryResponse>;
 
-  // 取得單一食材
-  getItem: (id: string) => Promise<FoodItem>;
+  // 取得單筆食材
+  getItem: (id: string) => Promise<ApiSuccess<{ item: FoodItem }>>;
 
   // 新增食材
   addItem: (data: AddFoodItemRequest) => Promise<AddFoodItemResponse>;
@@ -34,23 +34,20 @@ export type InventoryApi = {
   // 刪除食材
   deleteItem: (id: string) => Promise<DeleteFoodItemResponse>;
 
-  // 批次操作
-  batchOperation: (
-    data: BatchOperationRequest,
-  ) => Promise<{ success: boolean }>;
+  // 批次刪除（可選）
+  batchDelete: (
+    data: BatchDeleteInventoryRequest,
+  ) => Promise<ApiSuccess<Record<string, never>>>;
 
-  // 取得統計資料
-  getStats: (groupId?: string) => Promise<InventoryStats>;
+  // 庫存概要（可選，若已用 include 可不呼叫）
+  getSummary: () => Promise<InventorySummaryResponse>;
 
-  // 取得分類資訊
-  getCategories: () => Promise<CategoryInfo[]>;
+  // 類別列表
+  getCategories: () => Promise<InventoryCategoriesResponse>;
 
-  // 取得庫存概況
-  getSummary: () => Promise<InventorySummary>;
-
-  // 取得庫存設定
-  getSettings: () => Promise<InventorySettings>;
-
-  // 更新庫存設定
-  updateSettings: (data: UpdateInventorySettingsRequest) => Promise<void>;
+  // 庫存設定
+  getSettings: () => Promise<InventorySettingsResponse>;
+  updateSettings: (
+    data: UpdateInventorySettingsRequest,
+  ) => Promise<InventorySettingsResponse>;
 };

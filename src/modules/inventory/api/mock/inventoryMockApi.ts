@@ -1,4 +1,4 @@
-import type { InventoryApi } from '../inventoryApi';
+﻿import type { InventoryApi } from '../inventoryApi';
 import type {
   GetInventoryRequest,
   GetInventoryResponse,
@@ -7,28 +7,34 @@ import type {
   UpdateFoodItemRequest,
   UpdateFoodItemResponse,
   DeleteFoodItemResponse,
-  BatchOperationRequest,
+  BatchDeleteInventoryRequest,
   FoodItem,
   CategoryInfo,
+  FoodCategory,
   InventoryStats,
   InventorySummary,
   InventorySettings,
   UpdateInventorySettingsRequest,
 } from '../../types';
 import { MOCK_INVENTORY } from './inventoryMockData';
-import { categories } from '../../constants/categories'; // 暫時引用舊的 constants，之後會遷移
-
+import { categories } from '../../constants/categories';
 import { mockRequestHandlers } from '@/utils/debug/mockRequestHandlers';
+
+const createCategoryCounters = (): Record<FoodCategory, number> => {
+  const counters: Record<FoodCategory, number> = {};
+  MOCK_INVENTORY.forEach((item) => {
+    counters[item.category] = 0;
+  });
+  return counters;
+};
 
 export const createMockInventoryApi = (): InventoryApi => {
   const delay = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms));
 
-  // Memory cache
   let memoryItems: FoodItem[] | null = null;
   let memorySettings: InventorySettings | null = null;
 
-  // 使用 mockRequestHandlers 模擬持久化
   const getStoredItems = (): FoodItem[] => {
     if (mockRequestHandlers.shouldResetData()) {
       mockRequestHandlers.resetData(['mock_inventory_items']);
@@ -41,11 +47,11 @@ export const createMockInventoryApi = (): InventoryApi => {
 
     const stored = mockRequestHandlers.getItem('mock_inventory_items');
     if (stored) {
-      memoryItems = JSON.parse(stored);
-      return memoryItems!;
+      const parsed = JSON.parse(stored) as FoodItem[];
+      memoryItems = parsed;
+      return parsed;
     }
 
-    // 初始化
     mockRequestHandlers.setItem(
       'mock_inventory_items',
       JSON.stringify(MOCK_INVENTORY),
@@ -59,17 +65,16 @@ export const createMockInventoryApi = (): InventoryApi => {
     mockRequestHandlers.setItem('mock_inventory_items', JSON.stringify(items));
   };
 
-  const getItems = async (
+  const getInventory = async (
     params?: GetInventoryRequest,
   ): Promise<GetInventoryResponse> => {
-    await delay(500);
+    await delay(300);
     let items = getStoredItems();
 
-    // 篩選
     if (params?.groupId) {
       items = items.filter((item) => item.groupId === params.groupId);
     }
-    if (params?.category) {
+    if (params?.category && params.category !== 'all') {
       items = items.filter((item) => item.category === params.category);
     }
     if (params?.status) {
@@ -77,7 +82,6 @@ export const createMockInventoryApi = (): InventoryApi => {
       const threeDaysLater = new Date(
         today.getTime() + 3 * 24 * 60 * 60 * 1000,
       );
-
       items = items.filter((item) => {
         const expiry = new Date(item.expiryDate);
         switch (params.status) {
@@ -89,32 +93,24 @@ export const createMockInventoryApi = (): InventoryApi => {
             return (
               item.lowStockAlert && item.quantity <= item.lowStockThreshold
             );
+          case 'frequent':
+            return true;
           case 'normal':
+          default:
             return (
               expiry > threeDaysLater &&
               (!item.lowStockAlert || item.quantity > item.lowStockThreshold)
             );
-          default:
-            return true;
         }
       });
     }
 
-    // 統計
     const stats: InventoryStats = {
       totalItems: items.length,
       expiredCount: 0,
       expiringSoonCount: 0,
       lowStockCount: 0,
-      byCategory: {
-        蔬果類: 0,
-        冷凍調理類: 0,
-        主食烘焙類: 0,
-        乳製品飲料類: 0,
-        冷凍海鮮類: 0,
-        肉品類: 0,
-        其他: 0,
-      },
+      byCategory: createCategoryCounters(),
     };
 
     const today = new Date();
@@ -132,31 +128,49 @@ export const createMockInventoryApi = (): InventoryApi => {
       }
     });
 
-    // 分頁
     const page = params?.page || 1;
     const limit = params?.limit || 1000;
     const start = (page - 1) * limit;
     const paginatedItems = items.slice(start, start + limit);
 
-    return {
-      items: paginatedItems,
-      total: items.length,
-      stats,
+    const base: GetInventoryResponse = {
+      status: true,
+      data: {
+        items: paginatedItems,
+        total: items.length,
+      },
     };
+
+    if (params?.include?.includes('stats')) {
+      base.data.stats = stats;
+    }
+
+    if (params?.include?.includes('summary')) {
+      base.data.summary = {
+        total: items.length,
+        expiring: stats.expiringSoonCount,
+        expired: stats.expiredCount,
+        lowStock: stats.lowStockCount,
+      } as InventorySummary;
+    }
+
+    return base;
   };
 
-  const getItem = async (id: string): Promise<FoodItem> => {
-    await delay(300);
+  const getItem = async (
+    id: string,
+  ): Promise<{ status: true; data: { item: FoodItem } }> => {
+    await delay(200);
     const items = getStoredItems();
     const item = items.find((i) => i.id === id);
     if (!item) throw new Error('Item not found');
-    return item;
+    return { status: true, data: { item } };
   };
 
   const addItem = async (
     data: AddFoodItemRequest,
   ): Promise<AddFoodItemResponse> => {
-    await delay(800);
+    await delay(300);
     const items = getStoredItems();
     const newItem: FoodItem = {
       ...data,
@@ -168,8 +182,8 @@ export const createMockInventoryApi = (): InventoryApi => {
     setStoredItems(items);
 
     return {
-      success: true,
-      message: '新增成功',
+      status: true,
+      message: 'Added item',
       data: { id: newItem.id },
     };
   };
@@ -178,7 +192,7 @@ export const createMockInventoryApi = (): InventoryApi => {
     id: string,
     data: UpdateFoodItemRequest,
   ): Promise<UpdateFoodItemResponse> => {
-    await delay(500);
+    await delay(300);
     const items = getStoredItems();
     const index = items.findIndex((i) => i.id === id);
     if (index === -1) throw new Error('Item not found');
@@ -191,57 +205,50 @@ export const createMockInventoryApi = (): InventoryApi => {
     setStoredItems(items);
 
     return {
-      success: true,
-      message: '更新成功',
+      status: true,
+      message: 'Updated item',
+      data: { id },
     };
   };
 
   const deleteItem = async (id: string): Promise<DeleteFoodItemResponse> => {
-    await delay(500);
+    await delay(300);
     const items = getStoredItems();
     const filtered = items.filter((i) => i.id !== id);
     setStoredItems(filtered);
 
     return {
-      success: true,
-      message: '刪除成功',
+      status: true,
+      message: 'Deleted item',
+      data: {},
     };
   };
 
-  const batchOperation = async (
-    data: BatchOperationRequest,
-  ): Promise<{ success: boolean }> => {
-    await delay(1000);
-    let items = getStoredItems();
-
-    switch (data.operation) {
-      case 'delete':
-        items = items.filter((i) => !data.itemIds.includes(i.id));
-        break;
-      case 'update-category':
-        items = items.map((i) =>
-          data.itemIds.includes(i.id)
-            ? { ...i, category: data.data?.category }
-            : i,
-        );
-        break;
-      // 其他操作...
-    }
-
-    setStoredItems(items);
-    return { success: true };
-  };
-
-  const getStats = async (_groupId?: string): Promise<InventoryStats> => {
+  const batchDelete = async (
+    data: BatchDeleteInventoryRequest,
+  ): Promise<{
+    status: true;
+    message?: string;
+    data: Record<string, never>;
+  }> => {
     await delay(300);
-    const { stats } = await getItems();
-    return stats;
+    let items = getStoredItems();
+    items = items.filter((i) => !data.ids.includes(i.id));
+    setStoredItems(items);
+    return { status: true, data: {} };
   };
 
-  const getCategories = async (): Promise<CategoryInfo[]> => {
-    await delay(200);
-    // 轉換舊的 categories 格式
-    return categories.map((c) => ({
+  const getCategories = async (): Promise<{
+    status: true;
+    data: { categories: CategoryInfo[] };
+  }> => {
+    await delay(150);
+
+    // 取得使用者設定的類別順序
+    const settingsResponse = await getSettings();
+    const categoryOrder = settingsResponse.data.settings.categoryOrder;
+
+    const allCategories = categories.map((c) => ({
       id: c.id,
       title: c.title,
       count: c.value,
@@ -250,10 +257,43 @@ export const createMockInventoryApi = (): InventoryApi => {
       slogan: c.slogan,
       description: c.description,
     }));
+
+    // 如果有自訂順序，則根據順序排序
+    if (categoryOrder && categoryOrder.length > 0) {
+      const orderedCategories: CategoryInfo[] = [];
+
+      // 按照 categoryOrder 順序添加類別
+      categoryOrder.forEach((id) => {
+        const category = allCategories.find((c) => c.id === id);
+        if (category) {
+          orderedCategories.push(category);
+        }
+      });
+
+      // 添加不在 categoryOrder 中的類別（如果有新類別）
+      allCategories.forEach((category) => {
+        if (!categoryOrder.includes(category.id)) {
+          orderedCategories.push(category);
+        }
+      });
+
+      return {
+        status: true,
+        data: { categories: orderedCategories },
+      };
+    }
+
+    return {
+      status: true,
+      data: { categories: allCategories },
+    };
   };
 
-  const getSummary = async (): Promise<InventorySummary> => {
-    await delay(300);
+  const getSummary = async (): Promise<{
+    status: true;
+    data: { summary: InventorySummary };
+  }> => {
+    await delay(150);
     const items = getStoredItems();
     const today = new Date();
     const threeDaysLater = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000);
@@ -271,15 +311,23 @@ export const createMockInventoryApi = (): InventoryApi => {
     });
 
     return {
-      total: items.length,
-      expiring: expiringCount,
-      expired: expiredCount,
-      lowStock: lowStockCount,
+      status: true,
+      data: {
+        summary: {
+          total: items.length,
+          expiring: expiringCount,
+          expired: expiredCount,
+          lowStock: lowStockCount,
+        },
+      },
     };
   };
 
-  const getSettings = async (): Promise<InventorySettings> => {
-    await delay(200);
+  const getSettings = async (): Promise<{
+    status: true;
+    data: { settings: InventorySettings };
+  }> => {
+    await delay(150);
 
     if (mockRequestHandlers.shouldResetData()) {
       mockRequestHandlers.resetData(['mock_inventory_settings']);
@@ -287,50 +335,60 @@ export const createMockInventoryApi = (): InventoryApi => {
     }
 
     if (mockRequestHandlers.shouldUseMemoryOnly() && memorySettings) {
-      return memorySettings;
+      return { status: true, data: { settings: memorySettings } };
     }
 
     const stored = mockRequestHandlers.getItem('mock_inventory_settings');
     if (stored) {
-      memorySettings = JSON.parse(stored);
-      return memorySettings!;
+      const parsed = JSON.parse(stored) as InventorySettings;
+      memorySettings = parsed;
+      return { status: true, data: { settings: parsed } };
     }
 
-    const defaults = {
+    const defaults: InventorySettings = {
       lowStockThreshold: 2,
       expiringSoonDays: 3,
       notifyOnExpiry: true,
       notifyOnLowStock: true,
+      layoutType: 'layout-a',
     };
     memorySettings = defaults;
     mockRequestHandlers.setItem(
       'mock_inventory_settings',
       JSON.stringify(defaults),
     );
-    return defaults;
+    return { status: true, data: { settings: defaults } };
   };
 
   const updateSettings = async (
     data: UpdateInventorySettingsRequest,
-  ): Promise<void> => {
-    await delay(300);
+  ): Promise<{
+    status: true;
+    message?: string;
+    data: { settings: InventorySettings };
+  }> => {
+    await delay(150);
     const current = await getSettings();
-    const updated = { ...current, ...data };
+    const updated = { ...current.data.settings, ...data };
     memorySettings = updated;
     mockRequestHandlers.setItem(
       'mock_inventory_settings',
       JSON.stringify(updated),
     );
+    return {
+      status: true,
+      message: 'Updated successfully',
+      data: { settings: updated },
+    };
   };
 
   return {
-    getItems,
+    getInventory,
     getItem,
     addItem,
     updateItem,
     deleteItem,
-    batchOperation,
-    getStats,
+    batchDelete,
     getCategories,
     getSummary,
     getSettings,
