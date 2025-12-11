@@ -65,6 +65,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockThreshold: 2,
     notes: '好市多購入，季節限定',
     createdAt: '2026-01-01T00:00:00.000Z',
+    attributes: ['葉菜類'],
   },
   {
     id: 'veg-2',
@@ -79,6 +80,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockThreshold: 5,
     notes: '有機種植',
     createdAt: '2026-01-01T00:00:00.000Z',
+    attributes: ['葉菜類', '根莖類'], // Just testing multi-match
   },
   {
     id: 'veg-3',

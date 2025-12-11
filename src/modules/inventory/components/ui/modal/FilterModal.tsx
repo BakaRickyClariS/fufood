@@ -6,7 +6,7 @@ import gsap from 'gsap';
 type FilterModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onApply: (status: string | null, attribute: string | null) => void;
+  onApply: (status: string[], attribute: string[]) => void;
 };
 
 const statusOptions = ['即將到期', '低庫存', '已過期', '有庫存'];
@@ -20,10 +20,8 @@ const FilterModal: React.FC<FilterModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
-  const [selectedAttribute, setSelectedAttribute] = useState<string | null>(
-    null,
-  );
+  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
+  const [selectedAttribute, setSelectedAttribute] = useState<string[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -68,13 +66,29 @@ const FilterModal: React.FC<FilterModalProps> = ({
   };
 
   const handleClear = () => {
-    setSelectedStatus(null);
-    setSelectedAttribute(null);
+    setSelectedStatus([]);
+    setSelectedAttribute([]);
   };
 
   const handleApply = () => {
     onApply(selectedStatus, selectedAttribute);
     handleClose();
+  };
+  
+  const toggleStatus = (status: string) => {
+    setSelectedStatus(prev => 
+      prev.includes(status) 
+        ? prev.filter(s => s !== status) 
+        : [...prev, status]
+    );
+  };
+
+  const toggleAttribute = (attr: string) => {
+    setSelectedAttribute(prev => 
+      prev.includes(attr) 
+        ? prev.filter(a => a !== attr) 
+        : [...prev, attr]
+    );
   };
 
   if (!isOpen) return null;
@@ -91,7 +105,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
       {/* Modal Content */}
       <div
         ref={modalRef}
-        className="relative w-full bg-white max-w-layout-container mx-auto rounded-t-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+        className="relative w-full bg-white max-w-layout-container mx-auto rounded-t-3xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4">
@@ -113,7 +127,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-8 overflow-y-auto pb-24">
+        <div className="p-6 space-y-8 overflow-y-auto pb-48"> {/* Increased padding to avoid overlap with taller footer */}
           {/* Status Filter */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
@@ -122,13 +136,11 @@ const FilterModal: React.FC<FilterModalProps> = ({
             </div>
             <div className="flex flex-wrap gap-3">
               {statusOptions.map((status) => {
-                const isSelected = selectedStatus === status;
+                const isSelected = selectedStatus.includes(status);
                 return (
                   <button
                     key={status}
-                    onClick={() =>
-                      setSelectedStatus(isSelected ? null : status)
-                    }
+                    onClick={() => toggleStatus(status)}
                     className={`
                       px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1
                       ${
@@ -151,13 +163,11 @@ const FilterModal: React.FC<FilterModalProps> = ({
             <h3 className="text-lg font-bold text-neutral-900">屬性篩選</h3>
             <div className="flex flex-wrap gap-3">
               {attributeOptions.map((attr) => {
-                const isSelected = selectedAttribute === attr;
+                const isSelected = selectedAttribute.includes(attr);
                 return (
                   <button
                     key={attr}
-                    onClick={() =>
-                      setSelectedAttribute(isSelected ? null : attr)
-                    }
+                    onClick={() => toggleAttribute(attr)}
                     className={`
                       px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1
                       ${
@@ -177,9 +187,9 @@ const FilterModal: React.FC<FilterModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100">
+        <div className="absolute bottom-0 left-0 right-0 p-4 pb-24 bg-white border-t border-gray-100">
           <Button
-            className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white rounded-xl h-12 text-base font-medium shadow-lg shadow-orange-200"
+            className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white rounded-xl h-12 text-base font-medium shadow-orange-200"
             onClick={handleApply}
           >
             套用

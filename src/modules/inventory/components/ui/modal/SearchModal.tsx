@@ -117,11 +117,27 @@ const SearchModal: React.FC<SearchModalProps> = ({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
             <Input
               placeholder="搜尋"
-              className="pl-10 bg-gray-100 border-none h-12 rounded-xl text-base"
+              className="pl-10 pr-10 bg-gray-100 border-none h-12 rounded-xl text-base"
               autoFocus
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                const newQuery = e.target.value;
+                setQuery(newQuery);
+                onSearch(newQuery);
+              }}
             />
+            {query && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery('');
+                  onSearch('');
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-neutral-400 hover:text-neutral-600 rounded-full hover:bg-neutral-200 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </form>
         </div>
 
