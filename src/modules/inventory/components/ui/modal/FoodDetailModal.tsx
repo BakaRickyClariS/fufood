@@ -1,9 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { X, Check, AlertCircle, Clock } from 'lucide-react';
+import { X, Check, AlertCircle, Clock, ShoppingCart, Ban, Bell, BellRing } from 'lucide-react';
 import gsap from 'gsap';
+import { useDispatch } from 'react-redux';
 import { Button } from '@/shared/components/ui/button';
 import type { FoodItem } from '@/modules/inventory/types';
 import { useExpiryCheck } from '@/modules/inventory/hooks';
+import { toggleLowStockAlert } from '@/modules/inventory/store/inventorySlice';
 
 type FoodDetailModalProps = {
   item: FoodItem;
@@ -19,6 +21,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const { status, daysUntilExpiry } = useExpiryCheck(item);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (isOpen) {
@@ -60,6 +63,10 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
       { opacity: 0, duration: 0.3, ease: 'power2.in' },
       '-=0.3',
     );
+  };
+
+  const handleToggleAlert = () => {
+    dispatch(toggleLowStockAlert(item.id));
   };
 
   const getStatusBadge = () => {
@@ -109,7 +116,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
       {/* Modal Content */}
       <div
         ref={modalRef}
-        className="relative w-full max-w-md bg-white rounded-t-3xl overflow-hidden shadow-2xl"
+        className="relative w-full max-w-md bg-white rounded-t-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]" // Added flex col and max-h
       >
         {/* Close Button */}
         <button
@@ -119,8 +126,8 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
           <X className="w-5 h-5" />
         </button>
 
-        {/* Image Section */}
-        <div className="relative h-36 w-full rounded-b-3xl overflow-hidden">
+        {/* Image Section - Fixed height */}
+        <div className="relative h-36 w-full shrink-0 overflow-hidden"> 
           <img
             src={item.imageUrl}
             alt={item.name}
@@ -132,13 +139,33 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Content Section */}
-        <div className="p-6 space-y-6">
+        {/* Content Section - Scrollable */}
+        <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
           {/* Header */}
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-neutral-900 tracking-wide">
               {item.name}
             </h2>
+            <button
+              onClick={handleToggleAlert}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-colors ${
+                item.lowStockAlert
+                  ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-500)]' // Pinkish bg, red text
+                  : 'bg-[var(--color-primary-50)] text-[var(--color-primary-500)] hover:bg-[var(--color-primary-100)]'
+              }`}
+            >
+              {item.lowStockAlert ? (
+                <>
+                  <BellRing className="w-4 h-4 fill-current" />
+                  已開啟低庫存通知
+                </>
+              ) : (
+                <>
+                  <Bell className="w-4 h-4" />
+                  開啟低庫存通知
+                </>
+              )}
+            </button>
           </div>
 
           {/* Details List */}
@@ -164,7 +191,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
                 {item.quantity} / {item.unit || '個'}
               </span>
             </div>
-            <div className="w-full h-[1px] bg-gray-100" />
+            <div className="w-full h-px bg-gray-100" />
 
             {/* Dates */}
             <div className="flex flex-col gap-4 border-gray-100">
@@ -196,7 +223,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
                 {item.expiryDate}
               </span>
             </div>
-            <div className="w-full h-[1px] bg-gray-100" />
+            <div className="w-full h-px bg-gray-100" />
 
             {/* Notes */}
             <div className="flex items-start justify-between">
@@ -209,16 +236,31 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
             </div>
           </div>
 
-          {/* Action Button */}
-          <Button
-            className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white rounded-xl h-12 text-base font-medium shadow-lg shadow-orange-200"
-            onClick={() => {
-              // TODO: Implement consume logic
-              // console.log('Consume item:', item.id);
-            }}
-          >
-            確定消耗
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-3 pb-24"> {/* Increased padding to clear BottomNav */}
+             <Button
+              className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white rounded-xl h-12 text-base font-medium shadow-lg shadow-orange-200 flex items-center justify-center gap-2"
+              onClick={() => {
+                // TODO: Add to shopping list logic
+                onClose();
+              }}
+            >
+              <ShoppingCart className="w-5 h-5" />
+              已消耗，加入採買清單
+            </Button>
+            
+            <Button
+              variant="outline"
+              className="w-full border-gray-200 text-neutral-600 hover:bg-gray-50 rounded-xl h-12 text-base font-medium flex items-center justify-center gap-2"
+               onClick={() => {
+                // TODO: Just consume logic
+                onClose();
+              }}
+            >
+              <Ban className="w-5 h-5" />
+              僅消耗，暫不採買
+            </Button>
+          </div>
         </div>
       </div>
     </div>

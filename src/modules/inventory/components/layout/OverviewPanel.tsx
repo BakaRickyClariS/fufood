@@ -142,11 +142,11 @@ const OverviewPanel: React.FC = () => {
   }
 
   return (
-    <section className="pb-25 relative">
+    <section className="pb-30 relative">
       <DynamicGridAreaStyles categories={categories} />
 
       <div
-        className="max-w-layout-container mx-auto grid gap-3 mb-10"
+        className="max-w-layout-container mx-auto grid gap-3 mb-6"
         style={{
           gridTemplateAreas: gridTemplate,
           gridTemplateColumns: '1fr 1fr',
