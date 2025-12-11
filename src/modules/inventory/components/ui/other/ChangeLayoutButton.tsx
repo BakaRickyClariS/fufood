@@ -5,7 +5,7 @@ const ChangeLayoutButton = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="mt-8 px-4 w-full max-w-md mx-auto">
+    <div className="w-full max-w-md mx-auto">
       <Button
         variant="outline"
         className="
