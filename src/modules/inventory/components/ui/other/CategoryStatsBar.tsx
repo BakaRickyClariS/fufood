@@ -56,20 +56,20 @@ const CategoryStatsBar: React.FC<CategoryStatsBarProps> = ({
   return (
     <div
       ref={barRef}
-      className="fixed bottom-24 left-4 right-4 z-40 bg-white/70 text-neutral-900 backdrop-blur-md rounded-[50px] shadow-xl border border-neutral-100 p-4 flex justify-between items-center max-w-layout-container mx-auto"
+      className="fixed bottom-24 left-4 right-4 z-40 bg-white/70 text-neutral-900 backdrop-blur-md rounded-[50px] shadow-xl border border-neutral-100 p-3 flex justify-between items-center max-w-layout-container mx-auto"
     >
       <div className="flex flex-col items-center flex-1 border-r border-neutral-400 last:border-0">
-        <span className="text-2xl font-bold">{totalCount}</span>
+        <span className="text-base font-bold">{totalCount}</span>
         <span className="text-xs font-medium mt-1">總數</span>
       </div>
-      
+
       <div className="flex flex-col items-center flex-1 border-r border-neutral-400 last:border-0">
-        <span className="text-2xl font-bold">{expiringCount}</span>
+        <span className="text-base font-bold">{expiringCount}</span>
         <span className="text-xs font-medium mt-1">即將過期</span>
       </div>
-      
+
       <div className="flex flex-col items-center flex-1">
-        <span className="text-2xl font-bold">{expiredCount}</span>
+        <span className="text-base font-bold">{expiredCount}</span>
         <span className="text-xs font-medium mt-1">已過期</span>
       </div>
     </div>

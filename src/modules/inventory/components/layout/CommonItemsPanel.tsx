@@ -70,6 +70,7 @@ const CommonItemsPanel: React.FC = () => {
           item={selectedItem}
           isOpen={!!selectedItem}
           onClose={() => setSelectedItem(null)}
+          onItemUpdate={fetchFrequentItems}
         />
       )}
     </>

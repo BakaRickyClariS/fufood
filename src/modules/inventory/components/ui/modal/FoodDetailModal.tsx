@@ -1,27 +1,49 @@
-import React, { useEffect, useRef } from 'react';
-import { X, Check, AlertCircle, Clock, ShoppingCart, Ban, Bell, BellRing } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  X,
+  Check,
+  AlertCircle,
+  Clock,
+  ShoppingCart,
+  Ban,
+  Bell,
+  BellRing,
+  Info,
+} from 'lucide-react';
 import gsap from 'gsap';
-import { useDispatch } from 'react-redux';
 import { Button } from '@/shared/components/ui/button';
 import type { FoodItem } from '@/modules/inventory/types';
 import { useExpiryCheck } from '@/modules/inventory/hooks';
-import { toggleLowStockAlert } from '@/modules/inventory/store/inventorySlice';
+import { inventoryApi } from '@/modules/inventory/api';
 
 type FoodDetailModalProps = {
   item: FoodItem;
   isOpen: boolean;
   onClose: () => void;
+  onItemUpdate?: () => void; // 當 item 更新後通知父組件刷新資料
 };
 
 const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
   item,
   isOpen,
   onClose,
+  onItemUpdate,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+
+  // 使用本地 state 管理 lowStockAlert 狀態，確保點擊時 UI 可以即時更新
+  const [lowStockAlertEnabled, setLowStockAlertEnabled] = useState(
+    item.lowStockAlert ?? false,
+  );
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // 當 item 變更時同步更新本地 state
+  useEffect(() => {
+    setLowStockAlertEnabled(item.lowStockAlert ?? false);
+  }, [item.lowStockAlert]);
+
   const { status, daysUntilExpiry } = useExpiryCheck(item);
-  const dispatch = useDispatch();
 
   useEffect(() => {
     if (isOpen) {
@@ -65,8 +87,28 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
     );
   };
 
-  const handleToggleAlert = () => {
-    dispatch(toggleLowStockAlert(item.id));
+  const handleToggleAlert = async () => {
+    if (isUpdating) return;
+
+    const newValue = !lowStockAlertEnabled;
+    // 立即更新本地 state，讓 UI 即時反映變化
+    setLowStockAlertEnabled(newValue);
+    setIsUpdating(true);
+
+    try {
+      // 調用 API 更新後端資料
+      await inventoryApi.updateItem(item.id, {
+        lowStockAlert: newValue,
+      });
+      // 成功後通知父組件刷新資料
+      onItemUpdate?.();
+    } catch (error) {
+      // 如果失敗，還原本地 state
+      setLowStockAlertEnabled(!newValue);
+      console.error('更新低庫存通知失敗:', error);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const getStatusBadge = () => {
@@ -116,7 +158,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
       {/* Modal Content */}
       <div
         ref={modalRef}
-        className="relative w-full max-w-md bg-white rounded-t-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]" // Added flex col and max-h
+        className="relative w-full max-w-md bg-white rounded-t-xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh]"
       >
         {/* Close Button */}
         <button
@@ -127,7 +169,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
         </button>
 
         {/* Image Section - Fixed height */}
-        <div className="relative h-36 w-full shrink-0 overflow-hidden"> 
+        <div className="relative h-46 w-full shrink-0 overflow-hidden rounded-b-xl">
           <img
             src={item.imageUrl}
             alt={item.name}
@@ -149,12 +191,12 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
             <button
               onClick={handleToggleAlert}
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-colors ${
-                item.lowStockAlert
+                lowStockAlertEnabled
                   ? 'bg-primary-50 text-primary-500' // Pinkish bg, red text
                   : 'bg-primary-50 text-primary-500 hover:bg-primary-100'
               }`}
             >
-              {item.lowStockAlert ? (
+              {lowStockAlertEnabled ? (
                 <>
                   <BellRing className="w-4 h-4 fill-current" />
                   已開啟低庫存通知
@@ -172,7 +214,10 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
           <div className="space-y-3 text-lg">
             {/* Status */}
             <div className="flex items-center justify-between border-gray-100">
-              <span className="text-neutral-500 font-medium">食材狀態</span>
+              <span className="text-neutral-500 font-medium flex items-center gap-1">
+                食材狀態
+                <Info className="w-4 h-4 text-neutral-400" />
+              </span>
               {getStatusBadge()}
             </div>
 
@@ -184,9 +229,20 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
               </span>
             </div>
 
+            {/* Attributes */}
+            <div className="flex items-center justify-between border-gray-100">
+              <span className="text-neutral-500 font-medium">產品屬性</span>
+              <span className="text-neutral-900 font-medium">
+                {item.attributes?.join('、') || '無'}
+              </span>
+            </div>
+
             {/* Quantity */}
             <div className="flex items-center justify-between">
-              <span className="text-neutral-500 font-medium">單位數量</span>
+              <span className="text-neutral-500 font-medium flex items-center gap-1">
+                單位數量
+                <Info className="w-4 h-4 text-neutral-400" />
+              </span>
               <span className="text-neutral-900 font-medium">
                 {item.quantity} / {item.unit || '個'}
               </span>
@@ -196,23 +252,19 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
             {/* Dates */}
             <div className="flex flex-col gap-4 border-gray-100">
               <div className="flex items-center justify-between">
-                <span className="text-neutral-500 font-medium block mb-1">
-                  入庫日期
-                </span>
+                <span className="text-neutral-500 font-medium">入庫日期</span>
                 <span className="text-neutral-900 font-medium">
                   {item.purchaseDate}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-neutral-500 font-medium block mb-1">
-                  剩餘天數
-                </span>
+                <span className="text-neutral-500 font-medium">保存期限</span>
                 <span
                   className={`font-medium ${daysUntilExpiry < 0 ? 'text-red-500' : 'text-neutral-900'}`}
                 >
                   {daysUntilExpiry < 0
                     ? `已過期 ${Math.abs(daysUntilExpiry)} 天`
-                    : `約 ${daysUntilExpiry} 天`}
+                    : `約${daysUntilExpiry}天`}
                 </span>
               </div>
             </div>
@@ -227,8 +279,9 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
 
             {/* Notes */}
             <div className="flex items-start justify-between">
-              <span className="text-neutral-500 font-medium shrink-0">
+              <span className="text-neutral-500 font-medium shrink-0 flex items-center gap-1">
                 備註
+                <Info className="w-4 h-4 text-neutral-400" />
               </span>
               <span className="text-neutral-900 font-medium text-right">
                 {item.notes || '無'}
@@ -237,8 +290,10 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col gap-3 pb-24"> {/* Increased padding to clear BottomNav */}
-             <Button
+          <div className="flex flex-col gap-3 pb-24">
+            {' '}
+            {/* Increased padding to clear BottomNav */}
+            <Button
               className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white rounded-xl h-12 text-base font-medium shadow-lg shadow-orange-200 flex items-center justify-center gap-2"
               onClick={() => {
                 // TODO: Add to shopping list logic
@@ -248,11 +303,10 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
               <ShoppingCart className="w-5 h-5" />
               已消耗，加入採買清單
             </Button>
-            
             <Button
               variant="outline"
               className="w-full border-gray-200 text-neutral-600 hover:bg-gray-50 rounded-xl h-12 text-base font-medium flex items-center justify-center gap-2"
-               onClick={() => {
+              onClick={() => {
                 // TODO: Just consume logic
                 onClose();
               }}

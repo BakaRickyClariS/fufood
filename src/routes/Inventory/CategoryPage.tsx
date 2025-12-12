@@ -10,11 +10,15 @@ import FilterModal from '@/modules/inventory/components/ui/modal/FilterModal';
 import CategoryStatsBar from '@/modules/inventory/components/ui/other/CategoryStatsBar';
 import { categories } from '@/modules/inventory/constants/categories';
 import { useInventory, useInventoryFilter } from '@/modules/inventory/hooks';
-import type { FoodItem, FoodCategory, InventoryStatus } from '@/modules/inventory/types';
+import type {
+  FoodItem,
+  FoodCategory,
+  InventoryStatus,
+} from '@/modules/inventory/types';
 
 const CategoryPage: React.FC = () => {
   const { categoryId } = useParams();
-  const { items: allItems, isLoading } = useInventory();
+  const { items: allItems, isLoading, refetch } = useInventory();
 
   const category = useMemo(
     () => categories.find((c) => c.id === categoryId),
@@ -44,15 +48,12 @@ const CategoryPage: React.FC = () => {
     setFilter('searchQuery', query);
   };
 
-  const handleFilterApply = (
-    statuses: string[],
-    attributes: string[],
-  ) => {
+  const handleFilterApply = (statuses: string[], attributes: string[]) => {
     // Map UI status to hook status
     if (statuses.length > 0) {
       const mappedStatuses: InventoryStatus[] = [];
-      
-      statuses.forEach(status => {
+
+      statuses.forEach((status) => {
         switch (status) {
           case '已過期':
             mappedStatuses.push('expired');
@@ -68,7 +69,7 @@ const CategoryPage: React.FC = () => {
             break;
         }
       });
-      
+
       setFilter('status', mappedStatuses);
     } else {
       setFilter('status', 'all');
@@ -85,25 +86,25 @@ const CategoryPage: React.FC = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Normalize to start of day
     const threeDaysLater = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000);
-    
+
     let expired = 0;
     let expiring = 0;
-    
-    categoryItems.forEach(item => {
+
+    categoryItems.forEach((item) => {
       const expiry = new Date(item.expiryDate);
       expiry.setHours(0, 0, 0, 0);
-      
+
       if (expiry < today) {
         expired++;
       } else if (expiry >= today && expiry <= threeDaysLater) {
         expiring++;
       }
     });
-    
+
     return {
       total: categoryItems.length,
       expired,
-      expiring
+      expiring,
     };
   }, [categoryItems]);
 
@@ -121,12 +122,15 @@ const CategoryPage: React.FC = () => {
   }
 
   // Calculate total active filters count
-  const statusCount = 
-    (Array.isArray(filters.status) ? filters.status.length : (filters.status !== 'all' ? 1 : 0)) +
-    (filters.attributes ? filters.attributes.length : 0);
+  const statusCount =
+    (Array.isArray(filters.status)
+      ? filters.status.length
+      : filters.status !== 'all'
+        ? 1
+        : 0) + (filters.attributes ? filters.attributes.length : 0);
 
   return (
-    <div 
+    <div
       ref={scrollRef}
       className="fixed inset-0 z-45 bg-white overflow-y-auto pb-24" // z-45 to cover TopNav(z-40) but be under BottomNav(z-50). Increased pb to 24 for safety.
     >
@@ -151,19 +155,21 @@ const CategoryPage: React.FC = () => {
       {/* 🎨 調整背景圖片放大倍數: 修改下方的 backgroundSize 值 (例: 100%, 150%, 200%) */}
       <div className="relative w-full pt-4 overflow-hidden bg-neutral-300">
         {/* Background Image - Positioned behind Banner Card, scaled up */}
-        <img 
+        <img
           src={category.img}
           alt=""
           className="absolute top-0 left-0 w-full h-48 object-cover object-center scale-250"
         />
-        
+
         {/* Blur overlay with 70% white transparency */}
         <div className="absolute inset-0 bg-white/70 backdrop-blur-sm" />
-        
+
         {/* Inner Container with Padding - rounded and clipped */}
         <div className="relative px-4 max-w-layout-container mx-auto z-10 rounded-3xl overflow-hidden">
           {/* Banner Card */}
-          <div className={`relative w-full h-40 rounded-3xl overflow-hidden bg-white/60 p-6`}>
+          <div
+            className={`relative w-full h-40 rounded-3xl overflow-hidden bg-white/60 p-6`}
+          >
             <div className="flex justify-between items-start h-full">
               <div className="flex flex-col justify-center h-full max-w-[80%] z-5">
                 <h2 className="text-base font-bold text-neutral-900 mb-2">
@@ -175,10 +181,10 @@ const CategoryPage: React.FC = () => {
                   ))}
                 </div>
               </div>
-              
-              <img 
-                src={category.img} 
-                alt={category.title} 
+
+              <img
+                src={category.img}
+                alt={category.title}
                 className="absolute -right-30 -bottom-30 h-[200%] object-contain translate-y-2 translate-x-2"
               />
             </div>
@@ -190,20 +196,24 @@ const CategoryPage: React.FC = () => {
             <div className="flex flex-row w-full cursor-pointer items-center gap-2">
               <div
                 className={`flex-1 border-2 rounded-full bg-neutral-100 border-neutral-200 flex items-center px-4 py-2 text-sm transition-colors ${
-                  filters.searchQuery ? 'text-neutral-900' : 'text-neutral-500 hover:bg-gray-200'
+                  filters.searchQuery
+                    ? 'text-neutral-900'
+                    : 'text-neutral-500 hover:bg-gray-200'
                 }`}
                 onClick={() => setIsSearchOpen(true)}
               >
                 <Search className={`size-6 mr-3 text-neutral-900`} />
                 <p>{filters.searchQuery || '搜尋'}</p>
               </div>
-              
+
               <div className="relative">
                 <Button
                   variant="ghost"
                   size="icon"
                   className={`h-12 w-12 rounded-full transition-colors ${
-                    statusCount > 0 ? 'bg-neutral-400 text-neutral-700 hover:bg-neutral-900' : 'bg-transparent text-neutral-900 hover:bg-gray-100'
+                    statusCount > 0
+                      ? 'bg-neutral-400 text-neutral-700 hover:bg-neutral-900'
+                      : 'bg-transparent text-neutral-900 hover:bg-gray-100'
                   }`}
                   onClick={() => setIsFilterOpen(true)}
                 >
@@ -241,11 +251,9 @@ const CategoryPage: React.FC = () => {
           </div>
         </div>
       </div>
-      
 
-      
       {/* Stats Bar */}
-      <CategoryStatsBar 
+      <CategoryStatsBar
         totalCount={stats.total}
         expiringCount={stats.expiring}
         expiredCount={stats.expired}
@@ -258,6 +266,7 @@ const CategoryPage: React.FC = () => {
           item={selectedItem}
           isOpen={!!selectedItem}
           onClose={() => setSelectedItem(null)}
+          onItemUpdate={refetch}
         />
       )}
 

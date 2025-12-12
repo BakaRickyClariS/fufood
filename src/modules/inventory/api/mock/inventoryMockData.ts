@@ -133,6 +133,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockAlert: true,
     lowStockThreshold: 1,
     createdAt: '2026-01-01T00:00:00.000Z',
+    attributes: ['根莖類'],
   },
   {
     id: 'veg-4',
@@ -159,6 +160,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockAlert: true,
     lowStockThreshold: 2,
     createdAt: '2026-01-05T00:00:00.000Z',
+    attributes: ['根莖類'],
   },
   {
     id: 'fruit-1',
@@ -172,6 +174,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockAlert: true,
     lowStockThreshold: 1,
     createdAt: '2026-01-01T00:00:00.000Z',
+    attributes: ['水果類'],
   },
   {
     id: 'fruit-2',
@@ -198,6 +201,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockAlert: true,
     lowStockThreshold: 10,
     createdAt: '2026-01-06T00:00:00.000Z',
+    attributes: ['水果類', '季節限定'],
   },
 
   // 冷凍調理類
@@ -226,6 +230,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockAlert: true,
     lowStockThreshold: 10,
     createdAt: '2026-01-01T00:00:00.000Z',
+    attributes: ['炸物類'],
   },
   {
     id: 'frozen-2',
@@ -319,6 +324,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockAlert: true,
     lowStockThreshold: 1,
     createdAt: '2026-01-01T00:00:00.000Z',
+    attributes: ['麵包類'],
   },
   {
     id: 'staple-2',
@@ -345,6 +351,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockAlert: true,
     lowStockThreshold: 1,
     createdAt: '2026-01-01T00:00:00.000Z',
+    attributes: ['穀物類'],
   },
   {
     id: 'staple-4',
