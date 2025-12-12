@@ -117,7 +117,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
             <Input
               placeholder="搜尋"
-              className="pl-10 pr-10 bg-gray-100 border-none h-12 rounded-xl text-base"
+              className="pl-10 pr-10 bg-gray-100 border-neutral-200 h-12 rounded-full text-base"
               autoFocus
               value={query}
               onChange={(e) => {
@@ -151,10 +151,10 @@ const SearchModal: React.FC<SearchModalProps> = ({
               <button
                 key={term}
                 onClick={() => handleTagClick(term)}
-                className="px-4 py-2 bg-gray-100 rounded-full text-sm text-neutral-600 flex items-center gap-2 hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 bg-gray-100 border border-neutral-400 rounded-full text-sm text-neutral-600 flex items-center gap-2 hover:bg-gray-200 transition-colors"
               >
                 {term}
-                <X className="w-3 h-3 text-neutral-400" />
+                <X className="w-3 h-3 text-neutral-700" />
               </button>
             ))}
           </div>

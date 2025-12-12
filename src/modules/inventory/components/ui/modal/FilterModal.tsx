@@ -111,7 +111,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
         <div className="flex items-center justify-between px-4 py-4">
           <button
             onClick={handleClose}
-            className="p-2 -ml-2 text-neutral-500 hover:text-neutral-900"
+            className="p-2 -ml-2 text-neutral-700 hover:text-neutral-900"
           >
             <X className="w-6 h-6" />
           </button>
@@ -142,11 +142,11 @@ const FilterModal: React.FC<FilterModalProps> = ({
                     key={status}
                     onClick={() => toggleStatus(status)}
                     className={`
-                      px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1
+                      px-4 py-2 rounded-full border border-neutral-400 text-sm font-medium transition-all flex items-center gap-1
                       ${
                         isSelected
                           ? 'bg-[#EE5D50] text-white shadow-md shadow-orange-100'
-                          : 'bg-gray-100 text-neutral-500 hover:bg-gray-200'
+                          : 'bg-gray-100 text-neutral-700 hover:bg-gray-200'
                       }
                     `}
                   >
@@ -169,11 +169,11 @@ const FilterModal: React.FC<FilterModalProps> = ({
                     key={attr}
                     onClick={() => toggleAttribute(attr)}
                     className={`
-                      px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1
+                      px-4 py-2 rounded-full text-sm font-medium border border-neutral-400 transition-all flex items-center gap-1
                       ${
                         isSelected
                           ? 'bg-[#EE5D50] text-white shadow-md shadow-orange-100'
-                          : 'bg-gray-100 text-neutral-500 hover:bg-gray-200'
+                          : 'bg-gray-100 text-neutral-700 hover:bg-gray-200'
                       }
                     `}
                   >
