@@ -125,24 +125,6 @@ const CategoryPage: React.FC = () => {
     (Array.isArray(filters.status) ? filters.status.length : (filters.status !== 'all' ? 1 : 0)) +
     (filters.attributes ? filters.attributes.length : 0);
 
-  // ... other code ...
-  // In JSX:
-  /*
-    className={`h-12 w-12 rounded-full transition-colors ${
-      statusCount > 0 
-        ? 'bg-neutral-800 text-white hover:bg-neutral-900' // Neutral active color
-        : 'bg-transparent text-neutral-900 hover:bg-gray-100'
-    }`}
-  */
-  // It seems attributes are NOT in FilterOptions yet?
-  // I need to check FilterModal onApply. It passes (status, attribute).
-  // CategoryPage handleFilterApply takes (statuses, attributes).
-  // But setFilter only sets 'status'.
-  // I need to add 'attribute' to FilterOptions and setFilter logic.
-  
-  // Let's do a safe partial fix here first for Layout and Status count.
-  // I'll proceed with layout fix.
-
   return (
     <div 
       ref={scrollRef}
@@ -165,83 +147,103 @@ const CategoryPage: React.FC = () => {
         <div className="w-10" /> {/* Spacer for centering */}
       </header>
 
-      <div className="px-4 mt-2 space-y-4 max-w-layout-container mx-auto">
-        {/* Banner Section */}
-        <div className={`relative w-full rounded-3xl overflow-hidden ${category.bgColor} p-6 h-40`}>
-          <div className="flex justify-between items-start h-full">
-            <div className="flex flex-col justify-center h-full z-10 max-w-[60%]">
-              <h2 className="text-lg font-bold text-neutral-900 mb-2">
-                {category.slogan}
-              </h2>
-              <div className="text-sm text-neutral-600 space-y-1 border-l-2 border-neutral-400 pl-3">
-                {category.description.map((desc, index) => (
-                  <p key={index}>{desc}</p>
-                ))}
+      {/* Banner Section - Background Container (Full Width) */}
+      {/* 🎨 調整背景圖片放大倍數: 修改下方的 backgroundSize 值 (例: 100%, 150%, 200%) */}
+      <div className="relative w-full pt-4 overflow-hidden bg-neutral-300">
+        {/* Background Image - Positioned behind Banner Card, scaled up */}
+        <img 
+          src={category.img}
+          alt=""
+          className="absolute top-0 left-0 w-full h-48 object-cover object-center scale-250"
+        />
+        
+        {/* Blur overlay with 70% white transparency */}
+        <div className="absolute inset-0 bg-white/70 backdrop-blur-sm" />
+        
+        {/* Inner Container with Padding - rounded and clipped */}
+        <div className="relative px-4 max-w-layout-container mx-auto z-10 rounded-3xl overflow-hidden">
+          {/* Banner Card */}
+          <div className={`relative w-full h-40 rounded-3xl overflow-hidden bg-white/60 p-6`}>
+            <div className="flex justify-between items-start h-full">
+              <div className="flex flex-col justify-center h-full max-w-[80%] z-5">
+                <h2 className="text-base font-bold text-neutral-900 mb-2">
+                  {category.slogan}
+                </h2>
+                <div className="text-xs text-neutral-600 space-y-1 border-l-2 border-neutral-600 pl-3">
+                  {category.description.map((desc, index) => (
+                    <p key={index}>{desc}</p>
+                  ))}
+                </div>
               </div>
-            </div>
-            
-            <img 
-              src={category.img} 
-              alt={category.title} 
-              className="absolute right-0 bottom-0 h-[140%] object-contain translate-y-2 translate-x-2"
-            />
-          </div>
-        </div>
-
-        {/* Search Bar */}
-        <div className="flex flex-row w-full cursor-pointer items-center gap-3">
-          <div
-            className={`flex-1 border-none h-12 rounded-xl flex items-center px-4 text-sm transition-colors ${
-              filters.searchQuery ? 'bg-orange-50 text-neutral-900' : 'bg-gray-100 text-neutral-500 hover:bg-gray-200'
-            }`}
-            onClick={() => setIsSearchOpen(true)}
-          >
-            <Search className={`h-5 w-5 mr-3 ${filters.searchQuery ? 'text-[#EE5D50]' : 'text-neutral-900'}`} />
-            <p>{filters.searchQuery || '搜尋'}</p>
-          </div>
-          
-          <div className="relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`h-12 w-12 rounded-full transition-colors ${
-                statusCount > 0 ? 'bg-neutral-800 text-white hover:bg-neutral-900' : 'bg-transparent text-neutral-900 hover:bg-gray-100'
-              }`}
-              onClick={() => setIsFilterOpen(true)}
-            >
-              <ListFilter className="h-6 w-6" />
-            </Button>
-            {/* Filter Badge */}
-             {statusCount > 0 && (
-              <div className="absolute -top-1 -right-1 bg-[#EE5D50] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
-                {statusCount}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Item List */}
-        <div className="grid grid-cols-2 gap-3 pb-24">
-          {isLoading ? (
-            <div className="col-span-2 text-center py-10 text-neutral-400">
-              載入中...
-            </div>
-          ) : hookFilteredItems.length > 0 ? (
-            hookFilteredItems.map((item) => (
-              <FoodCard
-                key={item.id}
-                item={item}
-                onClick={() => setSelectedItem(item)}
+              
+              <img 
+                src={category.img} 
+                alt={category.title} 
+                className="absolute -right-30 -bottom-30 h-[200%] object-contain translate-y-2 translate-x-2"
               />
-            ))
-          ) : (
-            <div className="col-span-2 text-center py-10 text-neutral-400">
-              沒有符合條件的項目
             </div>
-          )}
+          </div>
+
+          {/* Content Section - Search & Items */}
+          <div className="py-4 px-4 space-y-4 bg-white rounded-t-3xl -mx-4 mt-4">
+            {/* Search Bar */}
+            <div className="flex flex-row w-full cursor-pointer items-center gap-2">
+              <div
+                className={`flex-1 border-2 rounded-full bg-neutral-100 border-neutral-200 flex items-center px-4 py-2 text-sm transition-colors ${
+                  filters.searchQuery ? 'text-neutral-900' : 'text-neutral-500 hover:bg-gray-200'
+                }`}
+                onClick={() => setIsSearchOpen(true)}
+              >
+                <Search className={`size-6 mr-3 text-neutral-900`} />
+                <p>{filters.searchQuery || '搜尋'}</p>
+              </div>
+              
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`h-12 w-12 rounded-full transition-colors ${
+                    statusCount > 0 ? 'bg-neutral-400 text-neutral-700 hover:bg-neutral-900' : 'bg-transparent text-neutral-900 hover:bg-gray-100'
+                  }`}
+                  onClick={() => setIsFilterOpen(true)}
+                >
+                  <ListFilter className="size-6" />
+                </Button>
+                {/* Filter Badge */}
+                {statusCount > 0 && (
+                  <div className="absolute -top-1 -right-1 bg-[#EE5D50] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
+                    {statusCount}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Item List */}
+            <div className="grid grid-cols-2 gap-3 pb-24">
+              {isLoading ? (
+                <div className="col-span-2 text-center py-10 text-neutral-400">
+                  載入中...
+                </div>
+              ) : hookFilteredItems.length > 0 ? (
+                hookFilteredItems.map((item) => (
+                  <FoodCard
+                    key={item.id}
+                    item={item}
+                    onClick={() => setSelectedItem(item)}
+                  />
+                ))
+              ) : (
+                <div className="col-span-2 text-center py-10 text-neutral-400">
+                  沒有符合條件的項目
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
+      
 
+      
       {/* Stats Bar */}
       <CategoryStatsBar 
         totalCount={stats.total}

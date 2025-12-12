@@ -150,8 +150,8 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
               onClick={handleToggleAlert}
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-colors ${
                 item.lowStockAlert
-                  ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-500)]' // Pinkish bg, red text
-                  : 'bg-[var(--color-primary-50)] text-[var(--color-primary-500)] hover:bg-[var(--color-primary-100)]'
+                  ? 'bg-primary-50 text-primary-500' // Pinkish bg, red text
+                  : 'bg-primary-50 text-primary-500 hover:bg-primary-100'
               }`}
             >
               {item.lowStockAlert ? (

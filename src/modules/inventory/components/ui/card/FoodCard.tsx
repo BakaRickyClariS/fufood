@@ -19,39 +19,37 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
     switch (status) {
       case 'expired':
         return {
-          borderColor: 'border-[var(--color-danger-400)]',
-          shadow: 'shadow-[0_0_15px_-3px_rgba(250,111,111,0.4)]', // Approximation of danger-400 alpha
-          tagBg: 'bg-[var(--color-danger-400)]',
+          borderColor: 'border-danger-400',
+          shadow: 'shadow-[0_0_15px_-3px_rgba(250,111,111,0.4)]',
+          tagBg: 'bg-danger-400',
           tagText: '已過期',
-          // Gradient from bottom (color) to top (transparent)
-          // Using strict CSS variables in arbitrary values for gradient colors might be tricky regarding opacity.
-          // Let's us rgba or hex approximation if var doesn't work with opacity modifier, BUT user asked for vars.
-          // Tailwind 4 supports `from-[var(--color-foo)]/50`.
-          overlay: 'bg-gradient-to-t from-[var(--color-danger-400)]/90 via-[var(--color-danger-400)]/30 to-transparent'
+          overlay: 'bg-gradient-to-t from-black/95 via-black/50 to-transparent',
+          colorOverlay: 'bg-gradient-to-t from-danger-400/60 via-danger-400/20 to-transparent'
         };
       case 'expiring-soon':
         return {
-          borderColor: 'border-[var(--color-warning-400)]',
-          shadow: 'shadow-[0_0_15px_-3px_rgba(253,209,57,0.4)]', // Approximation of warning-400 alpha
-          tagBg: 'bg-[var(--color-warning-400)]',
+          borderColor: 'border-warning-400',
+          shadow: 'shadow-[0_0_15px_-3px_rgba(253,209,57,0.4)]',
+          tagBg: 'bg-warning-400',
           tagText: '即將過期',
-          overlay: 'bg-gradient-to-t from-[var(--color-warning-400)]/90 via-[var(--color-warning-400)]/30 to-transparent'
+          overlay: 'bg-gradient-to-t from-black/95 via-black/50 to-transparent',
+          colorOverlay: 'bg-gradient-to-t from-warning-400/60 via-warning-400/20 to-transparent'
         };
-      case 'low-stock':
+       case 'low-stock':
         return {
           borderColor: 'border-transparent',
           shadow: 'shadow-md',
           tagBg: null,
           tagText: null,
-          overlay: 'bg-gradient-to-t from-black/90 via-black/20 to-transparent'
+          overlay: 'bg-gradient-to-t from-black/95 via-black/50 to-transparent'
         };
-      default:
+       default:
         return {
           borderColor: 'border-transparent',
           shadow: 'shadow-md',
           tagBg: null,
           tagText: null,
-          overlay: 'bg-gradient-to-t from-black/90 via-black/20 to-transparent'
+          overlay: 'bg-gradient-to-t from-black/95 via-black/50 to-transparent'
         };
     }
   };
@@ -87,7 +85,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
       
       {/* Top Left Status Tag */}
       {styles.tagText && (
-        <div className={`absolute top-0 left-0 px-3 py-1.5 rounded-br-xl ${styles.tagBg} z-20`}>
+        <div className={`absolute top-0 left-0 px-3 py-1.5 rounded-br-xl ${styles.tagBg} z-15`}>
           <span className="text-xs font-bold text-neutral-900 tracking-wide">
             {styles.tagText}
           </span>
@@ -95,25 +93,27 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
       )}
 
       {/* Low Stock Alert Button */}
-      <button
+      
+        {item.lowStockAlert && (<button
         onClick={handleToggleAlert}
-        className="absolute top-2 right-2 z-20 w-8 h-8 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center border border-white/50 shadow-sm transition-colors hover:bg-white/50"
+        className="absolute top-2 right-2 z-15 w-8 h-8 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center border border-white/50 shadow-sm transition-colors hover:bg-white/50"
       >
-        {item.lowStockAlert ? (
-          <BellRing className="w-5 h-5 text-yellow-300 fill-yellow-300" />
-        ) : (
-          <Bell className="w-5 h-5 text-white" />
+          <BellRing className="w-5 h-5 text-white fill-white" /></button>
         )}
-      </button>
+      
 
       {/* Content */}
       <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-2">
         {/* Gradient Overlay */}
-        <div className={`absolute inset-0 ${styles.overlay} backdrop-blur-[1px] z-0`} />
+        <div className={`absolute inset-0 ${styles.overlay} backdrop-blur-[3px] z-0`} />
+        {/* Color Overlay for expired/expiring-soon status */}
+        {styles.colorOverlay && (
+          <div className={`absolute inset-0 ${styles.colorOverlay} z-0`} />
+        )}
         {/* Header: Name and Quantity */}
-        <div className="flex justify-between items-end text-lg text-white z-10">
+        <div className="flex justify-between items-end text-base text-white z-10">
           <h3 className="tracking-wide font-medium">{item.name}</h3>
-          <span className="tracking-widest font-bold text-2xl">{item.quantity}</span>
+          <span className="tracking-widest font-bold">{item.quantity}</span>
         </div>
 
         {/* Divider */}
@@ -123,10 +123,10 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
         <div className="space-y-2 text-white z-10">
           {/* Purchase Date */}
           <div className="flex items-center gap-2">
-            <span className="px-2 py-1 bg-[#7D6E58]/90 rounded-full text-[10px] backdrop-blur-sm shrink-0">
+            <span className="px-2 py-1  rounded-full bg-white/30 text-[10px] backdrop-blur-lg shrink-0">
               歸納
             </span>
-            <span className="text-white text-base tracking-wider font-light">
+            <span className="text-white text-sm tracking-wider font-light">
               {item.purchaseDate}
             </span>
           </div>
@@ -134,11 +134,11 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
           {/* Expiry Date */}
           <div className="flex items-center gap-2 z-10">
             <span
-              className="px-2 py-1 bg-[#A87B7B]/90 rounded-full text-[10px] backdrop-blur-sm shrink-0"
+              className="px-2 py-1 bg-[#FDA4A499]/90 rounded-full text-[10px] backdrop-blur-sm shrink-0"
             >
               過期
             </span>
-            <span className="text-base tracking-wider font-light">
+            <span className="text-sm tracking-wider font-light">
               {item.expiryDate}
             </span>
           </div>
