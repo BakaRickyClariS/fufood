@@ -117,16 +117,23 @@ export const authApi = {
    * 直接返回後端 OAuth 入口 URL
    */
   getLineLoginUrl: (): string => {
-    const LINE_API_BASE = import.meta.env.VITE_LINE_API_BASE_URL || 'https://api.fufood.jocelynh.me';
+    const LINE_API_BASE =
+      import.meta.env.VITE_LINE_API_BASE_URL ||
+      'https://api.fufood.jocelynh.me';
     return `${LINE_API_BASE}/oauth/line/init`;
   },
 
   /**
    * LINE 登入 Callback 處理
    * 處理後端回調帶回的認證資訊
+   * 注意：使用原生 fetch 而非 apiClient，因為這是外部 API
    */
-  handleLineCallback: async (data: LINELoginRequest): Promise<LineLoginCallbackResponse> => {
-    const LINE_API_BASE = import.meta.env.VITE_LINE_API_BASE_URL || 'https://api.fufood.jocelynh.me';
+  handleLineCallback: async (
+    data: LINELoginRequest,
+  ): Promise<LineLoginCallbackResponse> => {
+    const LINE_API_BASE =
+      import.meta.env.VITE_LINE_API_BASE_URL ||
+      'https://api.fufood.jocelynh.me';
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 800));
       return {
@@ -139,9 +146,24 @@ export const authApi = {
         token: MOCK_TOKEN,
       };
     }
-    return apiClient.get<LineLoginCallbackResponse>(`${LINE_API_BASE}/oauth/line/callback`, {
-      code: data.code,
-      state: data.state,
+
+    // 使用原生 fetch 呼叫外部 LINE API，不使用 apiClient（會拼接錯誤的 baseUrl）
+    const url = new URL(`${LINE_API_BASE}/oauth/line/callback`);
+    if (data.code) url.searchParams.append('code', data.code);
+    if (data.state) url.searchParams.append('state', data.state);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `LINE API 錯誤: ${response.status}`);
+    }
+
+    return response.json();
   },
 };
