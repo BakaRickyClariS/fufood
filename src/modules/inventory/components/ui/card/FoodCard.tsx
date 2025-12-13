@@ -1,7 +1,7 @@
 import type { FoodItem } from '@/modules/inventory/types';
 import { useExpiryCheck } from '@/modules/inventory/hooks';
 
-import { Bell, BellRing } from 'lucide-react';
+import { BellRing } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { toggleLowStockAlert } from '@/modules/inventory/store/inventorySlice';
 

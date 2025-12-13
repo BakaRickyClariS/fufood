@@ -7,6 +7,7 @@ import {
 } from '@/shared/components/ui/dropdown-menu';
 import { useState } from 'react';
 import zoeImg from '@/assets/images/inventory/members-zo.png';
+import { useAuth } from '@/modules/auth';
 
 // Group Modals
 import { GroupSettingsModal } from '@/modules/groups/components/modals/GroupSettingsModal';
@@ -17,6 +18,11 @@ import type { Group } from '@/modules/groups/types/group.types';
 
 const TopNav = () => {
   const [selectedHome] = useState('My Home');
+  const { user } = useAuth();
+
+  // 取得用戶資訊（優先使用 LINE 資料）
+  const userAvatar = user?.pictureUrl || zoeImg;
+  const userName = user?.displayName || user?.name || '使用者';
 
   // Modal States
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -79,10 +85,16 @@ const TopNav = () => {
               >
                 {/* Current User Info */}
                 <div className="flex items-center gap-3 mb-4 pb-4 border-b border-stone-100">
-                  <div className="w-10 h-10 rounded-full bg-red-200" />
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-red-200">
+                    <img
+                      src={userAvatar}
+                      alt={userName}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   <div className="flex flex-col">
                     <span className="text-sm font-medium text-stone-800">
-                      Jocelyn (你)
+                      {userName} (你)
                     </span>
                     <span className="text-xs text-stone-400">擁有者</span>
                   </div>
@@ -148,8 +160,8 @@ const TopNav = () => {
 
             <div className="w-8 h-8 rounded-full overflow-hidden border border-gray-200">
               <img
-                src={zoeImg}
-                alt="User"
+                src={userAvatar}
+                alt={userName}
                 className="w-full h-full object-cover"
               />
             </div>

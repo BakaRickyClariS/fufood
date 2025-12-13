@@ -3,6 +3,7 @@ import { ChefHat } from 'lucide-react';
 import type { FoodItemInput } from '../../types';
 import { calculateShelfLife } from '../../utils/dateHelpers';
 import resultDecoration from '@/assets/images/food-scan/result.png';
+import { InfoTooltip } from '@/shared/components/feedback/InfoTooltip';
 
 type ScanResultPreviewProps = {
   result: FoodItemInput;
@@ -11,15 +12,23 @@ type ScanResultPreviewProps = {
   onConfirm: () => void;
 };
 
-const DetailRow: React.FC<{ label: string; value: string | number }> = ({
-  label,
-  value,
-}) => (
-  <div className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
-    <span className="text-slate-500 font-medium">{label}</span>
+type DetailRowProps = {
+  label: string;
+  value: string | number;
+  tooltip?: React.ReactNode;
+};
+
+const DetailRow: React.FC<DetailRowProps> = ({ label, value, tooltip }) => (
+  <div className="flex justify-between items-center py-2">
+    <span className="text-slate-500 font-medium flex items-center gap-1">
+      {label}
+      {tooltip && <InfoTooltip content={tooltip} />}
+    </span>
     <span className="text-slate-800 font-bold">{value}</span>
   </div>
 );
+
+const Divider: React.FC = () => <div className="w-full h-px bg-gray-100 my-2" />;
 
 export const ScanResultPreview: React.FC<ScanResultPreviewProps> = ({
   result,
@@ -66,7 +75,7 @@ export const ScanResultPreview: React.FC<ScanResultPreviewProps> = ({
           </div>
 
           {/* 產品小圖 (右側) */}
-          <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-slate-100 flex-shrink-0 shadow-sm">
+          <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-slate-100 shrink-0 shadow-sm">
             <img
               src={imageUrl}
               className="w-full h-full object-cover"
@@ -88,11 +97,41 @@ export const ScanResultPreview: React.FC<ScanResultPreviewProps> = ({
             <DetailRow
               label="單位數量"
               value={`${result.purchaseQuantity} / ${result.unit}`}
+              tooltip={
+                <>
+                  表示此食材的剛存數量與計量單位。
+                  <br />
+                  <br />
+                  例如：「3 / 個」表示有 3 個該食材。
+                </>
+              }
             />
+
+            <Divider />
+
             <DetailRow label="入庫日期" value={result.purchaseDate} />
-            <DetailRow label="保存期限" value={`約${shelfLifeDays}天`} />
+            <DetailRow
+              label="保存期限"
+              value={`約${shelfLifeDays}天`}
+              tooltip={
+                <>
+                  根據入庫日期與過期日期自動計算的預估保存天數。
+                </>
+              }
+            />
             <DetailRow label="過期日期" value={result.expiryDate} />
-            <DetailRow label="備註" value={result.notes || '-'} />
+
+            <Divider />
+
+            <DetailRow
+              label="備註"
+              value={result.notes || '-'}
+              tooltip={
+                <>
+                  可註記該食材的特殊資訊，如保存方式或購買來源等。
+                </>
+              }
+            />
           </div>
         </div>
       </div>

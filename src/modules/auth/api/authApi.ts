@@ -5,6 +5,7 @@ import type {
   RegisterRequest,
   RegisterResponse,
   LINELoginRequest,
+  LineLoginCallbackResponse,
   User,
   RefreshTokenRequest,
   RefreshTokenResponse,
@@ -112,25 +113,35 @@ export const authApi = {
   },
 
   /**
-   * LINE 登入導向
+   * 取得 LINE 登入 URL
+   * 直接返回後端 OAuth 入口 URL
    */
-  getLineLoginUrl: async (): Promise<{ url: string }> => {
-    if (USE_MOCK) {
-      return { url: 'http://localhost:5173/login/callback?code=mock_code' };
-    }
-    return apiClient.get<{ url: string }>('/auth/line/login');
+  getLineLoginUrl: (): string => {
+    const LINE_API_BASE = import.meta.env.VITE_LINE_API_BASE_URL || 'https://api.fufood.jocelynh.me';
+    return `${LINE_API_BASE}/oauth/line/init`;
   },
 
   /**
-   * LINE 登入 Callback
+   * LINE 登入 Callback 處理
+   * 處理後端回調帶回的認證資訊
    */
-  loginWithLINE: async (data: LINELoginRequest): Promise<LoginResponse> => {
+  handleLineCallback: async (data: LINELoginRequest): Promise<LineLoginCallbackResponse> => {
+    const LINE_API_BASE = import.meta.env.VITE_LINE_API_BASE_URL || 'https://api.fufood.jocelynh.me';
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 800));
-      return { user: MOCK_USERS[0], token: MOCK_TOKEN };
+      return {
+        user: {
+          ...MOCK_USERS[0],
+          lineId: 'U1234567890',
+          displayName: 'LINE 測試用戶',
+          pictureUrl: 'https://profile.line-scdn.net/0h3Example',
+        },
+        token: MOCK_TOKEN,
+      };
     }
-    return apiClient.get<LoginResponse>('/auth/line/callback', {
+    return apiClient.get<LineLoginCallbackResponse>(`${LINE_API_BASE}/oauth/line/callback`, {
       code: data.code,
+      state: data.state,
     });
   },
 };
