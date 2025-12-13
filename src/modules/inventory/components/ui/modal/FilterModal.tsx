@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Info, Check } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
+import { InfoTooltip } from '@/shared/components/feedback/InfoTooltip';
 import gsap from 'gsap';
 
 type FilterModalProps = {
@@ -132,7 +133,18 @@ const FilterModal: React.FC<FilterModalProps> = ({
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-bold text-neutral-900">狀態篩選</h3>
-              <Info className="w-4 h-4 text-neutral-400" />
+              <InfoTooltip
+                content={
+                  <>
+                    <span className="text-primary-500">「即將到期」</span>
+                    系統預設為未來 7 天內到期的食材。您可以在「管理設定」中調整此天數。
+                    <br />
+                    <br />
+                    <span className="text-primary-500">「低庫存」</span>
+                    數量少於您在單品編輯頁面設定的最低數量。未設定者預設為 2 份/個。
+                  </>
+                }
+              />
             </div>
             <div className="flex flex-wrap gap-3">
               {statusOptions.map((status) => {

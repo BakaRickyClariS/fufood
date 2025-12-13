@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { authService } from '../services';
+import { authApi } from '../api';
 import type { User, LoginCredentials, RegisterData } from '../types';
 
 export const useAuth = () => {
@@ -69,6 +70,21 @@ export const useAuth = () => {
     }
   }, []);
 
+  /**
+   * 取得 LINE 登入 URL
+   */
+  const getLineLoginUrl = useCallback(() => {
+    return authApi.getLineLoginUrl();
+  }, []);
+
+  /**
+   * 重新整理用戶資訊（從 localStorage）
+   */
+  const refreshUser = useCallback(() => {
+    const savedUser = authService.getUser();
+    setUser(savedUser);
+  }, []);
+
   return {
     user,
     isAuthenticated: !!user,
@@ -77,5 +93,8 @@ export const useAuth = () => {
     login,
     register,
     logout,
+    getLineLoginUrl,
+    refreshUser,
   };
 };
+

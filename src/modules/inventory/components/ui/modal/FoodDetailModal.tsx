@@ -8,10 +8,10 @@ import {
   Ban,
   Bell,
   BellRing,
-  Info,
 } from 'lucide-react';
 import gsap from 'gsap';
 import { Button } from '@/shared/components/ui/button';
+import { InfoTooltip } from '@/shared/components/feedback/InfoTooltip';
 import type { FoodItem } from '@/modules/inventory/types';
 import { useExpiryCheck } from '@/modules/inventory/hooks';
 import { inventoryApi } from '@/modules/inventory/api';
@@ -216,7 +216,22 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
             <div className="flex items-center justify-between border-gray-100">
               <span className="text-neutral-500 font-medium flex items-center gap-1">
                 食材狀態
-                <Info className="w-4 h-4 text-neutral-400" />
+                <InfoTooltip
+                  content={
+                    <>
+                      <span className="text-primary-500">「已過期」</span>
+                      表示食材已超過保存期限。
+                      <br />
+                      <br />
+                      <span className="text-primary-500">「即將過期」</span>
+                      表示食材將在 7 天內過期。
+                      <br />
+                      <br />
+                      <span className="text-primary-500">「低庫存」</span>
+                      表示數量已低於設定的最低數量。
+                    </>
+                  }
+                />
               </span>
               {getStatusBadge()}
             </div>
@@ -241,7 +256,16 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-neutral-500 font-medium flex items-center gap-1">
                 單位數量
-                <Info className="w-4 h-4 text-neutral-400" />
+                <InfoTooltip
+                  content={
+                    <>
+                      表示此食材的剛存數量與計量單位。
+                      <br />
+                      <br />
+                      例如：「3 / 個」表示有 3 個該食材。
+                    </>
+                  }
+                />
               </span>
               <span className="text-neutral-900 font-medium">
                 {item.quantity} / {item.unit || '個'}
@@ -281,7 +305,13 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
             <div className="flex items-start justify-between">
               <span className="text-neutral-500 font-medium shrink-0 flex items-center gap-1">
                 備註
-                <Info className="w-4 h-4 text-neutral-400" />
+                <InfoTooltip
+                  content={
+                    <>
+                      可註記該食材的特殊資訊，如保存方式或購買來源等。
+                    </>
+                  }
+                />
               </span>
               <span className="text-neutral-900 font-medium text-right">
                 {item.notes || '無'}
