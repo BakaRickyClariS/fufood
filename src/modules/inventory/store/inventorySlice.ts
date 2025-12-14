@@ -53,6 +53,16 @@ const inventorySlice = createSlice({
     removeItem: (state, action: PayloadAction<string>) => {
       state.items = state.items.filter((item) => item.id !== action.payload);
     },
+    toggleLowStockAlert: (state, action: PayloadAction<string>) => {
+      const item = state.items.find((item) => item.id === action.payload);
+      if (item) {
+        item.lowStockAlert = !item.lowStockAlert;
+        // Update selected item if it matches
+        if (state.selectedItem && state.selectedItem.id === action.payload) {
+          state.selectedItem = { ...item };
+        }
+      }
+    },
     setSelectedItem: (state, action: PayloadAction<FoodItem | null>) => {
       state.selectedItem = action.payload;
     },
@@ -102,6 +112,7 @@ export const {
   setLayout,
   setCategoryOrder,
   setSettings,
+  toggleLowStockAlert,
 } = inventorySlice.actions;
 
 // Selectors

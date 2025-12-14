@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Info, Check } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
+import { InfoTooltip } from '@/shared/components/feedback/InfoTooltip';
 import gsap from 'gsap';
 
 type FilterModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onApply: (status: string | null, attribute: string | null) => void;
+  onApply: (status: string[], attribute: string[]) => void;
 };
 
 const statusOptions = ['即將到期', '低庫存', '已過期', '有庫存'];
@@ -20,10 +21,8 @@ const FilterModal: React.FC<FilterModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
-  const [selectedAttribute, setSelectedAttribute] = useState<string | null>(
-    null,
-  );
+  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
+  const [selectedAttribute, setSelectedAttribute] = useState<string[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -68,13 +67,29 @@ const FilterModal: React.FC<FilterModalProps> = ({
   };
 
   const handleClear = () => {
-    setSelectedStatus(null);
-    setSelectedAttribute(null);
+    setSelectedStatus([]);
+    setSelectedAttribute([]);
   };
 
   const handleApply = () => {
     onApply(selectedStatus, selectedAttribute);
     handleClose();
+  };
+  
+  const toggleStatus = (status: string) => {
+    setSelectedStatus(prev => 
+      prev.includes(status) 
+        ? prev.filter(s => s !== status) 
+        : [...prev, status]
+    );
+  };
+
+  const toggleAttribute = (attr: string) => {
+    setSelectedAttribute(prev => 
+      prev.includes(attr) 
+        ? prev.filter(a => a !== attr) 
+        : [...prev, attr]
+    );
   };
 
   if (!isOpen) return null;
@@ -91,13 +106,13 @@ const FilterModal: React.FC<FilterModalProps> = ({
       {/* Modal Content */}
       <div
         ref={modalRef}
-        className="relative w-full bg-white max-w-layout-container mx-auto rounded-t-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+        className="relative w-full bg-white max-w-layout-container mx-auto rounded-t-3xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4">
           <button
             onClick={handleClose}
-            className="p-2 -ml-2 text-neutral-500 hover:text-neutral-900"
+            className="p-2 -ml-2 text-neutral-700 hover:text-neutral-900"
           >
             <X className="w-6 h-6" />
           </button>
@@ -113,28 +128,37 @@ const FilterModal: React.FC<FilterModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-8 overflow-y-auto pb-24">
+        <div className="p-6 space-y-8 overflow-y-auto pb-48"> {/* Increased padding to avoid overlap with taller footer */}
           {/* Status Filter */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-bold text-neutral-900">狀態篩選</h3>
-              <Info className="w-4 h-4 text-neutral-400" />
+              <InfoTooltip
+                content={
+                  <>
+                    <span className="text-primary-500">「即將到期」</span>
+                    系統預設為未來 7 天內到期的食材。您可以在「管理設定」中調整此天數。
+                    <br />
+                    <br />
+                    <span className="text-primary-500">「低庫存」</span>
+                    數量少於您在單品編輯頁面設定的最低數量。未設定者預設為 2 份/個。
+                  </>
+                }
+              />
             </div>
             <div className="flex flex-wrap gap-3">
               {statusOptions.map((status) => {
-                const isSelected = selectedStatus === status;
+                const isSelected = selectedStatus.includes(status);
                 return (
                   <button
                     key={status}
-                    onClick={() =>
-                      setSelectedStatus(isSelected ? null : status)
-                    }
+                    onClick={() => toggleStatus(status)}
                     className={`
-                      px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1
+                      px-4 py-2 rounded-full border border-neutral-400 text-sm font-medium transition-all flex items-center gap-1
                       ${
                         isSelected
                           ? 'bg-[#EE5D50] text-white shadow-md shadow-orange-100'
-                          : 'bg-gray-100 text-neutral-500 hover:bg-gray-200'
+                          : 'bg-gray-100 text-neutral-700 hover:bg-gray-200'
                       }
                     `}
                   >
@@ -151,19 +175,17 @@ const FilterModal: React.FC<FilterModalProps> = ({
             <h3 className="text-lg font-bold text-neutral-900">屬性篩選</h3>
             <div className="flex flex-wrap gap-3">
               {attributeOptions.map((attr) => {
-                const isSelected = selectedAttribute === attr;
+                const isSelected = selectedAttribute.includes(attr);
                 return (
                   <button
                     key={attr}
-                    onClick={() =>
-                      setSelectedAttribute(isSelected ? null : attr)
-                    }
+                    onClick={() => toggleAttribute(attr)}
                     className={`
-                      px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1
+                      px-4 py-2 rounded-full text-sm font-medium border border-neutral-400 transition-all flex items-center gap-1
                       ${
                         isSelected
                           ? 'bg-[#EE5D50] text-white shadow-md shadow-orange-100'
-                          : 'bg-gray-100 text-neutral-500 hover:bg-gray-200'
+                          : 'bg-gray-100 text-neutral-700 hover:bg-gray-200'
                       }
                     `}
                   >
@@ -177,9 +199,9 @@ const FilterModal: React.FC<FilterModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100">
+        <div className="absolute bottom-0 left-0 right-0 p-4 pb-24 bg-white border-t border-gray-100">
           <Button
-            className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white rounded-xl h-12 text-base font-medium shadow-lg shadow-orange-200"
+            className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white rounded-xl h-12 text-base font-medium shadow-orange-200"
             onClick={handleApply}
           >
             套用

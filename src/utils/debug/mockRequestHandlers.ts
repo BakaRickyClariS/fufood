@@ -3,18 +3,6 @@
  * 用於處理 Mock API 的特殊請求，例如強制重置資料或僅使用記憶體模式
  */
 
-const STORAGE_KEYS = [
-  'mock_shared_lists',
-  'mock_posts',
-  'recipe_favorites',
-  'recipe_consumptions',
-  'shopping_list',
-  'meal_plans',
-  'mock_inventory_items',
-  'mock_inventory_settings',
-  'mock_food_items',
-];
-
 export const mockRequestHandlers = {
   /**
    * 檢查是否需要重置所有 Mock 資料
@@ -40,11 +28,19 @@ export const mockRequestHandlers = {
    * 重置指定的 localStorage Keys
    */
   resetData: (specificKeys?: string[]) => {
-    const keysToReset = specificKeys || STORAGE_KEYS;
-    keysToReset.forEach((key) => {
-      localStorage.removeItem(key);
-    });
-    console.log('[Mock Debug] Resetted storage keys:', keysToReset);
+    if (specificKeys) {
+      specificKeys.forEach((key) => {
+        localStorage.removeItem(key);
+      });
+      console.log('[Mock Debug] Resetted specific storage keys:', specificKeys);
+    } else {
+      // 若無指定 key，則清空所有資料 (包含 user, auth 等)
+      // 這是最徹底的重置方式，解決 "重置壞掉" 的問題
+      localStorage.clear();
+      console.log(
+        '[Mock Debug] Resetted ALL storage keys (localStorage.clear())',
+      );
+    }
   },
 
   /**
