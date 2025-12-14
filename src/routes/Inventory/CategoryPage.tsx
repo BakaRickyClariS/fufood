@@ -212,7 +212,7 @@ const CategoryPage: React.FC = () => {
                   size="icon"
                   className={`h-12 w-12 rounded-full transition-colors ${
                     statusCount > 0
-                      ? 'bg-neutral-400 text-neutral-700 hover:bg-neutral-900'
+                      ? 'bg-neutral-400 text-neutral-700 hover:text-neutral-100 hover:bg-neutral-600'
                       : 'bg-transparent text-neutral-900 hover:bg-gray-100'
                   }`}
                   onClick={() => setIsFilterOpen(true)}

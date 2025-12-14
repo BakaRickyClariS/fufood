@@ -83,10 +83,13 @@ const SortableCategoryItem: React.FC<SortableCategoryItemProps> = ({
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
-      className="flex items-center gap-2 mb-3 cursor-grab active:cursor-grabbing touch-none group"
+      className="flex items-center gap-2 mb-3 group"
     >
-      <div className="p-2 transition-colors">
+      {/* Drag Handle - 只有這個區域可以觸發拖拉 */}
+      <div
+        {...listeners}
+        className="p-2 transition-colors cursor-grab active:cursor-grabbing touch-none hover:bg-primary-50 rounded-lg"
+      >
         <svg
           width="24"
           height="24"
