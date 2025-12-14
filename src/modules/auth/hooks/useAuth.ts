@@ -24,6 +24,28 @@ export const useAuth = () => {
     };
 
     checkAuth();
+
+    // 監聽 storage 事件（跨 tab 同步）
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'user') {
+        const newUser = event.newValue ? JSON.parse(event.newValue) : null;
+        setUser(newUser);
+      }
+    };
+
+    // 監聽自訂事件（同視窗內的 localStorage 更新）
+    const handleUserUpdate = () => {
+      const savedUser = authService.getUser();
+      setUser(savedUser);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('userUpdated', handleUserUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('userUpdated', handleUserUpdate);
+    };
   }, []);
 
   const login = useCallback(async (credentials: LoginCredentials) => {

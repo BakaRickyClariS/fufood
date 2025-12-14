@@ -9,6 +9,30 @@ import { useState } from 'react';
 import zoeImg from '@/assets/images/inventory/members-zo.png';
 import { useAuth } from '@/modules/auth';
 
+// 匯入頭像圖片
+import Avatar1 from '@/assets/images/auth/Avatar-1.png';
+import Avatar2 from '@/assets/images/auth/Avatar-2.png';
+import Avatar3 from '@/assets/images/auth/Avatar-3.png';
+import Avatar4 from '@/assets/images/auth/Avatar-4.png';
+import Avatar5 from '@/assets/images/auth/Avatar-5.png';
+import Avatar6 from '@/assets/images/auth/Avatar-6.png';
+import Avatar7 from '@/assets/images/auth/Avatar-7.png';
+import Avatar8 from '@/assets/images/auth/Avatar-8.png';
+import Avatar9 from '@/assets/images/auth/Avatar-9.png';
+
+// 頭像 ID 對應圖片的對應表
+const AVATAR_MAP: Record<string, string> = {
+  '1': Avatar1,
+  '2': Avatar2,
+  '3': Avatar3,
+  '4': Avatar4,
+  '5': Avatar5,
+  '6': Avatar6,
+  '7': Avatar7,
+  '8': Avatar8,
+  '9': Avatar9,
+};
+
 // Group Modals
 import { GroupSettingsModal } from '@/modules/groups/components/modals/GroupSettingsModal';
 import { CreateGroupModal } from '@/modules/groups/components/modals/CreateGroupModal';
@@ -20,8 +44,15 @@ const TopNav = () => {
   const [selectedHome] = useState('My Home');
   const { user } = useAuth();
 
-  // 取得用戶資訊（優先使用 LINE 資料）
-  const userAvatar = user?.pictureUrl || zoeImg;
+  // 取得用戶頭像（優先使用 LINE pictureUrl，其次根據 avatarId 對應圖片，最後使用預設）
+  const getUserAvatar = () => {
+    if (user?.pictureUrl) return user.pictureUrl;
+    if (user?.avatar && AVATAR_MAP[user.avatar]) {
+      return AVATAR_MAP[user.avatar];
+    }
+    return zoeImg;
+  };
+  const userAvatar = getUserAvatar();
   const userName = user?.displayName || user?.name || '使用者';
 
   // Modal States

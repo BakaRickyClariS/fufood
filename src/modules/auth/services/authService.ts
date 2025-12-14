@@ -63,6 +63,8 @@ export const authService = {
    */
   saveUser: (user: User): void => {
     localStorage.setItem('user', JSON.stringify(user));
+    // 觸發自訂事件通知同視窗中的其他元件
+    window.dispatchEvent(new CustomEvent('userUpdated'));
   },
 
   /**
@@ -118,7 +120,7 @@ export const authService = {
       email: 'mock@example.com',
       name: displayName,
       displayName: displayName,
-      avatar: `/src/assets/images/auth/Avatar-${avatarId}.png`,
+      avatar: String(avatarId), // 儲存 avatarId，由元件負責載入對應圖片
       createdAt: new Date(),
     };
 

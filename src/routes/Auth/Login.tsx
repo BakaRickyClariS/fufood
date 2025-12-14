@@ -1,19 +1,14 @@
-import {
-  useEffect,
-  useState,
-  useCallback,
-  useLayoutEffect,
-  useRef,
-} from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, authService } from '@/modules/auth';
 import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 
 // 匯入 Hero 圖片
 import authHeroImage from '@/assets/images/auth/authHero.png';
 
-// 輪播配置（暫時使用同一張圖片）
+// 輪播配置
 const HERO_SLIDES = [
   {
     id: 1,
@@ -40,38 +35,162 @@ const HERO_SLIDES = [
 
 const Login = () => {
   const navigate = useNavigate();
-  const { isLoading, getLineLoginUrl, refreshUser } = useAuth();
+  const {
+    isLoading,
+    getLineLoginUrl,
+    refreshUser,
+    error: authError,
+  } = useAuth();
+
   const [lineLoginLoading, setLineLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const trackRef = useRef<HTMLDivElement>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  // 自動輪播 - 5秒
+  // Refs
+  const containerRef = useRef<HTMLDivElement>(null);
+  const slidesRef = useRef<(HTMLDivElement | null)[]>([]);
+  const isAnimatingRef = useRef(false);
+
+  // GSAP utility for wrapping index
+  const wrap = gsap.utils.wrap(0, HERO_SLIDES.length);
+
+  // useGSAP for scoped animations
+  const { contextSafe } = useGSAP({ scope: containerRef });
+
+  // Initialize slide positions
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
-    }, 5000);
-    return () => clearInterval(interval);
+    const slides = slidesRef.current.filter(Boolean) as HTMLDivElement[];
+    if (slides.length === 0) return;
+
+    // Set initial positions: stack all slides, only first one visible
+    gsap.set(slides, { xPercent: 0, opacity: 0, scale: 0.95 });
+    gsap.set(slides[0], { opacity: 1, scale: 1 });
   }, []);
 
-  // GSAP 動畫 - 移動 Track
-  useLayoutEffect(() => {
-    if (!trackRef.current) return;
+  // Animation function using contextSafe
+  const gotoSlide = contextSafe((direction: number) => {
+    if (isAnimatingRef.current) return;
+    isAnimatingRef.current = true;
 
-    gsap.to(trackRef.current, {
-      x: `-${currentSlide * 100}%`,
-      duration: 0.8,
-      ease: 'power2.inOut',
+    const slides = slidesRef.current.filter(Boolean) as HTMLDivElement[];
+    const newIndex = wrap(currentIndex + direction);
+    const currentSlide = slides[currentIndex];
+    const newSlide = slides[newIndex];
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        isAnimatingRef.current = false;
+        setCurrentIndex(newIndex);
+      },
     });
-  }, [currentSlide]);
+
+    // Animate current slide out
+    tl.to(
+      currentSlide,
+      {
+        xPercent: direction * -100,
+        opacity: 0,
+        scale: 0.95,
+        duration: 0.6,
+        ease: 'power2.inOut',
+      },
+      0,
+    );
+
+    // Animate new slide in (start from opposite side)
+    tl.fromTo(
+      newSlide,
+      {
+        xPercent: direction * 100,
+        opacity: 0,
+        scale: 0.95,
+      },
+      {
+        xPercent: 0,
+        opacity: 1,
+        scale: 1,
+        duration: 0.6,
+        ease: 'power2.inOut',
+      },
+      0,
+    );
+
+    // Reset current slide position after animation
+    tl.set(currentSlide, { xPercent: 0 });
+  });
+
+  // 自動輪播
+  useEffect(() => {
+    const interval = setInterval(() => {
+      gotoSlide(1);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [gotoSlide]);
+
+  // 手動切換
+  const goToSlide = (index: number) => {
+    if (!isAnimatingRef.current && index !== currentIndex) {
+      gotoSlideByIndex(index);
+    }
+  };
+
+  // 直接跳轉到指定 index
+  const gotoSlideByIndex = contextSafe((targetIndex: number) => {
+    if (isAnimatingRef.current || targetIndex === currentIndex) return;
+    isAnimatingRef.current = true;
+
+    const slides = slidesRef.current.filter(Boolean) as HTMLDivElement[];
+    const currentSlide = slides[currentIndex];
+    const newSlide = slides[targetIndex];
+    const direction = targetIndex > currentIndex ? 1 : -1;
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        isAnimatingRef.current = false;
+        setCurrentIndex(targetIndex);
+      },
+    });
+
+    // Animate current slide out
+    tl.to(
+      currentSlide,
+      {
+        xPercent: direction * -100,
+        opacity: 0,
+        scale: 0.95,
+        duration: 0.6,
+        ease: 'power2.inOut',
+      },
+      0,
+    );
+
+    // Animate new slide in
+    tl.fromTo(
+      newSlide,
+      {
+        xPercent: direction * 100,
+        opacity: 0,
+        scale: 0.95,
+      },
+      {
+        xPercent: 0,
+        opacity: 1,
+        scale: 1,
+        duration: 0.6,
+        ease: 'power2.inOut',
+      },
+      0,
+    );
+
+    // Reset current slide position after animation
+    tl.set(currentSlide, { xPercent: 0 });
+  });
 
   const handleEmailLogin = async () => {
     navigate('/auth/avatar-selection');
   };
 
   const handleLineLogin = useCallback(() => {
-    // ... (保留原有 LINE 登入邏輯，此處省略以節省篇幅，僅修改 UI 部分)
-    // 由於 replace_file_content 限制，我將在下面完整保留 handleLineLogin 的邏輯
     setLineLoginLoading(true);
     setLoginError(null);
 
@@ -177,64 +296,57 @@ const Login = () => {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [navigate, refreshUser]);
 
-  const displayError = loginError || useAuth().error;
+  const displayError = loginError || authError;
 
   return (
-    <div className="flex flex-col min-h-screen bg-white p-6 pb-24">
-      {/* Hero 輪播區域 - 滿版圖片、文字在內 */}
-      <div className="flex-1 flex flex-col justify-center mb-6 relative">
-        <div className="w-full aspect-[4/5] rounded-[32px] overflow-hidden relative shadow-sm">
-          {/* Track */}
-          <div
-            ref={trackRef}
-            className="flex h-full w-full"
-            style={{ width: `${HERO_SLIDES.length * 100}%` }}
-          >
-            {HERO_SLIDES.map((slide) => (
-              <div
-                key={slide.id}
-                className="relative h-full w-full flex-shrink-0"
-                style={{ width: `${100 / HERO_SLIDES.length}%` }}
-              >
-                {/* 圖片 */}
-                <img
-                  src={slide.image}
-                  alt={slide.title}
-                  className="w-full h-full object-cover"
-                />
-                {/* 漸層遮罩，讓文字更清晰 */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                {/* 文字內容 */}
-                <div className="absolute bottom-12 left-0 right-0 p-6 text-white text-center">
-                  <h1 className="text-2xl font-bold mb-2 shadow-sm">
-                    {slide.title}
-                  </h1>
-                  <h2 className="text-xl font-medium mb-3 shadow-sm">
-                    {slide.subtitle}
-                  </h2>
-                  <p className="text-sm opacity-90 whitespace-pre-line leading-relaxed shadow-sm">
-                    {slide.caption}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* 分頁指示器 (疊加在圖片上) */}
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
-            {HERO_SLIDES.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`transition-all duration-300 rounded-full shadow-sm ${
-                  currentSlide === index
-                    ? 'bg-white w-6 h-1.5'
-                    : 'bg-white/50 w-1.5 h-1.5 hover:bg-white/80'
-                }`}
+    <div className="flex flex-col min-h-screen bg-white px-5">
+      {/* Hero 輪播區域 */}
+      <div className="flex flex-col mb-6 pt-8">
+        {/* 輪播容器 */}
+        <div
+          ref={containerRef}
+          className="relative w-full rounded-[32px] overflow-hidden mb-4"
+          style={{ aspectRatio: '4/5' }}
+        >
+          {/* Slides - 使用絕對定位堆疊 */}
+          {HERO_SLIDES.map((slide, index) => (
+            <div
+              key={slide.id}
+              ref={(el) => {
+                slidesRef.current[index] = el;
+              }}
+              className="absolute inset-0 will-change-transform"
+            >
+              <img
+                src={slide.image}
+                alt={slide.title}
+                className="w-full h-full object-cover"
               />
-            ))}
-          </div>
+              <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
+              <div className="absolute bottom-12 left-0 right-0 p-6 text-white text-center">
+                <h1 className="text-2xl font-bold mb-2">{slide.title}</h1>
+                <h2 className="text-xl font-medium mb-3">{slide.subtitle}</h2>
+                <p className="text-sm opacity-90 whitespace-pre-line leading-relaxed">
+                  {slide.caption}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 分頁指示器 */}
+        <div className="flex justify-center gap-2">
+          {HERO_SLIDES.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`transition-all duration-300 rounded-full ${
+                currentIndex === index
+                  ? 'bg-neutral-800 w-2 h-2'
+                  : 'bg-neutral-300 w-2 h-2 hover:bg-neutral-400'
+              }`}
+            />
+          ))}
         </div>
       </div>
 
@@ -247,7 +359,7 @@ const Login = () => {
         )}
 
         <Button
-          className="w-full bg-[#06C755] hover:bg-[#05b64d] text-white h-12 text-base rounded-xl shadow-sm"
+          className="w-full bg-[#f58274] hover:bg-[#e06d5f] text-white h-12 text-base rounded-lg"
           onClick={handleLineLogin}
           disabled={isLoading || lineLoginLoading}
         >
@@ -256,14 +368,14 @@ const Login = () => {
 
         <Button
           variant="outline"
-          className="w-full border-neutral-200 text-neutral-700 h-12 text-base rounded-xl hover:bg-neutral-50"
+          className="w-full border-neutral-200 text-neutral-700 h-12 text-base rounded-lg hover:bg-neutral-50"
           onClick={handleEmailLogin}
           disabled={isLoading || lineLoginLoading}
         >
           使用電子郵件帳號登入
         </Button>
 
-        <div className="flex justify-center mt-2">
+        <div className="flex justify-center">
           <button className="text-sm text-neutral-500 font-medium hover:text-neutral-800 transition-colors">
             忘記密碼？
           </button>
