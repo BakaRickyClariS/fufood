@@ -42,6 +42,22 @@ export const useAuth = () => {
     }
   }, []);
 
+  const mockLogin = useCallback((avatarId: number, displayName: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = authService.mockLogin(avatarId, displayName);
+      setUser(response.user);
+      return response;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '假登入失敗';
+      setError(message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const register = useCallback(async (data: RegisterData) => {
     setIsLoading(true);
     setError(null);
@@ -91,10 +107,10 @@ export const useAuth = () => {
     isLoading,
     error,
     login,
+    mockLogin,
     register,
     logout,
     getLineLoginUrl,
     refreshUser,
   };
 };
-

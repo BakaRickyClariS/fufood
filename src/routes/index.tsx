@@ -8,8 +8,10 @@ import AuthRoutes from './Auth';
 import SettingsRoutes from './Settings';
 import CategoryPage from './Inventory/CategoryPage';
 
+import { AUTH_TOKEN_KEY } from '@/modules/auth/constants';
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const token = localStorage.getItem('accessToken');
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
   if (!token) {
     return <Navigate to="/auth/login" replace />;
   }

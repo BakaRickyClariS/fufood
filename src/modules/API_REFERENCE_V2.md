@@ -284,6 +284,8 @@
 - `GET /auth/line/login` / `GET /auth/line/callback`：LINE OAuth。
 - `PUT /auth/update-profile`：更新個人資料。
 
+> **Mock 模式**：前端開發環境提供假登入功能（電子郵件帳號），不經過後端 API，僅在前端模擬 Token 發發。
+
 ---
 
 ## 2. Groups（群組管理）

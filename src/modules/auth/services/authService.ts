@@ -101,6 +101,34 @@ export const authService = {
   },
 
   /**
+   * 執行假登入流程（電子郵件帳號）
+   */
+  mockLogin: (
+    avatarId: number,
+    displayName: string,
+  ): { user: User; token: AuthToken } => {
+    const mockToken: AuthToken = {
+      accessToken: `mock_auth_${Date.now()}`,
+      refreshToken: `mock_refresh_${Date.now()}`,
+      expiresIn: 3600 * 24 * 7, // 7 天
+    };
+
+    const user: User = {
+      id: `mock_user_${Date.now()}`,
+      email: 'mock@example.com',
+      name: displayName,
+      displayName: displayName,
+      avatar: `/src/assets/images/auth/Avatar-${avatarId}.png`,
+      createdAt: new Date(),
+    };
+
+    authService.saveToken(mockToken);
+    authService.saveUser(user);
+
+    return { user, token: mockToken };
+  },
+
+  /**
    * 執行登出流程
    */
   logout: async () => {

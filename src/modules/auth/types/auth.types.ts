@@ -1,6 +1,6 @@
 export type User = {
   id: string;
-  email?: string;        // LINE 登入可能無 email
+  email?: string; // LINE 登入可能無 email
   name?: string;
   avatar: string;
   createdAt: Date;
@@ -33,4 +33,10 @@ export type AuthState = {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+};
+
+// 假登入設定資料
+export type MockLoginData = {
+  avatarId: number;
+  displayName: string;
 };
