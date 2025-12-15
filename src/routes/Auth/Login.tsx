@@ -51,6 +51,9 @@ const Login = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const slidesRef = useRef<(HTMLDivElement | null)[]>([]);
   const isAnimatingRef = useRef(false);
+  // OAuth popup 計時器 refs（用於清理避免記憶體洩漏）
+  const popupIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const popupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // GSAP utility for wrapping index
   const wrap = gsap.utils.wrap(0, HERO_SLIDES.length);
@@ -191,9 +194,31 @@ const Login = () => {
     navigate('/auth/avatar-selection');
   };
 
+  // 清理 popup 計時器的函式
+  const clearPopupTimers = useCallback(() => {
+    if (popupIntervalRef.current) {
+      clearInterval(popupIntervalRef.current);
+      popupIntervalRef.current = null;
+    }
+    if (popupTimeoutRef.current) {
+      clearTimeout(popupTimeoutRef.current);
+      popupTimeoutRef.current = null;
+    }
+  }, []);
+
+  // 元件卸載時清理計時器，避免記憶體洩漏
+  useEffect(() => {
+    return () => {
+      clearPopupTimers();
+    };
+  }, [clearPopupTimers]);
+
   const handleLineLogin = useCallback(() => {
     setLineLoginLoading(true);
     setLoginError(null);
+
+    // 先清理之前可能存在的計時器
+    clearPopupTimers();
 
     const loginUrl = getLineLoginUrl();
     const width = 500;
@@ -214,11 +239,11 @@ const Login = () => {
       return;
     }
 
-    // 監聽 popup 關閉事件
-    const checkPopupClosed = setInterval(async () => {
+    // 監聽 popup 關閉事件（使用 ref 保存計時器 ID）
+    popupIntervalRef.current = setInterval(async () => {
       if (popup.closed) {
-        clearInterval(checkPopupClosed);
-        
+        clearPopupTimers();
+
         // popup 關閉後，呼叫 Profile API 確認登入狀態
         try {
           const isLoggedIn = await checkLoginStatus();
@@ -233,15 +258,15 @@ const Login = () => {
       }
     }, 500);
 
-    // 2 分鐘超時
-    setTimeout(() => {
-      clearInterval(checkPopupClosed);
+    // 2 分鐘超時（使用 ref 保存計時器 ID）
+    popupTimeoutRef.current = setTimeout(() => {
+      clearPopupTimers();
       if (!popup.closed) {
         popup.close();
       }
       setLineLoginLoading(false);
     }, 120000);
-  }, [getLineLoginUrl, checkLoginStatus, navigate]);
+  }, [getLineLoginUrl, checkLoginStatus, navigate, clearPopupTimers]);
 
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
