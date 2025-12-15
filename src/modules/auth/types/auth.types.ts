@@ -1,3 +1,8 @@
+/**
+ * 會員等級型別
+ */
+export type MembershipTier = 'free' | 'premium' | 'vip';
+
 export type User = {
   id: string;
   email?: string; // LINE 登入可能無 email
@@ -8,6 +13,8 @@ export type User = {
   lineId?: string;
   displayName?: string;
   pictureUrl?: string;
+  // 會員等級
+  membershipTier?: MembershipTier;
 };
 
 export type LoginCredentials = {
@@ -39,4 +46,16 @@ export type AuthState = {
 export type MockLoginData = {
   avatarId: number;
   displayName: string;
+};
+
+// Profile API 回傳格式
+export type ProfileData = {
+  id: string;
+  lineId: string;
+  name: string;
+  profilePictureUrl: string;
+};
+
+export type ProfileResponse = {
+  data: ProfileData;
 };

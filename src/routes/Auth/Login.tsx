@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { useAuth, authService } from '@/modules/auth';
+import { useAuth } from '@/modules/auth';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 
@@ -39,6 +39,7 @@ const Login = () => {
     isLoading,
     getLineLoginUrl,
     refreshUser,
+    checkLoginStatus,
     error: authError,
   } = useAuth();
 
@@ -200,6 +201,7 @@ const Login = () => {
     const left = window.screenX + (window.innerWidth - width) / 2;
     const top = window.screenY + (window.innerHeight - height) / 2;
 
+    // 開啟 popup 視窗（PWA 友好）
     const popup = window.open(
       loginUrl,
       'lineLogin',
@@ -212,78 +214,34 @@ const Login = () => {
       return;
     }
 
-    const checkPopup = setInterval(() => {
-      try {
-        if (popup.closed) {
-          clearInterval(checkPopup);
+    // 監聽 popup 關閉事件
+    const checkPopupClosed = setInterval(async () => {
+      if (popup.closed) {
+        clearInterval(checkPopupClosed);
+        
+        // popup 關閉後，呼叫 Profile API 確認登入狀態
+        try {
+          const isLoggedIn = await checkLoginStatus();
+          if (isLoggedIn) {
+            navigate('/', { replace: true });
+          } else {
+            setLineLoginLoading(false);
+          }
+        } catch {
           setLineLoginLoading(false);
-          return;
         }
-
-        const popupUrl = popup.location.href;
-
-        if (
-          popupUrl.includes('/oauth/line/callback') ||
-          popupUrl.includes('api.fufood.jocelynh.me')
-        ) {
-          setTimeout(() => {
-            try {
-              const bodyContent =
-                popup.document.body.innerText ||
-                popup.document.body.textContent;
-
-              if (bodyContent) {
-                const userData = JSON.parse(bodyContent);
-
-                if (userData && (userData.id || userData.lineId)) {
-                  const mockToken = {
-                    accessToken: `line_auth_${Date.now()}`,
-                    refreshToken: `line_refresh_${Date.now()}`,
-                    expiresIn: 3600,
-                  };
-
-                  const user = {
-                    id: userData.id || userData.lineId,
-                    lineId: userData.lineId,
-                    name: userData.name || userData.displayName,
-                    displayName: userData.name || userData.displayName,
-                    avatar: userData.profilePictureUrl || '',
-                    pictureUrl: userData.profilePictureUrl,
-                    createdAt: userData.createdAt
-                      ? new Date(userData.createdAt)
-                      : new Date(),
-                  };
-
-                  authService.saveToken(mockToken);
-                  authService.saveUser(user);
-
-                  popup.close();
-                  clearInterval(checkPopup);
-
-                  refreshUser();
-                  navigate('/', { replace: true });
-                } else {
-                  throw new Error('無效的用戶資料');
-                }
-              }
-            } catch (parseError) {
-              console.error('解析登入資料失敗:', parseError);
-            }
-          }, 500);
-        }
-      } catch {
-        // Cross-origin error, waiting
       }
     }, 500);
 
+    // 2 分鐘超時
     setTimeout(() => {
-      clearInterval(checkPopup);
+      clearInterval(checkPopupClosed);
       if (!popup.closed) {
         popup.close();
       }
       setLineLoginLoading(false);
     }, 120000);
-  }, [getLineLoginUrl, navigate, refreshUser]);
+  }, [getLineLoginUrl, checkLoginStatus, navigate]);
 
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
