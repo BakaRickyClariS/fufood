@@ -25,7 +25,7 @@ export const MemberAvatars = ({ members, maxDisplay = 3 }: MemberAvatarsProps) =
       {displayedMembers.map((member, index) => (
         <div
           key={member.id}
-          className="w-6 h-6 rounded-full overflow-hidden border-2 border-white bg-neutral-200"
+          className="w-6 h-6 rounded-full overflow-hidden border-2 border-neutral-400 bg-white"
           style={{
             marginLeft: index === 0 ? 0 : '-8px',
             zIndex: maxDisplay - index,
@@ -35,7 +35,7 @@ export const MemberAvatars = ({ members, maxDisplay = 3 }: MemberAvatarsProps) =
             <img
               src={member.avatar}
               alt={member.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover scale-150 translate-y-1"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-primary-100 text-primary-700 text-sm font-medium">

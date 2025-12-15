@@ -1,6 +1,7 @@
 import { ChevronDown } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/modules/auth';
 
 // 頭像工具
@@ -31,6 +32,10 @@ const mockGroupMembers: GroupMember[] = [
 const TopNav = () => {
   const [selectedHome] = useState('My Home');
   const { user } = useAuth();
+  const location = useLocation();
+
+  // 判斷是否為 dashboard 路由
+  const isDashboard = location.pathname === '/' || location.pathname === '/dashboard';
 
   // 使用頭像工具函數取得使用者頭像
   const userAvatar = getUserAvatarUrl(user);
@@ -87,15 +92,15 @@ const TopNav = () => {
 
   return (
     <>
-      <div className="top-nav-wrapper sticky top-0 left-0 right-0 bg-white z-40 px-4 py-3">
+      <div className={`top-nav-wrapper sticky top-0 left-0 right-0 z-40 px-4 py-3 ${isDashboard ? 'body-dashboard-bg' : 'bg-white'}`}>
         <div className="flex items-center justify-between gap-2">
           {/* Left: Member Avatars + Home Selector */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <MemberAvatars members={currentGroup.members} maxDisplay={3} />
 
             <Button
               variant="ghost"
-              className="flex items-center gap-1 text-base font-bold text-primary-700 px-4 py-2 bg-primary-100 rounded-full hover:bg-primary-200"
+              className="flex items-center gap-1 text-base font-bold text-primary-700 p-2 bg-primary-100 rounded-full hover:bg-primary-200"
               onClick={() => setIsHomeModalOpen(true)}
             >
               {selectedHome}
