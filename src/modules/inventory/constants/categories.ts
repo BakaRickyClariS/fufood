@@ -21,7 +21,7 @@ export type CategoryItem = {
 export const categories: CategoryItem[] = [
   {
     id: 'fruit',
-    title: '蔬果類 (92)',
+    title: '蔬果類',
     value: 92,
     img: fruitImg,
     bgColor: 'bg-[#D8EBC5]',
@@ -30,7 +30,7 @@ export const categories: CategoryItem[] = [
   },
   {
     id: 'frozen',
-    title: '冷凍調理類 (252)',
+    title: '冷凍調理類',
     value: 252,
     img: frozenImg,
     bgColor: 'bg-[#FFE895]',
@@ -39,7 +39,7 @@ export const categories: CategoryItem[] = [
   },
   {
     id: 'bake',
-    title: '主食烘焙類 (49)',
+    title: '主食烘焙類',
     value: 49,
     img: bakeImg,
     bgColor: 'bg-[#FFD6E3]',
@@ -48,7 +48,7 @@ export const categories: CategoryItem[] = [
   },
   {
     id: 'milk',
-    title: '乳製品飲料類 (3)',
+    title: '乳製品飲料類',
     value: 3,
     img: milkImg,
     bgColor: 'bg-[#DDF0FF]',
@@ -61,7 +61,7 @@ export const categories: CategoryItem[] = [
   },
   {
     id: 'seafood',
-    title: '冷凍海鮮類 (20)',
+    title: '冷凍海鮮類',
     value: 20,
     img: seafoodImg,
     bgColor: 'bg-[#FFC5A4]',
@@ -70,7 +70,7 @@ export const categories: CategoryItem[] = [
   },
   {
     id: 'meat',
-    title: '肉品類 (8)',
+    title: '肉品類',
     value: 8,
     img: meatImg,
     bgColor: 'bg-[#FFD4D4]',
@@ -79,7 +79,7 @@ export const categories: CategoryItem[] = [
   },
   {
     id: 'others',
-    title: '其他 (6)',
+    title: '其他',
     value: 6,
     img: otherImg,
     bgColor: 'bg-[#E2E2E2]',

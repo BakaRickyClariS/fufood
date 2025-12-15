@@ -54,6 +54,12 @@ export const apiClient = {
       method: 'PUT',
       body: data ? JSON.stringify(data) : null,
     }),
+  patch: <T, B = unknown>(url: string, data?: B, config?: RequestConfig) =>
+    request<T>(url, {
+      ...config,
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : null,
+    }),
   delete: <T>(url: string, config?: RequestConfig) =>
     request<T>(url, { ...config, method: 'DELETE' }),
 };

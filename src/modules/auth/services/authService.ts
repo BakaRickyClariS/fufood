@@ -63,6 +63,8 @@ export const authService = {
    */
   saveUser: (user: User): void => {
     localStorage.setItem('user', JSON.stringify(user));
+    // 觸發自訂事件通知同視窗中的其他元件
+    window.dispatchEvent(new CustomEvent('userUpdated'));
   },
 
   /**
@@ -98,6 +100,34 @@ export const authService = {
     authService.saveToken(response.token);
     authService.saveUser(response.user);
     return response;
+  },
+
+  /**
+   * 執行假登入流程（電子郵件帳號）
+   */
+  mockLogin: (
+    avatarId: number,
+    displayName: string,
+  ): { user: User; token: AuthToken } => {
+    const mockToken: AuthToken = {
+      accessToken: `mock_auth_${Date.now()}`,
+      refreshToken: `mock_refresh_${Date.now()}`,
+      expiresIn: 3600 * 24 * 7, // 7 天
+    };
+
+    const user: User = {
+      id: `mock_user_${Date.now()}`,
+      email: 'mock@example.com',
+      name: displayName,
+      displayName: displayName,
+      avatar: String(avatarId), // 儲存 avatarId，由元件負責載入對應圖片
+      createdAt: new Date(),
+    };
+
+    authService.saveToken(mockToken);
+    authService.saveUser(user);
+
+    return { user, token: mockToken };
   },
 
   /**

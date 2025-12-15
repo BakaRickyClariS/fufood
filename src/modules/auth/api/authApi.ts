@@ -5,10 +5,12 @@ import type {
   RegisterRequest,
   RegisterResponse,
   LINELoginRequest,
+  LineLoginCallbackResponse,
   User,
   RefreshTokenRequest,
   RefreshTokenResponse,
   UpdateProfileRequest,
+  ProfileResponse,
 } from '../types';
 import { MOCK_USERS, MOCK_TOKEN } from './mock/authMockData';
 
@@ -112,25 +114,82 @@ export const authApi = {
   },
 
   /**
-   * LINE 登入導向
+   * 取得 LINE 登入 URL
+   * 直接返回後端 OAuth 入口 URL
    */
-  getLineLoginUrl: async (): Promise<{ url: string }> => {
-    if (USE_MOCK) {
-      return { url: 'http://localhost:5173/login/callback?code=mock_code' };
-    }
-    return apiClient.get<{ url: string }>('/auth/line/login');
+  getLineLoginUrl: (): string => {
+    const LINE_API_BASE =
+      import.meta.env.VITE_LINE_API_BASE_URL ||
+      'https://api.fufood.jocelynh.me';
+    return `${LINE_API_BASE}/oauth/line/init`;
   },
 
   /**
-   * LINE 登入 Callback
+   * LINE 登入 Callback 處理
+   * 處理後端回調帶回的認證資訊
+   * 注意：使用原生 fetch 而非 apiClient，因為這是外部 API
    */
-  loginWithLINE: async (data: LINELoginRequest): Promise<LoginResponse> => {
+  handleLineCallback: async (
+    data: LINELoginRequest,
+  ): Promise<LineLoginCallbackResponse> => {
+    const LINE_API_BASE =
+      import.meta.env.VITE_LINE_API_BASE_URL ||
+      'https://api.fufood.jocelynh.me';
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 800));
-      return { user: MOCK_USERS[0], token: MOCK_TOKEN };
+      return {
+        user: {
+          ...MOCK_USERS[0],
+          lineId: 'U1234567890',
+          displayName: 'LINE 測試用戶',
+          pictureUrl: 'https://profile.line-scdn.net/0h3Example',
+        },
+        token: MOCK_TOKEN,
+      };
     }
-    return apiClient.get<LoginResponse>('/auth/line/callback', {
-      code: data.code,
+
+    // 使用原生 fetch 呼叫外部 LINE API，不使用 apiClient（會拼接錯誤的 baseUrl）
+    const url = new URL(`${LINE_API_BASE}/oauth/line/callback`);
+    if (data.code) url.searchParams.append('code', data.code);
+    if (data.state) url.searchParams.append('state', data.state);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `LINE API 錯誤: ${response.status}`);
+    }
+
+    return response.json();
+  },
+
+  /**
+   * 取得當前登入用戶資訊（透過 HttpOnly Cookie 驗證）
+   * 成功回傳用戶資料，未登入回傳 401
+   */
+  getProfile: async (): Promise<ProfileResponse> => {
+    const LINE_API_BASE =
+      import.meta.env.VITE_LINE_API_BASE_URL ||
+      'https://api.fufood.jocelynh.me';
+
+    // 使用原生 fetch 帶上 credentials: 'include' 以攜帶 HttpOnly Cookie
+    const response = await fetch(`${LINE_API_BASE}/api/v1/profile`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(response.status === 401 ? '未登入' : `API 錯誤: ${response.status}`);
+    }
+
+    return response.json();
   },
 };

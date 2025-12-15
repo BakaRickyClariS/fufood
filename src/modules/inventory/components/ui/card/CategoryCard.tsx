@@ -21,7 +21,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
     <Card
       className={`flex flex-row items-start justify-between p-4 rounded-2xl border-2 relative overflow-hidden h-full border-[#848484]/20 ${boxShadow} ${bgColor} transition-transform hover:scale-[1.02] active:scale-95`}
     >
-      <div className="flex flex-col w-full">
+      <div className="flex flex-col w-full z-10">
         <p className="text-base font-semibold text-neutral-900">{title}</p>
       </div>
 
@@ -29,8 +29,8 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
         src={img}
         alt={title}
         className=" absolute
-    bottom-0
-    right-0
+    -bottom-10
+    -right-5
     max-h-full
     w-auto
     object-contain

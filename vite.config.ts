@@ -16,6 +16,7 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         sourcemap: true,
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB
       },
       manifest: {
         name: 'fufood 食物管家',

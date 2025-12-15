@@ -1,6 +1,7 @@
 # Auth Module（使用者認證）
 
 ## 目錄
+
 - [概要](#概要)
 - [目錄結構](#目錄結構)
 - [核心功能](#核心功能)
@@ -15,18 +16,22 @@
 ---
 
 ## 概要
+
 負責使用者註冊、登入、登出、Token 管理、LINE OAuth，以及輕量驗證 `/auth/check`。提供 Mock 模式以便本地開發。
 
 ### 核心功能
+
 1. 帳密登入與註冊
 2. LINE Login OAuth
 3. Access/Refresh Token 管理與更新
 4. 輕量心跳驗證 `/auth/check`
 5. 取用目前使用者 `/auth/me`
+6. Mock 登入（電子郵件帳號 + 頭像選擇）
 
 ---
 
 ## 目錄結構
+
 ```
 auth/
 ├── api/                 # API 層
@@ -82,6 +87,7 @@ export type AuthState = {
 ## API 規格
 
 ### 路由（對應 API_REFERENCE_V2 #1-#9）
+
 - `POST /api/v1/auth/register`：註冊
 - `POST /api/v1/auth/login`：登入
 - `POST /api/v1/auth/logout`：登出（清除 Cookie/Session）
@@ -92,6 +98,7 @@ export type AuthState = {
 - `PUT /api/v1/auth/update-profile`：更新個人資料
 
 ### AuthApi 介面
+
 ```typescript
 export const authApi = {
   login: (data: LoginRequest) => Promise<LoginResponse>;
@@ -110,6 +117,7 @@ export const authApi = {
 ## Hooks
 
 ### `useAuth.ts`
+
 ```typescript
 const useAuth = () => {
   return {
@@ -125,6 +133,7 @@ const useAuth = () => {
   };
 };
 ```
+
 **功能**：管理登入/註冊/登出、Token 驗證、狀態與錯誤。
 
 ---
@@ -132,6 +141,7 @@ const useAuth = () => {
 ## Services
 
 ### `authService.ts`
+
 - 封裝 Token/User 的存取（localStorage）
 - 處理 login/register/logout/refresh/check/updateProfile
 - 將 `check` 作為輕量心跳，失敗時清理本地 Token
@@ -139,24 +149,27 @@ const useAuth = () => {
 ---
 
 ## Redux Store
+
 - `authSlice.ts` 管理 `user`, `token`, `isAuthenticated`, `isLoading`, `error`
 - Actions: `loginStart/loginSuccess/loginFailure`, `logout`, `setUser`
 
 ---
 
 ## 環境變數
-| 變數 | 說明 | 範例 |
-| --- | --- | --- |
-| `VITE_USE_MOCK_API` | 是否使用 Mock API | `true` / `false` |
-| `VITE_API_BASE_URL` | API 基底 | `http://localhost:3000/api/v1` |
-| `VITE_LINE_CLIENT_ID` | LINE Login Channel ID | `1234567890` |
+
+| 變數                     | 說明                    | 範例                                   |
+| ------------------------ | ----------------------- | -------------------------------------- |
+| `VITE_USE_MOCK_API`      | 是否使用 Mock API       | `true` / `false`                       |
+| `VITE_API_BASE_URL`      | API 基底                | `http://localhost:3000/api/v1`         |
+| `VITE_LINE_CLIENT_ID`    | LINE Login Channel ID   | `1234567890`                           |
 | `VITE_LINE_REDIRECT_URI` | LINE Login Callback URL | `http://localhost:5173/login/callback` |
 
 ---
 
 ## Mock 資料
+
 - `authMockData.ts`：提供測試用使用者與 Token。
 
---- 
+---
 
 **備註**：`/auth/check` 保留為輕量驗證，不回傳使用者資訊；`/auth/me` 則回傳完整使用者資料。

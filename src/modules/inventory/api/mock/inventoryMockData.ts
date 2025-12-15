@@ -27,6 +27,45 @@ import chocoIceCream from '@/assets/images/foods/chocoIceCream.png';
 export const MOCK_INVENTORY: FoodItem[] = [
   // 蔬果類
   {
+    id: 'manual-expired-1',
+    name: '今日到期香蕉',
+    category: '蔬果類',
+    quantity: 3,
+    unit: '根',
+    imageUrl: banana,
+    purchaseDate: '2025-12-05',
+    expiryDate: '2025-12-12',
+    lowStockAlert: true,
+    lowStockThreshold: 1,
+    createdAt: '2025-12-05T00:00:00.000Z',
+  },
+  {
+    id: 'manual-expired-2',
+    name: '即將過期軟餅乾',
+    category: '其他',
+    quantity: 5,
+    unit: '片',
+    imageUrl: americanSoft,
+    purchaseDate: '2025-12-01',
+    expiryDate: '2025-12-13',
+    lowStockAlert: true,
+    lowStockThreshold: 2,
+    createdAt: '2025-12-01T00:00:00.000Z',
+  },
+  {
+    id: 'manual-expired-3',
+    name: '即將過期捲心菜',
+    category: '蔬果類',
+    quantity: 1,
+    unit: '顆',
+    imageUrl: cabbage,
+    purchaseDate: '2025-12-01',
+    expiryDate: '2025-12-14',
+    lowStockAlert: true,
+    lowStockThreshold: 1,
+    createdAt: '2025-12-01T00:00:00.000Z',
+  },
+  {
     id: 'veg-expired-1',
     name: '過期青江菜',
     category: '蔬果類',
@@ -65,6 +104,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockThreshold: 2,
     notes: '好市多購入，季節限定',
     createdAt: '2026-01-01T00:00:00.000Z',
+    attributes: ['葉菜類'],
   },
   {
     id: 'veg-2',
@@ -79,6 +119,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockThreshold: 5,
     notes: '有機種植',
     createdAt: '2026-01-01T00:00:00.000Z',
+    attributes: ['葉菜類', '根莖類'], // Just testing multi-match
   },
   {
     id: 'veg-3',
@@ -92,6 +133,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockAlert: true,
     lowStockThreshold: 1,
     createdAt: '2026-01-01T00:00:00.000Z',
+    attributes: ['根莖類'],
   },
   {
     id: 'veg-4',
@@ -118,6 +160,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockAlert: true,
     lowStockThreshold: 2,
     createdAt: '2026-01-05T00:00:00.000Z',
+    attributes: ['根莖類'],
   },
   {
     id: 'fruit-1',
@@ -131,6 +174,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockAlert: true,
     lowStockThreshold: 1,
     createdAt: '2026-01-01T00:00:00.000Z',
+    attributes: ['水果類'],
   },
   {
     id: 'fruit-2',
@@ -157,6 +201,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockAlert: true,
     lowStockThreshold: 10,
     createdAt: '2026-01-06T00:00:00.000Z',
+    attributes: ['水果類', '季節限定'],
   },
 
   // 冷凍調理類
@@ -185,6 +230,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockAlert: true,
     lowStockThreshold: 10,
     createdAt: '2026-01-01T00:00:00.000Z',
+    attributes: ['炸物類'],
   },
   {
     id: 'frozen-2',
@@ -278,6 +324,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockAlert: true,
     lowStockThreshold: 1,
     createdAt: '2026-01-01T00:00:00.000Z',
+    attributes: ['麵包類'],
   },
   {
     id: 'staple-2',
@@ -304,6 +351,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lowStockAlert: true,
     lowStockThreshold: 1,
     createdAt: '2026-01-01T00:00:00.000Z',
+    attributes: ['穀物類'],
   },
   {
     id: 'staple-4',

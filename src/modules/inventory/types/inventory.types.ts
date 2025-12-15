@@ -24,6 +24,7 @@ export type FoodItem = {
   groupId?: string; // 所屬群組
   createdAt: string;
   updatedAt?: string;
+  attributes?: string[]; // e.g. ['葉菜類', '有機']
 };
 
 export type CategoryInfo = {

@@ -8,6 +8,7 @@ export const useInventoryFilter = (items: FoodItem[]) => {
     searchQuery: '',
     sortBy: 'expiryDate',
     sortOrder: 'asc',
+    attributes: [],
   });
 
   const filteredItems = useMemo(() => {
@@ -25,25 +26,43 @@ export const useInventoryFilter = (items: FoodItem[]) => {
         today.getTime() + 3 * 24 * 60 * 60 * 1000,
       );
 
+      const statusArray = Array.isArray(filters.status)
+        ? filters.status
+        : [filters.status];
+
+      if (statusArray.length > 0) {
+        result = result.filter((item) => {
+          const expiry = new Date(item.expiryDate);
+
+          return statusArray.some((status) => {
+            switch (status) {
+              case 'expired':
+                return expiry < today;
+              case 'expiring-soon':
+                return expiry >= today && expiry <= threeDaysLater;
+              case 'low-stock':
+                return (
+                  item.lowStockAlert && item.quantity <= item.lowStockThreshold
+                );
+              case 'normal':
+                return (
+                  expiry > threeDaysLater &&
+                  (!item.lowStockAlert || item.quantity > item.lowStockThreshold)
+                );
+              default:
+                return true;
+            }
+          });
+        });
+      }
+    }
+
+    // Search Filter
+    // Attributes Filter
+    if (filters.attributes && filters.attributes.length > 0) {
       result = result.filter((item) => {
-        const expiry = new Date(item.expiryDate);
-        switch (filters.status) {
-          case 'expired':
-            return expiry < today;
-          case 'expiring-soon':
-            return expiry >= today && expiry <= threeDaysLater;
-          case 'low-stock':
-            return (
-              item.lowStockAlert && item.quantity <= item.lowStockThreshold
-            );
-          case 'normal':
-            return (
-              expiry > threeDaysLater &&
-              (!item.lowStockAlert || item.quantity > item.lowStockThreshold)
-            );
-          default:
-            return true;
-        }
+        if (!item.attributes) return false;
+        return filters.attributes!.some((attr) => item.attributes!.includes(attr));
       });
     }
 
@@ -98,6 +117,7 @@ export const useInventoryFilter = (items: FoodItem[]) => {
       searchQuery: '',
       sortBy: 'expiryDate',
       sortOrder: 'asc',
+      attributes: [],
     });
   };
 

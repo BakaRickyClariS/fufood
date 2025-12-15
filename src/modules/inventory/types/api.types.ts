@@ -76,6 +76,8 @@ export type InventorySettings = {
   expiringSoonDays: number;
   notifyOnExpiry: boolean;
   notifyOnLowStock: boolean;
+  layoutType?: 'layout-a' | 'layout-b' | 'layout-c';
+  categoryOrder?: string[]; // 儲存類別 ID 的順序陣列
 };
 
 export type UpdateInventorySettingsRequest = Partial<InventorySettings>;
