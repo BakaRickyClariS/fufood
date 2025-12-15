@@ -8,27 +8,23 @@ import AuthRoutes from './Auth';
 import SettingsRoutes from './Settings';
 import CategoryPage from './Inventory/CategoryPage';
 
-import { authService } from '@/modules/auth';
+import { authService, useAuth } from '@/modules/auth';
 
 /**
  * 受保護路由元件
  * 檢查用戶是否已登入，未登入則重定向到登入頁面
  */
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const token = authService.getToken();
-  const isTokenExpired = authService.isTokenExpired();
+  const { isLoading, isAuthenticated } = useAuth();
+
+  if (!isLoading) return null;
 
   // 無 token 或 token 已過期
-  if (!token || isTokenExpired) {
-    // 清除過期的 token 和用戶資料
-    if (token && isTokenExpired) {
-      authService.clearToken();
-      authService.clearUser();
-    }
+  if (!isAuthenticated) {
     return <Navigate to="/auth/login" replace />;
   }
 
-  return <>{children}</>;
+  return children;
 };
 
 /**
