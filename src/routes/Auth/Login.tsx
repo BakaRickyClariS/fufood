@@ -39,6 +39,7 @@ const Login = () => {
     isLoading,
     getLineLoginUrl,
     refreshUser,
+    checkLoginStatus,
     error: authError,
   } = useAuth();
 
@@ -194,11 +195,53 @@ const Login = () => {
     setLineLoginLoading(true);
     setLoginError(null);
 
-    // 直接跳轉至後端 LINE OAuth 入口
-    // 後端完成授權後會設定 HttpOnly Cookie 並重導回 /auth/line/callback
     const loginUrl = getLineLoginUrl();
-    window.location.href = loginUrl;
-  }, [getLineLoginUrl]);
+    const width = 500;
+    const height = 600;
+    const left = window.screenX + (window.innerWidth - width) / 2;
+    const top = window.screenY + (window.innerHeight - height) / 2;
+
+    // 開啟 popup 視窗（PWA 友好）
+    const popup = window.open(
+      loginUrl,
+      'lineLogin',
+      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`,
+    );
+
+    if (!popup) {
+      setLoginError('無法開啟登入視窗，請檢查是否有彈出視窗被封鎖');
+      setLineLoginLoading(false);
+      return;
+    }
+
+    // 監聽 popup 關閉事件
+    const checkPopupClosed = setInterval(async () => {
+      if (popup.closed) {
+        clearInterval(checkPopupClosed);
+        
+        // popup 關閉後，呼叫 Profile API 確認登入狀態
+        try {
+          const isLoggedIn = await checkLoginStatus();
+          if (isLoggedIn) {
+            navigate('/', { replace: true });
+          } else {
+            setLineLoginLoading(false);
+          }
+        } catch {
+          setLineLoginLoading(false);
+        }
+      }
+    }, 500);
+
+    // 2 分鐘超時
+    setTimeout(() => {
+      clearInterval(checkPopupClosed);
+      if (!popup.closed) {
+        popup.close();
+      }
+      setLineLoginLoading(false);
+    }, 120000);
+  }, [getLineLoginUrl, checkLoginStatus, navigate]);
 
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
