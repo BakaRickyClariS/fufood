@@ -10,6 +10,7 @@ import type {
   RefreshTokenRequest,
   RefreshTokenResponse,
   UpdateProfileRequest,
+  ProfileResponse,
 } from '../types';
 import { MOCK_USERS, MOCK_TOKEN } from './mock/authMockData';
 
@@ -162,6 +163,31 @@ export const authApi = {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || `LINE API 錯誤: ${response.status}`);
+    }
+
+    return response.json();
+  },
+
+  /**
+   * 取得當前登入用戶資訊（透過 HttpOnly Cookie 驗證）
+   * 成功回傳用戶資料，未登入回傳 401
+   */
+  getProfile: async (): Promise<ProfileResponse> => {
+    const LINE_API_BASE =
+      import.meta.env.VITE_LINE_API_BASE_URL ||
+      'https://api.fufood.jocelynh.me';
+
+    // 使用原生 fetch 帶上 credentials: 'include' 以攜帶 HttpOnly Cookie
+    const response = await fetch(`${LINE_API_BASE}/api/v1/profile`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(response.status === 401 ? '未登入' : `API 錯誤: ${response.status}`);
     }
 
     return response.json();

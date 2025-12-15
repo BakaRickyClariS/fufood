@@ -4,7 +4,10 @@ import { authApi, authService } from '@/modules/auth';
 
 /**
  * LINE 登入回調頁面
- * 處理 LINE OAuth 回調，解析 code 並完成登入
+ * 後端已透過 HttpOnly Cookie 設定 token，此頁面負責：
+ * 1. 呼叫 Profile API 確認登入狀態
+ * 2. 儲存用戶資料到 localStorage
+ * 3. 導向首頁
  */
 const LineLoginCallback = () => {
   const navigate = useNavigate();
@@ -13,13 +16,11 @@ const LineLoginCallback = () => {
   const [isProcessing, setIsProcessing] = useState(true);
 
   useEffect(() => {
-    const processCallback = async () => {
-      const code = searchParams.get('code');
-      const state = searchParams.get('state');
+    const verifyLogin = async () => {
+      // 檢查 LINE 返回的錯誤
       const errorParam = searchParams.get('error');
       const errorDescription = searchParams.get('error_description');
 
-      // 處理 LINE 返回的錯誤
       if (errorParam) {
         const errorMsg = errorDescription || 'LINE 登入被取消或發生錯誤';
         setError(errorMsg);
@@ -28,34 +29,34 @@ const LineLoginCallback = () => {
         return;
       }
 
-      // 驗證必要參數
-      if (!code) {
-        setError('無效的回調參數，缺少授權碼');
-        setIsProcessing(false);
-        setTimeout(() => navigate('/auth/login'), 2500);
-        return;
-      }
-
       try {
-        // 呼叫後端 API 處理 LINE 登入
-        const response = await authApi.handleLineCallback({ code, state: state || undefined });
+        // 呼叫 Profile API 確認 Cookie 已設定
+        const response = await authApi.getProfile();
         
-        // 儲存 Token 及用戶資訊
-        authService.saveToken(response.token);
-        authService.saveUser(response.user);
+        // 將 API 回傳的資料轉換為 User 格式並儲存
+        const userData = {
+          id: response.data.id,
+          lineId: response.data.lineId,
+          name: response.data.name,
+          displayName: response.data.name,
+          avatar: response.data.profilePictureUrl,
+          pictureUrl: response.data.profilePictureUrl,
+          createdAt: new Date(),
+        };
+        
+        authService.saveUser(userData);
         
         // 登入成功，導向首頁
         navigate('/', { replace: true });
       } catch (err) {
-        console.error('LINE 登入失敗:', err);
-        const message = err instanceof Error ? err.message : 'LINE 登入失敗，請稍後再試';
-        setError(message);
+        console.error('LINE 登入驗證失敗:', err);
+        setError('登入失敗，請重試');
         setIsProcessing(false);
         setTimeout(() => navigate('/auth/login'), 2500);
       }
     };
 
-    processCallback();
+    verifyLogin();
   }, [searchParams, navigate]);
 
   return (
@@ -72,8 +73,8 @@ const LineLoginCallback = () => {
         </div>
       ) : isProcessing ? (
         <div className="text-center">
-          <div className="animate-spin w-10 h-10 border-4 border-[#EE5D50] border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-stone-600 font-medium">正在處理 LINE 登入...</p>
+          <div className="animate-spin w-10 h-10 border-4 border-[#f58274] border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-stone-600 font-medium">正在完成登入...</p>
           <p className="text-sm text-stone-400 mt-1">請稍候</p>
         </div>
       ) : null}

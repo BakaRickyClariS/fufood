@@ -149,3 +149,43 @@ const useGroupMembers = (groupId: string) => ({
 
 ## Mock 資料
 - `groupsMockData.ts`：提供群組與成員範例，用於本地開發。
+
+---
+
+## TopNav 整合
+
+TopNav 組件會顯示當前群組的成員大頭貼與群組選擇器。
+
+### 相關共用組件
+
+| 組件 | 路徑 | 說明 |
+| --- | --- | --- |
+| `MemberAvatars` | `@/shared/components/ui/MemberAvatars.tsx` | 顯示成員大頭貼群組（最多 3 個，超過用 ... 表示） |
+| `HomeModal` | `@/shared/components/layout/HomeModal.tsx` | 從下方彈出的群組成員列表 Modal |
+| `MembershipBadge` | `@/shared/components/ui/MembershipBadge.tsx` | 會員等級徽章（定位於大頭貼左下角） |
+
+### 使用方式
+
+```typescript
+import { MemberAvatars } from '@/shared/components/ui/MemberAvatars';
+import { HomeModal } from '@/shared/components/layout/HomeModal';
+
+// MemberAvatars 使用
+<MemberAvatars members={group.members} maxDisplay={3} />
+
+// HomeModal 使用
+<HomeModal
+  isOpen={isOpen}
+  onClose={() => setIsOpen(false)}
+  currentUser={{ name: '使用者', avatar: '...', role: 'owner' }}
+  members={group.members}
+  onEditMembers={() => { /* 處理編輯成員 */ }}
+/>
+```
+
+### 資料來源
+
+目前 TopNav 使用 mock 資料顯示群組成員。後續整合 API 時：
+1. 使用 `useGroups` hook 取得群組列表
+2. 管理「當前選中群組」狀態
+3. 從當前群組取得成員列表

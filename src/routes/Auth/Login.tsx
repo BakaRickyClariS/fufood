@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { useAuth, authService } from '@/modules/auth';
+import { useAuth } from '@/modules/auth';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 
@@ -39,6 +39,7 @@ const Login = () => {
     isLoading,
     getLineLoginUrl,
     refreshUser,
+    checkLoginStatus,
     error: authError,
   } = useAuth();
 
@@ -200,6 +201,7 @@ const Login = () => {
     const left = window.screenX + (window.innerWidth - width) / 2;
     const top = window.screenY + (window.innerHeight - height) / 2;
 
+    // 開啟 popup 視窗（PWA 友好）
     const popup = window.open(
       loginUrl,
       'lineLogin',
@@ -212,78 +214,34 @@ const Login = () => {
       return;
     }
 
-    const checkPopup = setInterval(() => {
-      try {
-        if (popup.closed) {
-          clearInterval(checkPopup);
+    // 監聽 popup 關閉事件
+    const checkPopupClosed = setInterval(async () => {
+      if (popup.closed) {
+        clearInterval(checkPopupClosed);
+        
+        // popup 關閉後，呼叫 Profile API 確認登入狀態
+        try {
+          const isLoggedIn = await checkLoginStatus();
+          if (isLoggedIn) {
+            navigate('/', { replace: true });
+          } else {
+            setLineLoginLoading(false);
+          }
+        } catch {
           setLineLoginLoading(false);
-          return;
         }
-
-        const popupUrl = popup.location.href;
-
-        if (
-          popupUrl.includes('/oauth/line/callback') ||
-          popupUrl.includes('api.fufood.jocelynh.me')
-        ) {
-          setTimeout(() => {
-            try {
-              const bodyContent =
-                popup.document.body.innerText ||
-                popup.document.body.textContent;
-
-              if (bodyContent) {
-                const userData = JSON.parse(bodyContent);
-
-                if (userData && (userData.id || userData.lineId)) {
-                  const mockToken = {
-                    accessToken: `line_auth_${Date.now()}`,
-                    refreshToken: `line_refresh_${Date.now()}`,
-                    expiresIn: 3600,
-                  };
-
-                  const user = {
-                    id: userData.id || userData.lineId,
-                    lineId: userData.lineId,
-                    name: userData.name || userData.displayName,
-                    displayName: userData.name || userData.displayName,
-                    avatar: userData.profilePictureUrl || '',
-                    pictureUrl: userData.profilePictureUrl,
-                    createdAt: userData.createdAt
-                      ? new Date(userData.createdAt)
-                      : new Date(),
-                  };
-
-                  authService.saveToken(mockToken);
-                  authService.saveUser(user);
-
-                  popup.close();
-                  clearInterval(checkPopup);
-
-                  refreshUser();
-                  navigate('/', { replace: true });
-                } else {
-                  throw new Error('無效的用戶資料');
-                }
-              }
-            } catch (parseError) {
-              console.error('解析登入資料失敗:', parseError);
-            }
-          }, 500);
-        }
-      } catch {
-        // Cross-origin error, waiting
       }
     }, 500);
 
+    // 2 分鐘超時
     setTimeout(() => {
-      clearInterval(checkPopup);
+      clearInterval(checkPopupClosed);
       if (!popup.closed) {
         popup.close();
       }
       setLineLoginLoading(false);
     }, 120000);
-  }, [getLineLoginUrl, navigate, refreshUser]);
+  }, [getLineLoginUrl, checkLoginStatus, navigate]);
 
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
@@ -305,7 +263,7 @@ const Login = () => {
         {/* 輪播容器 */}
         <div
           ref={containerRef}
-          className="relative w-full rounded-[32px] overflow-hidden mb-4"
+          className="relative w-full rounded-xl overflow-hidden mb-4"
           style={{ aspectRatio: '4/5' }}
         >
           {/* Slides - 使用絕對定位堆疊 */}
@@ -322,11 +280,12 @@ const Login = () => {
                 alt={slide.title}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
-              <div className="absolute bottom-12 left-0 right-0 p-6 text-white text-center">
-                <h1 className="text-2xl font-bold mb-2">{slide.title}</h1>
-                <h2 className="text-xl font-medium mb-3">{slide.subtitle}</h2>
-                <p className="text-sm opacity-90 whitespace-pre-line leading-relaxed">
+              <div className="absolute inset-0 bg-white/30" />
+              <div className="absolute inset-0 bg-linear-to-t from-white/60 via-transparent to-transparent" />
+              <div className="absolute top-5 left-0 right-0 p-6 text-neutral-900 text-center">
+                <h1 className="text-xl font-bold mb-2">{slide.title}</h1>
+                <h2 className="text-xl font-bold mb-3">{slide.subtitle}</h2>
+                <p className="text-lg font-medium opacity-90 whitespace-pre-line leading-relaxed mt-55 ml-30">
                   {slide.caption}
                 </p>
               </div>
@@ -335,15 +294,15 @@ const Login = () => {
         </div>
 
         {/* 分頁指示器 */}
-        <div className="flex justify-center gap-2">
+        <div className="flex justify-center gap-1">
           {HERO_SLIDES.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
               className={`transition-all duration-300 rounded-full ${
                 currentIndex === index
-                  ? 'bg-neutral-800 w-2 h-2'
-                  : 'bg-neutral-300 w-2 h-2 hover:bg-neutral-400'
+                  ? 'bg-neutral-800 w-1 h-1'
+                  : 'bg-neutral-300 w-1 h-1 hover:bg-neutral-400'
               }`}
             />
           ))}

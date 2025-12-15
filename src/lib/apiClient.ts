@@ -37,6 +37,7 @@ class ApiClient {
 
     const config: RequestInit = {
       ...customConfig,
+      credentials: 'include', // 允許攜帶 HttpOnly Cookie
       headers: {
         ...(body instanceof FormData
           ? {}

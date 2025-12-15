@@ -98,3 +98,37 @@ type InviteMemberForm = {
 | 更新成員角色 | ✓ | ✗ | ✗ |
 | 離開群組 | ✗ | ✓ | ✓ |
 
+---
+
+## 5. 會員等級 API 需求（前端 UI 整合）
+
+### 5.1 前端需求說明
+
+TopNav 組件右側大頭貼需顯示會員等級徽章，需要從 User 資料取得會員等級資訊。
+
+### 5.2 建議 User 型別擴充
+
+在 `/api/v1/auth/me` 回傳的 User 資料中新增 `membershipTier` 欄位：
+
+```typescript
+type MembershipTier = 'free' | 'premium' | 'vip';
+
+type User = {
+  id: string;
+  email?: string;
+  name?: string;
+  avatar: string;
+  // ... 其他現有欄位
+  membershipTier?: MembershipTier; // 新增：會員等級
+};
+```
+
+### 5.3 UI 顯示邏輯
+
+| 會員等級 | 顯示徽章 | 說明 |
+| --- | --- | --- |
+| `free` | 無 | 免費會員不顯示徽章 |
+| `premium` | ✓ | 顯示 Premium-membership-card.png |
+| `vip` | ✓ | 顯示 Premium-membership-card.png（暫用同圖） |
+
+> **備註**：目前前端僅有 `Premium-membership-card.png` 圖示，若需要區分不同等級的圖示，請提供對應的圖片資源。

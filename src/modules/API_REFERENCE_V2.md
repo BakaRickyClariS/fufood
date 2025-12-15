@@ -284,6 +284,24 @@
 - `GET /auth/line/login` / `GET /auth/line/callback`：LINE OAuth。
 - `PUT /auth/update-profile`：更新個人資料。
 
+### User 型別
+
+```typescript
+type MembershipTier = 'free' | 'premium' | 'vip';
+
+type User = {
+  id: string;
+  email?: string;           // LINE 登入可能無 email
+  name?: string;
+  avatar: string;
+  createdAt: Date;
+  lineId?: string;          // LINE 專屬
+  displayName?: string;     // LINE 專屬
+  pictureUrl?: string;      // LINE 專屬
+  membershipTier?: MembershipTier; // 會員等級（用於 TopNav 徽章顯示）
+};
+```
+
 > **Mock 模式**：前端開發環境提供假登入功能（電子郵件帳號），不經過後端 API，僅在前端模擬 Token 發發。
 
 ---
