@@ -16,9 +16,6 @@ export interface GetUserProfileResult {
 export async function getUserProfile(): Promise<GetUserProfileResult> {
   const response = await fetch(`${LINE_API_BASE}/api/v1/profile`, {
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-    },
   });
 
   if (response.status === 401) {
