@@ -263,7 +263,7 @@ const Login = () => {
         {/* 輪播容器 */}
         <div
           ref={containerRef}
-          className="relative w-full rounded-[32px] overflow-hidden mb-4"
+          className="relative w-full rounded-xl overflow-hidden mb-4"
           style={{ aspectRatio: '4/5' }}
         >
           {/* Slides - 使用絕對定位堆疊 */}
@@ -280,11 +280,12 @@ const Login = () => {
                 alt={slide.title}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
-              <div className="absolute bottom-12 left-0 right-0 p-6 text-white text-center">
-                <h1 className="text-2xl font-bold mb-2">{slide.title}</h1>
-                <h2 className="text-xl font-medium mb-3">{slide.subtitle}</h2>
-                <p className="text-sm opacity-90 whitespace-pre-line leading-relaxed">
+              <div className="absolute inset-0 bg-white/30" />
+              <div className="absolute inset-0 bg-linear-to-t from-white/60 via-transparent to-transparent" />
+              <div className="absolute top-5 left-0 right-0 p-6 text-neutral-900 text-center">
+                <h1 className="text-xl font-bold mb-2">{slide.title}</h1>
+                <h2 className="text-xl font-bold mb-3">{slide.subtitle}</h2>
+                <p className="text-lg font-medium opacity-90 whitespace-pre-line leading-relaxed mt-55 ml-30">
                   {slide.caption}
                 </p>
               </div>
@@ -293,15 +294,15 @@ const Login = () => {
         </div>
 
         {/* 分頁指示器 */}
-        <div className="flex justify-center gap-2">
+        <div className="flex justify-center gap-1">
           {HERO_SLIDES.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
               className={`transition-all duration-300 rounded-full ${
                 currentIndex === index
-                  ? 'bg-neutral-800 w-2 h-2'
-                  : 'bg-neutral-300 w-2 h-2 hover:bg-neutral-400'
+                  ? 'bg-neutral-800 w-1 h-1'
+                  : 'bg-neutral-300 w-1 h-1 hover:bg-neutral-400'
               }`}
             />
           ))}
