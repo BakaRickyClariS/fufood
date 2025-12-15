@@ -123,6 +123,33 @@ export const useAuth = () => {
     setUser(savedUser);
   }, []);
 
+  /**
+   * 透過 Profile API 驗證登入狀態（HttpOnly Cookie）
+   * @returns boolean 是否已登入
+   */
+  const checkLoginStatus = useCallback(async (): Promise<boolean> => {
+    try {
+      const response = await authApi.getProfile();
+      // 將 API 回傳的資料轉換為 User 格式
+      const userData: User = {
+        id: response.data.id,
+        lineId: response.data.lineId,
+        name: response.data.name,
+        displayName: response.data.name,
+        avatar: response.data.profilePictureUrl,
+        pictureUrl: response.data.profilePictureUrl,
+        createdAt: new Date(),
+      };
+      authService.saveUser(userData);
+      setUser(userData);
+      return true;
+    } catch {
+      authService.clearUser();
+      setUser(null);
+      return false;
+    }
+  }, []);
+
   return {
     user,
     isAuthenticated: !!user,
@@ -134,5 +161,6 @@ export const useAuth = () => {
     logout,
     getLineLoginUrl,
     refreshUser,
+    checkLoginStatus,
   };
 };

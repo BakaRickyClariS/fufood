@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { useAuth, authService } from '@/modules/auth';
+import { useAuth } from '@/modules/auth';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 
@@ -194,96 +194,11 @@ const Login = () => {
     setLineLoginLoading(true);
     setLoginError(null);
 
+    // 直接跳轉至後端 LINE OAuth 入口
+    // 後端完成授權後會設定 HttpOnly Cookie 並重導回 /auth/line/callback
     const loginUrl = getLineLoginUrl();
-    const width = 500;
-    const height = 600;
-    const left = window.screenX + (window.innerWidth - width) / 2;
-    const top = window.screenY + (window.innerHeight - height) / 2;
-
-    const popup = window.open(
-      loginUrl,
-      'lineLogin',
-      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`,
-    );
-
-    if (!popup) {
-      setLoginError('無法開啟登入視窗，請檢查是否有彈出視窗被封鎖');
-      setLineLoginLoading(false);
-      return;
-    }
-
-    const checkPopup = setInterval(() => {
-      try {
-        if (popup.closed) {
-          clearInterval(checkPopup);
-          setLineLoginLoading(false);
-          return;
-        }
-
-        const popupUrl = popup.location.href;
-
-        if (
-          popupUrl.includes('/oauth/line/callback') ||
-          popupUrl.includes('api.fufood.jocelynh.me')
-        ) {
-          setTimeout(() => {
-            try {
-              const bodyContent =
-                popup.document.body.innerText ||
-                popup.document.body.textContent;
-
-              if (bodyContent) {
-                const userData = JSON.parse(bodyContent);
-
-                if (userData && (userData.id || userData.lineId)) {
-                  const mockToken = {
-                    accessToken: `line_auth_${Date.now()}`,
-                    refreshToken: `line_refresh_${Date.now()}`,
-                    expiresIn: 3600,
-                  };
-
-                  const user = {
-                    id: userData.id || userData.lineId,
-                    lineId: userData.lineId,
-                    name: userData.name || userData.displayName,
-                    displayName: userData.name || userData.displayName,
-                    avatar: userData.profilePictureUrl || '',
-                    pictureUrl: userData.profilePictureUrl,
-                    createdAt: userData.createdAt
-                      ? new Date(userData.createdAt)
-                      : new Date(),
-                  };
-
-                  authService.saveToken(mockToken);
-                  authService.saveUser(user);
-
-                  popup.close();
-                  clearInterval(checkPopup);
-
-                  refreshUser();
-                  navigate('/', { replace: true });
-                } else {
-                  throw new Error('無效的用戶資料');
-                }
-              }
-            } catch (parseError) {
-              console.error('解析登入資料失敗:', parseError);
-            }
-          }, 500);
-        }
-      } catch {
-        // Cross-origin error, waiting
-      }
-    }, 500);
-
-    setTimeout(() => {
-      clearInterval(checkPopup);
-      if (!popup.closed) {
-        popup.close();
-      }
-      setLineLoginLoading(false);
-    }, 120000);
-  }, [getLineLoginUrl, navigate, refreshUser]);
+    window.location.href = loginUrl;
+  }, [getLineLoginUrl]);
 
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {

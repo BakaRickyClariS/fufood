@@ -47,3 +47,15 @@ export type MockLoginData = {
   avatarId: number;
   displayName: string;
 };
+
+// Profile API 回傳格式
+export type ProfileData = {
+  id: string;
+  lineId: string;
+  name: string;
+  profilePictureUrl: string;
+};
+
+export type ProfileResponse = {
+  data: ProfileData;
+};
