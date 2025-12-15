@@ -6,7 +6,12 @@ import LoginCarousel from './LoginCarousel';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { isLoading, getLineLoginUrl, error: authError } = useAuth();
+  const {
+    isLoading,
+    isAuthenticated,
+    getLineLoginUrl,
+    error: authError,
+  } = useAuth();
 
   const [lineLoginLoading, setLineLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -38,6 +43,14 @@ const Login = () => {
       clearPopupTimers();
     };
   }, [clearPopupTimers]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    navigate('/');
+  }, [isLoading, isAuthenticated, navigate]);
 
   const handleLineLogin = useCallback(() => {
     setLineLoginLoading(true);
