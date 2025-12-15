@@ -35,13 +35,7 @@ const HERO_SLIDES = [
 
 const Login = () => {
   const navigate = useNavigate();
-  const {
-    isLoading,
-    getLineLoginUrl,
-    refreshUser,
-    checkLoginStatus,
-    error: authError,
-  } = useAuth();
+  const { isLoading, getLineLoginUrl, error: authError } = useAuth();
 
   const [lineLoginLoading, setLineLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -238,46 +232,7 @@ const Login = () => {
       setLineLoginLoading(false);
       return;
     }
-
-    // 監聽 popup 關閉事件（使用 ref 保存計時器 ID）
-    popupIntervalRef.current = setInterval(async () => {
-      if (popup.closed) {
-        clearPopupTimers();
-
-        // popup 關閉後，呼叫 Profile API 確認登入狀態
-        try {
-          const isLoggedIn = await checkLoginStatus();
-          if (isLoggedIn) {
-            navigate('/', { replace: true });
-          } else {
-            setLineLoginLoading(false);
-          }
-        } catch {
-          setLineLoginLoading(false);
-        }
-      }
-    }, 500);
-
-    // 2 分鐘超時（使用 ref 保存計時器 ID）
-    popupTimeoutRef.current = setTimeout(() => {
-      clearPopupTimers();
-      if (!popup.closed) {
-        popup.close();
-      }
-      setLineLoginLoading(false);
-    }, 120000);
-  }, [getLineLoginUrl, checkLoginStatus, navigate, clearPopupTimers]);
-
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'user' && e.newValue) {
-        refreshUser();
-        navigate('/', { replace: true });
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [navigate, refreshUser]);
+  }, []);
 
   const displayError = loginError || authError;
 
@@ -338,7 +293,7 @@ const Login = () => {
       <div className="flex flex-col gap-4">
         {displayError && (
           <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg">
-            {displayError}
+            {String(displayError)}
           </div>
         )}
 

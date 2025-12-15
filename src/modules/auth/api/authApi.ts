@@ -179,7 +179,6 @@ export const authApi = {
 
     // 使用原生 fetch 帶上 credentials: 'include' 以攜帶 HttpOnly Cookie
     const response = await fetch(`${LINE_API_BASE}/api/v1/profile`, {
-      method: 'GET',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
@@ -187,7 +186,9 @@ export const authApi = {
     });
 
     if (!response.ok) {
-      throw new Error(response.status === 401 ? '未登入' : `API 錯誤: ${response.status}`);
+      throw new Error(
+        response.status === 401 ? '未登入' : `API 錯誤: ${response.status}`,
+      );
     }
 
     return response.json();
