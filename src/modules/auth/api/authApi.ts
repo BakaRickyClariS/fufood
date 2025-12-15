@@ -17,6 +17,11 @@ import { MOCK_USERS, MOCK_TOKEN } from './mock/authMockData';
 // 環境變數控制是否使用 Mock
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_API !== 'false';
 
+const LINE_API_BASE =
+  import.meta.env.VITE_LINE_API_BASE_URL || 'https://api.fufood.jocelynh.me';
+
+export const LineLoginUrl = `${LINE_API_BASE}/oauth/line/init`;
+
 export const authApi = {
   /**
    * 使用者登入
@@ -111,17 +116,6 @@ export const authApi = {
       return { ...MOCK_USERS[0], ...data };
     }
     return apiClient.put<User>('/auth/update-profile', data);
-  },
-
-  /**
-   * 取得 LINE 登入 URL
-   * 直接返回後端 OAuth 入口 URL
-   */
-  getLineLoginUrl: (): string => {
-    const LINE_API_BASE =
-      import.meta.env.VITE_LINE_API_BASE_URL ||
-      'https://api.fufood.jocelynh.me';
-    return `${LINE_API_BASE}/oauth/line/init`;
   },
 
   /**

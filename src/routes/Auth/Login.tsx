@@ -1,48 +1,40 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/modules/auth';
+import { LineLoginUrl, useAuth } from '@/modules/auth';
 import LoginCarousel from './LoginCarousel';
 
 const Login = () => {
   const navigate = useNavigate();
-  const {
-    isLoading,
-    isAuthenticated,
-    getLineLoginUrl,
-    error: authError,
-  } = useAuth();
+  const { isLoading, isAuthenticated, refetch, error: authError } = useAuth();
+  const popupWindowRef = useRef<Window | null>(null);
 
   const [lineLoginLoading, setLineLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  // Refs
-  // OAuth popup 計時器 refs（用於清理避免記憶體洩漏）
-  const popupIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const popupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handlePopupMessage = useCallback(
+    (e: MessageEvent) => {
+      if (e.origin === location.origin) {
+        return;
+      }
+
+      refetch().then(() => {
+        popupWindowRef.current?.close();
+      });
+    },
+    [refetch],
+  );
+
+  useEffect(() => {
+    window.addEventListener('message', handlePopupMessage);
+    return () => {
+      window.removeEventListener('message', handlePopupMessage);
+    };
+  }, [handlePopupMessage]);
 
   const handleEmailLogin = async () => {
     navigate('/auth/avatar-selection');
   };
-
-  // 清理 popup 計時器的函式
-  const clearPopupTimers = useCallback(() => {
-    if (popupIntervalRef.current) {
-      clearInterval(popupIntervalRef.current);
-      popupIntervalRef.current = null;
-    }
-    if (popupTimeoutRef.current) {
-      clearTimeout(popupTimeoutRef.current);
-      popupTimeoutRef.current = null;
-    }
-  }, []);
-
-  // 元件卸載時清理計時器，避免記憶體洩漏
-  useEffect(() => {
-    return () => {
-      clearPopupTimers();
-    };
-  }, [clearPopupTimers]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -56,10 +48,6 @@ const Login = () => {
     setLineLoginLoading(true);
     setLoginError(null);
 
-    // 先清理之前可能存在的計時器
-    clearPopupTimers();
-
-    const loginUrl = getLineLoginUrl();
     const width = 500;
     const height = 600;
     const left = window.screenX + (window.innerWidth - width) / 2;
@@ -67,7 +55,7 @@ const Login = () => {
 
     // 開啟 popup 視窗（PWA 友好）
     const popup = window.open(
-      loginUrl,
+      LineLoginUrl,
       'lineLogin',
       `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`,
     );
@@ -77,6 +65,8 @@ const Login = () => {
       setLineLoginLoading(false);
       return;
     }
+
+    popupWindowRef.current = popup;
   }, []);
 
   const displayError = loginError || authError;
