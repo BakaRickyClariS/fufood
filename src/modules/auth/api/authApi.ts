@@ -60,30 +60,14 @@ export const authApi = {
 
   /**
    * 登出
-   * 呼叫後端 API 清除 HttpOnly Cookie
    */
   logout: async (): Promise<void> => {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 300));
       return;
     }
-    
-    // 使用原生 fetch 呼叫 LINE API 的 logout 端點
-    // 必須攜帶 credentials: 'include' 以清除 HttpOnly Cookie
-    const response = await fetch(`${LINE_API_BASE}/api/v1/auth/logout`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    // 204 或 200 都視為成功
-    if (!response.ok && response.status !== 204) {
-      console.warn('Logout API 回應非預期:', response.status);
-    }
+    return apiClient.post<void>('/auth/logout');
   },
-
 
   /**
    * 刷新 Token
