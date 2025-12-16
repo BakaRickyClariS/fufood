@@ -18,12 +18,18 @@ const Login = () => {
         return;
       }
 
+      // 清除登出標記，讓 getUserProfile 正常運作
+      sessionStorage.removeItem('logged_out');
+      
       refetch().then(() => {
+        setLineLoginLoading(false);
         popupWindowRef.current?.close();
       });
     },
     [refetch],
   );
+
+
 
   useEffect(() => {
     window.addEventListener('message', handlePopupMessage);
