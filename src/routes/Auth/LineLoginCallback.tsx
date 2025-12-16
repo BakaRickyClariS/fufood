@@ -4,11 +4,18 @@ import { useQueryClient } from '@tanstack/react-query';
 import { authApi, authService } from '@/modules/auth';
 
 /**
+ * 檢測是否在 Popup 視窗中
+ */
+const isPopupWindow = (): boolean => {
+  return window.opener !== null && window.opener !== window;
+};
+
+/**
  * LINE 登入回調頁面
  * 後端已透過 HttpOnly Cookie 設定 token，此頁面負責：
  * 1. 呼叫 Profile API 確認登入狀態
- * 2. 使 TanStack Query 快取失效以觸發 TopNav 更新
- * 3. 導向首頁
+ * 2. 如果是 Popup 視窗：通知父視窗並關閉
+ * 3. 如果是主視窗：使 TanStack Query 快取失效並導向首頁
  */
 const LineLoginCallback = () => {
   const navigate = useNavigate();
@@ -27,7 +34,14 @@ const LineLoginCallback = () => {
         const errorMsg = errorDescription || 'LINE 登入被取消或發生錯誤';
         setError(errorMsg);
         setIsProcessing(false);
-        setTimeout(() => navigate('/auth/login'), 2500);
+        
+        // 如果是 Popup，通知父視窗錯誤後關閉
+        if (isPopupWindow()) {
+          window.opener?.postMessage({ type: 'LINE_LOGIN_ERROR', error: errorMsg }, '*');
+          setTimeout(() => window.close(), 2000);
+        } else {
+          setTimeout(() => navigate('/auth/login'), 2500);
+        }
         return;
       }
 
@@ -48,18 +62,30 @@ const LineLoginCallback = () => {
         
         // 儲存到 localStorage（作為備份）
         authService.saveUser(userData);
-        
-        // 使 TanStack Query 的 Profile 快取失效並重新取得
-        // 這會觸發 useAuth Hook 更新，進而更新 TopNav 的頭貼
-        await queryClient.invalidateQueries({ queryKey: ['GET_USER_PROFILE'] });
-        
-        // 登入成功，導向首頁
-        navigate('/', { replace: true });
+
+        // 判斷是否在 Popup 視窗中
+        if (isPopupWindow()) {
+          // 通知父視窗登入成功
+          window.opener?.postMessage({ type: 'LINE_LOGIN_SUCCESS', user: userData }, '*');
+          
+          // 關閉 Popup 視窗
+          window.close();
+        } else {
+          // 非 Popup 模式：直接更新快取並導向首頁
+          await queryClient.invalidateQueries({ queryKey: ['GET_USER_PROFILE'] });
+          navigate('/', { replace: true });
+        }
       } catch (err) {
         console.error('LINE 登入驗證失敗:', err);
         setError('登入失敗，請重試');
         setIsProcessing(false);
-        setTimeout(() => navigate('/auth/login'), 2500);
+        
+        if (isPopupWindow()) {
+          window.opener?.postMessage({ type: 'LINE_LOGIN_ERROR', error: '登入失敗' }, '*');
+          setTimeout(() => window.close(), 2000);
+        } else {
+          setTimeout(() => navigate('/auth/login'), 2500);
+        }
       }
     };
 
@@ -76,7 +102,9 @@ const LineLoginCallback = () => {
             </svg>
           </div>
           <p className="text-red-500 font-medium mb-2">{error}</p>
-          <p className="text-sm text-stone-400">正在返回登入頁面...</p>
+          <p className="text-sm text-stone-400">
+            {isPopupWindow() ? '視窗即將關閉...' : '正在返回登入頁面...'}
+          </p>
         </div>
       ) : isProcessing ? (
         <div className="text-center">
