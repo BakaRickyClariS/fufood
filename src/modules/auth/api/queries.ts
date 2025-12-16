@@ -9,6 +9,12 @@ export const LINE_API_BASE =
  * 使用 HttpOnly Cookie 進行認證
  */
 export async function getUserProfile(): Promise<User | null> {
+  // 檢查登出標記 - 如果用戶已登出，不要發送 API 請求
+  const loggedOut = sessionStorage.getItem('logged_out');
+  if (loggedOut === 'true') {
+    return null;
+  }
+
   const response = await fetch(`${LINE_API_BASE}/api/v1/profile`, {
     credentials: 'include', // 攜帶 HttpOnly Cookie
   });

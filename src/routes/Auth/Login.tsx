@@ -1,65 +1,40 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
 import { LineLoginUrl, useAuth } from '@/modules/auth';
 import LoginCarousel from './LoginCarousel';
 
-type LineLoginMessage = {
-  type: 'LINE_LOGIN_SUCCESS' | 'LINE_LOGIN_ERROR';
-  user?: unknown;
-  error?: string;
-};
-
 const Login = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { isLoading, isAuthenticated, error: authError } = useAuth();
+  const { isLoading, isAuthenticated, refetch, error: authError } = useAuth();
   const popupWindowRef = useRef<Window | null>(null);
-  const checkIntervalRef = useRef<number | null>(null);
 
   const [lineLoginLoading, setLineLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  // 處理來自 Popup 的訊息
   const handlePopupMessage = useCallback(
-    (e: MessageEvent<LineLoginMessage>) => {
-      // 驗證訊息來源（可以是同源或後端重定向的頁面）
-      const data = e.data;
-      
-      if (data?.type === 'LINE_LOGIN_SUCCESS') {
-        setLineLoginLoading(false);
-        
-        // 更新 TanStack Query 快取
-        queryClient.invalidateQueries({ queryKey: ['GET_USER_PROFILE'] });
-        
-        // 清除定時器
-        if (checkIntervalRef.current) {
-          clearInterval(checkIntervalRef.current);
-          checkIntervalRef.current = null;
-        }
-        
-        // 導向首頁（由 useEffect 處理，因為 isAuthenticated 會變化）
-      } else if (data?.type === 'LINE_LOGIN_ERROR') {
-        setLineLoginLoading(false);
-        setLoginError(data.error || '登入失敗');
-        
-        if (checkIntervalRef.current) {
-          clearInterval(checkIntervalRef.current);
-          checkIntervalRef.current = null;
-        }
+    (e: MessageEvent) => {
+      if (e.origin === location.origin) {
+        return;
       }
+
+      // 清除登出標記，讓 getUserProfile 正常運作
+      sessionStorage.removeItem('logged_out');
+      
+      refetch().then(() => {
+        setLineLoginLoading(false);
+        popupWindowRef.current?.close();
+      });
     },
-    [queryClient],
+    [refetch],
   );
+
+
 
   useEffect(() => {
     window.addEventListener('message', handlePopupMessage);
     return () => {
       window.removeEventListener('message', handlePopupMessage);
-      if (checkIntervalRef.current) {
-        clearInterval(checkIntervalRef.current);
-      }
     };
   }, [handlePopupMessage]);
 
@@ -67,12 +42,13 @@ const Login = () => {
     navigate('/auth/avatar-selection');
   };
 
-  // 當已認證時，導向首頁
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/');
+    if (!isAuthenticated) {
+      return;
     }
-  }, [isAuthenticated, navigate]);
+
+    navigate('/');
+  }, [isLoading, isAuthenticated, navigate]);
 
   const handleLineLogin = useCallback(() => {
     setLineLoginLoading(true);
@@ -97,21 +73,7 @@ const Login = () => {
     }
 
     popupWindowRef.current = popup;
-
-    // 監聽 Popup 關閉（備用方案，如果 postMessage 沒有收到）
-    checkIntervalRef.current = window.setInterval(() => {
-      if (popup.closed) {
-        if (checkIntervalRef.current) {
-          clearInterval(checkIntervalRef.current);
-          checkIntervalRef.current = null;
-        }
-        
-        // Popup 被關閉，嘗試重新取得用戶資料
-        queryClient.invalidateQueries({ queryKey: ['GET_USER_PROFILE'] });
-        setLineLoginLoading(false);
-      }
-    }, 500);
-  }, [queryClient]);
+  }, []);
 
   const displayError = loginError || authError;
 
