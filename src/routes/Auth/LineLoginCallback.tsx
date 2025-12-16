@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { authApi, authService } from '@/modules/auth';
 
 /**
  * LINE 登入回調頁面
  * 後端已透過 HttpOnly Cookie 設定 token，此頁面負責：
  * 1. 呼叫 Profile API 確認登入狀態
- * 2. 儲存用戶資料到 localStorage
+ * 2. 使 TanStack Query 快取失效以觸發 TopNav 更新
  * 3. 導向首頁
  */
 const LineLoginCallback = () => {
@@ -14,6 +15,7 @@ const LineLoginCallback = () => {
   const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const verifyLogin = async () => {
@@ -44,7 +46,12 @@ const LineLoginCallback = () => {
           createdAt: new Date(),
         };
         
+        // 儲存到 localStorage（作為備份）
         authService.saveUser(userData);
+        
+        // 使 TanStack Query 的 Profile 快取失效並重新取得
+        // 這會觸發 useAuth Hook 更新，進而更新 TopNav 的頭貼
+        await queryClient.invalidateQueries({ queryKey: ['GET_USER_PROFILE'] });
         
         // 登入成功，導向首頁
         navigate('/', { replace: true });
@@ -57,7 +64,7 @@ const LineLoginCallback = () => {
     };
 
     verifyLogin();
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, queryClient]);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-white">

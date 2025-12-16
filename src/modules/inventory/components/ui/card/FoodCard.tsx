@@ -1,5 +1,6 @@
 import type { FoodItem } from '@/modules/inventory/types';
 import { useExpiryCheck } from '@/modules/inventory/hooks';
+import { inventoryApi } from '@/modules/inventory/api';
 
 import { BellRing } from 'lucide-react';
 import { useDispatch } from 'react-redux';
@@ -24,7 +25,8 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
           tagBg: 'bg-danger-400',
           tagText: '已過期',
           overlay: 'bg-gradient-to-t from-black/95 via-black/50 to-transparent',
-          colorOverlay: 'bg-gradient-to-t from-danger-400/60 via-danger-400/20 to-transparent'
+          colorOverlay:
+            'bg-gradient-to-t from-danger-400/60 via-danger-400/20 to-transparent',
         };
       case 'expiring-soon':
         return {
@@ -33,23 +35,24 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
           tagBg: 'bg-warning-400',
           tagText: '即將過期',
           overlay: 'bg-gradient-to-t from-black/95 via-black/50 to-transparent',
-          colorOverlay: 'bg-gradient-to-t from-warning-400/60 via-warning-400/20 to-transparent'
+          colorOverlay:
+            'bg-gradient-to-t from-warning-400/60 via-warning-400/20 to-transparent',
         };
-       case 'low-stock':
+      case 'low-stock':
         return {
           borderColor: 'border-transparent',
           shadow: 'shadow-md',
           tagBg: null,
           tagText: null,
-          overlay: 'bg-gradient-to-t from-black/95 via-black/50 to-transparent'
+          overlay: 'bg-gradient-to-t from-black/95 via-black/50 to-transparent',
         };
-       default:
+      default:
         return {
           borderColor: 'border-transparent',
           shadow: 'shadow-md',
           tagBg: null,
           tagText: null,
-          overlay: 'bg-gradient-to-t from-black/95 via-black/50 to-transparent'
+          overlay: 'bg-gradient-to-t from-black/95 via-black/50 to-transparent',
         };
     }
   };
@@ -63,9 +66,22 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
     }
   };
 
-  const handleToggleAlert = (e: React.MouseEvent) => {
+  const handleToggleAlert = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    // Optimistic UI update
     dispatch(toggleLowStockAlert(item.id));
+
+    try {
+      // Persist change to the backend
+      await inventoryApi.updateItem(item.id, {
+        lowStockAlert: !item.lowStockAlert,
+      });
+    } catch (error) {
+      console.error('Failed to update low stock alert:', error);
+      // Revert on failure
+      dispatch(toggleLowStockAlert(item.id));
+      // Optionally show an error toast to the user
+    }
   };
 
   return (
@@ -82,10 +98,12 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
         alt={item.name}
         className="absolute inset-0 w-full h-full object-cover"
       />
-      
+
       {/* Top Left Status Tag */}
       {styles.tagText && (
-        <div className={`absolute top-0 left-0 px-3 py-1.5 rounded-br-xl ${styles.tagBg} z-15`}>
+        <div
+          className={`absolute top-0 left-0 px-3 py-1.5 rounded-br-xl ${styles.tagBg} z-15`}
+        >
           <span className="text-xs font-bold text-neutral-900 tracking-wide">
             {styles.tagText}
           </span>
@@ -93,19 +111,22 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
       )}
 
       {/* Low Stock Alert Button */}
-      
-        {item.lowStockAlert && (<button
-        onClick={handleToggleAlert}
-        className="absolute top-2 right-2 z-15 w-8 h-8 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center border border-white/50 shadow-sm transition-colors hover:bg-white/50"
-      >
-          <BellRing className="w-5 h-5 text-white fill-white" /></button>
-        )}
-      
+
+      {item.lowStockAlert && (
+        <button
+          onClick={handleToggleAlert}
+          className="absolute top-2 right-2 z-15 w-8 h-8 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center border border-white/50 shadow-sm transition-colors hover:bg-white/50"
+        >
+          <BellRing className="w-5 h-5 text-white fill-white" />
+        </button>
+      )}
 
       {/* Content */}
       <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-2">
         {/* Gradient Overlay */}
-        <div className={`absolute inset-0 ${styles.overlay} backdrop-blur-[3px] z-0`} />
+        <div
+          className={`absolute inset-0 ${styles.overlay} backdrop-blur-[3px] z-0`}
+        />
         {/* Color Overlay for expired/expiring-soon status */}
         {styles.colorOverlay && (
           <div className={`absolute inset-0 ${styles.colorOverlay} z-0`} />
@@ -133,9 +154,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
 
           {/* Expiry Date */}
           <div className="flex items-center gap-2 z-10">
-            <span
-              className="px-2 py-1 bg-[#FDA4A499]/90 rounded-full text-[10px] backdrop-blur-sm shrink-0"
-            >
+            <span className="px-2 py-1 bg-[#FDA4A499]/90 rounded-full text-[10px] backdrop-blur-sm shrink-0">
               過期
             </span>
             <span className="text-sm tracking-wider font-light">

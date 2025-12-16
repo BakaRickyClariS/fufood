@@ -17,6 +17,11 @@ import { MOCK_USERS, MOCK_TOKEN } from './mock/authMockData';
 // 環境變數控制是否使用 Mock
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_API !== 'false';
 
+const LINE_API_BASE =
+  import.meta.env.VITE_LINE_API_BASE_URL || 'https://api.fufood.jocelynh.me';
+
+export const LineLoginUrl = `${LINE_API_BASE}/oauth/line/init`;
+
 export const authApi = {
   /**
    * 使用者登入
@@ -114,17 +119,6 @@ export const authApi = {
   },
 
   /**
-   * 取得 LINE 登入 URL
-   * 直接返回後端 OAuth 入口 URL
-   */
-  getLineLoginUrl: (): string => {
-    const LINE_API_BASE =
-      import.meta.env.VITE_LINE_API_BASE_URL ||
-      'https://api.fufood.jocelynh.me';
-    return `${LINE_API_BASE}/oauth/line/init`;
-  },
-
-  /**
    * LINE 登入 Callback 處理
    * 處理後端回調帶回的認證資訊
    * 注意：使用原生 fetch 而非 apiClient，因為這是外部 API
@@ -179,7 +173,6 @@ export const authApi = {
 
     // 使用原生 fetch 帶上 credentials: 'include' 以攜帶 HttpOnly Cookie
     const response = await fetch(`${LINE_API_BASE}/api/v1/profile`, {
-      method: 'GET',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
@@ -187,7 +180,9 @@ export const authApi = {
     });
 
     if (!response.ok) {
-      throw new Error(response.status === 401 ? '未登入' : `API 錯誤: ${response.status}`);
+      throw new Error(
+        response.status === 401 ? '未登入' : `API 錯誤: ${response.status}`,
+      );
     }
 
     return response.json();
