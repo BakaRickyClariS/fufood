@@ -11,7 +11,6 @@ const SettingsRoutes = [
   {
     path: 'profile',
     element: <Profile />,
-    handle: { headerVariant: 'simple', footer: false },
   },
   {
     path: 'subscription',
