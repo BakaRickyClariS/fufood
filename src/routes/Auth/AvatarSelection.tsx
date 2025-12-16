@@ -2,25 +2,46 @@ import { useState } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/shared/utils/styleUtils';
-import { useAuth } from '@/modules/auth';
+import { useQueryClient } from '@tanstack/react-query';
 import { Check } from 'lucide-react';
 
 // 頭像常數
 import { AVATAR_OPTIONS } from '@/shared/utils/avatarUtils';
 
+// Mock Auth Service（開發用）
+import { mockAuthService } from '@/modules/auth/services/mockAuthService';
+
+/**
+ * 頭像選擇頁面（Mock 登入用）
+ * 
+ * 此頁面僅供開發測試使用。
+ * 正式環境請使用 LINE 登入。
+ * 
+ * 啟用條件：VITE_USE_MOCK_API=true
+ */
 const AvatarSelection = () => {
   const navigate = useNavigate();
-  const { mockLogin, isLoading } = useAuth();
+  const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [displayName, setDisplayName] = useState('Ricky');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleConfirm = async () => {
     if (selectedId && displayName.trim()) {
       try {
-        await mockLogin(selectedId, displayName);
+        setIsLoading(true);
+        
+        // 使用獨立的 Mock Auth Service
+        const { user } = mockAuthService.mockLogin(selectedId, displayName);
+        
+        // 更新 TanStack Query 快取
+        queryClient.setQueryData(['GET_USER_PROFILE'], user);
+        
         navigate('/');
       } catch (error) {
         console.error('Login failed:', error);
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -28,6 +49,13 @@ const AvatarSelection = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col pt-8">
       <div className="flex flex-col px-4">
+        {/* 開發模式提示 */}
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm text-yellow-800">
+            ⚠️ 開發模式：Mock 登入（正式環境請使用 LINE 登入）
+          </p>
+        </div>
+
         {/* 標題區 */}
         <div className="flex items-center gap-2 mb-4">
           <div className="w-1 h-5 bg-primary-400" />
