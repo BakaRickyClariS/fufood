@@ -8,7 +8,7 @@ import AuthRoutes from './Auth';
 import SettingsRoutes from './Settings';
 import CategoryPage from './Inventory/CategoryPage';
 
-import { authService, useAuth } from '@/modules/auth';
+import { useAuth } from '@/modules/auth';
 
 /**
  * 受保護路由元件
@@ -17,7 +17,7 @@ import { authService, useAuth } from '@/modules/auth';
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isLoading, isAuthenticated } = useAuth();
 
-  if (!isLoading) return null;
+  if (isLoading) return null;
 
   // 無 token 或 token 已過期
   if (!isAuthenticated) {
