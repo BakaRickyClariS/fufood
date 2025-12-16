@@ -1,37 +1,56 @@
 import { useQuery } from '@tanstack/react-query';
+import type { User, ProfileResponse } from '../types';
 
 export const LINE_API_BASE =
   import.meta.env.VITE_LINE_API_BASE_URL || 'https://api.fufood.jocelynh.me';
 
-export type UUID = string;
-
-export interface User {
-  id: UUID;
-}
-
-export interface GetUserProfileResult {
-  data: User | null;
-}
-
-export async function getUserProfile(): Promise<GetUserProfileResult> {
+/**
+ * 從後端 Profile API 取得已登入用戶資訊
+ * 使用 HttpOnly Cookie 進行認證
+ */
+export async function getUserProfile(): Promise<User | null> {
   const response = await fetch(`${LINE_API_BASE}/api/v1/profile`, {
-    credentials: 'include',
+    credentials: 'include', // 攜帶 HttpOnly Cookie
   });
 
+  // 未登入時返回 null（不拋出錯誤）
   if (response.status === 401) {
-    return { data: null };
+    return null;
   }
 
   if (!response.ok) {
     throw new Error(`API 錯誤: ${response.status}`);
   }
 
-  return response.json();
+  const result: ProfileResponse = await response.json();
+  
+  // 將 API 回傳的 ProfileData 轉換為 User 格式
+  return {
+    id: result.data.id,
+    lineId: result.data.lineId,
+    name: result.data.name,
+    displayName: result.data.name,
+    avatar: result.data.profilePictureUrl,
+    pictureUrl: result.data.profilePictureUrl, // LINE 頭貼 URL
+    createdAt: new Date(),
+  };
 }
 
+/**
+ * TanStack Query Hook - 取得用戶 Profile
+ * 
+ * 優化配置：
+ * - retry: false - 401 時不重試
+ * - staleTime: 5 分鐘 - 減少不必要的請求
+ * - refetchOnWindowFocus: false - 視窗聚焦時不自動重新取得
+ */
 export function useGetUserProfileQuery() {
   return useQuery({
-    queryFn: getUserProfile,
     queryKey: ['GET_USER_PROFILE'],
+    queryFn: getUserProfile,
+    retry: false,                      // 401 時不要重試
+    staleTime: 1000 * 60 * 5,          // 5 分鐘內資料視為新鮮
+    refetchOnWindowFocus: false,       // 視窗聚焦時不自動重新取得
+    refetchOnMount: false,             // 元件掛載時不自動重新取得（如果已有快取）
   });
 }
