@@ -1,65 +1,17 @@
 import { authApi } from '../api';
-import {
-  getAuthToken,
-  setAuthToken,
-  removeAuthToken,
-} from '../utils/authUtils';
-import type { LoginCredentials, RegisterData, User, AuthToken } from '../types';
+import type { LoginCredentials, RegisterData, User } from '../types';
 
 /**
  * Auth Service - 處理認證相關業務邏輯
+ * 
+ * 注意：此 Service 主要用於輔助真實 API 流程。
+ * 由於目前使用 HttpOnly Cookie 認證，大部分操作由後端處理。
+ * 
+ * Mock 功能已移至 mockAuthService.ts
  */
 export const authService = {
   /**
-   * 儲存 Token 到 localStorage
-   * 使用 authUtils 統一管理 accessToken
-   */
-  saveToken: (token: AuthToken): void => {
-    // 使用 authUtils 儲存主要的 accessToken
-    setAuthToken(token.accessToken);
-
-    // refreshToken 和 expiry 另外儲存
-    if (token.refreshToken) {
-      localStorage.setItem('refreshToken', token.refreshToken);
-    }
-    localStorage.setItem(
-      'tokenExpiry',
-      String(Date.now() + token.expiresIn * 1000),
-    );
-  },
-
-  /**
-   * 取得儲存的 Token
-   * 使用 authUtils 讀取
-   */
-  getToken: (): string | null => getAuthToken(),
-
-  /**
-   * 清除 Token
-   * 使用 authUtils 清除 accessToken
-   */
-  clearToken: (): void => {
-    removeAuthToken();
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('tokenExpiry');
-  },
-
-  /**
-   * 取得 Refresh Token
-   */
-  getRefreshToken: (): string | null => localStorage.getItem('refreshToken'),
-
-  /**
-   * 檢查 Token 是否過期
-   */
-  isTokenExpired: (): boolean => {
-    const expiry = localStorage.getItem('tokenExpiry');
-    if (!expiry) return true;
-    return Date.now() > Number(expiry);
-  },
-
-  /**
-   * 儲存使用者資料
+   * 儲存使用者資料到 localStorage（作為備份快取）
    */
   saveUser: (user: User): void => {
     localStorage.setItem('user', JSON.stringify(user));
@@ -83,11 +35,10 @@ export const authService = {
   },
 
   /**
-   * 執行登入流程
+   * 執行登入流程（帳密登入）
    */
   login: async (credentials: LoginCredentials) => {
     const response = await authApi.login(credentials);
-    authService.saveToken(response.token);
     authService.saveUser(response.user);
     return response;
   },
@@ -97,37 +48,8 @@ export const authService = {
    */
   register: async (data: RegisterData) => {
     const response = await authApi.register(data);
-    authService.saveToken(response.token);
     authService.saveUser(response.user);
     return response;
-  },
-
-  /**
-   * 執行假登入流程（電子郵件帳號）
-   */
-  mockLogin: (
-    avatarId: number,
-    displayName: string,
-  ): { user: User; token: AuthToken } => {
-    const mockToken: AuthToken = {
-      accessToken: `mock_auth_${Date.now()}`,
-      refreshToken: `mock_refresh_${Date.now()}`,
-      expiresIn: 3600 * 24 * 7, // 7 天
-    };
-
-    const user: User = {
-      id: `mock_user_${Date.now()}`,
-      email: 'mock@example.com',
-      name: displayName,
-      displayName: displayName,
-      avatar: String(avatarId), // 儲存 avatarId，由元件負責載入對應圖片
-      createdAt: new Date(),
-    };
-
-    authService.saveToken(mockToken);
-    authService.saveUser(user);
-
-    return { user, token: mockToken };
   },
 
   /**
@@ -135,7 +57,6 @@ export const authService = {
    */
   logout: async () => {
     await authApi.logout();
-    authService.clearToken();
     authService.clearUser();
   },
 };
