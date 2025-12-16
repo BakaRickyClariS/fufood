@@ -17,6 +17,11 @@ import { MOCK_USERS, MOCK_TOKEN } from './mock/authMockData';
 // 環境變數控制是否使用 Mock
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_API !== 'false';
 
+const LINE_API_BASE =
+  import.meta.env.VITE_LINE_API_BASE_URL || 'https://api.fufood.jocelynh.me';
+
+export const LineLoginUrl = `${LINE_API_BASE}/oauth/line/init`;
+
 export const authApi = {
   /**
    * 使用者登入
@@ -55,14 +60,30 @@ export const authApi = {
 
   /**
    * 登出
+   * 呼叫後端 API 清除 HttpOnly Cookie
    */
   logout: async (): Promise<void> => {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 300));
       return;
     }
-    return apiClient.post<void>('/auth/logout');
+    
+    // 使用原生 fetch 呼叫 LINE API 的 logout 端點
+    // 必須攜帶 credentials: 'include' 以清除 HttpOnly Cookie
+    const response = await fetch(`${LINE_API_BASE}/api/v1/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // 204 或 200 都視為成功
+    if (!response.ok && response.status !== 204) {
+      console.warn('Logout API 回應非預期:', response.status);
+    }
   },
+
 
   /**
    * 刷新 Token
@@ -111,17 +132,6 @@ export const authApi = {
       return { ...MOCK_USERS[0], ...data };
     }
     return apiClient.put<User>('/auth/update-profile', data);
-  },
-
-  /**
-   * 取得 LINE 登入 URL
-   * 直接返回後端 OAuth 入口 URL
-   */
-  getLineLoginUrl: (): string => {
-    const LINE_API_BASE =
-      import.meta.env.VITE_LINE_API_BASE_URL ||
-      'https://api.fufood.jocelynh.me';
-    return `${LINE_API_BASE}/oauth/line/init`;
   },
 
   /**
@@ -179,7 +189,6 @@ export const authApi = {
 
     // 使用原生 fetch 帶上 credentials: 'include' 以攜帶 HttpOnly Cookie
     const response = await fetch(`${LINE_API_BASE}/api/v1/profile`, {
-      method: 'GET',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
@@ -187,7 +196,9 @@ export const authApi = {
     });
 
     if (!response.ok) {
-      throw new Error(response.status === 401 ? '未登入' : `API 錯誤: ${response.status}`);
+      throw new Error(
+        response.status === 401 ? '未登入' : `API 錯誤: ${response.status}`,
+      );
     }
 
     return response.json();
