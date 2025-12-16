@@ -16,7 +16,8 @@ const Login = () => {
   // 處理後端發送的 postMessage
   const handlePopupMessage = useCallback(
     (e: MessageEvent) => {
-      if (e.origin === location.origin) {
+      const expectedOrigin = new URL(LineLoginUrl).origin;
+      if (e.origin !== expectedOrigin) {
         return;
       }
 
