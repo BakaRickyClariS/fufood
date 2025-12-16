@@ -10,14 +10,14 @@ import type {
 import { MockSharedListApi } from '../mock/mockSharedListApi';
 import { apiClient } from '@/services/apiClient';
 
-export interface SharedListApi {
+export type SharedListApi = {
   getSharedLists(year?: number, month?: number): Promise<SharedListItem[]>;
   getSharedListById(id: string): Promise<SharedList>;
   createSharedList(input: CreateSharedListInput): Promise<SharedList>;
   getPosts(listId: string): Promise<SharedListPost[]>;
   createPost(input: CreatePostInput): Promise<SharedListPost>;
   togglePostLike(postId: string, listId: string): Promise<SharedListPost>;
-}
+};
 
 // 真實 API 實作
 export class RealSharedListApi implements SharedListApi {

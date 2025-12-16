@@ -24,7 +24,12 @@ export type RegisterResponse = {
 
 export type LINELoginRequest = {
   code: string;
-  redirectUri: string;
+  state?: string;
+};
+
+export type LineLoginCallbackResponse = {
+  user: User;
+  token: AuthToken;
 };
 
 export type RefreshTokenRequest = {

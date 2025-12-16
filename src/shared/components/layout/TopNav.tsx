@@ -1,22 +1,48 @@
-import { ChevronDown, HousePlus, ShieldCheck } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/shared/components/ui/dropdown-menu';
 import { useState } from 'react';
-import zoeImg from '@/assets/images/inventory/members-zo.png';
+import { useLocation } from 'react-router-dom';
+import { useAuth } from '@/modules/auth';
+
+// 頭像工具
+import { getUserAvatarUrl, AVATAR_OPTIONS } from '@/shared/utils/avatarUtils';
+
+// UI 組件
+import { MemberAvatars } from '@/shared/components/ui/MemberAvatars';
+import { MembershipBadge } from '@/shared/components/ui/MembershipBadge';
+import { HomeModal } from '@/shared/components/layout/HomeModal';
+
+// 資源
+import EditGroupIcon from '@/assets/images/nav/edit-group.svg';
 
 // Group Modals
 import { GroupSettingsModal } from '@/modules/groups/components/modals/GroupSettingsModal';
 import { CreateGroupModal } from '@/modules/groups/components/modals/CreateGroupModal';
 import { EditGroupModal } from '@/modules/groups/components/modals/EditGroupModal';
 import { MembersModal } from '@/modules/groups/components/modals/MembersModal';
-import type { Group } from '@/modules/groups/types/group.types';
+import type { Group, GroupMember } from '@/modules/groups/types/group.types';
+
+// Mock 成員資料
+const mockGroupMembers: GroupMember[] = [
+  { id: '1', name: 'Jocelyn', avatar: AVATAR_OPTIONS[0].src, role: 'owner' },
+  { id: '2', name: 'Zoe', avatar: AVATAR_OPTIONS[1].src, role: 'organizer' },
+  { id: '3', name: 'Ricky', avatar: AVATAR_OPTIONS[2].src, role: 'member' },
+];
 
 const TopNav = () => {
   const [selectedHome] = useState('My Home');
+  const { user } = useAuth();
+  const location = useLocation();
+
+  // 判斷是否為 dashboard 路由
+  const isDashboard = location.pathname === '/' || location.pathname === '/dashboard';
+
+  // 使用頭像工具函數取得使用者頭像
+  const userAvatar = getUserAvatarUrl(user);
+  const userName = user?.displayName || user?.name || '使用者';
+
+  // HomeModal 狀態
+  const [isHomeModalOpen, setIsHomeModalOpen] = useState(false);
 
   // Modal States
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -24,6 +50,19 @@ const TopNav = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isMembersOpen, setIsMembersOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+
+  // 當前群組（暫時使用 mock 資料）
+  const currentGroup: Group = {
+    id: '1',
+    name: 'My Home',
+    admin: 'Jocelyn',
+    members: mockGroupMembers,
+    color: 'bg-red-100',
+    characterColor: 'bg-red-400',
+    plan: 'free',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 
   // Handlers
   const handleOpenCreate = () => {
@@ -40,6 +79,7 @@ const TopNav = () => {
   const handleOpenMembers = (group: Group) => {
     setSelectedGroup(group);
     setIsSettingsOpen(false);
+    setIsHomeModalOpen(false);
     setIsMembersOpen(true);
   };
 
@@ -52,90 +92,23 @@ const TopNav = () => {
 
   return (
     <>
-      <div className="top-nav-wrapper sticky top-0 left-0 right-0 bg-white z-40 px-4 py-3">
+      <div className={`top-nav-wrapper sticky top-0 left-0 right-0 z-40 px-4 py-3 ${isDashboard ? 'body-dashboard-bg' : 'bg-white'}`}>
         <div className="flex items-center justify-between gap-2">
-          {/* Left: Free Badge + Home Selector */}
-          <div className="flex items-center gap-3">
-            {/* Free Badge */}
-            <div className="flex items-center gap-1 bg-[#C48B6B] text-white px-2 py-1 rounded-md shadow-sm">
-              <ShieldCheck className="w-4 h-4 text-white" />
-              <span className="text-xs font-bold">Free</span>
-            </div>
+          {/* Left: Member Avatars + Home Selector */}
+          <div className="flex items-center gap-2">
+            <MemberAvatars members={currentGroup.members} maxDisplay={3} />
 
-            {/* Home Selector */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-1 text-xl font-bold text-neutral-900 px-0 hover:bg-transparent"
-                >
-                  {selectedHome}
-                  <ChevronDown className="w-5 h-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="start"
-                className="w-64 p-4 rounded-2xl"
-              >
-                {/* Current User Info */}
-                <div className="flex items-center gap-3 mb-4 pb-4 border-b border-stone-100">
-                  <div className="w-10 h-10 rounded-full bg-red-200" />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium text-stone-800">
-                      Jocelyn (你)
-                    </span>
-                    <span className="text-xs text-stone-400">擁有者</span>
-                  </div>
-                </div>
-
-                {/* Other Members */}
-                <div className="flex flex-col gap-3 mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-orange-200" />
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-stone-800">
-                        Zoe
-                      </span>
-                      <span className="text-xs text-stone-400">組織者</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-amber-200" />
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-stone-800">
-                        Ricky
-                      </span>
-                      <span className="text-xs text-stone-400">組織者</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Edit Button */}
-                <Button
-                  className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white h-10 rounded-xl text-sm"
-                  onClick={() => {
-                    // 這裡我們需要傳入當前群組，目前先用 mock
-                    // 實際應從 useGroups 獲取當前選中的群組
-                    handleOpenMembers({
-                      id: '1',
-                      name: 'My Home',
-                      admin: 'Jocelyn',
-                      members: [], // 這裡不需要完整成員列表，因為 Modal 會自己抓
-                      color: 'bg-red-100',
-                      characterColor: 'bg-red-400',
-                      plan: 'free',
-                      createdAt: new Date(),
-                      updatedAt: new Date(),
-                    });
-                  }}
-                >
-                  編輯成員
-                </Button>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="ghost"
+              className="flex items-center gap-1 text-base font-bold text-primary-700 p-2 bg-primary-100 rounded-full hover:bg-primary-200"
+              onClick={() => setIsHomeModalOpen(true)}
+            >
+              {selectedHome}
+              <ChevronDown className="w-5 h-5" />
+            </Button>
           </div>
 
-          {/* Right: Home Icon + User Avatar */}
+          {/* Right: Edit Group Icon + User Avatar */}
           <div className="flex items-center gap-3 shrink-0">
             <Button
               variant="ghost"
@@ -143,21 +116,42 @@ const TopNav = () => {
               className="text-neutral-900 hover:bg-transparent"
               onClick={() => setIsSettingsOpen(true)}
             >
-              <HousePlus className="w-6 h-6" />
+              <img src={EditGroupIcon} alt="編輯群組" className="w-6 h-6" />
             </Button>
 
-            <div className="w-8 h-8 rounded-full overflow-hidden border border-gray-200">
-              <img
-                src={zoeImg}
-                alt="User"
-                className="w-full h-full object-cover"
-              />
+            <div className="relative w-10 h-10">
+              <div className="w-full h-full rounded-full overflow-hidden border-2 border-primary-300">
+                <img
+                  src={userAvatar}
+                  alt={userName}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <MembershipBadge tier={user?.membershipTier || 'premium'} size="sm" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modals */}
+      {/* HomeModal */}
+      <HomeModal
+        isOpen={isHomeModalOpen}
+        onClose={() => setIsHomeModalOpen(false)}
+        currentUser={{
+          name: userName,
+          avatar: userAvatar,
+          role: 'owner',
+        }}
+        members={currentGroup.members.map((m) => ({
+          id: m.id,
+          name: m.name,
+          avatar: m.avatar,
+          role: m.role,
+        }))}
+        onEditMembers={() => handleOpenMembers(currentGroup)}
+      />
+
+      {/* Group Modals */}
       <GroupSettingsModal
         open={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}

@@ -70,6 +70,7 @@ const ExpiredRecordsPanel: React.FC = () => {
           item={selectedItem}
           isOpen={!!selectedItem}
           onClose={() => setSelectedItem(null)}
+          onItemUpdate={fetchExpiredItems}
         />
       )}
     </>

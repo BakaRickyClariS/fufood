@@ -1,69 +1,141 @@
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/modules/auth';
-import { useState } from 'react';
+import { LineLoginUrl, useAuth } from '@/modules/auth';
+import LoginCarousel from './LoginCarousel';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, isLoading, error } = useAuth();
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const { isLoading, isAuthenticated, refetch, error: authError } = useAuth();
+  const popupWindowRef = useRef<Window | null>(null);
+  const checkIntervalRef = useRef<number | null>(null);
+
+  const [lineLoginLoading, setLineLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+
+  // 處理後端發送的 postMessage
+  const handlePopupMessage = useCallback(
+    (e: MessageEvent) => {
+      const expectedOrigin = new URL(LineLoginUrl).origin;
+      if (e.origin !== expectedOrigin) {
+        return;
+      }
+
+      // 清除登出標記，讓 getUserProfile 正常運作
+      sessionStorage.removeItem('logged_out');
+      
+      // 清除 popup 監聽定時器
+      if (checkIntervalRef.current) {
+        clearInterval(checkIntervalRef.current);
+        checkIntervalRef.current = null;
+      }
+      
+      refetch().then(() => {
+        setLineLoginLoading(false);
+        popupWindowRef.current?.close();
+      });
+    },
+    [refetch],
+  );
+
+  useEffect(() => {
+    window.addEventListener('message', handlePopupMessage);
+    return () => {
+      window.removeEventListener('message', handlePopupMessage);
+      if (checkIntervalRef.current) {
+        clearInterval(checkIntervalRef.current);
+      }
+    };
+  }, [handlePopupMessage]);
 
   const handleEmailLogin = async () => {
-    // 暫時導向到頭像選擇頁面，模擬登入流程
     navigate('/auth/avatar-selection');
   };
 
-  const handleLineLogin = async () => {
-    setIsLoggingIn(true);
-    try {
-      // 模擬 LINE 登入
-      await login({ email: 'test@example.com', password: 'password' });
+  // 當已認證時，導向首頁
+  useEffect(() => {
+    if (isAuthenticated) {
+      setLineLoginLoading(false);
       navigate('/');
-    } catch (err) {
-      console.error('Login failed:', err);
-    } finally {
-      setIsLoggingIn(false);
     }
-  };
+  }, [isAuthenticated, navigate]);
+
+  const handleLineLogin = useCallback(() => {
+    setLineLoginLoading(true);
+    setLoginError(null);
+    
+    // 清除登出標記（準備登入）
+    sessionStorage.removeItem('logged_out');
+
+    const width = 500;
+    const height = 600;
+    const left = window.screenX + (window.innerWidth - width) / 2;
+    const top = window.screenY + (window.innerHeight - height) / 2;
+
+    // 開啟 popup 視窗（PWA 友好）
+    const popup = window.open(
+      LineLoginUrl,
+      'lineLogin',
+      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`,
+    );
+
+    if (!popup) {
+      setLoginError('無法開啟登入視窗，請檢查是否有彈出視窗被封鎖');
+      setLineLoginLoading(false);
+      return;
+    }
+
+    popupWindowRef.current = popup;
+
+    // 監聽 popup 關閉（當用戶手動關閉或登入完成時）
+    checkIntervalRef.current = window.setInterval(() => {
+      if (popup.closed) {
+        if (checkIntervalRef.current) {
+          clearInterval(checkIntervalRef.current);
+          checkIntervalRef.current = null;
+        }
+        
+        // Popup 被關閉，重新取得用戶資料
+        refetch().finally(() => {
+          setLineLoginLoading(false);
+        });
+      }
+    }, 500);
+  }, [refetch]);
+
+  const displayError = loginError || authError;
 
   return (
-    <div className="flex flex-col h-screen bg-white p-6">
-      {/* Spacer to push content down */}
-      <div className="flex-1" />
+    <div className="flex flex-col min-h-screen bg-white px-5">
+      <LoginCarousel />
 
-      {/* Content */}
-      <div className="flex flex-col gap-4 mb-12">
-        <div className="flex justify-center mb-4">
-          <span className="text-2xl font-bold tracking-widest text-stone-400">
-            ...
-          </span>
-        </div>
-
-        {error && (
+      {/* 登入按鈕區域 */}
+      <div className="flex flex-col gap-4">
+        {displayError && (
           <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg">
-            {error}
+            {String(displayError)}
           </div>
         )}
 
         <Button
-          className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white h-12 text-base rounded-xl shadow-sm"
+          className="w-full bg-[#f58274] hover:bg-[#e06d5f] text-white h-12 text-base rounded-lg"
           onClick={handleLineLogin}
-          disabled={isLoggingIn || isLoading}
+          disabled={isLoading || lineLoginLoading}
         >
-          {isLoggingIn ? '登入中...' : '使用LINE應用程式登入'}
+          {lineLoginLoading ? '登入中...' : '使用LINE應用程式登入'}
         </Button>
 
         <Button
           variant="outline"
-          className="w-full border-stone-200 text-stone-700 h-12 text-base rounded-xl hover:bg-stone-50"
+          className="w-full border-neutral-200 text-neutral-700 h-12 text-base rounded-lg hover:bg-neutral-50"
           onClick={handleEmailLogin}
-          disabled={isLoggingIn || isLoading}
+          disabled={isLoading || lineLoginLoading}
         >
           使用電子郵件帳號登入
         </Button>
 
-        <div className="flex justify-center mt-2">
-          <button className="text-sm text-stone-800 font-medium hover:underline">
+        <div className="flex justify-center">
+          <button className="text-sm text-neutral-500 font-medium hover:text-neutral-800 transition-colors">
             忘記密碼？
           </button>
         </div>

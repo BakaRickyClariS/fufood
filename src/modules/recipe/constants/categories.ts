@@ -1,6 +1,5 @@
 import type { RecipeCategory } from '@/modules/recipe/types';
 
-// Category 圖片 - 必須使用 import 才能在 Vercel 部署後正確顯示
 import chineseImg from '@/assets/images/recipe/category/Chinese.png';
 import americanImg from '@/assets/images/recipe/category/American.png';
 import italianImg from '@/assets/images/recipe/category/Italian.png';

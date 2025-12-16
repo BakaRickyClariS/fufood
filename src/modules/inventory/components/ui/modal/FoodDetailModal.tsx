@@ -1,23 +1,48 @@
-import React, { useEffect, useRef } from 'react';
-import { X, Check, AlertCircle, Clock } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  X,
+  Check,
+  AlertCircle,
+  Clock,
+  ShoppingCart,
+  Ban,
+  Bell,
+  BellRing,
+} from 'lucide-react';
 import gsap from 'gsap';
 import { Button } from '@/shared/components/ui/button';
+import { InfoTooltip } from '@/shared/components/feedback/InfoTooltip';
 import type { FoodItem } from '@/modules/inventory/types';
 import { useExpiryCheck } from '@/modules/inventory/hooks';
+import { inventoryApi } from '@/modules/inventory/api';
 
 type FoodDetailModalProps = {
   item: FoodItem;
   isOpen: boolean;
   onClose: () => void;
+  onItemUpdate?: () => void; // 當 item 更新後通知父組件刷新資料
 };
 
 const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
   item,
   isOpen,
   onClose,
+  onItemUpdate,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+
+  // 使用本地 state 管理 lowStockAlert 狀態，確保點擊時 UI 可以即時更新
+  const [lowStockAlertEnabled, setLowStockAlertEnabled] = useState(
+    item.lowStockAlert ?? false,
+  );
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // 當 item 變更時同步更新本地 state
+  useEffect(() => {
+    setLowStockAlertEnabled(item.lowStockAlert ?? false);
+  }, [item.lowStockAlert]);
+
   const { status, daysUntilExpiry } = useExpiryCheck(item);
 
   useEffect(() => {
@@ -60,6 +85,30 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
       { opacity: 0, duration: 0.3, ease: 'power2.in' },
       '-=0.3',
     );
+  };
+
+  const handleToggleAlert = async () => {
+    if (isUpdating) return;
+
+    const newValue = !lowStockAlertEnabled;
+    // 立即更新本地 state，讓 UI 即時反映變化
+    setLowStockAlertEnabled(newValue);
+    setIsUpdating(true);
+
+    try {
+      // 調用 API 更新後端資料
+      await inventoryApi.updateItem(item.id, {
+        lowStockAlert: newValue,
+      });
+      // 成功後通知父組件刷新資料
+      onItemUpdate?.();
+    } catch (error) {
+      // 如果失敗，還原本地 state
+      setLowStockAlertEnabled(!newValue);
+      console.error('更新低庫存通知失敗:', error);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const getStatusBadge = () => {
@@ -109,7 +158,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
       {/* Modal Content */}
       <div
         ref={modalRef}
-        className="relative w-full max-w-md bg-white rounded-t-3xl overflow-hidden shadow-2xl"
+        className="relative w-full max-w-md bg-white rounded-t-xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh]"
       >
         {/* Close Button */}
         <button
@@ -119,8 +168,8 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
           <X className="w-5 h-5" />
         </button>
 
-        {/* Image Section */}
-        <div className="relative h-36 w-full rounded-b-3xl overflow-hidden">
+        {/* Image Section - Fixed height */}
+        <div className="relative h-46 w-full shrink-0 overflow-hidden rounded-b-xl">
           <img
             src={item.imageUrl}
             alt={item.name}
@@ -132,20 +181,58 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Content Section */}
-        <div className="p-6 space-y-6">
+        {/* Content Section - Scrollable */}
+        <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
           {/* Header */}
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-neutral-900 tracking-wide">
               {item.name}
             </h2>
+            <button
+              onClick={handleToggleAlert}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-colors ${
+                lowStockAlertEnabled
+                  ? 'bg-primary-50 text-primary-500' // Pinkish bg, red text
+                  : 'bg-primary-50 text-primary-500 hover:bg-primary-100'
+              }`}
+            >
+              {lowStockAlertEnabled ? (
+                <>
+                  <BellRing className="w-4 h-4 fill-current" />
+                  已開啟低庫存通知
+                </>
+              ) : (
+                <>
+                  <Bell className="w-4 h-4" />
+                  開啟低庫存通知
+                </>
+              )}
+            </button>
           </div>
 
           {/* Details List */}
           <div className="space-y-3 text-lg">
             {/* Status */}
             <div className="flex items-center justify-between border-gray-100">
-              <span className="text-neutral-500 font-medium">食材狀態</span>
+              <span className="text-neutral-500 font-medium flex items-center gap-1">
+                食材狀態
+                <InfoTooltip
+                  content={
+                    <>
+                      <span className="text-primary-500">「已過期」</span>
+                      表示食材已超過保存期限。
+                      <br />
+                      <br />
+                      <span className="text-primary-500">「即將過期」</span>
+                      表示食材將在 7 天內過期。
+                      <br />
+                      <br />
+                      <span className="text-primary-500">「低庫存」</span>
+                      表示數量已低於設定的最低數量。
+                    </>
+                  }
+                />
+              </span>
               {getStatusBadge()}
             </div>
 
@@ -157,35 +244,51 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
               </span>
             </div>
 
+            {/* Attributes */}
+            <div className="flex items-center justify-between border-gray-100">
+              <span className="text-neutral-500 font-medium">產品屬性</span>
+              <span className="text-neutral-900 font-medium">
+                {item.attributes?.join('、') || '無'}
+              </span>
+            </div>
+
             {/* Quantity */}
             <div className="flex items-center justify-between">
-              <span className="text-neutral-500 font-medium">單位數量</span>
+              <span className="text-neutral-500 font-medium flex items-center gap-1">
+                單位數量
+                <InfoTooltip
+                  content={
+                    <>
+                      表示此食材的剛存數量與計量單位。
+                      <br />
+                      <br />
+                      例如：「3 / 個」表示有 3 個該食材。
+                    </>
+                  }
+                />
+              </span>
               <span className="text-neutral-900 font-medium">
                 {item.quantity} / {item.unit || '個'}
               </span>
             </div>
-            <div className="w-full h-[1px] bg-gray-100" />
+            <div className="w-full h-px bg-gray-100" />
 
             {/* Dates */}
             <div className="flex flex-col gap-4 border-gray-100">
               <div className="flex items-center justify-between">
-                <span className="text-neutral-500 font-medium block mb-1">
-                  入庫日期
-                </span>
+                <span className="text-neutral-500 font-medium">入庫日期</span>
                 <span className="text-neutral-900 font-medium">
                   {item.purchaseDate}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-neutral-500 font-medium block mb-1">
-                  剩餘天數
-                </span>
+                <span className="text-neutral-500 font-medium">保存期限</span>
                 <span
                   className={`font-medium ${daysUntilExpiry < 0 ? 'text-red-500' : 'text-neutral-900'}`}
                 >
                   {daysUntilExpiry < 0
                     ? `已過期 ${Math.abs(daysUntilExpiry)} 天`
-                    : `約 ${daysUntilExpiry} 天`}
+                    : `約${daysUntilExpiry}天`}
                 </span>
               </div>
             </div>
@@ -196,12 +299,19 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
                 {item.expiryDate}
               </span>
             </div>
-            <div className="w-full h-[1px] bg-gray-100" />
+            <div className="w-full h-px bg-gray-100" />
 
             {/* Notes */}
             <div className="flex items-start justify-between">
-              <span className="text-neutral-500 font-medium shrink-0">
+              <span className="text-neutral-500 font-medium shrink-0 flex items-center gap-1">
                 備註
+                <InfoTooltip
+                  content={
+                    <>
+                      可註記該食材的特殊資訊，如保存方式或購買來源等。
+                    </>
+                  }
+                />
               </span>
               <span className="text-neutral-900 font-medium text-right">
                 {item.notes || '無'}
@@ -209,16 +319,32 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
             </div>
           </div>
 
-          {/* Action Button */}
-          <Button
-            className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white rounded-xl h-12 text-base font-medium shadow-lg shadow-orange-200"
-            onClick={() => {
-              // TODO: Implement consume logic
-              // console.log('Consume item:', item.id);
-            }}
-          >
-            確定消耗
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-3 pb-24">
+            {' '}
+            {/* Increased padding to clear BottomNav */}
+            <Button
+              className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white rounded-xl h-12 text-base font-medium shadow-lg shadow-orange-200 flex items-center justify-center gap-2"
+              onClick={() => {
+                // TODO: Add to shopping list logic
+                onClose();
+              }}
+            >
+              <ShoppingCart className="w-5 h-5" />
+              已消耗，加入採買清單
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full border-gray-200 text-neutral-600 hover:bg-gray-50 rounded-xl h-12 text-base font-medium flex items-center justify-center gap-2"
+              onClick={() => {
+                // TODO: Just consume logic
+                onClose();
+              }}
+            >
+              <Ban className="w-5 h-5" />
+              僅消耗，暫不採買
+            </Button>
+          </div>
         </div>
       </div>
     </div>

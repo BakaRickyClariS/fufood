@@ -1,5 +1,5 @@
-**版本**: v2.2（參考 `src/modules/API_REFERENCE_V2.md`）  
-**最後更新**: 2025-12-08  
+**版本**: v2.3（參考 `src/modules/API_REFERENCE_V2.md`）  
+**最後更新**: 2025-12-13  
 **涵蓋範圍**: Inventory（庫存管理）＋Foods（食材主檔）模組
 
 ---
@@ -22,10 +22,10 @@
 
 **成功（Success）**:
 
-| 狀態碼             | 描述       | 常見使用場景                 |
-| :----------------- | :--------- | :--------------------------- |
-| **200 OK**         | 請求成功   | 一般查詢、更新、刪除，含在本頁 |
-| **201 Created**    | 建立成功   | 新增資料                     |
+| 狀態碼          | 描述     | 常見使用場景                   |
+| :-------------- | :------- | :----------------------------- |
+| **200 OK**      | 請求成功 | 一般查詢、更新、刪除，含在本頁 |
+| **201 Created** | 建立成功 | 新增資料                       |
 
 **成功回應封裝格式**（統一封套，`message` 可選，核心放在 `data`）:
 
@@ -33,7 +33,9 @@
 {
   "status": true,
   "message": "可選提示",
-  "data": { /* payload，依照 API 定義 */ }
+  "data": {
+    /* payload，依照 API 定義 */
+  }
 }
 ```
 
@@ -51,15 +53,15 @@
 }
 ```
 
-| 狀態碼                        | 描述         | 常見使用場景       |
-| :---------------------------- | :----------- | :----------------- |
-| **400 Bad Request**           | 請求參數錯誤 | 缺欄位或格式錯誤   |
-| **401 Unauthorized**          | 未授權      | Token 無效或缺失   |
-| **403 Forbidden**             | 禁止存取     | 已登入但無權限     |
-| **404 Not Found**             | 找不到資源   | 路由或 ID 不存在   |
-| **422 Unprocessable Entity**  | 驗證失敗     | 例如庫存量不足     |
-| **429 Too Many Requests**     | 請求過多     | 節流/流量限制      |
-| **500 Internal Server Error** | 伺服器錯誤   | 系統或內部異常     |
+| 狀態碼                        | 描述         | 常見使用場景     |
+| :---------------------------- | :----------- | :--------------- |
+| **400 Bad Request**           | 請求參數錯誤 | 缺欄位或格式錯誤 |
+| **401 Unauthorized**          | 未授權       | Token 無效或缺失 |
+| **403 Forbidden**             | 禁止存取     | 已登入但無權限   |
+| **404 Not Found**             | 找不到資源   | 路由或 ID 不存在 |
+| **422 Unprocessable Entity**  | 驗證失敗     | 例如庫存量不足   |
+| **429 Too Many Requests**     | 請求過多     | 節流/流量限制    |
+| **500 Internal Server Error** | 伺服器錯誤   | 系統或內部異常   |
 
 ---
 
@@ -83,6 +85,7 @@ type FoodItem = {
   groupId?: string; // 所屬群組ID（個人則為 undefined）
   createdAt: string; // ISO 8601
   updatedAt?: string; // ISO 8601
+  attributes?: string[]; // 產品屬性，如 ['葉菜根莖類', '有機']
 };
 ```
 
@@ -224,7 +227,11 @@ type Food = {
 - **Request Body**: `UpdateFoodItemRequest` (`Partial<Omit<FoodItem, 'id' | 'createdAt' | 'updatedAt'>>`)
 - **Success Response**:
   ```json
-  { "status": true, "message": "Updated successfully", "data": { "id": "<id>" } }
+  {
+    "status": true,
+    "message": "Updated successfully",
+    "data": { "id": "<id>" }
+  }
   ```
 
 ### 3.5 刪除食材
@@ -266,7 +273,9 @@ type Food = {
   {
     "status": true,
     "data": {
-      "items": [ /* 可選，若 limit=1 可最小化 */ ],
+      "items": [
+        /* 可選，若 limit=1 可最小化 */
+      ],
       "total": 100,
       "stats": {
         /* InventoryStats */
@@ -315,11 +324,14 @@ type Food = {
   - 過期：`status=expired`，`page?`, `limit?`
   - 常用：`status=frequent`，`limit?`
 - **Success Response**（同 3.1）:
+
   ```json
   {
     "status": true,
     "data": {
-      "items": [ /* FoodItem */ ],
+      "items": [
+        /* FoodItem */
+      ],
       "total": 42
     }
   }
@@ -330,12 +342,27 @@ type Food = {
 - **GET** `/api/v1/inventory/settings`: 取得設定
   - **Success Response**:
     ```json
-    { "status": true, "data": { "settings": { /* InventorySettings */ } } }
+    {
+      "status": true,
+      "data": {
+        "settings": {
+          /* InventorySettings */
+        }
+      }
+    }
     ```
 - **PUT** `/api/v1/inventory/settings`: 更新設定，Request Body: `UpdateInventorySettingsRequest`
   - **Success Response**:
     ```json
-    { "status": true, "message": "Updated successfully", "data": { "settings": { /* InventorySettings */ } } }
+    {
+      "status": true,
+      "message": "Updated successfully",
+      "data": {
+        "settings": {
+          /* InventorySettings */
+        }
+      }
+    }
     ```
 
 ---
@@ -349,7 +376,14 @@ type Food = {
 - **Query**: `category?`
 - **Success Response**:
   ```json
-  { "status": true, "data": { "items": [ /* Food */ ] } }
+  {
+    "status": true,
+    "data": {
+      "items": [
+        /* Food */
+      ]
+    }
+  }
   ```
 
 ### 4.2 取得單一食材
@@ -358,7 +392,14 @@ type Food = {
 - **Path**: `/api/v1/foods/{id}`
 - **Success Response**:
   ```json
-  { "status": true, "data": { "food": { /* Food */ } } }
+  {
+    "status": true,
+    "data": {
+      "food": {
+        /* Food */
+      }
+    }
+  }
   ```
 
 ### 4.3 新增食材主檔
@@ -368,7 +409,15 @@ type Food = {
 - **Request Body**: `Omit<Food, 'id'>`
 - **Success Response**:
   ```json
-  { "status": true, "message": "Created successfully", "data": { "food": { /* Food */ } } }
+  {
+    "status": true,
+    "message": "Created successfully",
+    "data": {
+      "food": {
+        /* Food */
+      }
+    }
+  }
   ```
 
 ### 4.4 更新食材主檔
@@ -378,7 +427,15 @@ type Food = {
 - **Request Body**: `Partial<Food>`
 - **Success Response**:
   ```json
-  { "status": true, "message": "Updated successfully", "data": { "food": { /* Food */ } } }
+  {
+    "status": true,
+    "message": "Updated successfully",
+    "data": {
+      "food": {
+        /* Food */
+      }
+    }
+  }
   ```
 
 ### 4.5 刪除食材主檔

@@ -1,9 +1,20 @@
+/**
+ * 會員等級型別
+ */
+export type MembershipTier = 'free' | 'premium' | 'vip';
+
 export type User = {
   id: string;
-  email: string;
+  email?: string; // LINE 登入可能無 email
   name?: string;
   avatar: string;
   createdAt: Date;
+  // LINE 專屬欄位
+  lineId?: string;
+  displayName?: string;
+  pictureUrl?: string;
+  // 會員等級
+  membershipTier?: MembershipTier;
 };
 
 export type LoginCredentials = {
@@ -29,4 +40,22 @@ export type AuthState = {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+};
+
+// 假登入設定資料
+export type MockLoginData = {
+  avatarId: number;
+  displayName: string;
+};
+
+// Profile API 回傳格式
+export type ProfileData = {
+  id: string;
+  lineId: string;
+  name: string;
+  profilePictureUrl: string;
+};
+
+export type ProfileResponse = {
+  data: ProfileData;
 };
