@@ -8,10 +8,12 @@ const Login = () => {
   const navigate = useNavigate();
   const { isLoading, isAuthenticated, refetch, error: authError } = useAuth();
   const popupWindowRef = useRef<Window | null>(null);
+  const checkIntervalRef = useRef<number | null>(null);
 
   const [lineLoginLoading, setLineLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
+  // 處理後端發送的 postMessage
   const handlePopupMessage = useCallback(
     (e: MessageEvent) => {
       if (e.origin === location.origin) {
@@ -21,6 +23,12 @@ const Login = () => {
       // 清除登出標記，讓 getUserProfile 正常運作
       sessionStorage.removeItem('logged_out');
       
+      // 清除 popup 監聽定時器
+      if (checkIntervalRef.current) {
+        clearInterval(checkIntervalRef.current);
+        checkIntervalRef.current = null;
+      }
+      
       refetch().then(() => {
         setLineLoginLoading(false);
         popupWindowRef.current?.close();
@@ -29,12 +37,13 @@ const Login = () => {
     [refetch],
   );
 
-
-
   useEffect(() => {
     window.addEventListener('message', handlePopupMessage);
     return () => {
       window.removeEventListener('message', handlePopupMessage);
+      if (checkIntervalRef.current) {
+        clearInterval(checkIntervalRef.current);
+      }
     };
   }, [handlePopupMessage]);
 
@@ -42,17 +51,20 @@ const Login = () => {
     navigate('/auth/avatar-selection');
   };
 
+  // 當已認證時，導向首頁
   useEffect(() => {
-    if (!isAuthenticated) {
-      return;
+    if (isAuthenticated) {
+      setLineLoginLoading(false);
+      navigate('/');
     }
-
-    navigate('/');
-  }, [isLoading, isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate]);
 
   const handleLineLogin = useCallback(() => {
     setLineLoginLoading(true);
     setLoginError(null);
+    
+    // 清除登出標記（準備登入）
+    sessionStorage.removeItem('logged_out');
 
     const width = 500;
     const height = 600;
@@ -73,7 +85,22 @@ const Login = () => {
     }
 
     popupWindowRef.current = popup;
-  }, []);
+
+    // 監聽 popup 關閉（當用戶手動關閉或登入完成時）
+    checkIntervalRef.current = window.setInterval(() => {
+      if (popup.closed) {
+        if (checkIntervalRef.current) {
+          clearInterval(checkIntervalRef.current);
+          checkIntervalRef.current = null;
+        }
+        
+        // Popup 被關閉，重新取得用戶資料
+        refetch().finally(() => {
+          setLineLoginLoading(false);
+        });
+      }
+    }, 500);
+  }, [refetch]);
 
   const displayError = loginError || authError;
 
