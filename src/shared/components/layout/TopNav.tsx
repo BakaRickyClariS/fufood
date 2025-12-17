@@ -35,11 +35,12 @@ const TopNav = () => {
   const location = useLocation();
 
   // 判斷是否為 dashboard 路由
-  const isDashboard = location.pathname === '/' || location.pathname === '/dashboard';
+  const isDashboard =
+    location.pathname === '/' || location.pathname === '/dashboard';
 
   // 使用頭像工具函數取得使用者頭像
-  const userAvatar = getUserAvatarUrl(user);
   const userName = user?.displayName || user?.name || '使用者';
+  const userAvatar = user?.pictureUrl;
 
   // HomeModal 狀態
   const [isHomeModalOpen, setIsHomeModalOpen] = useState(false);
@@ -92,7 +93,9 @@ const TopNav = () => {
 
   return (
     <>
-      <div className={`top-nav-wrapper sticky top-0 left-0 right-0 z-40 px-4 py-3 ${isDashboard ? 'body-dashboard-bg' : 'bg-white'}`}>
+      <div
+        className={`top-nav-wrapper sticky top-0 left-0 right-0 z-40 px-4 py-3 ${isDashboard ? 'body-dashboard-bg' : 'bg-white'}`}
+      >
         <div className="flex items-center justify-between gap-2">
           {/* Left: Member Avatars + Home Selector */}
           <div className="flex items-center gap-2">
@@ -127,7 +130,10 @@ const TopNav = () => {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <MembershipBadge tier={user?.membershipTier || 'premium'} size="sm" />
+              <MembershipBadge
+                tier={user?.membershipTier || 'premium'}
+                size="sm"
+              />
             </div>
           </div>
         </div>
