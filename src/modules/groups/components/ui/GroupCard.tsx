@@ -4,6 +4,7 @@ import { ChevronDown } from 'lucide-react';
 import gsap from 'gsap';
 import type { Group } from '../../types/group.types';
 import { useGroupModal } from '../../hooks/useGroupModal';
+import { useAuth } from '@/modules/auth/hooks';
 
 type GroupCardProps = {
   group: Group;
@@ -26,6 +27,7 @@ export const GroupCard: FC<GroupCardProps> = ({
   const contentRef = useRef<HTMLDivElement>(null);
   const arrowRef = useRef<HTMLButtonElement>(null);
   const { switchGroup } = useGroupModal();
+  const { user } = useAuth();
 
   // 當 isActive 改變時，自動展開或收合
   useEffect(() => {
@@ -37,8 +39,10 @@ export const GroupCard: FC<GroupCardProps> = ({
         duration: 0.3,
         ease: 'power2.out',
       });
+      // 箭頭旋轉並淡出
       gsap.to(arrowRef.current, {
         rotation: 180,
+        opacity: 0,
         duration: 0.3,
         ease: 'power2.out',
       });
@@ -50,8 +54,10 @@ export const GroupCard: FC<GroupCardProps> = ({
         duration: 0.3,
         ease: 'power2.in',
       });
+      // 箭頭還原並淡入
       gsap.to(arrowRef.current, {
         rotation: 0,
+        opacity: 1,
         duration: 0.3,
         ease: 'power2.in',
       });
@@ -80,22 +86,20 @@ export const GroupCard: FC<GroupCardProps> = ({
   return (
     <div
       onClick={handleCardClick}
-      className={`relative overflow-hidden rounded-[32px] p-5 shadow-sm border transition-all cursor-pointer ${
-        isActive
-          ? 'border-[#EE5D50] border-2 bg-stone-50'
-          : 'border-stone-100 bg-white'
+      className={`relative overflow-hidden bg-white rounded-[32px] p-5 transition-all cursor-pointer ${
+        isActive ? 'card-gradient-border' : 'border-2 border-neutral-400'
       }`}
     >
       <div className="flex justify-between items-start mb-4 relative z-10">
         <div className="flex flex-col gap-1">
-          <h3 className="text-xl font-bold text-[#EE5D50]">{group.name}</h3>
+          <h3 className="text-xl font-bold text-primary-700">{group.name}</h3>
           <p className="text-sm text-stone-500 font-medium">
             管理員 {group.admin}
           </p>
         </div>
 
         {/* 群組圖片 */}
-        <div className="w-24 h-24 absolute -right-2 -top-2">
+        <div className="w-40 h-40 absolute -right-2 -top-2">
           {group.imageUrl ? (
             <img
               src={group.imageUrl}
@@ -111,28 +115,37 @@ export const GroupCard: FC<GroupCardProps> = ({
       </div>
 
       {/* 成員區域 */}
-      <div className="flex items-center gap-2 mb-2 relative z-10">
+      <div className="flex flex-col justify-center gap-2 mb-2 relative z-10">
         <span className="text-sm text-stone-500 font-medium">
           成員 ({group.members.length})
         </span>
-        <div className="flex -space-x-3">
-          {group.members.slice(0, 4).map((member) => (
-            <div
-              key={member.id}
-              className="w-9 h-9 rounded-full border-2 border-white overflow-hidden bg-gray-100"
-            >
-              <img
-                src={member.avatar || ''}
-                alt={member.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ))}
+        <div className="flex">
+          {group.members.slice(0, 4).map((member, index) => {
+            const isCurrentUser = user?.id === member.id;
+            return (
+              <div
+                key={member.id}
+                className={`w-9 h-9 rounded-full border-2 overflow-hidden bg-gray-100 ${
+                  isCurrentUser ? 'border-primary-400' : 'border-neutral-500'
+                }`}
+                style={{
+                  marginLeft: index === 0 ? 0 : '-0.75rem',
+                  zIndex: group.members.length - index,
+                }}
+              >
+                <img
+                  src={member.avatar || ''}
+                  alt={member.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
 
       {/* 下拉按鈕 */}
-      <div className="flex justify-center mt-2">
+      <div className="flex justify-center">
         <button
           ref={arrowRef}
           onClick={handleArrowClick}
@@ -147,7 +160,7 @@ export const GroupCard: FC<GroupCardProps> = ({
       {/* 操作按鈕 (隱藏內容) */}
       <div ref={contentRef} className="h-0 opacity-0 overflow-hidden">
         <div
-          className="flex flex-col gap-3 pt-4 pb-1 cursor-default"
+          className="flex flex-col gap-3 pb-1 cursor-default"
           onClick={(e) => e.stopPropagation()}
         >
           <Button
@@ -158,7 +171,7 @@ export const GroupCard: FC<GroupCardProps> = ({
           </Button>
           <Button
             variant="outline"
-            className="w-full border-stone-200 text-stone-700 h-12 rounded-xl text-base font-bold bg-white hover:bg-stone-50"
+            className="w-full border-stone-200 border-2 text-stone-700 h-12 rounded-xl text-base font-bold bg-white hover:bg-stone-50"
             onClick={() => onEditGroup?.(group)}
           >
             修改群組內容

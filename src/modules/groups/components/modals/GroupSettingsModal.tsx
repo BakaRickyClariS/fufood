@@ -33,8 +33,8 @@ export const GroupSettingsModal: FC<GroupSettingsModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-none w-full h-[100dvh] p-0 rounded-none border-0 sm:rounded-none !fixed !left-0 !top-0 !translate-x-0 !translate-y-0 !duration-300 data-[state=open]:!slide-in-from-left-full data-[state=closed]:!slide-out-to-left-full data-[state=closed]:!zoom-out-100 data-[state=open]:!zoom-in-100 data-[state=closed]:!slide-out-to-top-0 data-[state=open]:!slide-in-from-top-0 overflow-hidden flex flex-col">
-        <DialogHeader className="flex-shrink-0 px-4 py-3 bg-white border-b border-stone-100 flex flex-row items-center justify-center relative">
+      <DialogContent className="max-w-none w-full h-[100dvh] p-0 gap-0 rounded-none border-0 sm:rounded-none !fixed !left-0 !top-0 !translate-x-0 !translate-y-0 !duration-300 data-[state=open]:!slide-in-from-left-full data-[state=closed]:!slide-out-to-left-full data-[state=closed]:!zoom-out-100 data-[state=open]:!zoom-in-100 data-[state=closed]:!slide-out-to-top-0 data-[state=open]:!slide-in-from-top-0 overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0 px-4 py-3 bg-white flex flex-row items-center justify-center relative">
           <button
             onClick={onClose}
             className="absolute left-4 p-1 -ml-1 text-stone-600"
@@ -46,7 +46,7 @@ export const GroupSettingsModal: FC<GroupSettingsModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-4 py-6 min-h-0 bg-stone-50">
+        <div className="flex-1 overflow-y-auto px-4 py-6 min-h-0 bg-neutral-100">
           <div className="flex flex-col gap-6">
             {/* 建立群組按鈕 */}
             <Button
