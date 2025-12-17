@@ -25,6 +25,7 @@
    可重用的 UI 元件
    ========================================================================== */
 /* @import './components/_buttons.css'; */
+@import './components/_cards.css';
 
 /* ==========================================================================
    UTILITIES LAYER - 工具類別
@@ -159,7 +160,8 @@
   *::-webkit-scrollbar {
     display: none;
   }
-  html, body {
+  html,
+  body {
     @apply bg-background text-foreground;
   }
 }

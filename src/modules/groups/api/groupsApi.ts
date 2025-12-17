@@ -7,7 +7,7 @@ import type {
   InviteMemberForm,
   JoinGroupForm,
 } from '../types/group.types';
-import { MOCK_GROUPS, MOCK_MEMBERS } from './mock/groupsMockData';
+import { mockGroups, mockMembers } from '../mocks/mockData';
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_API !== 'false';
 
@@ -18,7 +18,7 @@ export const groupsApi = {
   getAll: async (): Promise<Group[]> => {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      return MOCK_GROUPS;
+      return mockGroups;
     }
     return apiClient.get<Group[]>('/groups');
   },
@@ -29,7 +29,7 @@ export const groupsApi = {
   getById: async (id: string): Promise<Group> => {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      const group = MOCK_GROUPS.find((g) => g.id === id);
+      const group = mockGroups.find((g) => g.id === id);
       if (!group) throw new Error('群組不存在');
       return group;
     }
@@ -42,9 +42,15 @@ export const groupsApi = {
   getMembers: async (groupId: string): Promise<GroupMember[]> => {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 300));
-      return MOCK_MEMBERS;
+      // In a real mock, we might want to filter by groupId, but current mock data structure embeds members in group.
+      // Or we can return the global mockMembers list if it's shared.
+      // Based on previous code, it returned a global list.
+      // We should try to find members from the group first.
+      const group = mockGroups.find((g) => g.id === groupId);
+      if (group && group.members) return group.members;
+      return mockMembers;
     }
-    return apiClient.get<GroupMember[]>(`/groups/${groupId}/members`); // Note: API spec doesn't explicitly list this, but it's common. If not, it might be part of getGroup
+    return apiClient.get<GroupMember[]>(`/groups/${groupId}/members`);
   },
 
   /**
@@ -56,13 +62,13 @@ export const groupsApi = {
       return {
         id: Math.random().toString(36).substr(2, 9),
         ...data,
-        admin: 'Jocelyn',
+        admin: data.admin || 'Unknown',
         members: [],
         plan: 'free',
         createdAt: new Date(),
         updatedAt: new Date(),
-        color: data.color || 'blue',
-        characterColor: data.characterColor || 'blue',
+        color: data.color || 'bg-white',
+        characterColor: data.characterColor || 'bg-blue-200',
       } as Group;
     }
     return apiClient.post<Group>('/groups', data);
@@ -74,7 +80,7 @@ export const groupsApi = {
   update: async (id: string, data: UpdateGroupForm): Promise<Group> => {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      const group = MOCK_GROUPS.find((g) => g.id === id);
+      const group = mockGroups.find((g) => g.id === id);
       if (!group) throw new Error('群組不存在');
       return { ...group, ...data, updatedAt: new Date() } as Group;
     }
