@@ -12,7 +12,10 @@ type MemberAvatarsProps = {
  * - 超過則用「...」點點圖示表示
  * - 若成員不滿則空白（不顯示佔位符）
  */
-export const MemberAvatars = ({ members, maxDisplay = 3 }: MemberAvatarsProps) => {
+export const MemberAvatars = ({
+  members,
+  maxDisplay = 3,
+}: MemberAvatarsProps) => {
   if (!members || members.length === 0) {
     return null;
   }
@@ -21,40 +24,41 @@ export const MemberAvatars = ({ members, maxDisplay = 3 }: MemberAvatarsProps) =
   const remainingCount = members.length - maxDisplay;
 
   return (
-    <div className="flex items-center">
-      {displayedMembers.map((member, index) => (
-        <div
-          key={member.id}
-          className="w-6 h-6 rounded-full overflow-hidden border-2 border-neutral-400 bg-white"
-          style={{
-            marginLeft: index === 0 ? 0 : '-8px',
-            zIndex: maxDisplay - index,
-          }}
-        >
-          {member.avatar ? (
-            <img
-              src={member.avatar}
-              alt={member.name}
-              className="w-full h-full object-cover scale-150 translate-y-1"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-primary-100 text-primary-700 text-sm font-medium">
-              {member.name?.charAt(0) || '?'}
+    <div className="flex items-center pointer-events-none">
+      {displayedMembers.map((member, index) => {
+        const isLast = index === displayedMembers.length - 1;
+        const showMoreIndicator = isLast && remainingCount > 0;
+
+        return (
+          <div
+            key={member.id}
+            className="relative"
+            style={{
+              marginLeft: index === 0 ? 0 : '-8px',
+              zIndex: maxDisplay - index,
+            }}
+          >
+            <div className="w-6 h-6 rounded-full overflow-hidden border-2 border-neutral-400 bg-white">
+              {member.avatar ? (
+                <img
+                  src={member.avatar}
+                  alt={member.name}
+                  className="w-full h-full object-cover scale-150 translate-y-1"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-primary-100 text-primary-700 text-sm font-medium">
+                  {member.name?.charAt(0) || '?'}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      ))}
-      {remainingCount > 0 && (
-        <div
-          className="w-10 h-10 rounded-full border-2 border-white bg-neutral-100 flex items-center justify-center"
-          style={{
-            marginLeft: '-8px',
-            zIndex: 0,
-          }}
-        >
-          <MoreHorizontal className="w-5 h-5 text-neutral-500" />
-        </div>
-      )}
+            {showMoreIndicator && (
+              <div className="absolute -bottom-1 -right-1 flex items-center justify-center filter drop-shadow-sm">
+                <MoreHorizontal className="w-3 h-3 text-stone-600 rounded-full" />
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
