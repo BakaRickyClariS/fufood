@@ -145,7 +145,7 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
           currentUser={{
             name: userName,
             avatar: userAvatar,
-            role: 'owner', // 暫時寫死
+            role: activeGroup.members?.find(m => m.id === user?.id)?.role || 'member', // 暫時寫死
           }}
           members={activeGroup.members || []}
           onEditMembers={() => openMembers(activeGroup)}
