@@ -78,6 +78,11 @@ export type User = {
   lineId?: string;
   displayName?: string;
   pictureUrl?: string;      // LINE 頭貼 URL（用於 TopNav 顯示）
+  // 個人詳細資料
+  phone?: string;
+  gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
+  // 飲食喜好
+  dietaryPreference?: DietaryPreference;
   // 會員等級
   membershipTier?: MembershipTier;
 };

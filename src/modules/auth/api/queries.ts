@@ -4,6 +4,11 @@ import type { User, ProfileResponse } from '../types';
 export const LINE_API_BASE =
   import.meta.env.VITE_LINE_API_BASE_URL || 'https://api.fufood.jocelynh.me';
 
+import { MOCK_USERS } from './mock/authMockData';
+
+// 環境變數控制是否使用 Mock
+const USE_MOCK = import.meta.env.VITE_USE_MOCK_API !== 'false';
+
 /**
  * 從後端 Profile API 取得已登入用戶資訊
  * 使用 HttpOnly Cookie 進行認證
@@ -13,6 +18,19 @@ export async function getUserProfile(): Promise<User | null> {
   const loggedOut = sessionStorage.getItem('logged_out');
   if (loggedOut === 'true') {
     return null;
+  }
+
+  // Mock 模式
+  if (USE_MOCK) {
+    // 模擬 API 延遲
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return {
+      ...MOCK_USERS[0],
+      // 確保 Mock 資料有一致的欄位
+      lineId: 'U1234567890', 
+      displayName: MOCK_USERS[0].name,
+      pictureUrl: MOCK_USERS[0].avatar,
+    };
   }
 
   const response = await fetch(`${LINE_API_BASE}/api/v1/profile`, {

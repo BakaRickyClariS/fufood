@@ -5,7 +5,7 @@ export const MOCK_USERS: User[] = [
     id: '1',
     email: 'test@example.com',
     name: 'Jocelyn',
-    avatar: 'bg-red-200',
+    avatar: '1',
     createdAt: new Date(),
   },
 ];
