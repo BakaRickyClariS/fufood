@@ -1,8 +1,8 @@
 # Fufood API 參考 v2.2（精簡版）
 
-**版本**: v2.2  
-**最後更新**: 2025-12-02  
-**說明**: 依需求精簡路由，保留必要驗證（含 `/auth/check`）、社群貼文按讚／留言，並將「批次新增／批次修改」標註暫緩。
+**版本**: v2.3  
+**最後更新**: 2025-12-16  
+**說明**: 依需求精簡路由，新增 `/api/v1/profile` 端點（HttpOnly Cookie 認證），整合 TanStack Query。保留必要驗證（含 `/auth/check`）、社群貼文按讚／留言，並將「批次新增／批次修改」標註暫緩。
 
 ---
 
@@ -273,7 +273,9 @@
 
 ## 1. Auth（使用者認證）
 
-負責註冊、登入、登出、Token 更新、LINE OAuth、個人資料更新。
+負責註冊、登入、登出、Token 更新、LINE OAuth、個人資料更新。採用 **HttpOnly Cookie** 認證機制，前端使用 **TanStack Query** 管理認證狀態。
+
+### 路由列表
 
 - `POST /auth/register`：註冊。
 - `POST /auth/login`：登入。
@@ -281,10 +283,63 @@
 - `POST /auth/refresh`：用 refresh token 換 access token。
 - `GET /auth/me`：回傳使用者資料，401 視為未登入。
 - `GET /auth/check`：僅驗 Token，成功 204/200，失敗 401，適合心跳。
-- `GET /auth/line/login` / `GET /auth/line/callback`：LINE OAuth。
+- `GET /oauth/line/init`：LINE OAuth 入口（重定向）。
+- `GET /oauth/line/callback`：LINE OAuth 回呼（設定 HttpOnly Cookie）。
+- `GET /api/v1/profile`：**取得當前用戶 Profile**（HttpOnly Cookie 認證，TanStack Query 快取）。
 - `PUT /auth/update-profile`：更新個人資料。
 
-> **Mock 模式**：前端開發環境提供假登入功能（電子郵件帳號），不經過後端 API，僅在前端模擬 Token 發發。
+### User 型別
+
+```typescript
+type MembershipTier = 'free' | 'premium' | 'vip';
+
+type User = {
+  id: string;
+  email?: string;           // LINE 登入可能無 email
+  name?: string;
+  avatar: string;
+  createdAt: Date;
+  lineId?: string;          // LINE 專屬
+  displayName?: string;     // LINE 專屬
+  pictureUrl?: string;      // LINE 頭貼 URL（TopNav 顯示）
+  membershipTier?: MembershipTier; // 會員等級
+};
+```
+
+### ProfileResponse 型別
+
+```typescript
+type ProfileData = {
+  id: string;
+  lineId: string;
+  name: string;
+  profilePictureUrl: string;
+};
+
+type ProfileResponse = {
+  data: ProfileData;
+};
+```
+
+### 前端整合（TanStack Query）
+
+```typescript
+// 取得用戶 Profile（使用 HttpOnly Cookie）
+export function useGetUserProfileQuery() {
+  return useQuery({
+    queryKey: ['GET_USER_PROFILE'],
+    queryFn: getUserProfile,
+    retry: false,                 // 401 時不重試
+    staleTime: 1000 * 60 * 5,     // 5 分鐘快取
+    refetchOnWindowFocus: false,
+  });
+}
+
+// 登入成功後更新快取
+await queryClient.invalidateQueries({ queryKey: ['GET_USER_PROFILE'] });
+```
+
+> **Mock 模式**：前端開發環境提供假登入功能（電子郵件帳號），不經過後端 API，僅在前端模擬 Token 發放。
 
 ---
 

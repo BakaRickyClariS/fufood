@@ -2,54 +2,60 @@ import { useState } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/shared/utils/styleUtils';
-import { useAuth } from '@/modules/auth';
+import { useQueryClient } from '@tanstack/react-query';
 import { Check } from 'lucide-react';
 
-// 匯入頭像圖片
-import Avatar1 from '@/assets/images/auth/Avatar-1.png';
-import Avatar2 from '@/assets/images/auth/Avatar-2.png';
-import Avatar3 from '@/assets/images/auth/Avatar-3.png';
-import Avatar4 from '@/assets/images/auth/Avatar-4.png';
-import Avatar5 from '@/assets/images/auth/Avatar-5.png';
-import Avatar6 from '@/assets/images/auth/Avatar-6.png';
-import Avatar7 from '@/assets/images/auth/Avatar-7.png';
-import Avatar8 from '@/assets/images/auth/Avatar-8.png';
-import Avatar9 from '@/assets/images/auth/Avatar-9.png';
+// 頭像常數
+import { AVATAR_OPTIONS } from '@/shared/utils/avatarUtils';
 
-const AVATARS = [
-  { id: 1, src: Avatar1 },
-  { id: 2, src: Avatar2 },
-  { id: 3, src: Avatar3 },
-  { id: 4, src: Avatar4 },
-  { id: 5, src: Avatar5 },
-  { id: 6, src: Avatar6 },
-  { id: 7, src: Avatar7 },
-  { id: 8, src: Avatar8 },
-  { id: 9, src: Avatar9 },
-];
+// Mock Auth Service（開發用）
+import { mockAuthService } from '@/modules/auth/services/mockAuthService';
 
+/**
+ * 頭像選擇頁面（Mock 登入用）
+ * 
+ * 此頁面僅供開發測試使用。
+ * 正式環境請使用 LINE 登入。
+ * 
+ * 啟用條件：VITE_USE_MOCK_API=true
+ */
 const AvatarSelection = () => {
   const navigate = useNavigate();
-  const { mockLogin, isLoading } = useAuth();
+  const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [displayName, setDisplayName] = useState('Ricky');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleConfirm = async () => {
     if (selectedId && displayName.trim()) {
       try {
-        // 使用 Mock 登入 (改用 mockLogin)
-        await mockLogin(selectedId, displayName);
+        setIsLoading(true);
+        
+        // 使用獨立的 Mock Auth Service
+        const { user } = mockAuthService.mockLogin(selectedId, displayName);
+        
+        // 更新 TanStack Query 快取
+        queryClient.setQueryData(['GET_USER_PROFILE'], user);
+        
         navigate('/');
       } catch (error) {
         console.error('Login failed:', error);
+      } finally {
+        setIsLoading(false);
       }
     }
   };
 
   return (
     <div className="min-h-screen bg-white flex flex-col pt-8">
-      {/* 內容區 - 可捲動 */}
       <div className="flex flex-col px-4">
+        {/* 開發模式提示 */}
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm text-yellow-800">
+            ⚠️ 開發模式：Mock 登入（正式環境請使用 LINE 登入）
+          </p>
+        </div>
+
         {/* 標題區 */}
         <div className="flex items-center gap-2 mb-4">
           <div className="w-1 h-5 bg-primary-400" />
@@ -59,7 +65,7 @@ const AvatarSelection = () => {
         {/* 頭像選擇區 */}
         <div className="bg-white border-neutral-100 mb-8">
           <div className="grid grid-cols-3 gap-2">
-            {AVATARS.map((avatar) => (
+            {AVATAR_OPTIONS.map((avatar) => (
               <button
                 key={avatar.id}
                 className={cn(
@@ -102,7 +108,7 @@ const AvatarSelection = () => {
         </div>
       </div>
 
-      {/* 底部按鈕區 - 跟隨內容流動，若內容少則在底部，內容多則被推下去（但有外層 pb-24 確保不被 BottomNav 擋住） */}
+      {/* 底部按鈕區 */}
       <div className="p-4 mt-2">
         <Button
           className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white h-12 text-base font-bold rounded-xl shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"

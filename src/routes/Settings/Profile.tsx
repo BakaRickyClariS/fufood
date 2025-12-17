@@ -1,7 +1,11 @@
 import { mockRequestHandlers } from '@/utils/debug/mockRequestHandlers';
 import { User, RefreshCcw, LogOut } from 'lucide-react';
+import { useCallback } from 'react';
+import { useSignOutMutation } from '@/modules/auth/api/mutations';
 
 const Profile = () => {
+  const signOut = useSignOutMutation();
+
   const handleResetData = () => {
     if (
       window.confirm(
@@ -13,11 +17,10 @@ const Profile = () => {
     }
   };
 
-  const handleLogout = () => {
-    // 實作登出邏輯 (如有需要)
-    localStorage.removeItem('accessToken');
-    window.location.href = '/auth/login';
-  };
+  const handleLogout = useCallback(
+    () => signOut.mutateAsync(),
+    [signOut.mutateAsync],
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-24">
@@ -60,10 +63,11 @@ const Profile = () => {
           </h2>
           <button
             onClick={handleLogout}
-            className="w-full py-3 px-4 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+            disabled={signOut.isPending}
+            className="w-full py-3 px-4 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <LogOut className="w-4 h-4" />
-            登出
+            {signOut.isPending ? '登出中...' : '登出'}
           </button>
         </div>
 

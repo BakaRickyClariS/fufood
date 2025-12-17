@@ -1,79 +1,137 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { authApi, authService } from '@/modules/auth';
 
 /**
+ * 檢測是否在 Popup 視窗中
+ */
+const isPopupWindow = (): boolean => {
+  return window.opener !== null && window.opener !== window;
+};
+
+/**
  * LINE 登入回調頁面
- * 處理 LINE OAuth 回調，解析 code 並完成登入
+ * 後端已透過 HttpOnly Cookie 設定 token，此頁面負責：
+ * 1. 呼叫 Profile API 確認登入狀態
+ * 2. 如果是 Popup 視窗：通知父視窗並關閉
+ * 3. 如果是主視窗：使 TanStack Query 快取失效並導向首頁
  */
 const LineLoginCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    const processCallback = async () => {
-      const code = searchParams.get('code');
-      const state = searchParams.get('state');
+    const verifyLogin = async () => {
+      // 檢查 LINE 返回的錯誤
       const errorParam = searchParams.get('error');
       const errorDescription = searchParams.get('error_description');
 
-      // 處理 LINE 返回的錯誤
       if (errorParam) {
         const errorMsg = errorDescription || 'LINE 登入被取消或發生錯誤';
         setError(errorMsg);
         setIsProcessing(false);
-        setTimeout(() => navigate('/auth/login'), 2500);
-        return;
-      }
 
-      // 驗證必要參數
-      if (!code) {
-        setError('無效的回調參數，缺少授權碼');
-        setIsProcessing(false);
-        setTimeout(() => navigate('/auth/login'), 2500);
+        // 如果是 Popup，通知父視窗錯誤後關閉
+        if (isPopupWindow()) {
+          window.opener?.postMessage(
+            { type: 'LINE_LOGIN_ERROR', error: errorMsg },
+            '*',
+          );
+          setTimeout(() => window.close(), 2000);
+        } else {
+          setTimeout(() => navigate('/auth/login'), 2500);
+        }
         return;
       }
 
       try {
-        // 呼叫後端 API 處理 LINE 登入
-        const response = await authApi.handleLineCallback({ code, state: state || undefined });
-        
-        // 儲存 Token 及用戶資訊
-        authService.saveToken(response.token);
-        authService.saveUser(response.user);
-        
-        // 登入成功，導向首頁
-        navigate('/', { replace: true });
+        // 呼叫 Profile API 確認 Cookie 已設定
+        const response = await authApi.getProfile();
+
+        // 將 API 回傳的資料轉換為 User 格式並儲存
+        const userData = {
+          id: response.data.id,
+          lineId: response.data.lineId,
+          name: response.data.name,
+          displayName: response.data.name,
+          avatar: response.data.profilePictureUrl,
+          pictureUrl: response.data.profilePictureUrl,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        // 儲存到 localStorage（作為備份）
+        authService.saveUser(userData);
+
+        // 判斷是否在 Popup 視窗中
+        if (isPopupWindow()) {
+          // 通知父視窗登入成功
+          window.opener?.postMessage(
+            { type: 'LINE_LOGIN_SUCCESS', user: userData },
+            '*',
+          );
+
+          // 關閉 Popup 視窗
+          window.close();
+        } else {
+          // 非 Popup 模式：直接更新快取並導向首頁
+          await queryClient.invalidateQueries({
+            queryKey: ['GET_USER_PROFILE'],
+          });
+          navigate('/', { replace: true });
+        }
       } catch (err) {
-        console.error('LINE 登入失敗:', err);
-        const message = err instanceof Error ? err.message : 'LINE 登入失敗，請稍後再試';
-        setError(message);
+        console.error('LINE 登入驗證失敗:', err);
+        setError('登入失敗，請重試');
         setIsProcessing(false);
-        setTimeout(() => navigate('/auth/login'), 2500);
+
+        if (isPopupWindow()) {
+          window.opener?.postMessage(
+            { type: 'LINE_LOGIN_ERROR', error: '登入失敗' },
+            '*',
+          );
+          setTimeout(() => window.close(), 2000);
+        } else {
+          setTimeout(() => navigate('/auth/login'), 2500);
+        }
       }
     };
 
-    processCallback();
-  }, [searchParams, navigate]);
+    verifyLogin();
+  }, [searchParams, navigate, queryClient]);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-white">
       {error ? (
         <div className="text-center px-6">
           <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-8 h-8 text-red-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </div>
           <p className="text-red-500 font-medium mb-2">{error}</p>
-          <p className="text-sm text-stone-400">正在返回登入頁面...</p>
+          <p className="text-sm text-stone-400">
+            {isPopupWindow() ? '視窗即將關閉...' : '正在返回登入頁面...'}
+          </p>
         </div>
       ) : isProcessing ? (
         <div className="text-center">
-          <div className="animate-spin w-10 h-10 border-4 border-[#EE5D50] border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-stone-600 font-medium">正在處理 LINE 登入...</p>
+          <div className="animate-spin w-10 h-10 border-4 border-[#f58274] border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-stone-600 font-medium">正在完成登入...</p>
           <p className="text-sm text-stone-400 mt-1">請稍候</p>
         </div>
       ) : null}

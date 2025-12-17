@@ -187,13 +187,14 @@ const SettingsPanel: React.FC = () => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
+      const oldOrderIds = [...categoryOrder]; // 保存原始順序
       const oldIndex = sortedCategories.findIndex((c) => c.id === active.id);
       const newIndex = sortedCategories.findIndex((c) => c.id === over.id);
 
       const newOrder = arrayMove(sortedCategories, oldIndex, newIndex);
       const newOrderIds = newOrder.map((c) => c.id);
 
-      // 立即更新 Redux 狀態
+      // 樂觀更新
       dispatch(setCategoryOrder(newOrderIds));
 
       // 自動儲存到後端
@@ -202,7 +203,8 @@ const SettingsPanel: React.FC = () => {
       } catch (error) {
         console.error('Failed to save category order:', error);
         toast.error('儲存失敗，請稍後再試');
-        // 如果儲存失敗，可以考慮回復之前的順序
+        // 失敗時還原狀態
+        dispatch(setCategoryOrder(oldOrderIds));
       }
     }
   };
