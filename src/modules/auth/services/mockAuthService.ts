@@ -1,16 +1,16 @@
 /**
  * Mock Auth Service（開發用）
- * 
+ *
  * 此檔案包含 Mock 登入相關功能，僅供開發測試使用。
  * 正式環境請使用真實 API 認證。
- * 
+ *
  * 啟用方式：
  * 1. 在 .env 中設定 VITE_USE_MOCK_API=true
  * 2. 在需要的地方引入此模組
- * 
+ *
  * @example
  * import { mockAuthService } from '@/modules/auth/services/mockAuthService';
- * 
+ *
  * // Mock 登入
  * const { user, token } = mockAuthService.mockLogin(avatarId, displayName);
  */
@@ -47,6 +47,7 @@ export const mockAuthService = {
       displayName: displayName,
       avatar: String(avatarId),
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
     // 儲存到 localStorage

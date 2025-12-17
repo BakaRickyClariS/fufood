@@ -5,6 +5,8 @@ import type {
   CreateGroupForm,
   UpdateGroupForm,
 } from '../types/group.types';
+// Temporarily import mockGroups to ensure images work during dev if API is not ready
+import { mockGroups } from '../mocks/mockData';
 
 /**
  * 群組資料管理 Hook
@@ -17,7 +19,13 @@ export const useGroups = () => {
   const fetchGroups = async () => {
     setIsLoading(true);
     try {
-      const data = await groupsApi.getAll();
+      // PROVISIONAL: Use mockGroups directly to ensure consistency with Provider
+      // const data = await groupsApi.getAll();
+      const data = mockGroups;
+
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       setGroups(data);
     } catch (err) {
       setError(err as Error);
