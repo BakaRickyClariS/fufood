@@ -13,10 +13,10 @@
 ---
 
 ## 概要
-AI 影像辨識（OCR/食材辨識），上傳圖片至 Cloudinary 後呼叫 `/api/v1/ai/analyze-image`，並可直接送入庫存 `/api/v1/inventory`。依精簡版 API：AI 僅保留 `analyze-image` 與 `recipe` 兩條，庫存使用精簡後的 inventory 路由。
+AI 影像辨識（OCR/食材辨識），透過後端 Proxy 上傳圖片至 Cloudinary (`/api/v1/media/upload`)，再呼叫 `/api/v1/ai/analyze-image` 進行分析，並可直接送入庫存 `/api/v1/inventory`。依精簡版 API：AI 僅保留 `analyze-image` 與 `recipe` 兩條，庫存使用精簡後的 inventory 路由。
 
 ### 核心功能
-1. 影像上傳（Cloudinary）
+1. 影像上傳（透過後端 Proxy 至 Cloudinary）
 2. AI 影像辨識 `/ai/analyze-image`
 3.（可選）AI 產生食譜 `/ai/recipe`
 4. 將辨識結果提交到庫存 `/inventory`
@@ -36,7 +36,8 @@ food-scan/
 ├── services/
 │   ├── api/
 │   │   ├── foodScanApi.ts        # 介面定義
-│   │   └── imageRecognition.ts   # 實際 API 實作
+│   │   ├── imageRecognition.ts   # 實際 API 實作
+│   │   └── uploadApi.ts          # 圖片上傳 API
 │   ├── mock/
 │   │   ├── mockData.ts
 │   │   └── mockFoodScanApi.ts
@@ -82,6 +83,7 @@ export type FoodItemResponse = {
 ## API 規格
 
 ### 路由（對應 API_REFERENCE_V2 #51-#52，及 Inventory #18-#22）
+- `POST /api/v1/media/upload`：圖片上傳（Proxy to Cloudinary）
 - `POST /api/v1/ai/analyze-image`：影像辨識（OCR/食材）
 - `POST /api/v1/ai/recipe`：AI 產生食譜（可選，若未實作可標示 stub）
 - `POST /api/v1/inventory`：提交辨識後的食材至庫存（#20）
@@ -118,8 +120,9 @@ Response: `{ success, message, data: { id } }`
 ## Hooks
 
 ### `useImageUpload`
-- 上傳圖片到 Cloudinary，取得 URL 後呼叫 `recognizeImage`
-- 狀態：`isUploading`, `isAnalyzing`, `error`
+- 使用 **TanStack Query (useMutation)** 管理狀態。
+- 流程：呼叫 `uploadApi` 上傳圖片至後端 -> 取得 URL -> 呼叫 `recognizeImage` 進行 AI 分析。
+- 狀態：`isUploading` (上傳中), `isAnalyzing` (分析中), `isLoading` (總體等待), `error`, `uploadImage` (mutateAsync)。
 
 ### `useFoodItemSubmit`
 - 將表單資料提交到 `/inventory`
@@ -136,10 +139,10 @@ Response: `{ success, message, data: { id } }`
 ## 環境變數
 | 變數 | 說明 | 範例 |
 | --- | --- | --- |
-| `VITE_CLOUDINARY_CLOUD_NAME` | Cloudinary Cloud Name | `demo` |
-| `VITE_CLOUDINARY_UPLOAD_PRESET` | Cloudinary Upload Preset | `fufood_preset` |
 | `VITE_API_BASE_URL` | API 基底 | `http://localhost:3000/api/v1` |
 | `VITE_USE_MOCK_API` | 是否使用 Mock | `true` / `false` |
+
+> 注意：Cloudinary Credentials (`VITE_CLOUDINARY_...`) 已移除，改由後端環境變數管理。
 
 ---
 
