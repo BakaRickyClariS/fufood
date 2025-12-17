@@ -1,13 +1,10 @@
 import { mockRequestHandlers } from '@/utils/debug/mockRequestHandlers';
 import { User, RefreshCcw, LogOut } from 'lucide-react';
-import { useAuth } from '@/modules/auth';
-import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useCallback } from 'react';
+import { useSignOutMutation } from '@/modules/auth/api/mutations';
 
 const Profile = () => {
-  const { logout } = useAuth();
-  const navigate = useNavigate();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const signOut = useSignOutMutation();
 
   const handleResetData = () => {
     if (
@@ -20,25 +17,10 @@ const Profile = () => {
     }
   };
 
-  const handleLogout = async () => {
-    if (isLoggingOut) return;
-    
-    setIsLoggingOut(true);
-    try {
-      // 呼叫 useAuth 的 logout 方法
-      // 這會清除 HttpOnly Cookie 和 TanStack Query 快取
-      await logout();
-      
-      // 導向登入頁面
-      navigate('/auth/login', { replace: true });
-    } catch (error) {
-      console.error('登出失敗:', error);
-      // 即使失敗也嘗試導向登入頁面
-      navigate('/auth/login', { replace: true });
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
+  const handleLogout = useCallback(
+    () => signOut.mutateAsync(),
+    [signOut.mutateAsync],
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-24">
@@ -81,11 +63,11 @@ const Profile = () => {
           </h2>
           <button
             onClick={handleLogout}
-            disabled={isLoggingOut}
+            disabled={signOut.isPending}
             className="w-full py-3 px-4 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <LogOut className="w-4 h-4" />
-            {isLoggingOut ? '登出中...' : '登出'}
+            {signOut.isPending ? '登出中...' : '登出'}
           </button>
         </div>
 
