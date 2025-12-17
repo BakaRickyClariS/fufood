@@ -1,5 +1,7 @@
 import { Outlet, useLocation, useMatches } from 'react-router-dom';
 import { useEffect } from 'react';
+import { GroupModalProvider } from '@/modules/groups/providers/GroupModalProvider';
+// import { mockGroups } from '@/modules/groups/mocks/mockData';
 import TopNav from './TopNav';
 import BottomNav from './BottomNav';
 
@@ -11,7 +13,8 @@ type RouteHandle = {
 const MainLayout = () => {
   const location = useLocation();
   const matches = useMatches();
-  const isDashboard = location.pathname === '/';
+  const isDashboard =
+    location.pathname === '/' || location.pathname === '/dashboard';
 
   // 取得當前路由的 handle 設定
   const currentHandle = matches
@@ -36,8 +39,11 @@ const MainLayout = () => {
     };
   }, [isDashboard]);
 
+  // 暫時使用 Mock 的第一個群組作為當前群組
+  // const currentGroup = mockGroups[0]; // Provider internal state now handles this
+
   return (
-    <>
+    <GroupModalProvider>
       {showHeader && (
         <div className="sticky top-0 z-40">
           <TopNav />
@@ -53,7 +59,7 @@ const MainLayout = () => {
           </div>
         </div>
       )}
-    </>
+    </GroupModalProvider>
   );
 };
 
