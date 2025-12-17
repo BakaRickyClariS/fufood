@@ -19,15 +19,12 @@ export const useGroups = () => {
   const fetchGroups = async () => {
     setIsLoading(true);
     try {
-      // PROVISIONAL: Use mockGroups directly to ensure consistency with Provider
-      // const data = await groupsApi.getAll();
-      const data = mockGroups;
-
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
+      const data = await groupsApi.getAll();
       setGroups(data);
     } catch (err) {
+      // API 失敗時使用 mock 資料作為 fallback
+      console.warn('Failed to fetch groups from API, using mock data:', err);
+      setGroups(mockGroups);
       setError(err as Error);
     } finally {
       setIsLoading(false);

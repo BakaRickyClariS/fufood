@@ -8,7 +8,6 @@ import { MembersModal } from '@/modules/groups/components/modals/MembersModal';
 import { useAuth } from '@/modules/auth';
 import { getUserAvatarUrl } from '@/shared/utils/avatarUtils';
 import { useGroups } from '@/modules/groups/hooks/useGroups';
-import { mockGroups } from '../mocks/mockData';
 
 // Context 型別定義
 type GroupModalContextType = {
@@ -60,8 +59,7 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
   // When createGroup adds a group, 'groups' updates, and activeGroup is re-calculated if ID matches.
   // Actually, wait. 'groups' is initially empty in useGroups? No, I updated it to fetch mockGroups.
   // So 'groups' will be populated.
-  const activeGroup =
-    groups.find((g) => g.id === activeGroupId) || groups[0] || mockGroups[0];
+  const activeGroup = groups.find((g) => g.id === activeGroupId) || groups[0];
 
   // Modal States
   const [isHomeModalOpen, setIsHomeModalOpen] = useState(false);
@@ -145,7 +143,9 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
           currentUser={{
             name: userName,
             avatar: userAvatar,
-            role: activeGroup.members?.find(m => m.id === user?.id)?.role || 'member', // 暫時寫死
+            role:
+              activeGroup.members?.find((m) => m.id === user?.id)?.role ||
+              'member', // 暫時寫死
           }}
           members={activeGroup.members || []}
           onEditMembers={() => openMembers(activeGroup)}

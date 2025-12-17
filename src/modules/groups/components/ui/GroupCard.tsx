@@ -6,6 +6,9 @@ import type { Group } from '../../types/group.types';
 import { useGroupModal } from '../../hooks/useGroupModal';
 import { useAuth } from '@/modules/auth/hooks';
 
+/** 顯示的頭像數量上限 */
+const MAX_AVATARS_DISPLAY = 4;
+
 type GroupCardProps = {
   group: Group;
   isActive?: boolean;
@@ -120,7 +123,7 @@ export const GroupCard: FC<GroupCardProps> = ({
           成員 ({group.members.length})
         </span>
         <div className="flex">
-          {group.members.slice(0, 4).map((member, index) => {
+          {group.members.slice(0, MAX_AVATARS_DISPLAY).map((member, index) => {
             const isCurrentUser = user?.id === member.id;
             return (
               <div
