@@ -77,8 +77,6 @@ export const HomeModal = ({
     switch (role) {
       case 'owner':
         return '擁有者';
-      case 'organizer':
-        return '組織者';
       case 'member':
         return '成員';
       default:

@@ -10,7 +10,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { ChevronLeft, Check } from 'lucide-react';
 import { useGroupModal } from '../../hooks/useGroupModal';
-import { useAuth } from '@/modules/auth';
+
 
 // Check available images in source
 import joImg from '@/assets/images/group/jo.png';
@@ -38,8 +38,8 @@ export const CreateGroupModal: FC<CreateGroupModalProps> = ({
   onBack,
 }) => {
   const { createGroup, isGroupsLoading: isLoading } = useGroupModal();
-  const { user } = useAuth();
-  const userName = user?.displayName || user?.name || '使用者';
+
+
 
   const [name, setName] = useState('');
   const [selectedImage, setSelectedImage] = useState(
@@ -52,10 +52,6 @@ export const CreateGroupModal: FC<CreateGroupModalProps> = ({
 
     await createGroup({
       name,
-      color: 'bg-white', // Default or legacy
-      characterColor: 'bg-stone-200', // Default
-      imageUrl: selectedImage, // Pass selected image URL/Path
-      admin: userName, // Pass current user name as admin
     });
 
     // Reset form
