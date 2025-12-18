@@ -45,8 +45,8 @@ const EditProfile = () => {
   useEffect(() => {
     if (user) {
       setValue('name', user.name || '');
-      // setValue('phone', user.phone || ''); // user object doesn't have phone yet in type, assuming it might
-      // setValue('gender', user.gender || 'prefer-not-to-say');
+      setValue('phone', user.phone || '');
+      setValue('gender', user.gender || 'prefer-not-to-say');
     }
   }, [user, setValue]);
 
