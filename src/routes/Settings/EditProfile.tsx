@@ -54,8 +54,9 @@ const EditProfile = () => {
     updateProfileMutation.mutate(
       {
         name: data.name,
-        // phone: data.phone,
-        // gender: data.gender,
+        phone: data.phone,
+        gender: data.gender,
+      },
       },
       {
         onSuccess: () => {
