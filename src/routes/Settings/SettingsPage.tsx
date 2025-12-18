@@ -10,6 +10,7 @@ import DietaryPreferenceTags from '@/modules/settings/components/DietaryPreferen
 import QuickActions from '@/modules/settings/components/QuickActions';
 import OtherSettingsList from '@/modules/settings/components/OtherSettingsList';
 import LogoutSection from '@/modules/settings/components/LogoutSection';
+import { GroupApiTest } from '@/modules/groups/components/debug/GroupApiTest';
 
 const SettingsPage = () => {
   const { user, logout } = useAuth();
@@ -56,6 +57,9 @@ const SettingsPage = () => {
           onLogout={handleLogout} 
           isLoggingOut={isLoggingOut} 
         />
+
+        {/* 開發測試用：群組 API 測試按鈕 */}
+        {import.meta.env.DEV && <GroupApiTest />}
       </div>
     </div>
   );
