@@ -44,7 +44,7 @@ const defaultNavItems: NavItem[] = [
     id: 'profile',
     label: '設定',
     icon: <SlidersHorizontal className="w-5 h-5" />,
-    href: '/profile',
+    href: '/settings',
   },
 ];
 
