@@ -1,8 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { User, ProfileResponse } from '../types';
-
-export const LINE_API_BASE =
-  import.meta.env.VITE_LINE_API_BASE_URL || 'https://api.fufood.jocelynh.me';
+import { backendApi } from '@/api/client';
 
 import { MOCK_USERS } from './mock/authMockData';
 
@@ -33,32 +31,27 @@ export async function getUserProfile(): Promise<User | null> {
     };
   }
 
-  const response = await fetch(`${LINE_API_BASE}/api/v1/profile`, {
-    credentials: 'include', // 攜帶 HttpOnly Cookie
-  });
+  try {
+    const result = await backendApi.get<ProfileResponse>('/api/v1/profile');
 
-  // 未登入時返回 null（不拋出錯誤）
-  if (response.status === 401) {
-    return null;
+    // 將 API 回傳的 ProfileData 轉換為 User 格式
+    return {
+      id: result.data.id,
+      lineId: result.data.lineId,
+      name: result.data.name,
+      displayName: result.data.name,
+      avatar: result.data.profilePictureUrl,
+      pictureUrl: result.data.profilePictureUrl, // LINE 頭貼 URL
+      createdAt: new Date(result.data.createdAt),
+      updatedAt: new Date(result.data.updatedAt),
+    };
+  } catch (error) {
+    // 未登入時返回 null（不拋出錯誤）
+    if (error instanceof Error && error.message.includes('401')) {
+      return null;
+    }
+    throw error;
   }
-
-  if (!response.ok) {
-    throw new Error(`API 錯誤: ${response.status}`);
-  }
-
-  const result: ProfileResponse = await response.json();
-
-  // 將 API 回傳的 ProfileData 轉換為 User 格式
-  return {
-    id: result.data.id,
-    lineId: result.data.lineId,
-    name: result.data.name,
-    displayName: result.data.name,
-    avatar: result.data.profilePictureUrl,
-    pictureUrl: result.data.profilePictureUrl, // LINE 頭貼 URL
-    createdAt: new Date(result.data.createdAt),
-    updatedAt: new Date(result.data.updatedAt),
-  };
 }
 
 /**
