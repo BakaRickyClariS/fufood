@@ -8,8 +8,20 @@ import {
 } from '@/shared/components/ui/dialog';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
-import { ChevronLeft } from 'lucide-react';
-import { useGroups } from '../../hooks/useGroups';
+import { ChevronLeft, Check } from 'lucide-react';
+import { useGroupModal } from '../../hooks/useGroupModal';
+import { useAuth } from '@/modules/auth';
+
+// Check available images in source
+import joImg from '@/assets/images/group/jo.png';
+import koImg from '@/assets/images/group/ko.png';
+import zoImg from '@/assets/images/group/zo.png';
+
+const AVAILABLE_GROUP_IMAGES = [
+  { id: 'jo', src: joImg, alt: 'Jo Group' },
+  { id: 'ko', src: koImg, alt: 'Ko Group' },
+  { id: 'zo', src: zoImg, alt: 'Zo Group' },
+];
 
 type CreateGroupModalProps = {
   open: boolean;
@@ -25,10 +37,14 @@ export const CreateGroupModal: FC<CreateGroupModalProps> = ({
   onClose,
   onBack,
 }) => {
-  const { createGroup, isLoading } = useGroups();
+  const { createGroup, isGroupsLoading: isLoading } = useGroupModal();
+  const { user } = useAuth();
+  const userName = user?.displayName || user?.name || '使用者';
+
   const [name, setName] = useState('');
-  const [color, setColor] = useState('bg-white');
-  const [characterColor] = useState('bg-red-400');
+  const [selectedImage, setSelectedImage] = useState(
+    AVAILABLE_GROUP_IMAGES[0].src,
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,12 +52,15 @@ export const CreateGroupModal: FC<CreateGroupModalProps> = ({
 
     await createGroup({
       name,
-      color,
-      characterColor,
+      color: 'bg-white', // Default or legacy
+      characterColor: 'bg-stone-200', // Default
+      imageUrl: selectedImage, // Pass selected image URL/Path
+      admin: userName, // Pass current user name as admin
     });
 
     // Reset form
     setName('');
+    setSelectedImage(AVAILABLE_GROUP_IMAGES[0].src);
     onClose();
   };
 
@@ -82,22 +101,35 @@ export const CreateGroupModal: FC<CreateGroupModalProps> = ({
                 />
               </div>
 
-              {/* 顏色選擇 (簡化版) */}
+              {/* 群組圖片選擇 */}
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-stone-700">
-                  群組顏色
+                  選擇群組圖片
                 </label>
-                <div className="flex gap-2">
-                  {['bg-white', 'bg-red-50', 'bg-blue-50', 'bg-green-50'].map(
-                    (c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        className={`w-8 h-8 rounded-full border ${c} ${color === c ? 'ring-2 ring-stone-400' : ''}`}
-                        onClick={() => setColor(c)}
+                <div className="grid grid-cols-3 gap-3">
+                  {AVAILABLE_GROUP_IMAGES.map((img) => (
+                    <button
+                      key={img.id}
+                      type="button"
+                      className={`relative aspect-square rounded-2xl overflow-hidden border-2 transition-all ${
+                        selectedImage === img.src
+                          ? 'border-[#EE5D50] ring-2 ring-[#EE5D50]/20'
+                          : 'border-transparent hover:border-stone-200'
+                      }`}
+                      onClick={() => setSelectedImage(img.src)}
+                    >
+                      <img
+                        src={img.src}
+                        alt={img.alt}
+                        className="w-full h-full object-contain p-2"
                       />
-                    ),
-                  )}
+                      {selectedImage === img.src && (
+                        <div className="absolute top-1 right-1 bg-[#EE5D50] text-white rounded-full p-0.5">
+                          <Check className="w-3 h-3" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
                 </div>
               </div>
 

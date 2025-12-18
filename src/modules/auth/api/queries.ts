@@ -47,7 +47,7 @@ export async function getUserProfile(): Promise<User | null> {
   }
 
   const result: ProfileResponse = await response.json();
-  
+
   // 將 API 回傳的 ProfileData 轉換為 User 格式
   return {
     id: result.data.id,
@@ -56,13 +56,14 @@ export async function getUserProfile(): Promise<User | null> {
     displayName: result.data.name,
     avatar: result.data.profilePictureUrl,
     pictureUrl: result.data.profilePictureUrl, // LINE 頭貼 URL
-    createdAt: new Date(),
+    createdAt: new Date(result.data.createdAt),
+    updatedAt: new Date(result.data.updatedAt),
   };
 }
 
 /**
  * TanStack Query Hook - 取得用戶 Profile
- * 
+ *
  * 優化配置：
  * - retry: false - 401 時不重試
  * - staleTime: 5 分鐘 - 減少不必要的請求
@@ -72,9 +73,9 @@ export function useGetUserProfileQuery() {
   return useQuery({
     queryKey: ['GET_USER_PROFILE'],
     queryFn: getUserProfile,
-    retry: false,                      // 401 時不要重試
-    staleTime: 1000 * 60 * 5,          // 5 分鐘內資料視為新鮮
-    refetchOnWindowFocus: false,       // 視窗聚焦時不自動重新取得
-    refetchOnMount: false,             // 元件掛載時不自動重新取得（如果已有快取）
+    retry: false, // 401 時不要重試
+    staleTime: 1000 * 60 * 5, // 5 分鐘內資料視為新鮮
+    refetchOnWindowFocus: true, // 視窗聚焦時不自動重新取得
+    refetchOnMount: false, // 元件掛載時不自動重新取得（如果已有快取）
   });
 }

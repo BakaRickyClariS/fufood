@@ -1,6 +1,7 @@
 # Groups Module（群組管理）
 
 ## 目錄
+
 - [概要](#概要)
 - [目錄結構](#目錄結構)
 - [核心功能](#核心功能)
@@ -14,17 +15,19 @@
 ---
 
 ## 概要
+
 負責家庭/團隊群組的建立、管理與成員權限。依精簡後路由：成員操作合併為三條（加入/邀請、離開/移除、更新權限）。
 
 ### 核心功能
+
 1. 群組 CRUD
 2. 成員加入/邀請、移除、權限更新
-3. 權限模型：owner / organizer / member
-4.（可選）方案與設定管理
+3. 權限模型：owner / organizer / member 4.（可選）方案與設定管理
 
 ---
 
 ## 目錄結構
+
 ```
 groups/
 ├── api/
@@ -46,6 +49,7 @@ groups/
 ---
 
 ## 型別
+
 ```typescript
 export type GroupMember = {
   id: string;
@@ -61,6 +65,7 @@ export type Group = {
   members: GroupMember[];
   color: string;
   characterColor: string;
+  imageUrl?: string; // 加入自定義群組圖片
   plan: 'free' | 'premium';
   createdAt: string;
   updatedAt: string;
@@ -76,6 +81,7 @@ export type InviteMemberForm = { email: string; role?: GroupMember['role'] }; //
 ## API 規格
 
 ### 路由（對應 API_REFERENCE_V2 #10-#17）
+
 - `GET /api/v1/groups`：群組列表
 - `POST /api/v1/groups`：建立群組
 - `GET /api/v1/groups/{id}`：群組詳情
@@ -86,6 +92,7 @@ export type InviteMemberForm = { email: string; role?: GroupMember['role'] }; //
 - `PATCH /api/v1/groups/{id}/members/{memberId}`：更新成員權限
 
 ### GroupsApi 介面
+
 ```typescript
 export const groupsApi = {
   getAll: () => Promise<Group[]>;
@@ -104,7 +111,9 @@ export const groupsApi = {
 ## Hooks
 
 ### `useGroups.ts`
+
 管理群組列表與 CRUD。
+
 ```typescript
 const useGroups = () => ({
   groups: Group[],
@@ -118,7 +127,9 @@ const useGroups = () => ({
 ```
 
 ### `useGroupMembers.ts`
+
 管理單一群組成員。
+
 ```typescript
 const useGroupMembers = (groupId: string) => ({
   members: GroupMember[],
@@ -134,13 +145,15 @@ const useGroupMembers = (groupId: string) => ({
 ---
 
 ## 環境變數
-| 變數 | 說明 | 範例 |
-| --- | --- | --- |
+
+| 變數                | 說明              | 範例             |
+| ------------------- | ----------------- | ---------------- |
 | `VITE_USE_MOCK_API` | 是否使用 Mock API | `true` / `false` |
 
 ---
 
 ## 權限與方案
+
 - 角色：`owner` > `organizer` > `member`
 - 基本操作：建立/刪除群組需 owner；移除成員/調整權限需 owner 或 organizer（依實作）。
 - 方案（如有）：free/premium 可控制群組數量、成員上限等（可依業務調整）。
@@ -148,6 +161,7 @@ const useGroupMembers = (groupId: string) => ({
 ---
 
 ## Mock 資料
+
 - `groupsMockData.ts`：提供群組與成員範例，用於本地開發。
 
 ---
@@ -158,34 +172,26 @@ TopNav 組件會顯示當前群組的成員大頭貼與群組選擇器。
 
 ### 相關共用組件
 
-| 組件 | 路徑 | 說明 |
-| --- | --- | --- |
-| `MemberAvatars` | `@/shared/components/ui/MemberAvatars.tsx` | 顯示成員大頭貼群組（最多 3 個，超過用 ... 表示） |
-| `HomeModal` | `@/shared/components/layout/HomeModal.tsx` | 從下方彈出的群組成員列表 Modal |
-| `MembershipBadge` | `@/shared/components/ui/MembershipBadge.tsx` | 會員等級徽章（定位於大頭貼左下角） |
+| 組件              | 路徑                                               | 說明                                             |
+| ----------------- | -------------------------------------------------- | ------------------------------------------------ |
+| `MemberAvatars`   | `@/shared/components/ui/MemberAvatars.tsx`         | 顯示成員大頭貼群組（最多 3 個，超過用 ... 表示） |
+| `HomeModal`       | `@/modules/groups/components/modals/HomeModal.tsx` | 從下方彈出的群組成員列表 Modal                   |
+| `MembershipBadge` | `@/shared/components/ui/MembershipBadge.tsx`       | 會員等級徽章（定位於大頭貼左下角）               |
+
+### Providers (`src/modules/groups/providers`)
+
+- **GroupModalProvider**: 集中管理所有 Group Modal 狀態，提供 `useGroupModal` hook 供外部呼叫。
 
 ### 使用方式
 
 ```typescript
-import { MemberAvatars } from '@/shared/components/ui/MemberAvatars';
-import { HomeModal } from '@/shared/components/layout/HomeModal';
+import { useGroupModal } from '@/modules/groups/hooks/useGroupModal';
 
-// MemberAvatars 使用
-<MemberAvatars members={group.members} maxDisplay={3} />
+const { openHome, openSettings } = useGroupModal();
 
-// HomeModal 使用
-<HomeModal
-  isOpen={isOpen}
-  onClose={() => setIsOpen(false)}
-  currentUser={{ name: '使用者', avatar: '...', role: 'owner' }}
-  members={group.members}
-  onEditMembers={() => { /* 處理編輯成員 */ }}
-/>
+// 開啟 HomeModal
+openHome();
+
+// 開啟 SettingsModal
+openSettings();
 ```
-
-### 資料來源
-
-目前 TopNav 使用 mock 資料顯示群組成員。後續整合 API 時：
-1. 使用 `useGroups` hook 取得群組列表
-2. 管理「當前選中群組」狀態
-3. 從當前群組取得成員列表

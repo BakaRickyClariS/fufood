@@ -18,6 +18,7 @@ export type Group = {
   members: GroupMember[];
   color: string;
   characterColor: string;
+  imageUrl?: string;
   plan: 'free' | 'premium';
   createdAt: Date;
   updatedAt: Date;
@@ -26,7 +27,13 @@ export type Group = {
 /**
  * 群組建立表單型別
  */
-export type CreateGroupForm = Pick<Group, 'name' | 'color' | 'characterColor'>;
+export type CreateGroupForm = Pick<
+  Group,
+  'name' | 'color' | 'characterColor'
+> & {
+  imageUrl?: string;
+  admin?: string;
+};
 
 /**
  * 群組更新表單型別

@@ -1,0 +1,22 @@
+/* ==========================================================================
+   CARD COMPONENTS - 卡片元件
+   使用 @layer components 定義可重用的卡片樣式
+   ========================================================================== */
+
+@layer components {
+  /* ==================== GRADIENT BORDER CARD ==================== */
+  /* 漸層邊框卡片 - 用於選中/激活狀態 */
+  .card-gradient-border {
+    border: 4px solid transparent;
+    background-image:
+      linear-gradient(var(--color-neutral-0), var(--color-neutral-0)),
+      linear-gradient(
+        135deg,
+        var(--color-primary-400) 0%,
+        var(--color-primary-100) 50%,
+        var(--color-primary-400) 100%
+      );
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+  }
+}
