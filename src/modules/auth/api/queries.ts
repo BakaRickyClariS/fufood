@@ -22,9 +22,34 @@ export async function getUserProfile(): Promise<User | null> {
   if (USE_MOCK) {
     // 模擬 API 延遲
     await new Promise((resolve) => setTimeout(resolve, 500));
+    
+    // 檢查是否有 Mock token（用戶是否已登入）
+    const mockToken = localStorage.getItem('authToken');
+    const userStr = localStorage.getItem('user');
+    
+    // 未登入時返回 null（與真實 API 401 行為一致）
+    if (!mockToken || !mockToken.startsWith('mock_')) {
+      return null;
+    }
+    
+    // 嘗試從 localStorage 取得已登入的用戶資料
+    if (userStr) {
+      try {
+        const savedUser = JSON.parse(userStr);
+        return {
+          ...savedUser,
+          lineId: savedUser.lineId || 'U1234567890',
+          displayName: savedUser.displayName || savedUser.name,
+          pictureUrl: savedUser.pictureUrl || savedUser.avatar,
+        };
+      } catch {
+        // JSON 解析失敗，返回預設用戶
+      }
+    }
+    
+    // 有 token 但無 user 資料，返回預設 Mock 用戶
     return {
       ...MOCK_USERS[0],
-      // 確保 Mock 資料有一致的欄位
       lineId: 'U1234567890', 
       displayName: MOCK_USERS[0].name,
       pictureUrl: MOCK_USERS[0].avatar,

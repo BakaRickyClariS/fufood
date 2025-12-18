@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Camera } from 'lucide-react';
 import ComponentHeader from '@/modules/settings/components/SimpleHeader';
 import { Button } from '@/shared/components/ui/button';
-import { useAuth } from '@/modules/auth';
+
 
 const ReportProblem = () => {
   const navigate = useNavigate();
