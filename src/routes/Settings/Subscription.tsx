@@ -48,7 +48,7 @@ const Subscription = () => {
   const currentTier = user?.membershipTier || 'free';
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] pb-24 font-['Noto_Sans_TC']">
+    <div className="min-h-screen bg-[#F5F5F5] pb-24">
       <ComponentHeader title="會員方案" onBack={() => navigate(-1)} />
 
       <div className="max-w-layout-container mx-auto px-4 py-6 space-y-4">

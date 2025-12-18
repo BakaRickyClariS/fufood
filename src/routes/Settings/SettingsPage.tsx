@@ -21,13 +21,8 @@ const SettingsPage = () => {
     ...user,
     name: user?.displayName || user?.name || '使用者',
     avatar: getUserAvatarUrl(user),
-    // Ensure default empty object if undefined, to prevent errors in child components
-    dietaryPreference: user?.dietaryPreference || {
-       cookingFrequency: '3-4',
-       prepTime: '15-30',
-       seasoningLevel: 'moderate',
-       restrictions: ['none'],
-    }
+    // 直接傳遞 dietaryPreference，讓子元件處理 undefined 的情況
+    dietaryPreference: user?.dietaryPreference,
   } as UserProfile;
 
   const handleLogout = async () => {
@@ -57,7 +52,7 @@ const SettingsPage = () => {
         
         {/* Pass user email if available in User object, assuming user.email exists */}
         <LogoutSection 
-          email={user?.email || 'jojo@gmail.com'} 
+          email={user?.email} 
           onLogout={handleLogout} 
           isLoggingOut={isLoggingOut} 
         />
