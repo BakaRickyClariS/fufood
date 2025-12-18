@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/apiClient';
+import { backendApi } from '@/api/client';
 
 // Types for Foods API
 
@@ -13,11 +13,11 @@ export type Food = {
 
 export const foodsApi = {
   getCategoryFoods: (catId: string) =>
-    apiClient.get<Food[]>(`/foods/category/${catId}`),
+    backendApi.get<Food[]>(`/foods/category/${catId}`),
   getFoodDetail: (catId: string, id: string) =>
-    apiClient.get<Food>(`/foods/category/${catId}/${id}`),
-  createFood: (data: Omit<Food, 'id'>) => apiClient.post<Food>('/foods', data),
+    backendApi.get<Food>(`/foods/category/${catId}/${id}`),
+  createFood: (data: Omit<Food, 'id'>) => backendApi.post<Food>('/foods', data),
   updateFood: (id: string, data: Partial<Food>) =>
-    apiClient.put<Food>(`/foods/${id}`, data),
-  deleteFood: (id: string) => apiClient.delete<void>(`/foods/${id}`),
+    backendApi.put<Food>(`/foods/${id}`, data),
+  deleteFood: (id: string) => backendApi.delete<void>(`/foods/${id}`),
 };
