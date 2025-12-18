@@ -60,14 +60,9 @@ export const groupsApi = {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return {
         id: Math.random().toString(36).substr(2, 9),
-        ...data,
-        admin: data.admin || 'Unknown',
-        members: [],
-        plan: 'free',
+        name: data.name,
         createdAt: new Date(),
         updatedAt: new Date(),
-        color: data.color || 'bg-white',
-        characterColor: data.characterColor || 'bg-blue-200',
       } as Group;
     }
     return backendApi.post<Group>(API_BASE, data);
