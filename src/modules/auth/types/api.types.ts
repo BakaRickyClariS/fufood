@@ -1,4 +1,4 @@
-import type { User, AuthToken } from './auth.types';
+import type { User, AuthToken, DietaryPreference } from './auth.types';
 
 export type LoginRequest = {
   email: string;
@@ -44,4 +44,7 @@ export type RefreshTokenResponse = {
 export type UpdateProfileRequest = {
   name?: string;
   avatar?: string;
+  phone?: string;
+  gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
+  dietaryPreference?: DietaryPreference;
 };

@@ -8,7 +8,7 @@ import type {
   CreatePostInput,
 } from '@/modules/planning/types/post';
 import { MockSharedListApi } from '../mock/mockSharedListApi';
-import { apiClient } from '@/services/apiClient';
+import { backendApi } from '@/api/client';
 
 export type SharedListApi = {
   getSharedLists(year?: number, month?: number): Promise<SharedListItem[]>;
@@ -31,51 +31,45 @@ export class RealSharedListApi implements SharedListApi {
 
     // 如果有參數，附加到 URL
     const queryString = params.toString() ? `?${params.toString()}` : '';
-    const response = await apiClient.get<SharedListItem[]>(
+    return backendApi.get<SharedListItem[]>(
       `/api/v1/shopping-lists${queryString}`,
     );
-    return response.data;
   }
 
   async getSharedListById(id: string): Promise<SharedList> {
-    const response = await apiClient.get<SharedList>(
+    return backendApi.get<SharedList>(
       `/api/v1/shopping-lists/${id}`,
     );
-    return response.data;
   }
 
   async createSharedList(input: CreateSharedListInput): Promise<SharedList> {
-    const response = await apiClient.post<SharedList>(
+    return backendApi.post<SharedList>(
       '/api/v1/shopping-lists',
       input,
     );
-    return response.data;
   }
 
   async getPosts(listId: string): Promise<SharedListPost[]> {
-    const response = await apiClient.get<SharedListPost[]>(
+    return backendApi.get<SharedListPost[]>(
       `/api/v1/shopping-lists/${listId}/posts`,
     );
-    return response.data;
   }
 
   async createPost(input: CreatePostInput): Promise<SharedListPost> {
-    const response = await apiClient.post<SharedListPost>(
+    return backendApi.post<SharedListPost>(
       `/api/v1/shopping-lists/${input.listId}/posts`,
       input,
     );
-    return response.data;
   }
 
   async togglePostLike(
     postId: string,
     listId: string,
   ): Promise<SharedListPost> {
-    const response = await apiClient.post<SharedListPost>(
+    return backendApi.post<SharedListPost>(
       `/api/v1/posts/${postId}/like`,
       { listId },
     );
-    return response.data;
   }
 }
 

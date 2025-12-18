@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/apiClient';
+import { backendApi } from '@/api/client';
 
 export type NotificationSettings = {
   notifyOnExpiry: boolean;
@@ -8,7 +8,7 @@ export type NotificationSettings = {
 
 export const notificationsApi = {
   getSettings: () =>
-    apiClient.get<NotificationSettings>('/api/v1/notifications'),
+    backendApi.get<NotificationSettings>('/api/v1/notifications'),
   updateSettings: (data: Partial<NotificationSettings>) =>
-    apiClient.post<void>('/api/v1/notifications', data),
+    backendApi.post<void>('/api/v1/notifications', data),
 };

@@ -85,17 +85,11 @@ export const MembersModal: FC<MembersModalProps> = ({
 
                 {/* Character Illustration */}
                 <div className="absolute -right-4 -bottom-4 w-40 h-40">
-                  {group.imageUrl ? (
-                    <img
-                      src={group.imageUrl}
-                      alt={group.name}
-                      className="w-full h-full object-contain"
-                    />
-                  ) : (
-                    <div
-                      className={`w-full h-full ${group.characterColor || 'bg-primary-200'} rounded-full opacity-80`}
-                    />
-                  )}
+                  <img
+                    src={group.imageUrl || '/src/assets/images/auth/Avatar-1.png'}
+                    alt={group.name}
+                    className="w-full h-full object-contain"
+                  />
                 </div>
               </div>
 
