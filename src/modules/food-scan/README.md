@@ -36,8 +36,7 @@ food-scan/
 ├── services/
 │   ├── api/
 │   │   ├── foodScanApi.ts        # 介面定義
-│   │   ├── imageRecognition.ts   # 實際 API 實作
-│   │   └── uploadApi.ts          # 圖片上傳 API
+│   │   └── imageRecognition.ts   # 實際 API 實作（aiApi + backendApi）
 │   ├── mock/
 │   │   ├── mockData.ts
 │   │   └── mockFoodScanApi.ts
@@ -46,6 +45,8 @@ food-scan/
 ├── types/        (foodItem.ts, scanResult.ts, index.ts)
 └── utils/        (dateHelpers.ts, imageProcessor.ts, validation.ts)
 ```
+
+> **注意**：`uploadApi.ts` 已移除，圖片上傳功能整合至 `@/modules/media/api/mediaApi.ts`。
 
 ---
 
@@ -137,12 +138,23 @@ Response: `{ success, message, data: { id } }`
 ---
 
 ## 環境變數
+
+### 雙 API 架構
+
 | 變數 | 說明 | 範例 |
 | --- | --- | --- |
-| `VITE_API_BASE_URL` | API 基底 | `http://localhost:3000/api/v1` |
+| `VITE_AI_API_BASE_URL` | AI API 基底（媒體上傳、影像辨識） | `https://ai-api.vercel.app/api/v1` |
+| `VITE_BACKEND_API_BASE_URL` | 後端 API 基底（庫存管理） | `https://api.fufood.jocelynh.me` |
 | `VITE_USE_MOCK_API` | 是否使用 Mock | `true` / `false` |
 
-> 注意：Cloudinary Credentials (`VITE_CLOUDINARY_...`) 已移除，改由後端環境變數管理。
+> Cloudinary Credentials 已移至後端管理。
+
+---
+
+## 相關文件
+
+- [完整入庫 API 規格](../../../docs/backend/food_intake_api_spec.md)
+- [AI 媒體上傳規格](../../../docs/backend/ai_media_api_spec.md)
 
 ---
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { foodScanApi } from '../services';
-import { uploadApi } from '../services/api/uploadApi';
+import { mediaApi } from '@/modules/media/api/mediaApi';
 import type { ScanResult } from '../types';
 
 type UseImageUploadProps = {
@@ -26,7 +26,7 @@ export const useImageUpload = (props?: UseImageUploadProps) => {
         const blob = await response.blob();
 
         // 2. 上傳至後端
-        const optimizedUrl = await uploadApi.uploadImage(blob);
+        const optimizedUrl = await mediaApi.uploadImage(blob);
 
         if (onUploadSuccess) {
           await onUploadSuccess(blob);

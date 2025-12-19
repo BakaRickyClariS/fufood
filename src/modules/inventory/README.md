@@ -38,7 +38,7 @@
 inventory/
 ├── api/                  # API 層
 │   ├── inventoryApi.ts   # API 介面
-│   ├── inventoryRealApi.ts
+│   ├── inventoryApiImpl.ts # 實作（使用 backendApi）
 │   ├── index.ts          # API 匯出
 │   └── mock/
 │       ├── inventoryMockApi.ts
@@ -65,6 +65,8 @@ inventory/
 │   └── index.ts
 └── index.ts              # 模組匯出
 ```
+
+> **注意**：庫存 API 使用 `backendApi`（`VITE_BACKEND_API_BASE_URL`），不是 AI API。
 
 ---
 
@@ -323,20 +325,22 @@ type InventoryState = {
 
 ## 環境變數設定
 
-### 必要
+### 雙 API 架構
 
-```env
-# Mock 模式（開發預設）
-VITE_USE_MOCK_API=true
-```
-
-### 選填
-
-| 變數名稱            | 說明          | 範例                           |
-| ------------------- | ------------- | ------------------------------ |
-| `VITE_API_BASE_URL` | 後端 API 網址 | `http://localhost:3000/api/v1` |
+| 變數名稱 | 說明 | 範例 |
+| --- | --- | --- |
+| `VITE_BACKEND_API_BASE_URL` | 後端 API 網址（庫存管理） | `https://api.fufood.jocelynh.me` |
+| `VITE_AI_API_BASE_URL` | AI API 網址（影像辨識） | `https://ai-api.vercel.app/api/v1` |
+| `VITE_USE_MOCK_API` | Mock 模式 | `true` / `false` |
 
 > `inventory/api/index.ts` 會依 `VITE_USE_MOCK_API` 切換 Mock/Real。
+
+---
+
+## 相關文件
+
+- [完整入庫 API 規格](../../docs/backend/food_intake_api_spec.md)
+- [庫存 API 規格](../../docs/backend/inventory_api_spec.md)
 
 ---
 
