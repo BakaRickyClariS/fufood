@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import type { Group } from '../../types/group.types';
 import { useGroupModal } from '../../hooks/useGroupModal';
 import { useAuth } from '@/modules/auth/hooks';
+import defaultAvatar from '@/assets/images/auth/Avatar-1.png';
 
 /** 顯示的頭像數量上限 */
 const MAX_AVATARS_DISPLAY = 4;
@@ -104,7 +105,7 @@ export const GroupCard: FC<GroupCardProps> = ({
         {/* 群組圖片 */}
         <div className="w-40 h-40 absolute -right-2 -top-2">
           <img
-            src={group.imageUrl || '/src/assets/images/auth/Avatar-1.png'}
+            src={group.imageUrl || defaultAvatar}
             alt={group.name}
             className="w-full h-full object-contain drop-shadow-md"
           />
