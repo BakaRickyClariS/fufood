@@ -12,6 +12,7 @@ import { useGroupMembers } from '../../hooks/useGroupMembers';
 import { useAuth } from '@/modules/auth';
 import { getUserAvatarUrl } from '@/shared/utils/avatarUtils';
 import type { Group } from '../../types/group.types';
+import defaultAvatar from '@/assets/images/auth/Avatar-1.png';
 
 type MembersModalProps = {
   open: boolean;
@@ -85,17 +86,11 @@ export const MembersModal: FC<MembersModalProps> = ({
 
                 {/* Character Illustration */}
                 <div className="absolute -right-4 -bottom-4 w-40 h-40">
-                  {group.imageUrl ? (
-                    <img
-                      src={group.imageUrl}
-                      alt={group.name}
-                      className="w-full h-full object-contain"
-                    />
-                  ) : (
-                    <div
-                      className={`w-full h-full ${group.characterColor || 'bg-primary-200'} rounded-full opacity-80`}
-                    />
-                  )}
+                  <img
+                    src={group.imageUrl || defaultAvatar}
+                    alt={group.name}
+                    className="w-full h-full object-contain"
+                  />
                 </div>
               </div>
 

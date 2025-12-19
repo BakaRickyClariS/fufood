@@ -30,12 +30,10 @@ export const EditGroupModal: FC<EditGroupModalProps> = ({
 }) => {
   const { updateGroup, deleteGroup, isLoading } = useGroups();
   const [name, setName] = useState('');
-  const [color, setColor] = useState('bg-white');
 
   useEffect(() => {
     if (group) {
       setName(group.name);
-      setColor(group.color);
     }
   }, [group]);
 
@@ -45,7 +43,6 @@ export const EditGroupModal: FC<EditGroupModalProps> = ({
 
     await updateGroup(group.id, {
       name,
-      color,
     });
 
     onClose();
@@ -96,24 +93,6 @@ export const EditGroupModal: FC<EditGroupModalProps> = ({
                   className="h-12 rounded-xl"
                   required
                 />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-stone-700">
-                  群組顏色
-                </label>
-                <div className="flex gap-2">
-                  {['bg-white', 'bg-red-50', 'bg-blue-50', 'bg-green-50'].map(
-                    (c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        className={`w-8 h-8 rounded-full border ${c} ${color === c ? 'ring-2 ring-stone-400' : ''}`}
-                        onClick={() => setColor(c)}
-                      />
-                    ),
-                  )}
-                </div>
               </div>
 
               <div className="mt-auto pt-4 flex flex-col gap-3">

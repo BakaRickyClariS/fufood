@@ -19,7 +19,7 @@ const ProfileSection = ({ user }: ProfileSectionProps) => {
             />
           ) : (
             <div className="w-full h-full bg-primary-50 flex items-center justify-center text-primary-400 text-2xl font-bold">
-              {user.name.charAt(0)}
+              {(user.name || '').charAt(0)}
             </div>
           )}
         </div>

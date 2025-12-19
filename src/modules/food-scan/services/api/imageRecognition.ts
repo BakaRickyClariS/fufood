@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/apiClient';
+import { aiApi } from '@/api/client';
 import type {
   FoodScanApi,
   ScanResult,
@@ -62,7 +62,7 @@ export const createRealFoodScanApi = (): FoodScanApi => {
   const recognizeImage = async (imageUrl: string): Promise<ScanResult> => {
     try {
       // Updated endpoint to match v2.1 spec
-      const data = await apiClient.post<RawScanResponse>('/ai/analyze-image', {
+      const data = await aiApi.post<RawScanResponse>('/ai/analyze-image', {
         imageUrl,
       });
       return transformScanResult(data);
@@ -76,18 +76,18 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     data: FoodItemInput,
   ): Promise<FoodItemResponse> => {
     // Updated endpoint to match v2.1 spec (Inventory Module)
-    return apiClient.post<FoodItemResponse>('/inventory', data);
+    return aiApi.post<FoodItemResponse>('/inventory', data);
   };
 
   const updateFoodItem = async (
     id: string,
     data: Partial<FoodItemInput>,
   ): Promise<FoodItemResponse> => {
-    return apiClient.put<FoodItemResponse>(`/inventory/${id}`, data);
+    return aiApi.put<FoodItemResponse>(`/inventory/${id}`, data);
   };
 
   const deleteFoodItem = async (id: string): Promise<{ success: boolean }> => {
-    return apiClient.delete<{ success: boolean }>(`/inventory/${id}`);
+    return aiApi.delete<{ success: boolean }>(`/inventory/${id}`);
   };
 
   const getFoodItems = async (
@@ -98,7 +98,7 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     if (filters?.category) params.category = filters.category;
     if (filters?.status) params.status = filters.status;
 
-    const response = await apiClient.get<{ items: FoodItem[] }>(
+    const response = await aiApi.get<{ items: FoodItem[] }>(
       '/inventory',
       params,
     );
