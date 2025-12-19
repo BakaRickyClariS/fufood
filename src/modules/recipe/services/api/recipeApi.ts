@@ -56,16 +56,16 @@ export class RealRecipeApi implements RecipeApi {
     shouldFavorite?: boolean,
   ): Promise<{ isFavorite: boolean }> => {
     if (shouldFavorite === false) {
-      const response = await backendApi.delete<{ isFavorite: boolean }>(
+      const response = await backendApi.delete<{ isFavorite?: boolean }>(
         `/api/v1/recipes/${id}/favorite`,
       );
-      return response ?? { isFavorite: false };
+      return { isFavorite: response?.isFavorite ?? false };
     }
 
-    const response = await backendApi.post<{ isFavorite: boolean }>(
+    const response = await backendApi.post<{ isFavorite?: boolean }>(
       `/api/v1/recipes/${id}/favorite`,
     );
-    return response ?? { isFavorite: true };
+    return { isFavorite: response?.isFavorite ?? true };
   };
 
   getFavorites = async (): Promise<RecipeListItem[]> => {
@@ -78,18 +78,16 @@ export class RealRecipeApi implements RecipeApi {
     data: ConsumptionConfirmation,
   ): Promise<{ success: boolean; message: string }> => {
     const response = await backendApi.patch<{
-      success: boolean;
-      message: string;
+      success?: boolean;
+      message?: string;
     }>(`/api/v1/recipes/${data.recipeId}`, {
       status: 'cooked',
       consumption: data,
     });
-    return (
-      response ?? {
-        success: true,
-        message: '已更新食譜狀態',
-      }
-    );
+    return {
+      success: response?.success ?? true,
+      message: response?.message ?? '已更新食譜狀態',
+    };
   };
 
   addMealPlan = async (data: MealPlanInput): Promise<MealPlan> => {
