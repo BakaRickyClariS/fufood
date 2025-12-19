@@ -27,6 +27,7 @@ jobs:
               .toString()
               .trim()
               .split('\n')
+              .map(b => b.trim())
               .filter(b => b);
             for (const branch of unmergedBranches) {
               let labels = [];

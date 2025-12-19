@@ -34,10 +34,13 @@ const LineLoginCallback = () => {
         const errorMsg = errorDescription || 'LINE 登入被取消或發生錯誤';
         setError(errorMsg);
         setIsProcessing(false);
-        
+
         // 如果是 Popup，通知父視窗錯誤後關閉
         if (isPopupWindow()) {
-          window.opener?.postMessage({ type: 'LINE_LOGIN_ERROR', error: errorMsg }, '*');
+          window.opener?.postMessage(
+            { type: 'LINE_LOGIN_ERROR', error: errorMsg },
+            '*',
+          );
           setTimeout(() => window.close(), 2000);
         } else {
           setTimeout(() => navigate('/auth/login'), 2500);
@@ -48,7 +51,7 @@ const LineLoginCallback = () => {
       try {
         // 呼叫 Profile API 確認 Cookie 已設定
         const response = await authApi.getProfile();
-        
+
         // 將 API 回傳的資料轉換為 User 格式並儲存
         const userData = {
           id: response.data.id,
@@ -58,30 +61,39 @@ const LineLoginCallback = () => {
           avatar: response.data.profilePictureUrl,
           pictureUrl: response.data.profilePictureUrl,
           createdAt: new Date(),
+          updatedAt: new Date(),
         };
-        
+
         // 儲存到 localStorage（作為備份）
         authService.saveUser(userData);
 
         // 判斷是否在 Popup 視窗中
         if (isPopupWindow()) {
           // 通知父視窗登入成功
-          window.opener?.postMessage({ type: 'LINE_LOGIN_SUCCESS', user: userData }, '*');
-          
+          window.opener?.postMessage(
+            { type: 'LINE_LOGIN_SUCCESS', user: userData },
+            '*',
+          );
+
           // 關閉 Popup 視窗
           window.close();
         } else {
           // 非 Popup 模式：直接更新快取並導向首頁
-          await queryClient.invalidateQueries({ queryKey: ['GET_USER_PROFILE'] });
+          await queryClient.invalidateQueries({
+            queryKey: ['GET_USER_PROFILE'],
+          });
           navigate('/', { replace: true });
         }
       } catch (err) {
         console.error('LINE 登入驗證失敗:', err);
         setError('登入失敗，請重試');
         setIsProcessing(false);
-        
+
         if (isPopupWindow()) {
-          window.opener?.postMessage({ type: 'LINE_LOGIN_ERROR', error: '登入失敗' }, '*');
+          window.opener?.postMessage(
+            { type: 'LINE_LOGIN_ERROR', error: '登入失敗' },
+            '*',
+          );
           setTimeout(() => window.close(), 2000);
         } else {
           setTimeout(() => navigate('/auth/login'), 2500);
@@ -97,8 +109,18 @@ const LineLoginCallback = () => {
       {error ? (
         <div className="text-center px-6">
           <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-8 h-8 text-red-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </div>
           <p className="text-red-500 font-medium mb-2">{error}</p>

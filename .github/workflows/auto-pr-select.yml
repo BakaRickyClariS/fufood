@@ -1,0 +1,98 @@
+name: Auto PR by Selected Branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: '輸入要建立 PR 的分支名稱（排除 main, dev, qa）'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  create-pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch all branches
+        run: git fetch origin
+
+      - name: List available branches
+        run: |
+          echo "📋 可用的分支列表（排除 main, dev, qa）："
+          git branch -r --no-merged origin/dev | grep -v origin/dev | grep -v origin/main | grep -v origin/qa | sed "s|origin/||" | sed 's/^[ \t]*//'
+
+      - name: Create Pull Request
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.ACTIONS_PAT }}
+          script: |
+            const { execSync } = require('child_process');
+            const branch = '${{ github.event.inputs.branch }}'.trim();
+
+            // 驗證不是保護分支
+            if (['main', 'dev', 'qa'].includes(branch)) {
+              core.setFailed(`❌ 不允許選擇 ${branch} 分支`);
+              return;
+            }
+
+            // 檢查分支是否存在
+            try {
+              execSync(`git ls-remote --exit-code origin ${branch}`);
+            } catch (e) {
+              core.setFailed(`❌ 分支 "${branch}" 不存在於遠端倉庫`);
+              return;
+            }
+
+            // 根據分支名稱設定標籤（與 auto-pr.yml 相同規則）
+            let labels = [];
+            if (branch.startsWith('Feature-')) labels = ['feature', 'enhancement'];
+            else if (branch.startsWith('Fix-')) labels = ['bug', 'fix'];
+            else if (branch.startsWith('Update-')) labels = ['documentation', 'update'];
+            else if (branch.startsWith('Hotfix-')) labels = ['hotfix', 'urgent'];
+
+            // Fetch 遠端分支並更新 refs
+            execSync(`git fetch origin ${branch}:${branch}`);
+
+            // 取得 commit 訊息
+            const commits = execSync(`git log origin/dev..${branch} --pretty=format:"- %s" --reverse`)
+              .toString()
+              .trim();
+
+            const prBody = `## Commits\n\n${commits || 'No commit messages available'}`;
+
+            try {
+              const pr = await github.rest.pulls.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head: branch,
+                base: 'dev',
+                title: `${branch}`,
+                body: prBody
+              });
+              
+              console.log(`✅ 成功建立 PR #${pr.data.number}: ${branch} -> dev`);
+              
+              if (labels.length > 0) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.data.number,
+                  labels: labels
+                });
+                console.log(`✅ 已加入標籤: ${labels.join(', ')}`);
+              }
+            } catch (e) {
+              if (e.message.includes('A pull request already exists')) {
+                console.log(`⚠️ PR 已存在: ${branch} -> dev`);
+              } else {
+                core.setFailed(`❌ 建立 PR 失敗: ${e.message}`);
+              }
+            }

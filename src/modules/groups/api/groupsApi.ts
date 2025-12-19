@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/apiClient';
+import { backendApi } from '@/api/client';
 import type {
   Group,
   CreateGroupForm,
@@ -7,33 +7,36 @@ import type {
   InviteMemberForm,
   JoinGroupForm,
 } from '../types/group.types';
-import { MOCK_GROUPS, MOCK_MEMBERS } from './mock/groupsMockData';
+import { mockGroups, mockMembers } from '../mocks/mockData';
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_API !== 'false';
 
+// API 基底路徑
+const API_BASE = '/api/v1/refrigerators';
+
 export const groupsApi = {
   /**
-   * 取得所有群組
+   * 取得所有群組（冰箱）
    */
   getAll: async (): Promise<Group[]> => {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      return MOCK_GROUPS;
+      return mockGroups;
     }
-    return apiClient.get<Group[]>('/groups');
+    return backendApi.get<Group[]>(API_BASE);
   },
 
   /**
-   * 取得單一群組
+   * 取得單一群組（冰箱）
    */
   getById: async (id: string): Promise<Group> => {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      const group = MOCK_GROUPS.find((g) => g.id === id);
+      const group = mockGroups.find((g) => g.id === id);
       if (!group) throw new Error('群組不存在');
       return group;
     }
-    return apiClient.get<Group>(`/groups/${id}`);
+    return backendApi.get<Group>(`${API_BASE}/${id}`);
   },
 
   /**
@@ -42,58 +45,55 @@ export const groupsApi = {
   getMembers: async (groupId: string): Promise<GroupMember[]> => {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 300));
-      return MOCK_MEMBERS;
+      const group = mockGroups.find((g) => g.id === groupId);
+      if (group && group.members) return group.members;
+      return mockMembers;
     }
-    return apiClient.get<GroupMember[]>(`/groups/${groupId}/members`); // Note: API spec doesn't explicitly list this, but it's common. If not, it might be part of getGroup
+    return backendApi.get<GroupMember[]>(`${API_BASE}/${groupId}/members`);
   },
 
   /**
-   * 建立群組
+   * 建立群組（冰箱）
    */
   create: async (data: CreateGroupForm): Promise<Group> => {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return {
         id: Math.random().toString(36).substr(2, 9),
-        ...data,
-        admin: 'Jocelyn',
-        members: [],
-        plan: 'free',
+        name: data.name,
         createdAt: new Date(),
         updatedAt: new Date(),
-        color: data.color || 'blue',
-        characterColor: data.characterColor || 'blue',
       } as Group;
     }
-    return apiClient.post<Group>('/groups', data);
+    return backendApi.post<Group>(API_BASE, data);
   },
 
   /**
-   * 更新群組
+   * 更新群組（冰箱）
    */
   update: async (id: string, data: UpdateGroupForm): Promise<Group> => {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      const group = MOCK_GROUPS.find((g) => g.id === id);
+      const group = mockGroups.find((g) => g.id === id);
       if (!group) throw new Error('群組不存在');
       return { ...group, ...data, updatedAt: new Date() } as Group;
     }
-    return apiClient.put<Group>(`/groups/${id}`, data);
+    return backendApi.put<Group>(`${API_BASE}/${id}`, data);
   },
 
   /**
-   * 刪除群組
+   * 刪除群組（冰箱）
    */
   delete: async (id: string): Promise<void> => {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return;
     }
-    return apiClient.delete<void>(`/groups/${id}`);
+    return backendApi.delete<void>(`${API_BASE}/${id}`);
   },
 
   /**
-   * 邀請成員
+   * 邀請成員加入群組（冰箱）
    */
   inviteMember: async (
     groupId: string,
@@ -103,29 +103,29 @@ export const groupsApi = {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return;
     }
-    return apiClient.post<void>(`/groups/${groupId}/invite`, data);
+    return backendApi.post<void>(`${API_BASE}/${groupId}/members`, data);
   },
 
   /**
-   * 加入群組
+   * 加入群組（冰箱）
    */
   join: async (groupId: string, data: JoinGroupForm): Promise<void> => {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return;
     }
-    return apiClient.post<void>(`/groups/${groupId}/join`, data);
+    return backendApi.post<void>(`${API_BASE}/${groupId}/members`, data);
   },
 
   /**
-   * 離開群組
+   * 離開群組（冰箱）
    */
-  leave: async (groupId: string): Promise<void> => {
+  leave: async (groupId: string, memberId: string): Promise<void> => {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return;
     }
-    return apiClient.delete<void>(`/groups/${groupId}/leave`);
+    return backendApi.delete<void>(`${API_BASE}/${groupId}/members/${memberId}`);
   },
 
   /**
@@ -136,7 +136,7 @@ export const groupsApi = {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return;
     }
-    return apiClient.delete<void>(`/groups/${groupId}/remove/${memberId}`);
+    return backendApi.delete<void>(`${API_BASE}/${groupId}/members/${memberId}`);
   },
 
   /**
@@ -151,7 +151,7 @@ export const groupsApi = {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return;
     }
-    return apiClient.patch<void>(`/groups/${groupId}/members/${memberId}`, {
+    return backendApi.patch<void>(`${API_BASE}/${groupId}/members/${memberId}`, {
       role,
     });
   },

@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/apiClient';
+import { backendApi } from '@/api/client';
 import type {
   LoginRequest,
   LoginResponse,
@@ -17,10 +17,10 @@ import { MOCK_USERS, MOCK_TOKEN } from './mock/authMockData';
 // 環境變數控制是否使用 Mock
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_API !== 'false';
 
-const LINE_API_BASE =
-  import.meta.env.VITE_LINE_API_BASE_URL || 'https://api.fufood.jocelynh.me';
+// 取得後端 API 基底 URL（用於 LINE OAuth 等需要完整 URL 的情境）
+const BACKEND_API_BASE = backendApi.getBaseUrl();
 
-export const LineLoginUrl = `${LINE_API_BASE}/oauth/line/init`;
+export const LineLoginUrl = `${BACKEND_API_BASE}/oauth/line/init`;
 
 export const authApi = {
   /**
@@ -35,7 +35,7 @@ export const authApi = {
         token: MOCK_TOKEN,
       };
     }
-    return apiClient.post<LoginResponse>('/auth/login', data);
+    return backendApi.post<LoginResponse>('/auth/login', data);
   },
 
   /**
@@ -51,11 +51,12 @@ export const authApi = {
           name: data.name || '新使用者',
           avatar: data.avatar || 'bg-blue-200',
           createdAt: new Date(),
+          updatedAt: new Date(),
         },
         token: MOCK_TOKEN,
       };
     }
-    return apiClient.post<RegisterResponse>('/auth/register', data);
+    return backendApi.post<RegisterResponse>('/auth/register', data);
   },
 
   /**
@@ -67,23 +68,15 @@ export const authApi = {
       await new Promise((resolve) => setTimeout(resolve, 300));
       return;
     }
-    
-    // 使用原生 fetch 呼叫 LINE API 的 logout 端點
-    // 必須攜帶 credentials: 'include' 以清除 HttpOnly Cookie
-    const response = await fetch(`${LINE_API_BASE}/api/v1/auth/logout`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
 
-    // 204 或 200 都視為成功
-    if (!response.ok && response.status !== 204) {
-      console.warn('Logout API 回應非預期:', response.status);
+    // 使用 backendApi 呼叫 logout 端點
+    try {
+      await backendApi.post<void>('/api/v1/auth/logout');
+    } catch (error) {
+      // 204 或 200 都視為成功，其他錯誤僅警告
+      console.warn('Logout API 回應非預期:', error);
     }
   },
-
 
   /**
    * 刷新 Token
@@ -98,7 +91,7 @@ export const authApi = {
         expiresIn: 3600,
       };
     }
-    return apiClient.post<RefreshTokenResponse>('/auth/refresh', data);
+    return backendApi.post<RefreshTokenResponse>('/auth/refresh', data);
   },
 
   /**
@@ -109,7 +102,7 @@ export const authApi = {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return MOCK_USERS[0];
     }
-    return apiClient.get<User>('/auth/me');
+    return backendApi.get<User>('/auth/me');
   },
 
   /**
@@ -120,7 +113,7 @@ export const authApi = {
       await new Promise((resolve) => setTimeout(resolve, 300));
       return;
     }
-    return apiClient.get<void>('/auth/check');
+    return backendApi.get<void>('/auth/check');
   },
 
   /**
@@ -131,20 +124,17 @@ export const authApi = {
       await new Promise((resolve) => setTimeout(resolve, 800));
       return { ...MOCK_USERS[0], ...data };
     }
-    return apiClient.put<User>('/auth/update-profile', data);
+    return backendApi.put<User>('/auth/update-profile', data);
   },
 
   /**
    * LINE 登入 Callback 處理
    * 處理後端回調帶回的認證資訊
-   * 注意：使用原生 fetch 而非 apiClient，因為這是外部 API
+   * 注意：使用原生 fetch 進行 OAuth 回調，因為需要處理重定向
    */
   handleLineCallback: async (
     data: LINELoginRequest,
   ): Promise<LineLoginCallbackResponse> => {
-    const LINE_API_BASE =
-      import.meta.env.VITE_LINE_API_BASE_URL ||
-      'https://api.fufood.jocelynh.me';
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 800));
       return {
@@ -158,13 +148,14 @@ export const authApi = {
       };
     }
 
-    // 使用原生 fetch 呼叫外部 LINE API，不使用 apiClient（會拼接錯誤的 baseUrl）
-    const url = new URL(`${LINE_API_BASE}/oauth/line/callback`);
+    // 使用原生 fetch 呼叫 OAuth callback（需要處理重定向）
+    const url = new URL(`${BACKEND_API_BASE}/oauth/line/callback`);
     if (data.code) url.searchParams.append('code', data.code);
     if (data.state) url.searchParams.append('state', data.state);
 
     const response = await fetch(url.toString(), {
       method: 'GET',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -183,24 +174,6 @@ export const authApi = {
    * 成功回傳用戶資料，未登入回傳 401
    */
   getProfile: async (): Promise<ProfileResponse> => {
-    const LINE_API_BASE =
-      import.meta.env.VITE_LINE_API_BASE_URL ||
-      'https://api.fufood.jocelynh.me';
-
-    // 使用原生 fetch 帶上 credentials: 'include' 以攜帶 HttpOnly Cookie
-    const response = await fetch(`${LINE_API_BASE}/api/v1/profile`, {
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(
-        response.status === 401 ? '未登入' : `API 錯誤: ${response.status}`,
-      );
-    }
-
-    return response.json();
+    return backendApi.get<ProfileResponse>('/api/v1/profile');
   },
 };

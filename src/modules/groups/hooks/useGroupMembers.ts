@@ -1,12 +1,25 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import { groupsApi } from '../api';
 import type { GroupMember, InviteMemberForm } from '../types/group.types';
 
+type CurrentUserInfo = {
+  id?: string;
+  name: string;
+  avatar: string;
+};
+
 // Manage group members: fetch list, invite, remove, update role
-export const useGroupMembers = (groupId: string) => {
+export const useGroupMembers = (
+  groupId: string,
+  currentUser?: CurrentUserInfo,
+) => {
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+
+  // Use ref to avoid infinite loop from object dependency
+  const currentUserRef = useRef(currentUser);
+  currentUserRef.current = currentUser;
 
   const fetchMembers = useCallback(async () => {
     if (!groupId) return;
@@ -14,13 +27,36 @@ export const useGroupMembers = (groupId: string) => {
     setIsLoading(true);
     try {
       const data = await groupsApi.getMembers(groupId);
-      setMembers(data);
+      const user = currentUserRef.current;
+
+      // Inject current user - replace first member with current user to maintain 3 members
+      if (user && user.name) {
+        const userAlreadyInList = data.some(
+          (m) => m.name === user.name || m.id === user.id,
+        );
+
+        if (!userAlreadyInList && data.length > 0) {
+          // Replace first member with current user (maintain 3 members)
+          const currentUserMember: GroupMember = {
+            id: user.id || 'current-user',
+            name: user.name,
+            avatar: user.avatar,
+            role: 'owner', // Current user is owner
+          };
+          // Keep current user first, then rest of members (excluding first one)
+          setMembers([currentUserMember, ...data.slice(1)]);
+        } else {
+          setMembers(data);
+        }
+      } else {
+        setMembers(data);
+      }
     } catch (err) {
       setError(err as Error);
     } finally {
       setIsLoading(false);
     }
-  }, [groupId]);
+  }, [groupId]); // Only depend on groupId, use ref for currentUser
 
   const inviteMember = async (form: InviteMemberForm) => {
     setIsLoading(true);
