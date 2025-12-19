@@ -35,11 +35,7 @@ export const MemberItem: FC<MemberItemProps> = ({
           {isCurrentUser && ' (我)'}
         </span>
         <span className="text-xs text-stone-400 font-medium">
-          {member.role === 'owner'
-            ? '擁有者'
-            : member.role === 'organizer'
-              ? '組織者'
-              : '成員'}
+          {member.role === 'owner' ? '擁有者' : '成員'}
         </span>
       </div>
     </div>

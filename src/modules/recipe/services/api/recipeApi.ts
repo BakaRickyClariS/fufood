@@ -8,7 +8,7 @@ import type {
   ConsumptionConfirmation,
   MealPlanInput,
 } from '@/modules/recipe/types';
-import { apiClient } from '@/services/apiClient';
+import { backendApi } from '@/api/client';
 
 export type RecipeApi = {
   getRecipes(params?: {
@@ -42,15 +42,13 @@ export class RealRecipeApi implements RecipeApi {
       query.push('favorite=true');
     }
     const queryString = query.length ? `?${query.join('&')}` : '';
-    const response = await apiClient.get<RecipeListItem[]>(
+    return backendApi.get<RecipeListItem[]>(
       `/api/v1/recipes${queryString}`,
     );
-    return response.data;
   };
 
   getRecipeById = async (id: string): Promise<Recipe> => {
-    const response = await apiClient.get<Recipe>(`/api/v1/recipes/${id}`);
-    return response.data;
+    return backendApi.get<Recipe>(`/api/v1/recipes/${id}`);
   };
 
   toggleFavorite = async (
@@ -58,60 +56,54 @@ export class RealRecipeApi implements RecipeApi {
     shouldFavorite?: boolean,
   ): Promise<{ isFavorite: boolean }> => {
     if (shouldFavorite === false) {
-      const response = await apiClient.delete<{ isFavorite: boolean }>(
+      const response = await backendApi.delete<{ isFavorite?: boolean }>(
         `/api/v1/recipes/${id}/favorite`,
       );
-      return response.data ?? { isFavorite: false };
+      return { isFavorite: response?.isFavorite ?? false };
     }
 
-    const response = await apiClient.post<{ isFavorite: boolean }>(
+    const response = await backendApi.post<{ isFavorite?: boolean }>(
       `/api/v1/recipes/${id}/favorite`,
     );
-    return response.data ?? { isFavorite: true };
+    return { isFavorite: response?.isFavorite ?? true };
   };
 
   getFavorites = async (): Promise<RecipeListItem[]> => {
-    const response = await apiClient.get<RecipeListItem[]>(
+    return backendApi.get<RecipeListItem[]>(
       '/api/v1/recipes?favorite=true',
     );
-    return response.data;
   };
 
   confirmCook = async (
     data: ConsumptionConfirmation,
   ): Promise<{ success: boolean; message: string }> => {
-    const response = await apiClient.patch<{
-      success: boolean;
-      message: string;
+    const response = await backendApi.patch<{
+      success?: boolean;
+      message?: string;
     }>(`/api/v1/recipes/${data.recipeId}`, {
       status: 'cooked',
       consumption: data,
     });
-    return (
-      response.data ?? {
-        success: true,
-        message: '已更新食譜狀態',
-      }
-    );
+    return {
+      success: response?.success ?? true,
+      message: response?.message ?? '已更新食譜狀態',
+    };
   };
 
   addMealPlan = async (data: MealPlanInput): Promise<MealPlan> => {
-    const response = await apiClient.post<MealPlan>(
+    return backendApi.post<MealPlan>(
       '/api/v1/recipes/plan',
       data,
     );
-    return response.data;
   };
 
   getMealPlans = async (): Promise<MealPlan[]> => {
-    const response = await apiClient.get<MealPlan[]>('/api/v1/recipes/plan');
-    return response.data;
+    return backendApi.get<MealPlan[]>('/api/v1/recipes/plan');
   };
 
   deleteMealPlan = async (planId: string): Promise<{ success: boolean }> => {
-    const response = await apiClient.delete<{ success: boolean }>(
+    return backendApi.delete<{ success: boolean }>(
       `/api/v1/recipes/plan/${planId}`,
     );
-    return response.data;
   };
 }

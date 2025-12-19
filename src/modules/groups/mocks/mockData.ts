@@ -17,8 +17,8 @@ export const mockAvatars = {
 
 export const mockMembers: GroupMember[] = [
   { id: '1', name: 'Jocelyn', role: 'owner', avatar: avatar1 },
-  { id: '2', name: 'Zoe', role: 'organizer', avatar: avatar2 },
-  { id: '3', name: 'Ricky', role: 'organizer', avatar: avatar3 },
+  { id: '2', name: 'Zoe', role: 'member', avatar: avatar2 },
+  { id: '3', name: 'Ricky', role: 'member', avatar: avatar3 },
 ];
 
 export const mockGroups: Group[] = [
@@ -27,8 +27,6 @@ export const mockGroups: Group[] = [
     name: 'My Home',
     admin: 'Jocelyn',
     members: mockMembers,
-    color: 'bg-white',
-    characterColor: 'bg-primary-200',
     imageUrl: joAvatar,
     plan: 'free',
     createdAt: new Date(),
@@ -39,8 +37,6 @@ export const mockGroups: Group[] = [
     name: 'R Home',
     admin: 'Ricky',
     members: mockMembers,
-    color: 'bg-stone-50',
-    characterColor: 'bg-green-200',
     imageUrl: koAvatar,
     plan: 'free',
     createdAt: new Date(),
@@ -51,8 +47,6 @@ export const mockGroups: Group[] = [
     name: 'Z Home',
     admin: 'Zoe',
     members: mockMembers,
-    color: 'bg-stone-50',
-    characterColor: 'bg-orange-200',
     imageUrl: zoAvatar,
     plan: 'free',
     createdAt: new Date(),

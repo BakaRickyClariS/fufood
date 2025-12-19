@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/apiClient';
+import { backendApi } from '@/api/client';
 import type {
   FoodItem,
   GetInventoryRequest,
@@ -17,7 +17,7 @@ import type {
 } from '../types';
 import type { InventoryApi } from './inventoryApi';
 
-export const createRealInventoryApi = (): InventoryApi => {
+export const createInventoryApi = (): InventoryApi => {
   return {
     /**
      * 取得庫存列表
@@ -25,21 +25,21 @@ export const createRealInventoryApi = (): InventoryApi => {
     getInventory: async (
       params?: GetInventoryRequest,
     ): Promise<GetInventoryResponse> => {
-      return apiClient.get<GetInventoryResponse>('/inventory', params);
+      return backendApi.get<GetInventoryResponse>('/inventory', params);
     },
 
     /**
      * 取得單一食材
      */
     getItem: async (id: string): Promise<ApiSuccess<{ item: FoodItem }>> => {
-      return apiClient.get<ApiSuccess<{ item: FoodItem }>>(`/inventory/${id}`);
+      return backendApi.get<ApiSuccess<{ item: FoodItem }>>(`/inventory/${id}`);
     },
 
     /**
      * 新增食材
      */
     addItem: async (data: AddFoodItemRequest): Promise<AddFoodItemResponse> => {
-      return apiClient.post<AddFoodItemResponse>('/inventory', data);
+      return backendApi.post<AddFoodItemResponse>('/inventory', data);
     },
 
     /**
@@ -49,14 +49,14 @@ export const createRealInventoryApi = (): InventoryApi => {
       id: string,
       data: UpdateFoodItemRequest,
     ): Promise<UpdateFoodItemResponse> => {
-      return apiClient.put<UpdateFoodItemResponse>(`/inventory/${id}`, data);
+      return backendApi.put<UpdateFoodItemResponse>(`/inventory/${id}`, data);
     },
 
     /**
      * 刪除食材
      */
     deleteItem: async (id: string): Promise<DeleteFoodItemResponse> => {
-      return apiClient.delete<DeleteFoodItemResponse>(`/inventory/${id}`);
+      return backendApi.delete<DeleteFoodItemResponse>(`/inventory/${id}`);
     },
 
     /**
@@ -65,7 +65,7 @@ export const createRealInventoryApi = (): InventoryApi => {
     batchDelete: async (
       data: BatchDeleteInventoryRequest,
     ): Promise<ApiSuccess<Record<string, never>>> => {
-      return apiClient.delete<ApiSuccess<Record<string, never>>>(
+      return backendApi.delete<ApiSuccess<Record<string, never>>>(
         '/inventory/batch',
         {
           body: data,
@@ -77,14 +77,14 @@ export const createRealInventoryApi = (): InventoryApi => {
      * 庫存概要（可選）
      */
     getSummary: async (): Promise<InventorySummaryResponse> => {
-      return apiClient.get<InventorySummaryResponse>('/inventory/summary');
+      return backendApi.get<InventorySummaryResponse>('/inventory/summary');
     },
 
     /**
      * 類別列表
      */
     getCategories: async (): Promise<InventoryCategoriesResponse> => {
-      return apiClient.get<InventoryCategoriesResponse>(
+      return backendApi.get<InventoryCategoriesResponse>(
         '/inventory/categories',
       );
     },
@@ -93,7 +93,7 @@ export const createRealInventoryApi = (): InventoryApi => {
      * 庫存設定
      */
     getSettings: async (): Promise<InventorySettingsResponse> => {
-      return apiClient.get<InventorySettingsResponse>('/inventory/settings');
+      return backendApi.get<InventorySettingsResponse>('/inventory/settings');
     },
 
     /**
@@ -102,7 +102,7 @@ export const createRealInventoryApi = (): InventoryApi => {
     updateSettings: async (
       data: UpdateInventorySettingsRequest,
     ): Promise<InventorySettingsResponse> => {
-      return apiClient.put<InventorySettingsResponse>(
+      return backendApi.put<InventorySettingsResponse>(
         '/inventory/settings',
         data,
       );
@@ -110,5 +110,5 @@ export const createRealInventoryApi = (): InventoryApi => {
   };
 };
 
-// Export singleton for backward compatibility if needed, but index.ts uses createRealInventoryApi
-export const inventoryApi = createRealInventoryApi();
+// Export singleton for backward compatibility if needed, but index.ts uses createInventoryApi
+export const inventoryApi = createInventoryApi();

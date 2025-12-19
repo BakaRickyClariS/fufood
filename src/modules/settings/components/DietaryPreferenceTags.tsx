@@ -58,7 +58,7 @@ const DietaryPreferenceTags = ({ preference }: DietaryPreferenceTagsProps) => {
       </div>
       
       <div className="flex flex-wrap gap-2 mb-4">
-        {tags.map((tag, index) => (
+        {tags.map((tag) => (
           <span
             key={tag}
             className="px-4 py-2 bg-primary-100 text-primary-700 text-sm font-medium rounded-2xl"

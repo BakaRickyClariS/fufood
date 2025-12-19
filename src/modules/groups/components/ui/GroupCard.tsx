@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import type { Group } from '../../types/group.types';
 import { useGroupModal } from '../../hooks/useGroupModal';
 import { useAuth } from '@/modules/auth/hooks';
+import defaultAvatar from '@/assets/images/auth/Avatar-1.png';
 
 /** 顯示的頭像數量上限 */
 const MAX_AVATARS_DISPLAY = 4;
@@ -103,27 +104,21 @@ export const GroupCard: FC<GroupCardProps> = ({
 
         {/* 群組圖片 */}
         <div className="w-40 h-40 absolute -right-2 -top-2">
-          {group.imageUrl ? (
-            <img
-              src={group.imageUrl}
-              alt={group.name}
-              className="w-full h-full object-contain drop-shadow-md"
-            />
-          ) : (
-            <div
-              className={`w-20 h-20 ${group.characterColor || 'bg-primary-200'} rounded-full opacity-80`}
-            />
-          )}
+          <img
+            src={group.imageUrl || defaultAvatar}
+            alt={group.name}
+            className="w-full h-full object-contain drop-shadow-md"
+          />
         </div>
       </div>
 
       {/* 成員區域 */}
       <div className="flex flex-col justify-center gap-2 mb-2 relative z-10">
         <span className="text-sm text-stone-500 font-medium">
-          成員 ({group.members.length})
+          成員 ({group.members?.length ?? 0})
         </span>
         <div className="flex">
-          {group.members.slice(0, MAX_AVATARS_DISPLAY).map((member, index) => {
+          {(group.members ?? []).slice(0, MAX_AVATARS_DISPLAY).map((member, index) => {
             const isCurrentUser = user?.id === member.id;
             return (
               <div
@@ -133,7 +128,7 @@ export const GroupCard: FC<GroupCardProps> = ({
                 }`}
                 style={{
                   marginLeft: index === 0 ? 0 : '-0.75rem',
-                  zIndex: group.members.length - index,
+                  zIndex: (group.members?.length ?? 0) - index,
                 }}
               >
                 <img

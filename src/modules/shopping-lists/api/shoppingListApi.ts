@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/apiClient';
+import { backendApi } from '@/api/client';
 
 export type ShoppingList = {
   id: string;
@@ -15,17 +15,17 @@ export type ShoppingListItem = {
 };
 
 export const shoppingListApi = {
-  getLists: () => apiClient.get<ShoppingList[]>('/api/v1/shopping-lists'),
+  getLists: () => backendApi.get<ShoppingList[]>('/api/v1/shopping-lists'),
   createList: (data: { name: string }) =>
-    apiClient.post<ShoppingList>('/api/v1/shopping-lists', data),
+    backendApi.post<ShoppingList>('/api/v1/shopping-lists', data),
   getList: (id: string) =>
-    apiClient.get<ShoppingList>(`/api/v1/shopping-lists/${id}`),
+    backendApi.get<ShoppingList>(`/api/v1/shopping-lists/${id}`),
   updateList: (id: string, data: Partial<ShoppingList>) =>
-    apiClient.patch<ShoppingList>(`/api/v1/shopping-lists/${id}`, data),
+    backendApi.patch<ShoppingList>(`/api/v1/shopping-lists/${id}`, data),
   deleteList: (id: string) =>
-    apiClient.delete<void>(`/api/v1/shopping-lists/${id}`),
+    backendApi.delete<void>(`/api/v1/shopping-lists/${id}`),
   markPurchased: (id: string) =>
-    apiClient.patch<ShoppingList>(`/api/v1/shopping-lists/${id}`, {
+    backendApi.patch<ShoppingList>(`/api/v1/shopping-lists/${id}`, {
       status: 'purchased',
     }),
 };

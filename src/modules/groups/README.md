@@ -22,7 +22,7 @@
 
 1. 群組 CRUD
 2. 成員加入/邀請、移除、權限更新
-3. 權限模型：owner / organizer / member 4.（可選）方案與設定管理
+3. 權限模型：owner / member
 
 ---
 
@@ -54,26 +54,24 @@ groups/
 export type GroupMember = {
   id: string;
   name: string;
-  avatar?: string;
-  role: 'owner' | 'organizer' | 'member';
+  avatar: string;
+  role: 'owner' | 'member';
 };
 
 export type Group = {
   id: string;
   name: string;
-  admin: string;
-  members: GroupMember[];
-  color: string;
-  characterColor: string;
-  imageUrl?: string; // 加入自定義群組圖片
-  plan: 'free' | 'premium';
-  createdAt: string;
-  updatedAt: string;
+  admin?: string;
+  members?: GroupMember[];
+  imageUrl?: string;
+  plan?: 'free' | 'premium';
+  createdAt?: Date;
+  updatedAt?: Date;
 };
 
-export type CreateGroupForm = Pick<Group, 'name' | 'color' | 'characterColor'>;
-export type UpdateGroupForm = Partial<CreateGroupForm>;
-export type InviteMemberForm = { email: string; role?: GroupMember['role'] }; // role 預設 member
+export type CreateGroupForm = { name: string };
+export type UpdateGroupForm = { name?: string };
+export type InviteMemberForm = { email: string; role?: GroupMember['role'] };
 ```
 
 ---
@@ -154,8 +152,8 @@ const useGroupMembers = (groupId: string) => ({
 
 ## 權限與方案
 
-- 角色：`owner` > `organizer` > `member`
-- 基本操作：建立/刪除群組需 owner；移除成員/調整權限需 owner 或 organizer（依實作）。
+- 角色：`owner`（擁有者）> `member`（成員）
+- 基本操作：建立/刪除群組需 owner；移除成員需 owner。
 - 方案（如有）：free/premium 可控制群組數量、成員上限等（可依業務調整）。
 
 ---
