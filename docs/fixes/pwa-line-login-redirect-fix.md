@@ -1,102 +1,70 @@
-# LINE 登入 PWA 跳轉問題分析報告
+# LINE 登入 PWA 跳轉問題 - 分析與修正報告
 
 > **日期**: 2025-12-20  
-> **問題**: 在 PWA standalone 模式下，LINE 登入後停留在 `/auth/line/callback` 頁面，無法跳轉回首頁
+> **問題**: PWA standalone 模式下 LINE 登入無法正確跳轉
 
 ---
 
 ## 問題現象
 
-1. 使用者在 PWA standalone 模式下點擊「使用 LINE 應用程式登入」
-2. 完成 LINE 授權後，頁面停留在 `/auth/line/callback`
-3. 無法自動跳轉回首頁
+1. LINE 登入後停留在 `/auth/line/callback`
+2. 回到 Login 頁面卡在「登入中...」狀態
+3. 無法偵測到已登入
 
 ---
 
 ## 根因分析
 
-### 比較 commit `0ff1138`（可運作）與目前版本
+### 問題 1：`handlePopupMessage` origin 檢查錯誤
 
-#### 關鍵問題：`Login.tsx` 的 `handlePopupMessage` origin 檢查邏輯被反轉
+**舊版**：接收同源訊息  
+**新版**：預期後端 API origin → 訊息被忽略
 
-**舊版（commit `0ff1138`，可運作）:**
-
-```typescript
-const handlePopupMessage = useCallback(
-  (e: MessageEvent) => {
-    if (e.origin === location.origin) {
-      return; // 忽略來自相同 origin 的訊息
-    }
-    // 處理 postMessage...
-  },
-  [refetch],
-);
-```
-
-**被改成（有問題）:**
+**修正**：恢復同源檢查
 
 ```typescript
-const handlePopupMessage = useCallback(
-  (e: MessageEvent) => {
-    const expectedOrigin = new URL(LineLoginUrl).origin;
-    if (e.origin !== expectedOrigin) {
-      return; // 只接收來自後端 API origin 的訊息
-    }
-    // 處理 postMessage...
-  },
-  [refetch],
-);
+if (e.origin !== window.location.origin) return;
 ```
 
-### 問題說明
+### 問題 2：`getUserProfile` 在 Mock 模式下無法偵測 LINE 登入
 
-| 項目                   | 說明                                                                      |
-| ---------------------- | ------------------------------------------------------------------------- |
-| **postMessage 來源**   | `LineLoginCallback.tsx` 發送，origin 為前端（如 `http://localhost:5173`） |
-| **錯誤的 origin 檢查** | 預期訊息來自後端 API origin（如 `https://api.fufood.jocelynh.me`）        |
-| **結果**               | 訊息被忽略，`refetch()` 不會被呼叫，登入狀態無法更新                      |
+**原因**：
+
+- LINE 登入使用 HttpOnly Cookie
+- Mock 模式檢查 `localStorage.authToken`（LINE 不會設定此值）
+- 導致 `getUserProfile` 返回 `null`
+
+**修正**：重構邏輯，讓 LINE 登入與 Mock 獨立運作
 
 ---
 
-## 解決方案
+## 修改檔案
 
-### 修正 `Login.tsx` 的 `handlePopupMessage`
-
-```typescript
-const handlePopupMessage = useCallback(
-  (e: MessageEvent) => {
-    // 只接收來自同源的 postMessage（LineLoginCallback 發送的）
-    if (e.origin !== window.location.origin) {
-      return;
-    }
-    // ... 處理登入成功
-  },
-  [refetch],
-);
-```
+| 檔案         | 變更                                         |
+| ------------ | -------------------------------------------- |
+| `Login.tsx`  | 修正 `handlePopupMessage` origin 檢查        |
+| `queries.ts` | 重構 `getUserProfile`，LINE 優先使用真實 API |
 
 ---
 
-## 變更檔案
+## 新架構
 
-| 檔案                        | 變更內容                                     |
-| --------------------------- | -------------------------------------------- |
-| `src/routes/Auth/Login.tsx` | 修正 `handlePopupMessage` 的 origin 檢查邏輯 |
+```
+getUserProfile() 邏輯：
+
+1. 檢查登出標記 → 有則返回 null
+2. 呼叫真實 API（/api/v1/profile with Cookie）
+   └── 成功 → 返回用戶資料（LINE 登入）
+   └── 失敗 → 繼續步驟 3
+3. 檢查 Mock token（localStorage.authToken）
+   └── 有 mock_ 前綴 → 返回 Mock 用戶（電子郵件登入）
+4. 返回 null（未登入）
+```
 
 ---
 
 ## 驗證步驟
 
-1. 開啟 PWA standalone 模式
-2. 點擊「使用 LINE 應用程式登入」
-3. 完成 LINE 授權
-4. 確認成功跳轉回首頁
-
----
-
-## 額外說明
-
-本次修改同時保留了先前新增的功能：
-
-- `VITE_LINE_LOGIN_MODE` 環境變數開關（`popup` / `redirect` / `auto`）
-- `LineLoginCallback.tsx` 的成功訊息 UI
+1. 用 PWA standalone 模式測試 LINE 登入
+2. 確認成功跳轉回首頁
+3. 測試電子郵件登入（Mock）仍正常運作
