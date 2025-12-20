@@ -1,10 +1,7 @@
-import { useState, useCallback } from 'react';
-import { cld } from '@/lib/cloudinary';
-import { format, quality } from '@cloudinary/url-gen/actions/delivery';
-import { auto } from '@cloudinary/url-gen/qualifiers/format';
-import { auto as qAuto } from '@cloudinary/url-gen/qualifiers/quality';
-import { limitFit } from '@cloudinary/url-gen/actions/resize';
+import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { foodScanApi } from '../services';
+import { mediaApi } from '@/modules/media/api/mediaApi';
 import type { ScanResult } from '../types';
 
 type UseImageUploadProps = {
@@ -13,94 +10,56 @@ type UseImageUploadProps = {
 
 export const useImageUpload = (props?: UseImageUploadProps) => {
   const { onUploadSuccess } = props || {};
-  const [isUploading, setIsUploading] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
+  // 保留細粒度的狀態追蹤，但主要邏輯交給 React Query
+  const [stage, setStage] = useState<'idle' | 'uploading' | 'analyzing'>('idle');
 
-  const uploadImage = useCallback(
-    async (img: string): Promise<ScanResult | null> => {
-      if (!img) return null;
-
-      setIsUploading(true);
-      setError(null);
+  const mutation = useMutation<ScanResult, Error, string>({
+    mutationFn: async (img: string) => {
+      if (!img) throw new Error('No image provided');
 
       try {
+        setStage('uploading');
+        
+        // 1. 轉換圖片
         const response = await fetch(img);
         const blob = await response.blob();
 
-        const formData = new FormData();
-        formData.append('file', blob);
-        formData.append(
-          'upload_preset',
-          import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET,
-        );
-
-        const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-        if (!cloudName) {
-          throw new Error('Cloudinary cloud name is not configured');
-        }
-
-        const uploadResponse = await fetch(
-          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-          {
-            method: 'POST',
-            body: formData,
-          },
-        );
-
-        if (!uploadResponse.ok) {
-          throw new Error(`上傳失敗: ${uploadResponse.statusText}`);
-        }
-
-        const result = await uploadResponse.json();
-
-        const myImage = cld.image(result.public_id);
-        myImage
-          .delivery(format(auto()))
-          .delivery(quality(qAuto()))
-          .resize(limitFit().width(500).height(500));
-
-        const optimizedUrl = myImage.toURL();
+        // 2. 上傳至後端
+        const optimizedUrl = await mediaApi.uploadImage(blob);
 
         if (onUploadSuccess) {
           await onUploadSuccess(blob);
         }
 
-        // Start Analysis
-        setIsAnalyzing(true);
-        setIsUploading(false); // Upload done, analyzing starts
-
-        try {
-          const analyzeResult = await foodScanApi.recognizeImage(optimizedUrl);
-          return analyzeResult;
-        } catch (analyzeError) {
-          console.error('API Analyze Error:', analyzeError);
-          const errorMessage =
-            analyzeError instanceof Error
-              ? analyzeError.message
-              : '圖片分析失敗，請稍後再試';
-
-          setError(errorMessage);
-          // Re-throw error so the caller (CameraCapture) can handle it (e.g. show Toast)
-          throw analyzeError;
-        } finally {
-          setIsAnalyzing(false);
-        }
-      } catch (err) {
-        console.error('上傳失敗:', err);
-        setError('上傳失敗，請檢查網路連線');
-        return null;
-      } finally {
-        setIsUploading(false);
+        // 3. AI 分析
+        setStage('analyzing');
+        const result = await foodScanApi.recognizeImage(optimizedUrl);
+        
+        return result;
+      } catch (error) {
+        // 確保錯誤時重置狀態 (雖 useMutation 會處理 isError，但 local stage 需重置)
+        setStage('idle'); 
+        throw error;
       }
     },
-    [onUploadSuccess],
-  );
+    onSettled: () => {
+       // 完成後 (成功或失敗) 重置 stage，或者保留在 success 狀態視需求而定
+       // 這裡若設為 idle，會導致 UI 在拿到資料後立刻不再顯示 loading
+       // 由於 mutation.isPending 會變 false，外部會以此為主
+       setStage('idle');
+    }
+  });
 
   return {
-    isUploading,
-    isAnalyzing,
-    uploadImage,
-    error,
+    // 相容舊介面
+    isUploading: mutation.isPending && stage === 'uploading',
+    isAnalyzing: mutation.isPending && stage === 'analyzing',
+    // 也可以直接暴露 isPending 讓外部決定
+    isLoading: mutation.isPending,
+    
+    uploadImage: mutation.mutateAsync,
+    error: mutation.error ? (mutation.error instanceof Error ? mutation.error.message : '發生未知錯誤') : null,
+    reset: mutation.reset,
   };
 };
