@@ -67,12 +67,31 @@ const Login = () => {
     // 清除登出標記（準備登入）
     sessionStorage.removeItem('logged_out');
 
+    // 取得登入模式設定：popup | redirect | auto
+    const loginMode = import.meta.env.VITE_LINE_LOGIN_MODE || 'auto';
+
+    // 檢測是否為 PWA standalone 模式
+    const isPWAStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as unknown as { standalone?: boolean }).standalone ===
+        true;
+
+    // 判斷是否使用 redirect 模式
+    const useRedirect =
+      loginMode === 'redirect' || (loginMode === 'auto' && isPWAStandalone);
+
+    // Redirect 模式：使用直接跳轉（適合 PWA standalone）
+    if (useRedirect) {
+      window.location.href = LineLoginUrl;
+      return;
+    }
+
+    // 瀏覽器模式：使用 popup 視窗
     const width = 500;
     const height = 600;
     const left = window.screenX + (window.innerWidth - width) / 2;
     const top = window.screenY + (window.innerHeight - height) / 2;
 
-    // 開啟 popup 視窗（PWA 友好）
     const popup = window.open(
       LineLoginUrl,
       'lineLogin',
