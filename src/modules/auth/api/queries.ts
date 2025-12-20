@@ -4,12 +4,13 @@ import { backendApi } from '@/api/client';
 
 import { MOCK_USERS } from './mock/authMockData';
 
-// 環境變數控制是否使用 Mock
-const USE_MOCK = import.meta.env.VITE_USE_MOCK_API !== 'false';
-
 /**
  * 從後端 Profile API 取得已登入用戶資訊
- * 使用 HttpOnly Cookie 進行認證
+ *
+ * 邏輯說明：
+ * 1. LINE 登入：使用 HttpOnly Cookie，優先呼叫真實 API
+ * 2. 電子郵件登入（Mock）：使用 localStorage 的 authToken
+ * 3. 兩種登入方式獨立運作，不受 VITE_USE_MOCK_API 環境變數影響
  */
 export async function getUserProfile(): Promise<User | null> {
   // 檢查登出標記 - 如果用戶已登出，不要發送 API 請求
@@ -18,44 +19,10 @@ export async function getUserProfile(): Promise<User | null> {
     return null;
   }
 
-  // Mock 模式
-  if (USE_MOCK) {
-    // 模擬 API 延遲
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    
-    // 檢查是否有 Mock token（用戶是否已登入）
-    const mockToken = localStorage.getItem('authToken');
-    const userStr = localStorage.getItem('user');
-    
-    // 未登入時返回 null（與真實 API 401 行為一致）
-    if (!mockToken || !mockToken.startsWith('mock_')) {
-      return null;
-    }
-    
-    // 嘗試從 localStorage 取得已登入的用戶資料
-    if (userStr) {
-      try {
-        const savedUser = JSON.parse(userStr);
-        return {
-          ...savedUser,
-          lineId: savedUser.lineId || 'U1234567890',
-          displayName: savedUser.displayName || savedUser.name,
-          pictureUrl: savedUser.pictureUrl || savedUser.avatar,
-        };
-      } catch {
-        // JSON 解析失敗，返回預設用戶
-      }
-    }
-    
-    // 有 token 但無 user 資料，返回預設 Mock 用戶
-    return {
-      ...MOCK_USERS[0],
-      lineId: 'U1234567890', 
-      displayName: MOCK_USERS[0].name,
-      pictureUrl: MOCK_USERS[0].avatar,
-    };
-  }
+  // 檢查是否有 LINE 登入儲存的用戶資料（透過 LineLoginCallback 儲存）
+  const userStr = localStorage.getItem('user');
 
+  // 優先嘗試真實 API（LINE 登入使用 HttpOnly Cookie）
   try {
     const result = await backendApi.get<ProfileResponse>('/api/v1/profile');
 
@@ -71,12 +38,49 @@ export async function getUserProfile(): Promise<User | null> {
       updatedAt: new Date(result.data.updatedAt),
     };
   } catch (error) {
-    // 未登入時返回 null（不拋出錯誤）
-    if (error instanceof Error && error.message.includes('401')) {
-      return null;
+    // 真實 API 失敗（401 或其他錯誤），嘗試 Mock 備援
+    const is401 = error instanceof Error && error.message.includes('401');
+
+    if (!is401) {
+      // 非 401 錯誤，繼續檢查 Mock 狀態（可能是網路問題或後端未啟動）
+      console.warn('Profile API 失敗，嘗試 Mock 備援:', error);
     }
-    throw error;
   }
+
+  // Mock 備援：電子郵件登入（檢查 localStorage 的 authToken）
+  const mockToken = localStorage.getItem('authToken');
+
+  // 如果有 mock token（電子郵件登入），返回 Mock 用戶
+  if (mockToken && mockToken.startsWith('mock_')) {
+    // 模擬 API 延遲
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    // 嘗試從 localStorage 取得已登入的用戶資料
+    if (userStr) {
+      try {
+        const savedUser = JSON.parse(userStr);
+        return {
+          ...savedUser,
+          lineId: savedUser.lineId || 'U1234567890',
+          displayName: savedUser.displayName || savedUser.name,
+          pictureUrl: savedUser.pictureUrl || savedUser.avatar,
+        };
+      } catch {
+        // JSON 解析失敗，返回預設用戶
+      }
+    }
+
+    // 有 token 但無 user 資料，返回預設 Mock 用戶
+    return {
+      ...MOCK_USERS[0],
+      lineId: 'U1234567890',
+      displayName: MOCK_USERS[0].name,
+      pictureUrl: MOCK_USERS[0].avatar,
+    };
+  }
+
+  // 真實 API 失敗且無 Mock token，返回 null（未登入）
+  return null;
 }
 
 /**

@@ -22,6 +22,7 @@ const LineLoginCallback = () => {
   const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(true);
+  const [loginSuccess, setLoginSuccess] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -49,6 +50,9 @@ const LineLoginCallback = () => {
       }
 
       try {
+        // 清除登出標記，確保後續 API 呼叫正常
+        sessionStorage.removeItem('logged_out');
+
         // 呼叫 Profile API 確認 Cookie 已設定
         const response = await authApi.getProfile();
 
@@ -78,11 +82,19 @@ const LineLoginCallback = () => {
           // 關閉 Popup 視窗
           window.close();
         } else {
-          // 非 Popup 模式：直接更新快取並導向首頁
+          // 非 Popup 模式（Redirect 模式）：更新快取並導向首頁
+          setIsProcessing(false);
+          setLoginSuccess(true);
+
+          // 使快取失效並重新取得用戶資料
           await queryClient.invalidateQueries({
             queryKey: ['GET_USER_PROFILE'],
           });
-          navigate('/', { replace: true });
+
+          // 稍微延遲讓用戶看到成功訊息
+          setTimeout(() => {
+            navigate('/', { replace: true });
+          }, 800);
         }
       } catch (err) {
         console.error('LINE 登入驗證失敗:', err);
@@ -127,6 +139,26 @@ const LineLoginCallback = () => {
           <p className="text-sm text-stone-400">
             {isPopupWindow() ? '視窗即將關閉...' : '正在返回登入頁面...'}
           </p>
+        </div>
+      ) : loginSuccess ? (
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+            <svg
+              className="w-8 h-8 text-green-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+          <p className="text-stone-600 font-medium">登入成功！</p>
+          <p className="text-sm text-stone-400 mt-1">正在導向首頁...</p>
         </div>
       ) : isProcessing ? (
         <div className="text-center">
