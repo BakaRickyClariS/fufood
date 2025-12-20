@@ -60,6 +60,23 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  // 登入超時 fallback：如果 lineLoginLoading 超過 3 秒，自動檢查登入狀態
+  // 這是 OAuth 流程的常見補救機制，確保 Cookie 設定成功後能正確跳轉
+  useEffect(() => {
+    if (!lineLoginLoading) return;
+
+    const timeoutId = setTimeout(() => {
+      // 超時後重新檢查登入狀態
+      refetch().finally(() => {
+        // 如果 refetch 後仍未登入，停止 loading 狀態
+        // 讓使用者可以再次嘗試登入
+        setLineLoginLoading(false);
+      });
+    }, 3000); // 3 秒後自動檢查
+
+    return () => clearTimeout(timeoutId);
+  }, [lineLoginLoading, refetch]);
+
   const handleLineLogin = useCallback(() => {
     setLineLoginLoading(true);
     setLoginError(null);
