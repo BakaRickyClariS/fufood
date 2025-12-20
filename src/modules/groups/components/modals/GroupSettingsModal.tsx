@@ -62,7 +62,7 @@ export const GroupSettingsModal: FC<GroupSettingsModalProps> = ({
 
               {isLoading ? (
                 <div className="text-center py-8 text-stone-400">載入中...</div>
-              ) : groups.length === 0 ? (
+              ) : !Array.isArray(groups) || groups.length === 0 ? (
                 <div className="text-center py-8 text-stone-400">尚無群組</div>
               ) : (
                 groups.map((group) => (

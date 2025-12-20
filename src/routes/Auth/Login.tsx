@@ -52,13 +52,21 @@ const Login = () => {
     navigate('/auth/avatar-selection');
   };
 
-  // 當已認證時，導向首頁
+  // 當已認證時，導向首頁（包含頁面載入時的檢查）
   useEffect(() => {
     if (isAuthenticated) {
       setLineLoginLoading(false);
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
+
+  // 頁面載入時如果還在載入中，設定 lineLoginLoading 為 true
+  // 這樣可以讓 UI 顯示正確的載入狀態
+  useEffect(() => {
+    if (isLoading) {
+      setLineLoginLoading(true);
+    }
+  }, [isLoading]);
 
   // 登入超時 fallback：如果 lineLoginLoading 超過 3 秒，自動檢查登入狀態
   // 這是 OAuth 流程的常見補救機制，確保 Cookie 設定成功後能正確跳轉
@@ -93,11 +101,25 @@ const Login = () => {
       (window.navigator as unknown as { standalone?: boolean }).standalone ===
         true;
 
-    // 判斷是否使用 redirect 模式
-    const useRedirect =
-      loginMode === 'redirect' || (loginMode === 'auto' && isPWAStandalone);
+    // 檢測是否為移動裝置（移動裝置 popup 體驗較差，建議用 redirect）
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    // Redirect 模式：使用直接跳轉（適合 PWA standalone）
+    // 判斷是否使用 redirect 模式
+    // 1. 環境變數強制指定 redirect
+    // 2. auto 模式下：PWA standalone 或移動裝置都使用 redirect
+    const useRedirect =
+      loginMode === 'redirect' ||
+      (loginMode === 'auto' && (isPWAStandalone || isMobile));
+
+    // 除錯訊息（可在瀏覽器 Console 查看）
+    console.log('[LINE Login]', {
+      loginMode,
+      isPWAStandalone,
+      isMobile,
+      useRedirect,
+    });
+
+    // Redirect 模式：使用直接跳轉（適合 PWA standalone 和移動裝置）
     if (useRedirect) {
       window.location.href = LineLoginUrl;
       return;
