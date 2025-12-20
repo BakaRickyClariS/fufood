@@ -13,11 +13,11 @@ const Login = () => {
   const [lineLoginLoading, setLineLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  // 處理後端發送的 postMessage
+  // 處理 LineLoginCallback 發送的 postMessage
   const handlePopupMessage = useCallback(
     (e: MessageEvent) => {
-      const expectedOrigin = new URL(LineLoginUrl).origin;
-      if (e.origin !== expectedOrigin) {
+      // 只接收來自同源的 postMessage（LineLoginCallback 發送的）
+      if (e.origin !== window.location.origin) {
         return;
       }
 
@@ -52,13 +52,38 @@ const Login = () => {
     navigate('/auth/avatar-selection');
   };
 
-  // 當已認證時，導向首頁
+  // 當已認證時，導向首頁（包含頁面載入時的檢查）
   useEffect(() => {
     if (isAuthenticated) {
       setLineLoginLoading(false);
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
+
+  // 頁面載入時如果還在載入中，設定 lineLoginLoading 為 true
+  // 這樣可以讓 UI 顯示正確的載入狀態
+  useEffect(() => {
+    if (isLoading) {
+      setLineLoginLoading(true);
+    }
+  }, [isLoading]);
+
+  // 登入超時 fallback：如果 lineLoginLoading 超過 3 秒，自動檢查登入狀態
+  // 這是 OAuth 流程的常見補救機制，確保 Cookie 設定成功後能正確跳轉
+  useEffect(() => {
+    if (!lineLoginLoading) return;
+
+    const timeoutId = setTimeout(() => {
+      // 超時後重新檢查登入狀態
+      refetch().finally(() => {
+        // 如果 refetch 後仍未登入，停止 loading 狀態
+        // 讓使用者可以再次嘗試登入
+        setLineLoginLoading(false);
+      });
+    }, 3000); // 3 秒後自動檢查
+
+    return () => clearTimeout(timeoutId);
+  }, [lineLoginLoading, refetch]);
 
   const handleLineLogin = useCallback(() => {
     setLineLoginLoading(true);
@@ -67,12 +92,45 @@ const Login = () => {
     // 清除登出標記（準備登入）
     sessionStorage.removeItem('logged_out');
 
+    // 取得登入模式設定：popup | redirect | auto
+    const loginMode = import.meta.env.VITE_LINE_LOGIN_MODE || 'auto';
+
+    // 檢測是否為 PWA standalone 模式
+    const isPWAStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as unknown as { standalone?: boolean }).standalone ===
+        true;
+
+    // 檢測是否為移動裝置（移動裝置 popup 體驗較差，建議用 redirect）
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    // 判斷是否使用 redirect 模式
+    // 1. 環境變數強制指定 redirect
+    // 2. auto 模式下：PWA standalone 或移動裝置都使用 redirect
+    const useRedirect =
+      loginMode === 'redirect' ||
+      (loginMode === 'auto' && (isPWAStandalone || isMobile));
+
+    // 除錯訊息（可在瀏覽器 Console 查看）
+    console.log('[LINE Login]', {
+      loginMode,
+      isPWAStandalone,
+      isMobile,
+      useRedirect,
+    });
+
+    // Redirect 模式：使用直接跳轉（適合 PWA standalone 和移動裝置）
+    if (useRedirect) {
+      window.location.href = LineLoginUrl;
+      return;
+    }
+
+    // 瀏覽器模式：使用 popup 視窗
     const width = 500;
     const height = 600;
     const left = window.screenX + (window.innerWidth - width) / 2;
     const top = window.screenY + (window.innerHeight - height) / 2;
 
-    // 開啟 popup 視窗（PWA 友好）
     const popup = window.open(
       LineLoginUrl,
       'lineLogin',
