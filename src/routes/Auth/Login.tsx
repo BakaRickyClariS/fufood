@@ -13,11 +13,11 @@ const Login = () => {
   const [lineLoginLoading, setLineLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  // 處理後端發送的 postMessage
+  // 處理 LineLoginCallback 發送的 postMessage
   const handlePopupMessage = useCallback(
     (e: MessageEvent) => {
-      const expectedOrigin = new URL(LineLoginUrl).origin;
-      if (e.origin !== expectedOrigin) {
+      // 只接收來自同源的 postMessage（LineLoginCallback 發送的）
+      if (e.origin !== window.location.origin) {
         return;
       }
 
