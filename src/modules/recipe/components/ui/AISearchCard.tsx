@@ -1,17 +1,34 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles, AlertCircle } from 'lucide-react';
 import { HeroCard } from './HeroCard';
+import { useRecipeSuggestions } from '@/modules/ai';
 
 type AISearchCardProps = {
   remainingQueries?: number;
 };
 
-const SUGGESTION_TAGS = ['台灣屬性的美食', '晚餐想吃日式', '聖誕節吃什麼'];
+/** 預設建議標籤（API 不可用時的 fallback） */
+const DEFAULT_SUGGESTION_TAGS = [
+  '台灣屬性的美食',
+  '晚餐想吃日式',
+  '聖誕節吃什麼',
+];
 
 export const AISearchCard = ({ remainingQueries = 3 }: AISearchCardProps) => {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
+
+  // 從 API 取得建議標籤，失敗時使用預設值
+  const { data: suggestionsData } = useRecipeSuggestions();
+
+  // 安全檢查：確保 data 是陣列
+  const suggestionTags = Array.isArray(suggestionsData?.data)
+    ? suggestionsData.data
+    : DEFAULT_SUGGESTION_TAGS;
+
+  // 檢查是否使用 Mock 資料
+  const isMock = suggestionsData?.isMock ?? false;
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -37,6 +54,14 @@ export const AISearchCard = ({ remainingQueries = 3 }: AISearchCardProps) => {
           </h2>
         </div>
 
+        {/* Mock 資料提示 */}
+        {isMock && (
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-full text-xs text-amber-700">
+            <AlertCircle className="w-3.5 h-3.5" />
+            <span>AI 服務連線中，目前使用示範資料</span>
+          </div>
+        )}
+
         {/* Search Input */}
         <div className="w-full relative group">
           <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
@@ -60,7 +85,7 @@ export const AISearchCard = ({ remainingQueries = 3 }: AISearchCardProps) => {
 
         {/* Tags */}
         <div className="flex flex-wrap justify-center gap-2.5">
-          {SUGGESTION_TAGS.map((tag) => (
+          {suggestionTags.map((tag) => (
             <button
               key={tag}
               onClick={() => {
