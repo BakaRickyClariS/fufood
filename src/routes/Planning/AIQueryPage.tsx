@@ -1,9 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { X, Sparkles, Send } from 'lucide-react';
+import { X, Sparkles, Send, SlidersHorizontal, Plus } from 'lucide-react';
 import gsap from 'gsap';
+import { cn } from '@/lib/utils';
+import { useAIRecipeGenerate, useRecipeSuggestions } from '@/modules/ai';
+import { useAuth } from '@/modules/auth/hooks/useAuth';
+import { RecipeCard } from '@/shared/components/recipe/RecipeCard';
+import { InventoryFilterModal } from '@/modules/ai/components/InventoryFilterModal';
+import { SelectedIngredientTags } from '@/modules/ai/components/SelectedIngredientTags';
+import aiAvatar from '@/assets/images/recipe/ai-avator.png';
 
-const SUGGESTION_TAGS = [
+/** 預設建議標籤（API 不可用時的 fallback） */
+const DEFAULT_SUGGESTION_TAGS = [
   '冰箱剩餘食材食譜',
   '低卡路里晚餐',
   '快速早餐建議',
@@ -11,24 +19,51 @@ const SUGGESTION_TAGS = [
 ];
 
 type AIQueryPageProps = {
-  remainingQueries?: number;
+  /** 是否使用 SSE Streaming（預設 true） */
+  useStreaming?: boolean;
 };
 
-const AIQueryPage = ({ remainingQueries = 3 }: AIQueryPageProps) => {
+const AIQueryPage = ({ useStreaming = true }: AIQueryPageProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [query, setQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
+  const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
+  const [showFilterModal, setShowFilterModal] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // 取得使用者資訊
+  const { user } = useAuth();
+  const userName = user?.name || user?.displayName || 'User';
+
+  // AI 生成 Hook
+  const {
+    generate,
+    isLoading,
+    text,
+    stage,
+    recipes,
+    error,
+    remainingQueries,
+    reset,
+  } = useAIRecipeGenerate({ useStreaming });
+
+  // 建議標籤
+  const { data: suggestionsData } = useRecipeSuggestions();
+  const suggestionTags = Array.isArray(suggestionsData?.data)
+    ? suggestionsData.data
+    : DEFAULT_SUGGESTION_TAGS;
+
+  // 判斷是否有結果
+  const hasResult = text || recipes;
 
   useEffect(() => {
     const initialQuery = searchParams.get('q');
     if (initialQuery) {
       setQuery(initialQuery);
+      generate({ prompt: initialQuery });
     }
 
-    // GSAP slide in animation from right
+    // Entry animation
     if (containerRef.current) {
       gsap.fromTo(
         containerRef.current,
@@ -36,147 +71,295 @@ const AIQueryPage = ({ remainingQueries = 3 }: AIQueryPageProps) => {
         { x: '0%', duration: 0.4, ease: 'power3.out' },
       );
     }
-  }, [searchParams]);
+  }, []);
 
   const handleClose = () => {
-    // GSAP slide out animation to right
     if (containerRef.current) {
       gsap.to(containerRef.current, {
         x: '100%',
         duration: 0.3,
         ease: 'power3.in',
         onComplete: () => {
+          reset();
           navigate('/planning?tab=recipes');
         },
       });
     }
   };
 
-  const handleSubmit = async (text: string = query) => {
-    if (!text.trim() || isLoading) return;
+  const handleSubmit = async (textToSubmit: string = query) => {
+    if (!textToSubmit.trim() && selectedIngredients.length === 0) return;
+    if (isLoading) return;
 
-    setIsLoading(true);
-    setResult(null);
+    setQuery(textToSubmit);
+    await generate({
+      prompt: textToSubmit || '請根據我選擇的食材推薦食譜', // 若僅選擇食材沒輸入文字，給個預設 prompt
+      selectedIngredients,
+    });
+  };
 
-    try {
-      // TODO: Replace with actual API call to /api/v1/ai/recipe
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setResult(`這是針對「${text}」的食譜建議...\n\n[API 整合後顯示真實內容]`);
-    } catch (error) {
-      console.error('AI Query failed:', error);
-      setResult('抱歉，發生錯誤，請稍後再試。');
-    } finally {
-      setIsLoading(false);
+  const handleRecipeClick = (recipeId: string) => {
+    const selectedRecipe = recipes?.find((r) => r.id === recipeId);
+    if (selectedRecipe) {
+      navigate(`/planning/recipes/${recipeId}`, {
+        state: { aiRecipe: selectedRecipe },
+      });
     }
   };
 
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 bg-white z-[100] flex flex-col"
+      className="fixed inset-0 bg-white z-100 flex flex-col"
     >
       {/* Header */}
-      <header className="bg-gradient-to-b from-orange-50 to-white border-b border-orange-100">
-        <div className="flex items-center justify-between px-4 h-14">
+      <header className="bg-white border-b border-gray-100 shrink-0">
+        <div className="flex items-center px-4 h-14 relative justify-center">
           <button
             onClick={handleClose}
-            className="p-2 -ml-2 hover:bg-orange-50 rounded-full transition-colors"
+            className="absolute left-4 p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors"
           >
             <X className="w-6 h-6 text-gray-700" />
           </button>
-          <span className="font-bold text-lg bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-            FuFood.ai
-          </span>
-          <div className="w-10" />
+          <span className="font-bold text-lg text-gray-900">FuFood AI</span>
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto bg-gradient-to-b from-white to-orange-50/20">
-        {/* Welcome Section */}
-        {!result && !isLoading && (
-          <div className="text-center mt-12 mb-8 px-4">
-            <div className="w-20 h-20 bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 rounded-3xl mx-auto flex items-center justify-center shadow-xl shadow-orange-200/50 mb-6">
-              <Sparkles className="w-10 h-10 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              詢問 FuFood.ai
+      {/* Main Content */}
+      <div className="flex-1 overflow-y-auto bg-white pb-32 custom-scrollbar">
+        {/* Welcome Section (Only show when no results) */}
+        {!hasResult && !isLoading && (
+          <div className="flex flex-col min-h-full px-4 pt-8 pb-4 text-center">
+            <h1 className="text-2xl font-bold text-gray-900">
+              {userName}，您好！
             </h1>
-            <p className="text-gray-500 text-sm mb-1">讓 AI 為您推薦美味食譜</p>
-            <p className="text-orange-500 text-sm font-bold">
-              今天還可以詢問 {remainingQueries} 次
-            </p>
+
+            {/* Spacer to push suggestions to bottom */}
+            <div className="flex-1" />
+
+            {/* Suggestion Tags Grid */}
+            {/* Suggestion Tags Horizontal Scroll */}
+            <div className="flex overflow-x-auto gap-4 pb-2 -mx-1 px-1 custom-scrollbar hide-scrollbar mb-4">
+              {suggestionTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => handleSubmit(tag)}
+                  className="shrink-0 max-w-[80px] bg-white border border-neutral-200 rounded-sm px-2 py-2 text-neutral-600 text-sm font-medium hover:border-[#F58274] hover:text-[#F58274] transition-all active:scale-95"
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-2 mb-4">
+              {remainingQueries !== null && (
+                <p className="text-orange-500 text-sm font-bold">
+                  今天還可以詢問 {remainingQueries} 次
+                </p>
+              )}
+              <p className="text-xs text-gray-400">AI可能會出錯，請查證。</p>
+            </div>
           </div>
         )}
 
         {/* Result Area */}
-        {(result || isLoading) && (
-          <div className="p-4">
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-orange-100">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center shrink-0 shadow-md">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1 space-y-4">
-                  <p className="font-semibold text-gray-900 text-lg">{query}</p>
-                  <div className="h-px bg-gradient-to-r from-orange-200 via-orange-100 to-transparent w-full" />
-                  {isLoading ? (
-                    <div className="space-y-3 animate-pulse">
-                      <div className="h-4 bg-orange-100 rounded w-3/4" />
-                      <div className="h-4 bg-orange-50 rounded w-1/2" />
-                      <div className="h-4 bg-orange-100 rounded w-5/6" />
-                    </div>
-                  ) : (
-                    <div className="text-gray-700 whitespace-pre-wrap leading-relaxed">
-                      {result}
+        {(hasResult || isLoading) && (
+          <div className="p-4 space-y-6">
+            {/* AI Response Bubble */}
+            <div className="space-y-4">
+              {/* User Query (Right) */}
+              <div className="flex justify-end">
+                <div className="max-w-[80%] bg-white border border-gray-200 rounded-2xl rounded-tr-none px-4 py-3 shadow-sm">
+                  {selectedIngredients.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {selectedIngredients.map((ing) => (
+                        <span
+                          key={ing}
+                          className="text-xs px-2 py-0.5 bg-[#FDE6E3] text-[#F58274] rounded-full"
+                        >
+                          {ing}
+                        </span>
+                      ))}
                     </div>
                   )}
+                  <p className="text-gray-800">{query || '庫存食材食譜推薦'}</p>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
 
-        {/* Suggestions */}
-        {!result && !isLoading && (
-          <div className="px-4 space-y-3">
-            <p className="text-sm text-gray-500 font-medium mb-4">
-              試試這些問題
-            </p>
-            {SUGGESTION_TAGS.map((tag) => (
-              <button
-                key={tag}
-                onClick={() => {
-                  setQuery(tag);
-                  handleSubmit(tag);
-                }}
-                className="w-full p-4 bg-white rounded-2xl border-2 border-orange-100 text-left text-gray-700 hover:border-orange-300 hover:bg-gradient-to-r hover:from-orange-50 hover:to-white transition-all flex items-center justify-between group shadow-sm"
-              >
-                <span className="font-medium">{tag}</span>
-                <Sparkles className="w-5 h-5 text-orange-300 group-hover:text-orange-500 transition-colors" />
-              </button>
-            ))}
+              {/* Loader */}
+              {isLoading && !text && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-100 rounded-2xl rounded-tl-none px-4 py-3 shadow-sm flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+                    </div>
+                    {stage && (
+                      <span className="text-xs text-gray-500 ml-2">
+                        {stage}...
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* AI Response (Left) */}
+              {/* AI Response (Left) */}
+              {(text || error) && (
+                <div className="space-y-4">
+                  {/* Avatar Row */}
+                  <div className="flex justify-start">
+                    <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-gray-100">
+                      <img
+                        src={aiAvatar}
+                        alt="AI"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <Sparkles
+                        className="w-6 h-6 text-yellow-500 absolute"
+                        style={{ display: 'none' }}
+                      />{' '}
+                      {/* Fallback icon */}
+                    </div>
+                  </div>
+
+                  {/* Content Column */}
+                  <div className="space-y-4">
+                    {error ? (
+                      <div className="bg-red-50 text-red-600 rounded-2xl px-4 py-3 border border-red-100">
+                        {error}
+                      </div>
+                    ) : (
+                      <div className="text-gray-900 font-bold text-lg px-1 leading-relaxed">
+                        {text}
+                      </div>
+                    )}
+
+                    {/* Recipe Horizontal Scroll */}
+                    {recipes && recipes.length > 0 && (
+                      <div className="w-full overflow-x-auto pb-4 pt-2 -mx-1 px-1 custom-scrollbar hide-scrollbar">
+                        <div className="flex gap-4">
+                          {recipes.map((recipe) => (
+                            <div
+                              key={recipe.id}
+                              className="w-[280px] h-[280px] shrink-0"
+                            >
+                              <RecipeCard
+                                recipe={{
+                                  id: recipe.id,
+                                  name: recipe.name,
+                                  category:
+                                    recipe.category as import('@/modules/recipe/types').RecipeCategory,
+                                  imageUrl: recipe.imageUrl,
+                                  servings: recipe.servings,
+                                  cookTime: recipe.cookTime,
+                                  isFavorite: recipe.isFavorite,
+                                }}
+                                onClick={handleRecipeClick}
+                                showCategoryBadge
+                                className="w-full h-full shadow-md border-0"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Input Area */}
-      <div className="bg-white border-t border-orange-100 p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-        <div className="max-w-layout-container mx-auto relative">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-            placeholder="詢問 FuFood.AI..."
-            className="w-full pl-4 pr-12 py-4 bg-orange-50 border-2 border-orange-200 rounded-2xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition-all placeholder-gray-400"
-          />
-          <button
-            onClick={() => handleSubmit()}
-            disabled={!query.trim() || isLoading}
-            className="absolute right-2 top-2 bottom-2 aspect-square bg-gradient-to-br from-orange-500 to-red-500 disabled:from-gray-200 disabled:to-gray-300 text-white rounded-xl flex items-center justify-center transition-all shadow-md hover:shadow-lg disabled:shadow-none"
-          >
-            <Send className="w-5 h-5" />
-          </button>
+      <InventoryFilterModal
+        isOpen={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        selectedItems={selectedIngredients}
+        onApply={setSelectedIngredients}
+      />
+
+      {/* Footer Input Area */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-101">
+        <div className="max-w-layout-container mx-auto space-y-3">
+          {/* Query Prompt Text if results shown */}
+
+          <div className="relative">
+            <div className="mb-2 text-sm font-medium text-gray-500 pl-1">
+              詢問 FuFood.AI
+            </div>
+
+            {/* Selected Tags Area */}
+            <div className="flex items-center gap-2 mb-2 overflow-x-auto hide-scrollbar">
+              {/* Filter Trigger Button */}
+              <button
+                onClick={() => setShowFilterModal(true)}
+                className={cn(
+                  'shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-colors relative',
+                  selectedIngredients.length > 0
+                    ? 'bg-gray-100 text-gray-800'
+                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200',
+                )}
+              >
+                <SlidersHorizontal className="w-5 h-5" />
+                {selectedIngredients.length > 0 && (
+                  <div className="absolute -top-1 -left-1 w-4 h-4 bg-[#F58274] text-white rounded-full text-[10px] flex items-center justify-center font-bold">
+                    {selectedIngredients.length}
+                  </div>
+                )}
+              </button>
+
+              {/* Tags */}
+              {selectedIngredients.length > 0 ? (
+                <SelectedIngredientTags
+                  items={selectedIngredients}
+                  onRemove={(item) =>
+                    setSelectedIngredients((prev) =>
+                      prev.filter((i) => i !== item),
+                    )
+                  }
+                />
+              ) : (
+                <button
+                  onClick={() => setShowFilterModal(true)}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-dashed border-gray-300 text-gray-400 text-sm hover:border-gray-400 hover:text-gray-500 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  加入庫存食材
+                </button>
+              )}
+            </div>
+
+            {/* Input Field */}
+            <div className="relative">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+                placeholder={
+                  selectedIngredients.length > 0
+                    ? '想做什麼料理？'
+                    : '輸入食材或料理名稱...'
+                }
+                className="w-full pl-4 pr-12 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 transition-all text-gray-800 placeholder-gray-400 shadow-sm"
+              />
+              <button
+                onClick={() => handleSubmit()}
+                disabled={
+                  (!query.trim() && selectedIngredients.length === 0) ||
+                  isLoading
+                }
+                className="absolute right-2 top-1.5 bottom-1.5 aspect-square bg-neutral-900 disabled:bg-gray-200 text-white rounded-lg flex items-center justify-center transition-all"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
