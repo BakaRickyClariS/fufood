@@ -52,8 +52,8 @@ export async function getUserProfile(): Promise<User | null> {
 
   // 如果有 mock token（電子郵件登入），返回 Mock 用戶
   if (mockToken && mockToken.startsWith('mock_')) {
-    // 模擬 API 延遲
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    // 模擬 API 延遲（最小化以提升體驗）
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     // 嘗試從 localStorage 取得已登入的用戶資料
     if (userStr) {
@@ -97,7 +97,7 @@ export function useGetUserProfileQuery() {
     queryFn: getUserProfile,
     retry: false, // 401 時不要重試
     staleTime: 1000 * 60 * 5, // 5 分鐘內資料視為新鮮
-    refetchOnWindowFocus: true, // 視窗聚焦時不自動重新取得
+    refetchOnWindowFocus: false, // 視窗聚焦時不自動重新取得
     refetchOnMount: false, // 元件掛載時不自動重新取得（如果已有快取）
   });
 }

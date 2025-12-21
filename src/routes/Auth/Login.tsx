@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import gsap from 'gsap';
 import { Button } from '@/shared/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { LineLoginUrl, useAuth } from '@/modules/auth';
@@ -9,9 +10,12 @@ const Login = () => {
   const { isLoading, isAuthenticated, refetch, error: authError } = useAuth();
   const popupWindowRef = useRef<Window | null>(null);
   const checkIntervalRef = useRef<number | null>(null);
+  const popupTimeoutRef = useRef<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const [lineLoginLoading, setLineLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // 處理 LineLoginCallback 發送的 postMessage
   const handlePopupMessage = useCallback(
@@ -45,6 +49,9 @@ const Login = () => {
       if (checkIntervalRef.current) {
         clearInterval(checkIntervalRef.current);
       }
+      if (popupTimeoutRef.current) {
+        clearTimeout(popupTimeoutRef.current);
+      }
     };
   }, [handlePopupMessage]);
 
@@ -52,38 +59,50 @@ const Login = () => {
     navigate('/auth/avatar-selection');
   };
 
-  // 當已認證時，導向首頁（包含頁面載入時的檢查）
-  useEffect(() => {
-    if (isAuthenticated) {
-      setLineLoginLoading(false);
+  // 登入成功轉場動畫
+  const playExitAnimation = useCallback(() => {
+    if (!containerRef.current) {
       navigate('/');
+      return;
     }
-  }, [isAuthenticated, navigate]);
 
-  // 頁面載入時如果還在載入中，設定 lineLoginLoading 為 true
-  // 這樣可以讓 UI 顯示正確的載入狀態
+    setIsTransitioning(true);
+
+    // GSAP 轉場動畫：淡出 + 輕微放大
+    gsap.to(containerRef.current, {
+      opacity: 0,
+      scale: 1.02,
+      duration: 0.25,
+      ease: 'power2.out',
+      onComplete: () => {
+        navigate('/');
+      },
+    });
+  }, [navigate]);
+
+  // 當已認證時，播放轉場動畫後導向首頁
   useEffect(() => {
-    if (isLoading) {
+    if (isAuthenticated && !isTransitioning) {
+      setLineLoginLoading(false);
+      playExitAnimation();
+    }
+  }, [isAuthenticated, isTransitioning, playExitAnimation]);
+
+  // 防止重複檢查初始狀態（避免無限循環）
+  const hasInitialCheckRef = useRef(false);
+
+  // 頁面載入時，如果正在檢查認證狀態，顯示 loading
+  // 使用 ref 確保只在首次載入時執行一次
+  useEffect(() => {
+    if (!hasInitialCheckRef.current && isLoading) {
+      hasInitialCheckRef.current = true;
       setLineLoginLoading(true);
     }
+    // 當初次檢查完成後，停止 loading 狀態
+    if (hasInitialCheckRef.current && !isLoading) {
+      setLineLoginLoading(false);
+    }
   }, [isLoading]);
-
-  // 登入超時 fallback：如果 lineLoginLoading 超過 3 秒，自動檢查登入狀態
-  // 這是 OAuth 流程的常見補救機制，確保 Cookie 設定成功後能正確跳轉
-  useEffect(() => {
-    if (!lineLoginLoading) return;
-
-    const timeoutId = setTimeout(() => {
-      // 超時後重新檢查登入狀態
-      refetch().finally(() => {
-        // 如果 refetch 後仍未登入，停止 loading 狀態
-        // 讓使用者可以再次嘗試登入
-        setLineLoginLoading(false);
-      });
-    }, 3000); // 3 秒後自動檢查
-
-    return () => clearTimeout(timeoutId);
-  }, [lineLoginLoading, refetch]);
 
   const handleLineLogin = useCallback(() => {
     setLineLoginLoading(true);
@@ -159,12 +178,29 @@ const Login = () => {
         });
       }
     }, 500);
+
+    // Popup 登入超時備援（30 秒）
+    // 當後端 callback 沒有正確重定向到前端時，popup 不會自動關閉
+    // 此時需要超時備援來停止 loading 狀態
+    popupTimeoutRef.current = window.setTimeout(() => {
+      // 如果 30 秒後還在等待，檢查登入狀態
+      if (checkIntervalRef.current) {
+        console.warn('[LINE Login] Popup 登入超時，正在檢查登入狀態...');
+        refetch().finally(() => {
+          setLineLoginLoading(false);
+          // 如果 popup 還開著，可能是後端 callback 設定問題
+          if (!popup.closed) {
+            setLoginError('登入逾時，請手動關閉登入視窗後重試');
+          }
+        });
+      }
+    }, 30000);
   }, [refetch]);
 
   const displayError = loginError || authError;
 
   return (
-    <div className="flex flex-col min-h-screen bg-white px-5">
+    <div ref={containerRef} className="flex flex-col min-h-screen px-5">
       <LoginCarousel />
 
       {/* 登入按鈕區域 */}

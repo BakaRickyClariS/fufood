@@ -13,10 +13,10 @@ import { mockAuthService } from '@/modules/auth/services/mockAuthService';
 
 /**
  * 頭像選擇頁面（Mock 登入用）
- * 
+ *
  * 此頁面僅供開發測試使用。
  * 正式環境請使用 LINE 登入。
- * 
+ *
  * 啟用條件：VITE_USE_MOCK_API=true
  */
 const AvatarSelection = () => {
@@ -30,13 +30,13 @@ const AvatarSelection = () => {
     if (selectedId && displayName.trim()) {
       try {
         setIsLoading(true);
-        
+
         // 使用獨立的 Mock Auth Service
         const { user } = mockAuthService.mockLogin(selectedId, displayName);
-        
+
         // 更新 TanStack Query 快取
         queryClient.setQueryData(['GET_USER_PROFILE'], user);
-        
+
         navigate('/');
       } catch (error) {
         console.error('Login failed:', error);
@@ -47,7 +47,7 @@ const AvatarSelection = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pt-8">
+    <div className="min-h-screen flex flex-col pt-8">
       <div className="flex flex-col px-4">
         {/* 開發模式提示 */}
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
