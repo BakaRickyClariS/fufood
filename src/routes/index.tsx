@@ -56,6 +56,12 @@ const wrapRoutesWithProtection = (routes: any[]): any[] => {
   });
 };
 
+type RouteHandle = {
+  headerVariant?: 'default' | 'simple' | 'none';
+  footer?: boolean;
+  bodyClass?: string;
+};
+
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -63,6 +69,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
+        handle: { bodyClass: 'body-dashboard-bg' } as RouteHandle,
         element: (
           <ProtectedRoute>
             <Dashboard />
@@ -71,6 +78,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'dashboard',
+        handle: { bodyClass: 'body-dashboard-bg' } as RouteHandle,
         element: (
           <ProtectedRoute>
             <Dashboard />
