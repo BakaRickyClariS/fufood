@@ -13,7 +13,10 @@ const PlanningRoutes = [
     path: 'planning',
     element: <PlanningLayout />,
     children: [
-      { index: true, element: <PlanningHome /> },
+      {
+        index: true,
+        element: <PlanningHome />,
+      },
       // 共享清單
       { path: 'list/create', element: <CreateSharedList /> },
       { path: 'list/:listId', element: <SharedListDetail /> },
