@@ -18,7 +18,14 @@ import { ConsumptionModal } from '@/modules/recipe/components/ui/ConsumptionModa
 import { ConsumptionEditor } from '@/modules/recipe/components/ui/ConsumptionEditor';
 import { useConsumption } from '@/modules/recipe/hooks';
 import { parseQuantity } from '@/modules/recipe/utils/parseQuantity';
-import { Clock, Users, Sparkles } from 'lucide-react';
+import { Clock, Users, Sparkles, ChefHat } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/shared/components/ui/sheet';
 
 /** 將 AI 食譜格式轉換為 Recipe 格式 */
 const convertAIRecipeToRecipe = (aiRecipe: AIRecipeItem): Recipe => {
@@ -188,17 +195,12 @@ export const RecipeDetailView = () => {
         isFavorite={recipe.isFavorite}
       />
 
-      <div className="relative aspect-video w-full">
+      <div className="relative w-full h-[40vh]">
         <img
           src={recipe.imageUrl}
           alt={recipe.name}
           className="w-full h-full object-cover"
         />
-        {recipe.series && (
-          <div className="absolute bottom-4 left-4">
-            <RecipeSeriesTag series={recipe.series} />
-          </div>
-        )}
         {/* AI 食譜標記 */}
         {isAIRecipe && (
           <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 rounded-full text-white text-xs font-medium shadow-lg">
@@ -208,35 +210,65 @@ export const RecipeDetailView = () => {
         )}
       </div>
 
-      <div className="px-4 py-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">{recipe.name}</h1>
-          <div className="flex gap-4 text-gray-500 text-sm">
-            <div className="flex items-center gap-1">
-              <Users className="w-4 h-4" />
-              <span>{recipe.servings}人份</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              <span>{recipe.cookTime}分鐘</span>
-            </div>
+      <div className="relative -mt-10 bg-white rounded-t-3xl min-h-screen px-5 py-6 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1 mr-4">
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+              {recipe.name}
+            </h1>
+          </div>
+
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-colors shrink-0">
+                <ChefHat className="w-4 h-4 text-gray-700" />
+                <span className="font-bold text-gray-900 text-sm">
+                  烹煮方式
+                </span>
+              </button>
+            </SheetTrigger>
+            <SheetContent
+              side="bottom"
+              className="h-[85vh] rounded-t-2xl px-0 pb-0"
+            >
+              <SheetHeader className="px-5 text-left mb-6 border-b border-gray-100 pb-4">
+                <SheetTitle className="text-xl font-bold text-gray-900">
+                  烹煮方式
+                </SheetTitle>
+              </SheetHeader>
+              <div className="overflow-y-auto h-full px-5 pb-32">
+                <CookingSteps steps={recipe.steps} />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        <div className="flex items-center gap-3 mb-8 text-sm">
+          {recipe.series && (
+            <RecipeSeriesTag series={recipe.series} className="mt-0!" />
+          )}
+          <div className="flex items-center gap-1 text-gray-500 font-medium">
+            <Users className="w-4 h-4 text-red-400" />
+            <span className="text-red-400">{recipe.servings}人份</span>
+          </div>
+          <div className="flex items-center gap-1 text-gray-500 font-medium">
+            <Clock className="w-4 h-4 text-red-400" />
+            <span className="text-red-400">{recipe.cookTime}分鐘</span>
           </div>
         </div>
 
         <IngredientList ingredients={recipe.ingredients} />
 
-        <div className="bg-white rounded-xl p-4">
-          <h3 className="font-bold text-lg mb-4">烹煮步驟</h3>
-          <CookingSteps steps={recipe.steps} />
-        </div>
+        {/* Padding for bottom button */}
+        <div className="h-24"></div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-sm border-t border-gray-100 z-10">
         <button
           onClick={() => setShowConsumptionModal(true)}
-          className="w-full py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 transition-colors shadow-lg shadow-orange-200"
+          className="w-full py-3.5 bg-[#F5655D] text-white rounded-xl font-bold hover:bg-[#E5554D] transition-colors shadow-lg shadow-red-200"
         >
-          確認消耗食材
+          確認消耗
         </button>
       </div>
 

@@ -23,7 +23,11 @@ const PlanningRoutes = [
       { path: 'list/:listId/post/create', element: <CreatePost /> },
       // 食譜相關
       { path: 'recipes', element: <RecipeList /> },
-      { path: 'recipes/:id', element: <RecipeDetailView /> },
+      {
+        path: 'recipes/:id',
+        element: <RecipeDetailView />,
+        handle: { headerVariant: 'none' },
+      },
       { path: 'recipes/favorites', element: <FavoriteRecipes /> },
       { path: 'recipes/ai-query', element: <AIQueryPage /> },
     ],

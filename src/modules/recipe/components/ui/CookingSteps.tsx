@@ -7,15 +7,17 @@ type CookingStepsProps = {
 
 export const CookingSteps = ({ steps }: CookingStepsProps) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {steps.map((step) => (
         <div key={step.stepNumber} className="flex gap-4">
-          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold">
-            {step.stepNumber}
+          <div className="flex-shrink-0">
+            <span className="inline-block px-3 py-1 rounded-lg bg-[#FFECEB] text-[#F5655D] font-bold text-sm">
+              步驟{step.stepNumber}
+            </span>
           </div>
           <div className="flex-1 pt-1">
-            <p className="text-gray-800 leading-relaxed mb-2">
-              {step.description}
+            <p className="text-gray-800 leading-relaxed mb-2 font-medium">
+              {step.description.replace(/\$/g, '')}
             </p>
             {step.time && (
               <div className="flex items-center gap-1.5 text-orange-600 text-sm font-medium">
