@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { X, Sparkles, Send, SlidersHorizontal, Plus } from 'lucide-react';
+import { X, Sparkles, SlidersHorizontal, Plus, ArrowUp } from 'lucide-react';
 import gsap from 'gsap';
 import { cn } from '@/lib/utils';
 import { useAIRecipeGenerate, useRecipeSuggestions } from '@/modules/ai';
@@ -289,12 +289,33 @@ const AIQueryPage = ({ useStreaming = true }: AIQueryPageProps) => {
           {/* Query Prompt Text if results shown */}
 
           <div className="relative">
-            <div className="mb-2 text-sm font-medium text-gray-500 pl-1">
-              詢問 FuFood.AI
+            {/* Input Field */}
+            <div className="relative">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+                placeholder={
+                  selectedIngredients.length > 0
+                    ? '想做什麼料理？'
+                    : '輸入食材或料理名稱...'
+                }
+                className="w-full pl-4 pr-12 pb-3 bg-white focus:outline-none focus:border-gray-400 transition-all text-gray-800 placeholder-gray-400"
+              />
+              <button
+                onClick={() => handleSubmit()}
+                disabled={
+                  (!query.trim() && selectedIngredients.length === 0) ||
+                  isLoading
+                }
+                className="absolute right-2 top-1.5 w-8 h-8 bg-neutral-900 disabled:bg-gray-200 text-white rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-sm"
+              >
+                <ArrowUp className="w-5 h-5" />
+              </button>
             </div>
-
             {/* Selected Tags Area */}
-            <div className="flex items-center gap-2 mb-2 overflow-x-auto hide-scrollbar">
+            <div className="flex items-center gap-2 mb-2 overflow-x-auto hide-scrollbar p-1">
               {/* Filter Trigger Button */}
               <button
                 onClick={() => setShowFilterModal(true)}
@@ -307,7 +328,7 @@ const AIQueryPage = ({ useStreaming = true }: AIQueryPageProps) => {
               >
                 <SlidersHorizontal className="w-5 h-5" />
                 {selectedIngredients.length > 0 && (
-                  <div className="absolute -top-1 -left-1 w-4 h-4 bg-[#F58274] text-white rounded-full text-[10px] flex items-center justify-center font-bold">
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#E85A4F] text-white rounded-full text-[10px] flex items-center justify-center font-bold border-2 border-white box-content">
                     {selectedIngredients.length}
                   </div>
                 )}
@@ -332,32 +353,6 @@ const AIQueryPage = ({ useStreaming = true }: AIQueryPageProps) => {
                   加入庫存食材
                 </button>
               )}
-            </div>
-
-            {/* Input Field */}
-            <div className="relative">
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                placeholder={
-                  selectedIngredients.length > 0
-                    ? '想做什麼料理？'
-                    : '輸入食材或料理名稱...'
-                }
-                className="w-full pl-4 pr-12 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 transition-all text-gray-800 placeholder-gray-400 shadow-sm"
-              />
-              <button
-                onClick={() => handleSubmit()}
-                disabled={
-                  (!query.trim() && selectedIngredients.length === 0) ||
-                  isLoading
-                }
-                className="absolute right-2 top-1.5 bottom-1.5 aspect-square bg-neutral-900 disabled:bg-gray-200 text-white rounded-lg flex items-center justify-center transition-all"
-              >
-                <Send className="w-4 h-4" />
-              </button>
             </div>
           </div>
         </div>
