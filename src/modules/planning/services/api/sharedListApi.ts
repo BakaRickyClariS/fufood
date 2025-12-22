@@ -14,6 +14,7 @@ export type SharedListApi = {
   getSharedLists(year?: number, month?: number): Promise<SharedListItem[]>;
   getSharedListById(id: string): Promise<SharedList>;
   createSharedList(input: CreateSharedListInput): Promise<SharedList>;
+  deleteSharedList(id: string): Promise<void>;
   getPosts(listId: string): Promise<SharedListPost[]>;
   createPost(input: CreatePostInput): Promise<SharedListPost>;
   togglePostLike(postId: string, listId: string): Promise<SharedListPost>;
@@ -47,6 +48,10 @@ export class RealSharedListApi implements SharedListApi {
       '/api/v1/shopping-lists',
       input,
     );
+  }
+
+  async deleteSharedList(id: string): Promise<void> {
+    return backendApi.delete<void>(`/api/v1/shopping-lists/${id}`);
   }
 
   async getPosts(listId: string): Promise<SharedListPost[]> {

@@ -40,6 +40,22 @@ export const useSharedLists = (year?: number, month?: number) => {
     }
   };
 
+  const deleteList = async (id: string) => {
+    // Optimistic update: 立即從 UI 移除
+    const previousLists = lists;
+    setLists((prev) => prev.filter((list) => list.id !== id));
+
+    try {
+      await sharedListApi.deleteSharedList(id);
+    } catch (err) {
+      // 失敗時回滾：恢復之前的狀態
+      setLists(previousLists);
+      const msg = err instanceof Error ? err.message : 'Failed to delete list';
+      setError(msg);
+      throw new Error(msg);
+    }
+  };
+
   useEffect(() => {
     fetchLists();
   }, [fetchLists]);
@@ -50,6 +66,7 @@ export const useSharedLists = (year?: number, month?: number) => {
     error,
     refetch: fetchLists,
     createList,
+    deleteList,
   };
 };
 

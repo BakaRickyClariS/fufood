@@ -138,6 +138,13 @@ export class MockSharedListApi {
     return newList;
   }
 
+  async deleteSharedList(id: string): Promise<void> {
+    await delay(500);
+    const lists = getLists();
+    const filteredLists = lists.filter((list) => list.id !== id);
+    saveLists(filteredLists);
+  }
+
   async getPosts(listId: string): Promise<SharedListPost[]> {
     await delay(600);
     const allPosts = getPosts();

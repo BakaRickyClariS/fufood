@@ -20,7 +20,7 @@ const PlanningHome = () => {
             )}
 
             {mainTab === 'recipes' && (
-              <div className="space-y-6">
+              <div className="">
                 {/* AISearchCard 在這裡可能需要調整樣式，或者維持原樣 */}
                 <div className="bg-neutral-100 p-4">
                   <AISearchCard />

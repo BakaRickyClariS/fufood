@@ -47,7 +47,7 @@ export const AISearchCard = ({ remainingQueries = 3 }: AISearchCardProps) => {
   return (
     <div className="w-full max-w-layout-container mx-auto">
       {/* Container with Gradient Background */}
-      <div className="relative p-4 pt-8 rounded-[32px] bg-gradient-to-b from-[#FDE6E3] via-[#FFF5F3] to-white flex flex-col items-center text-center space-y-6">
+      <div className="relative p-4 pt-8 rounded-lg border border-neutral-200 bg-gradient-to-b from-[#FDE6E3] via-[#FFF5F3] to-white flex flex-col items-center text-center space-y-6">
         {/* Brand */}
         <div className="space-y-1">
           <h2 className="text-xl font-bold text-primary-800 tracking-tight">

@@ -135,6 +135,7 @@ export interface SharedListApi {
   getSharedLists(year?: number, month?: number): Promise<SharedListItem[]>;
   getSharedListById(id: string): Promise<SharedList>;
   createSharedList(input: CreateSharedListInput): Promise<SharedList>;
+  deleteSharedList(id: string): Promise<void>;
   getPosts(listId: string): Promise<SharedListPost[]>;
   createPost(input: CreatePostInput): Promise<SharedListPost>;
   togglePostLike(postId: string, listId: string): Promise<SharedListPost>;
@@ -154,6 +155,7 @@ const useSharedLists = () => {
     error: string | null;
     refetch: () => Promise<void>;
     createList: (input: CreateSharedListInput) => Promise<void>;
+    deleteList: (id: string) => Promise<void>;  // 使用 Optimistic Update
   };
 };
 
