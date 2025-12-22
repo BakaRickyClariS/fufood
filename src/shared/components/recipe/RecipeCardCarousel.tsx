@@ -43,7 +43,7 @@ export const RecipeCardCarousel = ({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between px-4">
-        <h2 className="text-lg font-bold text-gray-800">{title}</h2>
+        <h2 className="text-xl font-bold text-gray-800">{title}</h2>
         {showMoreLink && (
           <Link
             to={showMoreLink}
@@ -55,10 +55,10 @@ export const RecipeCardCarousel = ({
         {showScrollButton && !showMoreLink && (
           <button
             onClick={scrollRight}
-            className="p-1.5 rounded-full border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+            className="p-1.5 rounded-full border bg-white border-neutral-400 hover:bg-neutral-50 active:bg-neutral-100 transition-colors"
             aria-label="向右捲動"
           >
-            <ArrowRight className="w-4 h-4 text-gray-600" />
+            <ArrowRight className="w-5.5 h-5.5 text-gray-600" />
           </button>
         )}
       </div>
