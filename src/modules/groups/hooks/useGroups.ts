@@ -20,11 +20,12 @@ export const useGroups = () => {
     setIsLoading(true);
     try {
       const data = await groupsApi.getAll();
-      setGroups(data);
+      // 確保資料是陣列，避免 API 回傳非預期格式導致 .map() 錯誤
+      setGroups(Array.isArray(data) ? data : []);
     } catch (err) {
       // API 失敗時使用 mock 資料作為 fallback
       console.warn('Failed to fetch groups from API, using mock data:', err);
-      setGroups(mockGroups);
+      setGroups(Array.isArray(mockGroups) ? mockGroups : []);
       setError(err as Error);
     } finally {
       setIsLoading(false);

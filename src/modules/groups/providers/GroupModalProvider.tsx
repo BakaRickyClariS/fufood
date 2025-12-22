@@ -11,7 +11,7 @@ import { useGroups } from '@/modules/groups/hooks/useGroups';
 
 // Context 型別定義
 type GroupModalContextType = {
-  activeGroup: Group;
+  activeGroup: Group | undefined;
   switchGroup: (groupId: string) => void;
   openHome: () => void;
   openSettings: () => void;
@@ -59,7 +59,9 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
   // When createGroup adds a group, 'groups' updates, and activeGroup is re-calculated if ID matches.
   // Actually, wait. 'groups' is initially empty in useGroups? No, I updated it to fetch mockGroups.
   // So 'groups' will be populated.
-  const activeGroup = groups.find((g) => g.id === activeGroupId) || groups[0];
+  const activeGroup = Array.isArray(groups)
+    ? groups.find((g) => g.id === activeGroupId) || groups[0]
+    : undefined;
 
   // Modal States
   const [isHomeModalOpen, setIsHomeModalOpen] = useState(false);
@@ -125,7 +127,7 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
         openEdit,
         openMembers,
         closeAll,
-        groups,
+        groups: Array.isArray(groups) ? groups : [],
         createGroup,
         updateGroup,
         deleteGroup,

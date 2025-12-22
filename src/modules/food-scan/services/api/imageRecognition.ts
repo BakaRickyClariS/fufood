@@ -1,4 +1,4 @@
-import { aiApi } from '@/api/client';
+import { aiApi, backendApi } from '@/api/client';
 import type {
   FoodScanApi,
   ScanResult,
@@ -75,31 +75,33 @@ export const createRealFoodScanApi = (): FoodScanApi => {
   const submitFoodItem = async (
     data: FoodItemInput,
   ): Promise<FoodItemResponse> => {
-    // Updated endpoint to match v2.1 spec (Inventory Module)
-    return aiApi.post<FoodItemResponse>('/inventory', data);
+    // 庫存 API 已遷移至主後端
+    return backendApi.post<FoodItemResponse>('/api/v1/inventory', data);
   };
 
   const updateFoodItem = async (
     id: string,
     data: Partial<FoodItemInput>,
   ): Promise<FoodItemResponse> => {
-    return aiApi.put<FoodItemResponse>(`/inventory/${id}`, data);
+    // 庫存 API 已遷移至主後端
+    return backendApi.put<FoodItemResponse>(`/api/v1/inventory/${id}`, data);
   };
 
   const deleteFoodItem = async (id: string): Promise<{ success: boolean }> => {
-    return aiApi.delete<{ success: boolean }>(`/inventory/${id}`);
+    // 庫存 API 已遷移至主後端
+    return backendApi.delete<{ success: boolean }>(`/api/v1/inventory/${id}`);
   };
 
   const getFoodItems = async (
     filters?: FoodItemFilters,
   ): Promise<FoodItem[]> => {
-    // Mapping filters to query params
+    // 庫存 API 已遷移至主後端
     const params: Record<string, string | number | boolean | undefined> = {};
     if (filters?.category) params.category = filters.category;
     if (filters?.status) params.status = filters.status;
 
-    const response = await aiApi.get<{ items: FoodItem[] }>(
-      '/inventory',
+    const response = await backendApi.get<{ items: FoodItem[] }>(
+      '/api/v1/inventory',
       params,
     );
     return response.items;
