@@ -1,6 +1,6 @@
 import { ChevronDown } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/modules/auth';
 import { useGroupModal } from '@/modules/groups/hooks/useGroupModal';
 import { getUserAvatarUrl } from '@/shared/utils/avatarUtils';
@@ -14,6 +14,7 @@ import EditGroupIcon from '@/assets/images/nav/edit-group.svg';
 const TopNav = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const { openHome, openSettings, activeGroup } = useGroupModal();
 
   // 判斷是否為 dashboard 路由
@@ -79,7 +80,10 @@ const TopNav = () => {
             <img src={EditGroupIcon} alt="編輯群組" className="w-6 h-6" />
           </Button>
 
-          <div className="relative w-10 h-10">
+          <div
+            className="relative w-10 h-10 cursor-pointer"
+            onClick={() => navigate('/settings')}
+          >
             <div className="w-full h-full rounded-full overflow-hidden border-2 border-primary-300">
               <img
                 src={userAvatar}
