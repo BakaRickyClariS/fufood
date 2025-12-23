@@ -18,7 +18,11 @@ const PlanningRoutes = [
         element: <PlanningHome />,
       },
       // 共享清單
-      { path: 'list/create', element: <CreateSharedList /> },
+      {
+        path: 'list/create',
+        element: <CreateSharedList />,
+        handle: { headerVariant: 'none' },
+      },
       { path: 'list/:listId', element: <SharedListDetail /> },
       { path: 'list/:listId/post/create', element: <CreatePost /> },
       // 食譜相關
