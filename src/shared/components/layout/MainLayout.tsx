@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { Outlet, useMatches } from 'react-router-dom';
 import { GroupModalProvider } from '@/modules/groups/providers/GroupModalProvider';
-import { Helmet } from 'react-helmet-async';
 import TopNav from './TopNav';
 import BottomNav from './BottomNav';
 
@@ -41,7 +40,6 @@ const MainLayout = () => {
 
   return (
     <GroupModalProvider>
-      <Helmet />
       {showHeader && (
         <div className="sticky top-0 z-40">
           <TopNav />

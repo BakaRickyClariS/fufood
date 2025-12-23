@@ -85,18 +85,20 @@ const PlanningTabsSection = ({ children }: PlanningTabsSectionProps) => {
       <section>
         <div className="max-w-layout-container mx-auto">
           {/* 主 Tabs */}
+          {/* 主 Tabs */}
           <Tabs
             variant="underline"
             tabs={mainTabs}
             activeTab={mainTab}
             onTabChange={setMainTab}
             animated
+            className={mainTab === 'planning' ? 'shadow-none' : ''}
           />
-          <div className="mx-4 mt-4">
+          <div>
             {mainTab === 'planning' && (
-              <div className="mb-4">
+              <div className="bg-white pb-4 mb-4 rounded-b-xl">
                 {/* 月份時間軸 */}
-                <div className="mb-4">
+                <div className="p-4">
                   <MonthTimelinePicker
                     selectedYear={selectedYear}
                     selectedMonth={selectedMonth}
@@ -111,13 +113,13 @@ const PlanningTabsSection = ({ children }: PlanningTabsSectionProps) => {
                   activeTab={subTab}
                   onTabChange={setSubTab}
                   animated
-                  className="mb-6"
+                  className="mx-4"
                 />
               </div>
             )}
 
             {/* 子內容渲染 */}
-            {children(mainTab, subTab, selectedYear, selectedMonth)}
+            <div>{children(mainTab, subTab, selectedYear, selectedMonth)}</div>
           </div>
         </div>
       </section>
