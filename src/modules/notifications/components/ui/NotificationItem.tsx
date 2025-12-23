@@ -17,7 +17,7 @@ export const NotificationItem = ({
   type,
   title,
   description,
-  isRead = true,
+  isRead,
   onClick,
 }: NotificationItemProps) => {
   const getTagStyle = (type: NotificationType) => {
