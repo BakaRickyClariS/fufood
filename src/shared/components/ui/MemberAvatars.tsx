@@ -1,5 +1,4 @@
 import type { GroupMember } from '@/modules/groups/types/group.types';
-// unused, but waiting for next edit to remove or replace if needed. Actually I should remove it now.
 
 type MemberAvatarsProps = {
   members: Pick<GroupMember, 'id' | 'name' | 'avatar'>[];
