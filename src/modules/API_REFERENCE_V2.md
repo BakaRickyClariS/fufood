@@ -455,7 +455,7 @@ await queryClient.invalidateQueries({ queryKey: ['GET_USER_PROFILE'] });
 - `DELETE /notifications/{id}`：刪除通知。
 - `POST /notifications/read-all`：全部標記已讀。
 - `GET /notifications/settings`：取得通知設定。
-- `PUT /notifications/settings`：更新通知設定。
+- `PATCH /notifications/settings`：更新通知設定。
 
 ### 點擊跳轉
 

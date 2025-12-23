@@ -16,7 +16,7 @@
 | 4   | DELETE | `/api/v1/notifications/{id}`     | 刪除通知                     |
 | 5   | POST   | `/api/v1/notifications/read-all` | 全部標記已讀                 |
 | 6   | GET    | `/api/v1/notifications/settings` | 取得通知設定                 |
-| 7   | PUT    | `/api/v1/notifications/settings` | 更新通知設定                 |
+| 7   | PATCH  | `/api/v1/notifications/settings` | 更新通知設定                 |
 
 ---
 

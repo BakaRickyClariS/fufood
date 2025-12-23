@@ -61,7 +61,7 @@ type NotificationMessage = {
 | DELETE | `/api/v1/notifications/{id}`     | 刪除通知     |
 | POST   | `/api/v1/notifications/read-all` | 全部標記已讀 |
 | GET    | `/api/v1/notifications/settings` | 取得設定     |
-| PUT    | `/api/v1/notifications/settings` | 更新設定     |
+| PATCH  | `/api/v1/notifications/settings` | 更新設定     |
 
 ---
 
