@@ -1,5 +1,5 @@
 import type { GroupMember } from '@/modules/groups/types/group.types';
-import { MoreHorizontal } from 'lucide-react';
+// unused, but waiting for next edit to remove or replace if needed. Actually I should remove it now.
 
 type MemberAvatarsProps = {
   members: Pick<GroupMember, 'id' | 'name' | 'avatar'>[];
@@ -52,8 +52,8 @@ export const MemberAvatars = ({
               )}
             </div>
             {showMoreIndicator && (
-              <div className="absolute -bottom-1 -right-1 flex items-center justify-center filter drop-shadow-sm">
-                <MoreHorizontal className="w-3 h-3 text-stone-600 rounded-full" />
+              <div className="absolute -top-1 -right-2 flex items-center justify-center w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full z-10 border border-white">
+                +{remainingCount}
               </div>
             )}
           </div>
