@@ -79,7 +79,13 @@ export const MOCK_POSTS: Record<string, SharedListPost[]> = {
       authorName: 'Ricky',
       authorAvatar: 'https://ui-avatars.com/api/?name=Ricky&background=random',
       content: '',
-      images: [COVER_IMAGES[6], COVER_IMAGES[7]],
+      images: [
+        COVER_IMAGES[6],
+        COVER_IMAGES[7],
+        COVER_IMAGES[0],
+        COVER_IMAGES[1],
+        COVER_IMAGES[2],
+      ],
       items: [
         { id: 'item_01', name: '烏龍麵', quantity: 1, unit: '份' },
         { id: 'item_02', name: '薄豆皮', quantity: 1, unit: '罐' },

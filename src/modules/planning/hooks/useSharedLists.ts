@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type {
   SharedListItem,
   SharedList,
@@ -10,13 +10,18 @@ export const useSharedLists = (year?: number, month?: number) => {
   const [lists, setLists] = useState<SharedListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasLoadedRef = useRef(false);
 
   const fetchLists = useCallback(async () => {
-    setIsLoading(true);
+    // 只有在首次載入時才顯示 loading 狀態，避免返回頁面時閃爍
+    if (!hasLoadedRef.current) {
+      setIsLoading(true);
+    }
     setError(null);
     try {
       const data = await sharedListApi.getSharedLists(year, month);
       setLists(data);
+      hasLoadedRef.current = true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch lists');
       console.error(err);

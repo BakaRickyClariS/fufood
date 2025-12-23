@@ -9,16 +9,18 @@ export const IngredientList = ({ ingredients }: IngredientListProps) => {
   const seasonings = ingredients.filter((i) => i.category === '調味料');
 
   const renderList = (title: string, items: RecipeIngredient[]) => (
-    <div className="mb-6">
-      <h4 className="text-sm font-medium text-gray-500 mb-3">{title}</h4>
+    <div className="mb-6 bg-gray-100/80 rounded-2xl p-4">
+      <h4 className="flex items-center text-lg font-bold text-gray-700 mb-4 pl-3 border-l-4 border-primary-500">
+        {title}
+      </h4>
       <div className="space-y-3">
         {items.map((item) => (
           <div
             key={item.name}
-            className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0"
+            className="flex justify-between items-center py-2 border-b border-gray-200 last:border-0"
           >
             <span className="text-gray-900">{item.name}</span>
-            <span className="text-gray-600 font-medium">{item.quantity}</span>
+            <span className="text-gray-900 font-medium">{item.quantity}</span>
           </div>
         ))}
       </div>

@@ -12,9 +12,9 @@ export const FloatingActionButton = ({ onClick, className }: FloatingActionButto
       onClick={onClick}
       className={cn(
         "fixed bottom-24 right-4 z-50",
-        "w-14 h-14 rounded-full bg-neutral-50 text-neutral-900 shadow-lg",
+        "w-14 h-14 rounded-full bg-[#EE5D50] text-neutral-800 shadow-lg",
         "flex items-center justify-center transition-transform active:scale-95",
-        "hover:bg-neutral-100",
+        "hover:bg-[#D94A3D]",
         className
       )}
     >

@@ -1,13 +1,14 @@
 import type { SharedListPost } from '@/modules/planning/types';
-import { MessageCircle, Heart, Plus } from 'lucide-react';
+import { MessageCircle, Heart, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type PostCardProps = {
   post: SharedListPost;
   onToggleLike: (postId: string) => Promise<void> | void;
+  onOpenComments: (postId: string) => void;
 };
 
-export const PostCard = ({ post, onToggleLike }: PostCardProps) => {
+export const PostCard = ({ post, onToggleLike, onOpenComments }: PostCardProps) => {
   const getTimeAgo = (dateString: string) => {
     // 簡單實作，實際應使用 date-fns
     const diff = Date.now() - new Date(dateString).getTime();
@@ -26,7 +27,7 @@ export const PostCard = ({ post, onToggleLike }: PostCardProps) => {
           <img
             src={post.authorAvatar}
             alt={post.authorName}
-            className="w-10 h-10 rounded-full bg-neutral-100"
+            className="w-[42px] h-[42px] rounded-full bg-neutral-100 object-cover"
           />
           <div>
             <div className="font-bold text-sm">{post.authorName}</div>
@@ -35,7 +36,9 @@ export const PostCard = ({ post, onToggleLike }: PostCardProps) => {
             </div>
           </div>
         </div>
-        <button className="text-neutral-400">•••</button>
+        <button className="text-neutral-400">
+          <MoreHorizontal className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Content */}
@@ -47,7 +50,7 @@ export const PostCard = ({ post, onToggleLike }: PostCardProps) => {
           {post.items.map((item) => (
             <div
               key={item.id}
-              className="flex justify-between text-sm py-1 border-b border-dashed border-neutral-100 last:border-0"
+              className="flex justify-between text-sm py-1 border-b border-neutral-100 last:border-0"
             >
               <span>{item.name}</span>
               <span className="font-medium">
@@ -58,33 +61,51 @@ export const PostCard = ({ post, onToggleLike }: PostCardProps) => {
           ))}
         </div>
 
-        {/* Images Grid */}
+        {/* Images Display */}
         {post.images.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-            {post.images.map((img, idx) => (
+          <div className="mb-2">
+            {post.images.length === 1 ? (
               <img
-                key={idx}
-                src={img}
+                src={post.images[0]}
                 alt="Post"
-                className="w-full h-48 object-cover rounded-lg flex-shrink-0"
+                className="w-full h-64 object-cover rounded-xl"
               />
-            ))}
+            ) : (
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                {post.images.map((img, idx) => (
+                  <img
+                    key={idx}
+                    src={img}
+                    alt={`Post ${idx + 1}`}
+                    className="w-[200px] h-[200px] object-cover rounded-xl shrink-0"
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
+        
+        {/* Read More Link */}
+        <button className="text-[#EE5D50] text-sm font-medium hover:underline">
+          閱讀更多
+        </button>
       </div>
 
       {/* Footer / Actions */}
       <div className="flex items-center justify-between pt-2">
-        {/* 左側互動區 */}
+        {/* Actions */}
         <div className="flex gap-4">
           {/* 留言 */}
-          <button className="flex items-center gap-1 text-neutral-500">
+          <button 
+            onClick={() => onOpenComments(post.id)}
+            className="flex items-center gap-1 text-neutral-500"
+          >
             <MessageCircle className="w-5 h-5" />
             <span className="text-sm font-medium">{post.commentsCount}</span>
           </button>
           {/* 按讚 */}
           <button
-            onClick={() => onToggleLike(post.id)}
+            onClick={() => void onToggleLike(post.id)}
             className="flex items-center gap-1"
           >
             <Heart
@@ -98,10 +119,6 @@ export const PostCard = ({ post, onToggleLike }: PostCardProps) => {
             </span>
           </button>
         </div>
-        {/* 右側加入購物清單 (模擬) */}
-        <button className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500">
-          <Plus className="w-5 h-5" />
-        </button>
       </div>
     </div>
   );

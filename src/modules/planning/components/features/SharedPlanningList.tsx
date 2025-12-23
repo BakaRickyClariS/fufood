@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useSharedListsContext } from '@/modules/planning/contexts/SharedListsContext';
 import { SharedListCard } from '../ui/SharedListCard';
 import { FloatingActionButton } from '@/shared/components/ui/FloatingActionButton';
+import { CreateSharedListDrawer } from './CreateSharedListDrawer';
 
 type SharedPlanningListProps = {
   statusFilter: string; // 當前選擇的 Tab 對應狀態 Id
@@ -18,6 +19,7 @@ export const SharedPlanningList = ({
 }: SharedPlanningListProps) => {
   const { lists, isLoading, deleteList } = useSharedListsContext();
   const navigate = useNavigate();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const statusTextMap: Record<string, string> = {
     'in-progress': '進行中',
@@ -74,7 +76,12 @@ export const SharedPlanningList = ({
         </div>
       )}
 
-      <FloatingActionButton onClick={() => navigate('/planning/list/create')} />
+      {/* Drawer 取代原本的路由導航 */}
+      <FloatingActionButton onClick={() => setIsDrawerOpen(true)} />
+      <CreateSharedListDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+      />
     </div>
   );
 };
