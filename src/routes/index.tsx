@@ -6,6 +6,7 @@ import PlanningRoutes from './Planning';
 import FoodScanRoutes from './FoodScan';
 import AuthRoutes from './Auth';
 import SettingsRoutes from './Settings';
+import NotificationsRoutes from './Notifications';
 import CategoryPage from './Inventory/CategoryPage';
 
 import { useAuth } from '@/modules/auth';
@@ -114,6 +115,7 @@ export const router = createBrowserRouter([
       ...wrapRoutesWithProtection(PlanningRoutes),
       ...wrapRoutesWithProtection(FoodScanRoutes),
       ...wrapRoutesWithProtection(SettingsRoutes),
+      ...wrapRoutesWithProtection(NotificationsRoutes),
     ],
   },
 ]);
