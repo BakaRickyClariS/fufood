@@ -1,13 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Home,
-  Grid2x2Plus,
-  Refrigerator,
-  SlidersHorizontal,
-  ScanLine,
-} from 'lucide-react';
+import { Home, Grid2x2Plus, Refrigerator, Bell, ScanLine } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/nav-tabs';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -41,10 +35,10 @@ const defaultNavItems: NavItem[] = [
     href: '/inventory',
   },
   {
-    id: 'profile',
-    label: '設定',
-    icon: <SlidersHorizontal className="w-5 h-5" />,
-    href: '/settings',
+    id: 'notifications',
+    label: '通知',
+    icon: <Bell className="w-5 h-5" />,
+    href: '/notifications',
   },
 ];
 
