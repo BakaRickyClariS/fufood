@@ -295,13 +295,13 @@ type MembershipTier = 'free' | 'premium' | 'vip';
 
 type User = {
   id: string;
-  email?: string;           // LINE 登入可能無 email
+  email?: string; // LINE 登入可能無 email
   name?: string;
   avatar: string;
   createdAt: Date;
-  lineId?: string;          // LINE 專屬
-  displayName?: string;     // LINE 專屬
-  pictureUrl?: string;      // LINE 頭貼 URL（TopNav 顯示）
+  lineId?: string; // LINE 專屬
+  displayName?: string; // LINE 專屬
+  pictureUrl?: string; // LINE 頭貼 URL（TopNav 顯示）
   membershipTier?: MembershipTier; // 會員等級
 };
 ```
@@ -329,8 +329,8 @@ export function useGetUserProfileQuery() {
   return useQuery({
     queryKey: ['GET_USER_PROFILE'],
     queryFn: getUserProfile,
-    retry: false,                 // 401 時不重試
-    staleTime: 1000 * 60 * 5,     // 5 分鐘快取
+    retry: false, // 401 時不重試
+    staleTime: 1000 * 60 * 5, // 5 分鐘快取
     refetchOnWindowFocus: false,
   });
 }
@@ -445,8 +445,26 @@ await queryClient.invalidateQueries({ queryKey: ['GET_USER_PROFILE'] });
 
 ## 8. Notifications（通知）
 
-- `GET /notifications`：取得通知設定。
-- `POST /notifications`：建立/更新通知設定。
+通知訊息管理與設定。
+
+### 路由列表
+
+- `GET /notifications`：取得通知列表（支援 `?category=` 篩選）。
+- `GET /notifications/{id}`：取得單一通知。
+- `PATCH /notifications/{id}`：標記已讀 `{ isRead: true }`。
+- `DELETE /notifications/{id}`：刪除通知。
+- `POST /notifications/read-all`：全部標記已讀。
+- `GET /notifications/settings`：取得通知設定。
+- `PUT /notifications/settings`：更新通知設定。
+
+### 點擊跳轉
+
+| actionType    | 跳轉目標                            |
+| ------------- | ----------------------------------- |
+| inventory     | `/inventory/:itemId`                |
+| shopping-list | `/planning?tab=shopping&id=:listId` |
+| recipe        | `/recipes/:recipeId`                |
+| detail        | `/notifications/:id`                |
 
 ---
 
