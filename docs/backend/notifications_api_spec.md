@@ -184,7 +184,7 @@ type NotificationSettings = {
 
 ### 3.7 更新通知設定
 
-**PUT** `/api/v1/notifications/settings`
+**PATCH** `/api/v1/notifications/settings`
 
 **Body**: `Partial<NotificationSettings>`
 
