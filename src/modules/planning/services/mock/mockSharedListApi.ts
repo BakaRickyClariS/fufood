@@ -265,6 +265,43 @@ export class MockSharedListApi {
     return newComment;
   }
 
+  async deletePost(postId: string, listId: string): Promise<void> {
+    await delay(500);
+    const allPosts = getPosts();
+    const listPosts = allPosts[listId] || [];
+    const filteredPosts = listPosts.filter((post) => post.id !== postId);
+    allPosts[listId] = filteredPosts;
+    savePosts(allPosts);
+  }
+
+  async updatePost(
+    postId: string,
+    listId: string,
+    input: CreatePostInput,
+  ): Promise<SharedListPost> {
+    await delay(600);
+    const allPosts = getPosts();
+    const listPosts = allPosts[listId] || [];
+    const index = listPosts.findIndex((post) => post.id === postId);
+
+    if (index === -1) {
+      throw new Error('Post not found');
+    }
+
+    const updatedPost: SharedListPost = {
+      ...listPosts[index],
+      content: input.content,
+      images: input.images,
+      items: input.items,
+      // Keep other fields
+    };
+
+    listPosts[index] = updatedPost;
+    allPosts[listId] = listPosts;
+    savePosts(allPosts);
+    return updatedPost;
+  }
+
   async testReset() {
     localStorage.removeItem('mock_shared_lists');
     localStorage.removeItem('mock_posts');

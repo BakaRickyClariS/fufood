@@ -21,6 +21,13 @@ export type SharedListApi = {
   togglePostLike(postId: string, listId: string): Promise<SharedListPost>;
   getPostComments(postId: string): Promise<PostComment[]>;
   createPostComment(postId: string, content: string): Promise<PostComment>;
+  createPostComment(postId: string, content: string): Promise<PostComment>;
+  deletePost(postId: string, listId: string): Promise<void>;
+  updatePost(
+    postId: string,
+    listId: string,
+    input: CreatePostInput,
+  ): Promise<SharedListPost>;
 };
 
 // 真實 API 實作
@@ -87,6 +94,23 @@ export class RealSharedListApi implements SharedListApi {
   async createPostComment(postId: string, content: string): Promise<PostComment> {
     return backendApi.post<PostComment>(`/api/v1/posts/${postId}/comments`, {
       content,
+    });
+  }
+
+  async deletePost(postId: string, listId: string): Promise<void> {
+    return backendApi.delete<void>(`/api/v1/posts/${postId}`, {
+      body: { listId },
+    });
+  }
+
+  async updatePost(
+    postId: string,
+    listId: string,
+    input: CreatePostInput,
+  ): Promise<SharedListPost> {
+    return backendApi.put<SharedListPost>(`/api/v1/posts/${postId}`, {
+      ...input,
+      listId,
     });
   }
 }

@@ -40,7 +40,9 @@ const CreateSharedList = () => {
       x: '100%',
       duration: 0.3,
       ease: 'power2.in',
-      onComplete: () => navigate('/planning', { viewTransition: true }),
+      onComplete: () => {
+        navigate('/planning', { viewTransition: true });
+      },
     });
   };
 
