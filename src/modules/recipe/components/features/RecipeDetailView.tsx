@@ -18,7 +18,7 @@ import { ConsumptionModal } from '@/modules/recipe/components/ui/ConsumptionModa
 import { ConsumptionEditor } from '@/modules/recipe/components/ui/ConsumptionEditor';
 import { useConsumption } from '@/modules/recipe/hooks';
 import { parseQuantity } from '@/modules/recipe/utils/parseQuantity';
-import { Clock, Users, Sparkles, ChefHat } from 'lucide-react';
+import { Clock, Users, Sparkles, ChefHat, Heart } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -166,6 +166,21 @@ export const RecipeDetailView = () => {
     }
   };
 
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!recipe) return;
+    try {
+      const { isFavorite } = await recipeApi.toggleFavorite(
+        recipe.id,
+        !recipe.isFavorite,
+      );
+      setRecipe((prev) => (prev ? { ...prev, isFavorite } : null));
+      toast.success(isFavorite ? '已加入收藏' : '已取消收藏');
+    } catch (error) {
+      toast.error('操作失敗');
+    }
+  };
+
   if (isLoading) return <div className="p-4 text-center">載入中...</div>;
   if (error || !recipe)
     return (
@@ -197,9 +212,22 @@ export const RecipeDetailView = () => {
           alt={recipe.name}
           className="w-full h-full object-cover"
         />
+        
+        {/* 我的最愛按鈕 */}
+        <button
+          onClick={handleToggleFavorite}
+          className={`absolute top-18 right-4 z-50 p-2.5 bg-white/30 rounded-full backdrop-blur-[2px] transition-transform active:scale-95`}
+        >
+          <Heart
+            className={`w-6 h-6 transition-colors ${
+              recipe.isFavorite ? 'fill-white text-white' : 'text-white'
+            }`}
+          />
+        </button>
+
         {/* AI 食譜標記 */}
         {isAIRecipe && (
-          <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 bg-linear-to-r from-orange-500 to-red-500 rounded-full text-white text-xs font-medium shadow-lg">
+          <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 bg-linear-to-r from-orange-500 to-red-500 rounded-full text-white text-xs font-medium shadow-lg z-10">
             <Sparkles className="w-3.5 h-3.5" />
             <span>AI 推薦</span>
           </div>
@@ -240,9 +268,9 @@ export const RecipeDetailView = () => {
             </SheetTrigger>
             <SheetContent
               side="bottom"
-              className="h-[85vh] rounded-t-2xl px-0 pb-0"
+              className="h-[85vh] rounded-t-2xl px-0 pb-0 [&>button]:hidden"
             >
-              <SheetHeader className="px-5 text-left mb-6 border-b border-gray-100 pb-4">
+              <SheetHeader className="px-5 text-left mb-2 pb-4">
                 <SheetTitle className="text-xl font-bold text-gray-900">
                   烹煮方式
                 </SheetTitle>
