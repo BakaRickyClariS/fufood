@@ -12,13 +12,13 @@ export const FloatingActionButton = ({ onClick, className }: FloatingActionButto
       onClick={onClick}
       className={cn(
         "fixed bottom-24 right-4 z-50",
-        "w-14 h-14 rounded-full bg-red-400 text-white shadow-lg",
+        "w-14 h-14 rounded-full bg-[#EE5D50] text-neutral-800 shadow-lg",
         "flex items-center justify-center transition-transform active:scale-95",
-        "hover:bg-red-500",
+        "hover:bg-[#D94A3D]",
         className
       )}
     >
-      <Plus className="w-8 h-8" />
+      <Plus className="w-6 h-6" />
     </button>
   );
 };
