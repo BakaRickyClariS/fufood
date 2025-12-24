@@ -1,26 +1,8 @@
-import { ChevronLeft, Share2, Heart } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useFavorite } from '@/modules/recipe/hooks';
 
-type RecipeHeaderProps = {
-  title?: string;
-  recipeId?: string;
-  isFavorite?: boolean;
-};
-
-export const RecipeHeader = ({
-  title,
-  recipeId,
-  isFavorite,
-}: RecipeHeaderProps) => {
+export const RecipeHeader = () => {
   const navigate = useNavigate();
-  const { toggleFavorite, isToggling } = useFavorite();
-
-  const handleFavoriteClick = async () => {
-    if (recipeId) {
-      await toggleFavorite(recipeId, isFavorite);
-    }
-  };
 
   return (
     <header className="absolute top-0 left-0 right-0 z-40 bg-white/30 backdrop-blur-xs">

@@ -11,7 +11,7 @@ import type {
 } from '@/modules/recipe/types';
 import type { AIRecipeItem } from '@/modules/ai';
 import { RecipeHeader } from '@/modules/recipe/components/layout/RecipeHeader';
-import { RecipeSeriesTag } from '@/modules/recipe/components/ui/RecipeSeriesTag';
+
 import { IngredientList } from '@/modules/recipe/components/ui/IngredientList';
 import { CookingSteps } from '@/modules/recipe/components/ui/CookingSteps';
 import { ConsumptionModal } from '@/modules/recipe/components/ui/ConsumptionModal';
@@ -189,11 +189,7 @@ export const RecipeDetailView = () => {
 
   return (
     <div className="min-h-screen">
-      <RecipeHeader
-        title={recipe.name}
-        recipeId={recipe.id}
-        isFavorite={recipe.isFavorite}
-      />
+      <RecipeHeader />
 
       <div className="relative w-full h-[40vh]">
         <img
@@ -203,7 +199,7 @@ export const RecipeDetailView = () => {
         />
         {/* AI 食譜標記 */}
         {isAIRecipe && (
-          <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 rounded-full text-white text-xs font-medium shadow-lg">
+          <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 bg-linear-to-r from-orange-500 to-red-500 rounded-full text-white text-xs font-medium shadow-lg">
             <Sparkles className="w-3.5 h-3.5" />
             <span>AI 推薦</span>
           </div>
