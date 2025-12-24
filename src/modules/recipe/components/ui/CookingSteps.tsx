@@ -15,6 +15,7 @@ export const CookingSteps = ({ steps }: CookingStepsProps) => {
             </span>
           </div>
           <div className="flex-1 pt-1">
+            {/* 移除 AI 模型偶爾產生的多餘 $ 符號 */}
             <p className="text-gray-800 leading-relaxed mb-2 font-medium">
               {step.description.replace(/\$/g, '')}
             </p>

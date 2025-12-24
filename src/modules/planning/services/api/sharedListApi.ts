@@ -21,7 +21,6 @@ export type SharedListApi = {
   togglePostLike(postId: string, listId: string): Promise<SharedListPost>;
   getPostComments(postId: string): Promise<PostComment[]>;
   createPostComment(postId: string, content: string): Promise<PostComment>;
-  createPostComment(postId: string, content: string): Promise<PostComment>;
   deletePost(postId: string, listId: string): Promise<void>;
   updatePost(
     postId: string,

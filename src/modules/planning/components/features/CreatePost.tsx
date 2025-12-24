@@ -201,17 +201,18 @@ export const PostFormFeature = ({
     setUploadingItemId(null);
   };
   
-  // Clean up object URLs when component unmounts or items change
+  // 元件卸載時清理 blob URL，釋放記憶體資源
   useEffect(() => {
+    // 保存當前的 items 參照，用於 cleanup 時存取
+    const currentItems = items;
     return () => {
-      // Basic cleanup - in a real app might exact tracking
-      items.forEach(item => {
+      currentItems.forEach(item => {
         if (item.imageUrl && item.imageUrl.startsWith('blob:')) {
-           // URL.revokeObjectURL(item.imageUrl); // Optional: be careful not to revoke while still needed
+          URL.revokeObjectURL(item.imageUrl);
         }
       });
     };
-  }, []);
+  }, [items]);
 
   const handleRemoveImage = (itemId: string) => {
     handleUpdateItem(itemId, 'imageUrl', undefined);
