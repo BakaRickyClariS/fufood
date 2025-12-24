@@ -79,7 +79,7 @@ export const RecipeList = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-white pt-7">
       <div className="pl-0">
         <CategoryGrid
           categories={categoryItems}
@@ -90,7 +90,7 @@ export const RecipeList = () => {
         />
       </div>
 
-      <div className="space-y-6 pb-20">
+      <div className="space-y-6 -mb-13">
         {COOKING_TIME_SECTIONS.map((section) => (
           <RecipeCardCarousel
             key={section.id}
@@ -101,7 +101,7 @@ export const RecipeList = () => {
         ))}
 
         {/* 收藏食譜區塊 */}
-        <div className="bg-neutral-100 py-4">
+        <div className="bg-neutral-100 py-7">
           <RecipeCardCarousel
             title="收藏食譜"
             recipes={groupedRecipes.favorites}

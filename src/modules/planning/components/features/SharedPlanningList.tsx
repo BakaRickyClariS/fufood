@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useSharedListsContext } from '@/modules/planning/contexts/SharedListsContext';
 import { SharedListCard } from '../ui/SharedListCard';
 import { FloatingActionButton } from '@/shared/components/ui/FloatingActionButton';
+import { CreateSharedListDrawer } from './CreateSharedListDrawer';
 
 type SharedPlanningListProps = {
   statusFilter: string; // 當前選擇的 Tab 對應狀態 Id
@@ -15,8 +17,9 @@ export const SharedPlanningList = ({
   year,
   month,
 }: SharedPlanningListProps) => {
-  const { lists, isLoading } = useSharedListsContext();
+  const { lists, isLoading, deleteList } = useSharedListsContext();
   const navigate = useNavigate();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const statusTextMap: Record<string, string> = {
     'in-progress': '進行中',
@@ -49,14 +52,36 @@ export const SharedPlanningList = ({
           <p>目前沒有符合「{statusTextMap[statusFilter] ?? '該狀態'}」的清單</p>
         </div>
       ) : (
-        <div className="space-y-4">
+      <div className="space-y-4">
           {filteredLists.map((list) => (
-            <SharedListCard key={list.id} list={list} />
+            <SharedListCard
+              key={list.id}
+              list={list}
+              onEdit={(listItem) => {
+                // TODO: 實作編輯功能，導航到編輯頁面或開啟編輯 Modal
+                navigate(`/planning/list/${listItem.id}/edit`);
+              }}
+              onDelete={async (listItem) => {
+                if (confirm(`確定要刪除「${listItem.name}」嗎？此動作無法復原。`)) {
+                  try {
+                    await deleteList(listItem.id);
+                    toast.success('清單已刪除');
+                  } catch {
+                    toast.error('刪除失敗，請稍後再試');
+                  }
+                }
+              }}
+            />
           ))}
         </div>
       )}
 
-      <FloatingActionButton onClick={() => navigate('/planning/list/create')} />
+      {/* Drawer 取代原本的路由導航 */}
+      <FloatingActionButton onClick={() => setIsDrawerOpen(true)} />
+      <CreateSharedListDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+      />
     </div>
   );
 };

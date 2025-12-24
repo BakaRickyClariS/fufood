@@ -48,14 +48,14 @@ export const CategoryGrid = <TId extends string = string>({
     <div className={`space-y-3 ${className}`}>
       {title && (
         <div className="flex items-center justify-between px-4">
-          <h2 className="text-lg font-bold text-gray-800">{title}</h2>
+          <h2 className="text-xl font-bold text-gray-800">{title}</h2>
           {showScrollButton && (
             <button 
               onClick={scrollRight}
-              className="p-1.5 rounded-full border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              className="p-1.5 rounded-full border border-neutral-400 hover:bg-neutral-50 active:bg-neutral-100 transition-colors"
               aria-label="Scroll right"
             >
-              <ArrowRight className="w-4 h-4 text-gray-600" />
+              <ArrowRight className="w-5.5 h-5.5 text-neutral-600" />
             </button>
           )}
         </div>
@@ -78,11 +78,8 @@ export const CategoryGrid = <TId extends string = string>({
                   className={`
                     w-16 h-16 rounded-full overflow-hidden flex items-center justify-center 
                     transition-all duration-200
-                    ${isSelected ? 'ring-2 ring-primary-500 ring-offset-2' : ''}
+                    ${isSelected ? 'bg-primary-100' : ''}
                   `}
-                  style={{
-                    backgroundColor: isSelected ? 'var(--color-primary-200)' : 'transparent'
-                  }}
                 >
                   <img 
                     src={category.icon} 
@@ -92,7 +89,7 @@ export const CategoryGrid = <TId extends string = string>({
                 </div>
                 <span className={`
                   text-xs font-medium transition-colors
-                  ${isSelected ? 'text-primary-600' : 'text-gray-600'}
+                  ${isSelected ? 'text-primary-600' : 'text-neutral-600'}
                 `}>
                   {category.label}
                 </span>

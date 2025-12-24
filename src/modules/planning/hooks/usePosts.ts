@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import type { SharedListPost, CreatePostInput } from '../types';
 import { sharedListApi } from '../services/api/sharedListApi';
 
@@ -75,6 +76,33 @@ export const usePosts = (listId: string | undefined) => {
     [listId, posts],
   );
 
+  const deletePost = async (postId: string) => {
+    if (!listId) return;
+    try {
+      await sharedListApi.deletePost(postId, listId);
+      setPosts((prev) => prev.filter((post) => post.id !== postId));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete post';
+      toast.error(msg);
+      throw err;
+    }
+  };
+
+  const updatePost = async (postId: string, input: CreatePostInput) => {
+    if (!listId) return;
+    try {
+      const updatedPost = await sharedListApi.updatePost(postId, listId, input);
+      setPosts((prev) =>
+        prev.map((post) => (post.id === postId ? updatedPost : post)),
+      );
+      return updatedPost;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to update post';
+      toast.error(msg);
+      throw err;
+    }
+  };
+
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
@@ -85,6 +113,8 @@ export const usePosts = (listId: string | undefined) => {
     error,
     refetch: fetchPosts,
     createPost,
+    updatePost,
     toggleLike,
+    deletePost,
   };
 };

@@ -13,14 +13,29 @@ const PlanningRoutes = [
     path: 'planning',
     element: <PlanningLayout />,
     children: [
-      { index: true, element: <PlanningHome /> },
+      {
+        index: true,
+        element: <PlanningHome />,
+      },
       // 共享清單
-      { path: 'list/create', element: <CreateSharedList /> },
-      { path: 'list/:listId', element: <SharedListDetail /> },
+      {
+        path: 'list/create',
+        element: <CreateSharedList />,
+        handle: { headerVariant: 'none', footer: false },
+      },
+      {
+        path: 'list/:listId',
+        element: <SharedListDetail />,
+        handle: { headerVariant: 'none' },
+      },
       { path: 'list/:listId/post/create', element: <CreatePost /> },
       // 食譜相關
       { path: 'recipes', element: <RecipeList /> },
-      { path: 'recipes/:id', element: <RecipeDetailView /> },
+      {
+        path: 'recipes/:id',
+        element: <RecipeDetailView />,
+        handle: { headerVariant: 'none' },
+      },
       { path: 'recipes/favorites', element: <FavoriteRecipes /> },
       { path: 'recipes/ai-query', element: <AIQueryPage /> },
     ],
