@@ -9,6 +9,80 @@ import type { ShoppingItem, SharedListPost } from '@/modules/planning/types';
 
 
 
+
+
+const UNITS = ['個', '包', '條', '罐', '瓶', '盒', '袋', '台斤', '公克', '公斤', 'ml', 'L'];
+
+const UnitSelector = ({ value, onChange }: { value?: string; onChange: (val: string) => void }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (isOpen && menuRef.current) {
+      gsap.fromTo(menuRef.current,
+        { opacity: 0, y: -10, scaleY: 0.95 },
+        { opacity: 1, y: 0, scaleY: 1, duration: 0.2, ease: 'power2.out' }
+      );
+    }
+  }, [isOpen]);
+
+  // Click outside to close
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full px-4 py-3 rounded-xl border flex items-center justify-between bg-white transition-all ${
+          isOpen ? 'border-primary-default ring-1 ring-primary-default' : 'border-neutral-200'
+        }`}
+      >
+        <span className={value ? 'text-neutral-800' : 'text-neutral-400'}>
+          {value || '請選擇單位'}
+        </span>
+        <ChevronLeft 
+          className={`w-5 h-5 text-neutral-400 transition-transform duration-200 ${
+            isOpen ? 'rotate-90' : '-rotate-90'
+          }`} 
+        />
+      </button>
+
+      {isOpen && (
+        <div 
+          ref={menuRef}
+          className="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-neutral-100 overflow-hidden z-[100] max-h-60 overflow-y-auto origin-top"
+        >
+          {UNITS.map((unit) => (
+            <button
+              key={unit}
+              type="button"
+              onClick={() => {
+                onChange(unit);
+                setIsOpen(false);
+              }}
+              className={`w-full text-left px-4 py-3 hover:bg-neutral-50 transition-colors ${
+                value === unit ? 'text-primary-default font-bold bg-primary-light/10' : 'text-neutral-600'
+              }`}
+            >
+              {unit}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 type PostFormProps = {
   listId?: string;
   mode: 'create' | 'edit';
@@ -52,7 +126,7 @@ export const PostFormFeature = ({
         id: `item_${Date.now()}`,
         name: '',
         quantity: 1,
-        unit: '個',
+        unit: '',
       }]);
       setContent('');
       setSelectedImages([]);
@@ -85,7 +159,7 @@ export const PostFormFeature = ({
       id: `item_${Date.now()}`,
       name: '',
       quantity: 1,
-      unit: '個',
+      unit: '',
     };
     setItems([...items, newItem]);
   };
@@ -296,6 +370,17 @@ export const PostFormFeature = ({
                     >
                          <Plus className="w-5 h-5" />
                     </button>
+                </div>
+            </div>
+
+            {/* Unit */}
+            <div className="space-y-2">
+                <label className="block text-base font-bold text-neutral-800">單位</label>
+                <div className="relative">
+                   <UnitSelector 
+                     value={item.unit}
+                     onChange={(val) => handleUpdateItem(item.id, 'unit', val)}
+                   />
                 </div>
             </div>
 
