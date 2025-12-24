@@ -134,10 +134,21 @@ type InventorySettings = {
   expiringSoonDays: number;
   notifyOnExpiry: boolean;
   notifyOnLowStock: boolean;
+  layoutType?: 'layout-a' | 'layout-b' | 'layout-c'; // 庫存版型
+  categoryOrder?: string[]; // 類別顯示順序
 };
 ```
 
-### 2.6 Food（食材主檔）
+### 2.6 EditableCategoryInfo（可編輯類別）
+
+```typescript
+type EditableCategoryInfo = {
+  id: string;
+  title: string;
+};
+```
+
+### 2.7 Food（食材主檔）
 
 ```typescript
 type Food = {
@@ -351,7 +362,13 @@ type Food = {
       }
     }
     ```
-- **PUT** `/api/v1/inventory/settings`: 更新設定，Request Body: `UpdateInventorySettingsRequest`
+- **PUT** `/api/v1/inventory/settings`: 更新設定
+  - **Request Body**: `UpdateInventorySettingsRequest`
+    ```typescript
+    type UpdateInventorySettingsRequest = Partial<InventorySettings> & {
+      categories?: EditableCategoryInfo[]; // 可更新類別名稱與順序
+    };
+    ```
   - **Success Response**:
     ```json
     {

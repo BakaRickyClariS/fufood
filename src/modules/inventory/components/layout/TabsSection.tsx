@@ -30,9 +30,7 @@ const TabsSection = () => {
   ];
 
   return (
-    <section
-      className={mainTab === 'settings' ? 'bg-neutral-100 min-h-screen' : ''}
-    >
+    <section className="bg-[#F0F0F0] min-h-screen">
       <div className="max-w-layout-container mx-auto">
         {/* 主 Tabs */}
         <Tabs

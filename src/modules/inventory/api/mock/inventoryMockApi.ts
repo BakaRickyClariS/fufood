@@ -248,9 +248,17 @@ export const createMockInventoryApi = (): InventoryApi => {
     const settingsResponse = await getSettings();
     const categoryOrder = settingsResponse.data.settings.categoryOrder;
 
+    // 取得自訂類別名稱
+    const storedCategoryTitles = mockRequestHandlers.getItem(
+      'mock_category_titles',
+    );
+    const categoryTitles: Record<string, string> = storedCategoryTitles
+      ? JSON.parse(storedCategoryTitles)
+      : {};
+
     const allCategories = categories.map((c) => ({
       id: c.id,
-      title: c.title,
+      title: categoryTitles[c.id] || c.title, // 優先使用自訂名稱
       count: c.value,
       imageUrl: c.img,
       bgColor: c.bgColor,
@@ -369,7 +377,30 @@ export const createMockInventoryApi = (): InventoryApi => {
   }> => {
     await delay(150);
     const current = await getSettings();
+
+    // 處理類別名稱更新
+    if (data.categories && data.categories.length > 0) {
+      const storedCategoryTitles = mockRequestHandlers.getItem(
+        'mock_category_titles',
+      );
+      const categoryTitles: Record<string, string> = storedCategoryTitles
+        ? JSON.parse(storedCategoryTitles)
+        : {};
+
+      data.categories.forEach((cat) => {
+        categoryTitles[cat.id] = cat.title;
+      });
+
+      mockRequestHandlers.setItem(
+        'mock_category_titles',
+        JSON.stringify(categoryTitles),
+      );
+    }
+
     const updated = { ...current.data.settings, ...data };
+    // 移除 categories 欄位，因為它不是 InventorySettings 的一部分
+    delete (updated as UpdateInventorySettingsRequest).categories;
+
     memorySettings = updated;
     mockRequestHandlers.setItem(
       'mock_inventory_settings',

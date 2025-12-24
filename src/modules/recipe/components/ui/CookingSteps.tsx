@@ -1,5 +1,4 @@
 import type { CookingStep } from '@/modules/recipe/types';
-import { Clock } from 'lucide-react';
 
 type CookingStepsProps = {
   steps: CookingStep[];
@@ -7,24 +6,19 @@ type CookingStepsProps = {
 
 export const CookingSteps = ({ steps }: CookingStepsProps) => {
   return (
-    <div className="space-y-8">
+    <div className="divide-y divide-gray-100">
       {steps.map((step) => (
-        <div key={step.stepNumber} className="flex gap-4">
-          <div className="flex-shrink-0">
-            <span className="inline-block px-3 py-1 rounded-lg bg-[#FFECEB] text-[#F5655D] font-bold text-sm">
+        <div key={step.stepNumber} className="flex gap-4 py-6 first:pt-2">
+          <div className="shrink-0">
+            <span className="inline-block px-3 py-1 rounded-l-2xl rounded-br-2xl rounded-tr-sm bg-[#FFECEB] text-[#A13232] font-bold text-sm">
               步驟{step.stepNumber}
             </span>
           </div>
           <div className="flex-1 pt-1">
+            {/* 移除 AI 模型偶爾產生的多餘 $ 符號 */}
             <p className="text-gray-800 leading-relaxed mb-2 font-medium">
               {step.description.replace(/\$/g, '')}
             </p>
-            {step.time && (
-              <div className="flex items-center gap-1.5 text-orange-600 text-sm font-medium">
-                <Clock className="w-4 h-4" />
-                <span>{step.time}</span>
-              </div>
-            )}
           </div>
         </div>
       ))}

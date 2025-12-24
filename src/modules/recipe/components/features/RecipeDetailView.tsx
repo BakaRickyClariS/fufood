@@ -11,14 +11,14 @@ import type {
 } from '@/modules/recipe/types';
 import type { AIRecipeItem } from '@/modules/ai';
 import { RecipeHeader } from '@/modules/recipe/components/layout/RecipeHeader';
-import { RecipeSeriesTag } from '@/modules/recipe/components/ui/RecipeSeriesTag';
+
 import { IngredientList } from '@/modules/recipe/components/ui/IngredientList';
 import { CookingSteps } from '@/modules/recipe/components/ui/CookingSteps';
 import { ConsumptionModal } from '@/modules/recipe/components/ui/ConsumptionModal';
 import { ConsumptionEditor } from '@/modules/recipe/components/ui/ConsumptionEditor';
 import { useConsumption } from '@/modules/recipe/hooks';
 import { parseQuantity } from '@/modules/recipe/utils/parseQuantity';
-import { Clock, Users, Sparkles, ChefHat } from 'lucide-react';
+import { Clock, Users, Sparkles, ChefHat, Heart } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -166,6 +166,21 @@ export const RecipeDetailView = () => {
     }
   };
 
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!recipe) return;
+    try {
+      const { isFavorite } = await recipeApi.toggleFavorite(
+        recipe.id,
+        !recipe.isFavorite,
+      );
+      setRecipe((prev) => (prev ? { ...prev, isFavorite } : null));
+      toast.success(isFavorite ? '已加入收藏' : '已取消收藏');
+    } catch (error) {
+      toast.error('操作失敗');
+    }
+  };
+
   if (isLoading) return <div className="p-4 text-center">載入中...</div>;
   if (error || !recipe)
     return (
@@ -188,12 +203,8 @@ export const RecipeDetailView = () => {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen pb-24">
-      <RecipeHeader
-        title={recipe.name}
-        recipeId={recipe.id}
-        isFavorite={recipe.isFavorite}
-      />
+    <div className="min-h-screen">
+      <RecipeHeader />
 
       <div className="relative w-full h-[40vh]">
         <img
@@ -201,27 +212,55 @@ export const RecipeDetailView = () => {
           alt={recipe.name}
           className="w-full h-full object-cover"
         />
+        
+        {/* 我的最愛按鈕 */}
+        <button
+          onClick={handleToggleFavorite}
+          className={`absolute top-18 right-4 z-50 p-2.5 bg-white/30 rounded-full backdrop-blur-[2px] transition-transform active:scale-95`}
+        >
+          <Heart
+            className={`w-6 h-6 transition-colors ${
+              recipe.isFavorite ? 'fill-white text-white' : 'text-white'
+            }`}
+          />
+        </button>
+
         {/* AI 食譜標記 */}
         {isAIRecipe && (
-          <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 rounded-full text-white text-xs font-medium shadow-lg">
+          <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 bg-linear-to-r from-orange-500 to-red-500 rounded-full text-white text-xs font-medium shadow-lg z-10">
             <Sparkles className="w-3.5 h-3.5" />
             <span>AI 推薦</span>
           </div>
         )}
       </div>
 
-      <div className="relative -mt-10 bg-white rounded-t-3xl min-h-screen px-5 py-6 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1 mr-4">
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+      <div className="relative -mt-10 bg-white rounded-t-3xl min-h-screen px-4 py-6">
+        <div className="flex items-center justify-between mb-4 gap-2">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-[20px] font-bold text-gray-900 tracking-tight mb-3 truncate">
               {recipe.name}
             </h1>
+            
+            <div className="flex items-center gap-2 text-sm flex-wrap">
+              <span className="px-2 py-1 bg-primary-500 text-white rounded-sm font-medium text-[10px] shrink-0">
+                {recipe.category.slice(0, 2)}
+              </span>
+              
+              <div className="flex items-center gap-1 text-primary-500 font-medium text-[16px] shrink-0">
+                <Users className="w-4 h-4" />
+                <span>{recipe.servings}人份</span>
+              </div>
+              <div className="flex items-center gap-1 text-primary-500 font-medium text-[16px] shrink-0">
+                <Clock className="w-4 h-4" />
+                <span>{recipe.cookTime}分鐘</span>
+              </div>
+            </div>
           </div>
 
           <Sheet>
             <SheetTrigger asChild>
-              <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-colors shrink-0">
-                <ChefHat className="w-4 h-4 text-gray-700" />
+              <button className="flex items-center gap-1.5 px-6 py-3 bg-white border-2 border-neutral-300 rounded-sm hover:bg-gray-50 transition-colors shrink-0">
+                <ChefHat className="w-5 h-5 text-gray-700" />
                 <span className="font-bold text-gray-900 text-sm">
                   烹煮方式
                 </span>
@@ -229,9 +268,9 @@ export const RecipeDetailView = () => {
             </SheetTrigger>
             <SheetContent
               side="bottom"
-              className="h-[85vh] rounded-t-2xl px-0 pb-0"
+              className="h-[85vh] rounded-t-2xl px-0 pb-0 [&>button]:hidden"
             >
-              <SheetHeader className="px-5 text-left mb-6 border-b border-gray-100 pb-4">
+              <SheetHeader className="px-5 text-left mb-2 pb-4">
                 <SheetTitle className="text-xl font-bold text-gray-900">
                   烹煮方式
                 </SheetTitle>
@@ -243,38 +282,20 @@ export const RecipeDetailView = () => {
           </Sheet>
         </div>
 
-        <div className="flex items-center gap-3 mb-8 text-sm">
-          {recipe.series && (
-            <RecipeSeriesTag series={recipe.series} className="mt-0!" />
-          )}
-          <div className="flex items-center gap-1 text-gray-500 font-medium">
-            <Users className="w-4 h-4 text-red-400" />
-            <span className="text-red-400">{recipe.servings}人份</span>
-          </div>
-          <div className="flex items-center gap-1 text-gray-500 font-medium">
-            <Clock className="w-4 h-4 text-red-400" />
-            <span className="text-red-400">{recipe.cookTime}分鐘</span>
-          </div>
-        </div>
-
         <IngredientList ingredients={recipe.ingredients} />
 
-        {/* Padding for bottom button */}
-        <div className="h-24"></div>
-      </div>
-
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-sm border-t border-gray-100 z-10">
-        <button
-          onClick={() => setShowConsumptionModal(true)}
-          className="w-full py-3.5 bg-[#F5655D] text-white rounded-xl font-bold hover:bg-[#E5554D] transition-colors shadow-lg shadow-red-200"
-        >
-          確認消耗
-        </button>
+        <div className="mt-8 mb-6">
+          <button
+            onClick={() => setShowConsumptionModal(true)}
+            className="w-full py-3.5 bg-[#F5655D] text-white rounded-xl font-bold hover:bg-[#E5554D] transition-colors shadow-lg shadow-red-200"
+          >
+            確認消耗
+          </button>
+        </div>
       </div>
 
       <ConsumptionModal
         isOpen={showConsumptionModal}
-        onClose={() => setShowConsumptionModal(false)}
         onConfirm={handleConfirmConsumption}
         onEdit={() => {
           setShowConsumptionModal(false);
