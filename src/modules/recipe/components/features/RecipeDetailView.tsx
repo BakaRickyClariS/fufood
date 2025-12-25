@@ -14,7 +14,7 @@ import { RecipeHeader } from '@/modules/recipe/components/layout/RecipeHeader';
 
 import { IngredientList } from '@/modules/recipe/components/ui/IngredientList';
 import { CookingSteps } from '@/modules/recipe/components/ui/CookingSteps';
-import { ConsumptionModal } from '@/modules/recipe/components/ui/ConsumptionModal';
+import { ConsumptionModal } from '@/shared/components/feedback/ConsumptionModal';
 import { ConsumptionEditor } from '@/modules/recipe/components/ui/ConsumptionEditor';
 import { useConsumption } from '@/modules/recipe/hooks';
 import { parseQuantity } from '@/modules/recipe/utils/parseQuantity';
@@ -212,7 +212,7 @@ export const RecipeDetailView = () => {
           alt={recipe.name}
           className="w-full h-full object-cover"
         />
-        
+
         {/* 我的最愛按鈕 */}
         <button
           onClick={handleToggleFavorite}
@@ -240,12 +240,12 @@ export const RecipeDetailView = () => {
             <h1 className="text-[20px] font-bold text-gray-900 tracking-tight mb-3 truncate">
               {recipe.name}
             </h1>
-            
+
             <div className="flex items-center gap-2 text-sm flex-wrap">
               <span className="px-2 py-1 bg-primary-500 text-white rounded-sm font-medium text-[10px] shrink-0">
                 {recipe.category.slice(0, 2)}
               </span>
-              
+
               <div className="flex items-center gap-1 text-primary-500 font-medium text-[16px] shrink-0">
                 <Users className="w-4 h-4" />
                 <span>{recipe.servings}人份</span>
@@ -296,12 +296,12 @@ export const RecipeDetailView = () => {
 
       <ConsumptionModal
         isOpen={showConsumptionModal}
+        onClose={() => setShowConsumptionModal(false)}
+        items={consumptionItems}
         onConfirm={handleConfirmConsumption}
         onEdit={() => {
-          setShowConsumptionModal(false);
-          setShowEditor(true);
+          console.log('Edit consumption');
         }}
-        items={consumptionItems}
       />
     </div>
   );
