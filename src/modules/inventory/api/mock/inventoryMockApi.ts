@@ -95,6 +95,8 @@ export const createMockInventoryApi = (): InventoryApi => {
             );
           case 'frequent':
             return true;
+          case 'completed':
+            return item.quantity === 0;
           case 'normal':
           default:
             return (
