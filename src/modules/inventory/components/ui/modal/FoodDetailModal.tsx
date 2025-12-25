@@ -153,6 +153,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
         isOpen={showConsumptionModal}
         onClose={() => setShowConsumptionModal(false)}
         singleItem={{
+          id: item.id,
           name: item.name,
           quantity: item.quantity,
           unit: item.unit || '個',

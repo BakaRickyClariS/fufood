@@ -40,8 +40,8 @@ const ExpiredRecordsPanel: React.FC = () => {
             onClick={() => setFilter('expired')}
             className={`px-3 py-1.5 rounded-full text-sm font-bold flex items-center gap-1 transition-colors ${
               filter === 'expired'
-                ? 'bg-primary-400 text-white border border-primary-400bg-primary-400'
-                : 'bg-transparent text-neutral-500 border border-neutral-200'
+                ? 'bg-primary-400 text-white border border-primary-400'
+                : 'bg-transparent text-neutral-500 border border-neutral-400'
             }`}
           >
             {filter === 'expired' && (
@@ -68,7 +68,7 @@ const ExpiredRecordsPanel: React.FC = () => {
             className={`px-3 py-1.5 rounded-full text-sm font-bold flex items-center gap-1 transition-colors ${
               filter === 'completed'
                 ? 'bg-primary-400 text-white border border-primary-400'
-                : 'bg-transparent text-neutral-500 border border-neutral-200'
+                : 'bg-transparent text-neutral-500 border border-neutral-400'
             }`}
           >
             {filter === 'completed' && (

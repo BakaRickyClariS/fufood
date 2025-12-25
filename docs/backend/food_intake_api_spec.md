@@ -379,8 +379,8 @@ Authorization: Bearer <access_token>
 | 欄位       | 類型              | 必填 | 說明                                 |
 | ---------- | ----------------- | :--: | ------------------------------------ |
 | `quantity` | number            |  ✅  | 消耗數量（若為全部則等於當前庫存量） |
-| `reason`   | ConsumptionReason |  ✅  | 消耗原因                             |
-| `note`     | string            |  ❌  | 備註                                 |
+| `reason`   | ConsumptionReason |  ✅  | 主要消耗原因 (`expired`, `other` 等) |
+| `note`     | string            |  ❌  | 備註 (包含自訂原因、多選原因詳情)    |
 
 **消耗原因 (ConsumptionReason)**
 

@@ -348,7 +348,7 @@ const SettingsPanel: React.FC = () => {
 
                     {/* 「目前」標籤 - 移至圖片容器外，並定位於底部 */}
                     {isSaved && (
-                      <span className="absolute top-[140px] left-1/2 -translate-x-1/2 px-2.5 py-1 bg-primary-400 text-white text-[10px] rounded-full whitespace-nowrap z-20">
+                      <span className="absolute top-[37%] left-1/2 -translate-x-1/2 px-2.5 py-1 bg-primary-400 text-white text-[10px] rounded-full whitespace-nowrap z-20">
                         目前
                       </span>
                     )}

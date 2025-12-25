@@ -415,6 +415,36 @@ export const createMockInventoryApi = (): InventoryApi => {
     };
   };
 
+  const consumeItem = async (
+    id: string,
+    data: { quantity: number; reason: string; note?: string },
+  ): Promise<{
+    status: true;
+    message?: string;
+    data: { id: string; remainingQuantity: number };
+  }> => {
+    await delay(300);
+    const items = getStoredItems();
+    const index = items.findIndex((i) => i.id === id);
+    if (index === -1) throw new Error('Item not found');
+
+    const item = items[index];
+    const newQuantity = Math.max(0, item.quantity - data.quantity);
+
+    items[index] = {
+      ...item,
+      quantity: newQuantity,
+      updatedAt: new Date().toISOString(),
+    };
+    setStoredItems(items);
+
+    return {
+      status: true,
+      message: 'Consumed successfully',
+      data: { id, remainingQuantity: newQuantity },
+    };
+  };
+
   return {
     getInventory,
     getItem,
@@ -426,5 +456,6 @@ export const createMockInventoryApi = (): InventoryApi => {
     getSummary,
     getSettings,
     updateSettings,
+    consumeItem,
   };
 };
