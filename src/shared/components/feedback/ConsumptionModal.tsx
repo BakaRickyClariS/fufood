@@ -28,6 +28,11 @@ type ConsumptionModalProps = {
   // onConfirm removed or kept for legacy?
   // The new flow handles success internally or via callback, but parent might need to know to refresh.
   onConfirm: (success: boolean) => void;
+  // 返回庫房時：先關閉父層（食材詳細頁），callback 中再關閉成功頁面
+  onCloseAll?: (onParentClosed: () => void) => void;
+  // 顯示「加入採買清單」按鈕（食譜場景使用）
+  showShoppingListButton?: boolean;
+  onAddToShoppingList?: () => void;
   // items/singleItem props
   items?: ConsumptionItem[];
   singleItem?: {
@@ -43,6 +48,9 @@ export const ConsumptionModal = ({
   isOpen,
   onClose,
   onConfirm,
+  onCloseAll,
+  showShoppingListButton = false,
+  onAddToShoppingList,
   items = [],
   singleItem,
 }: ConsumptionModalProps) => {
@@ -185,30 +193,32 @@ export const ConsumptionModal = ({
     }
   };
 
+  // 播放消耗通知 modal 離場動畫，然後顯示成功 modal
+  const animateOutAndShowSuccess = () => {
+    if (modalRef.current && overlayRef.current) {
+      const tl = gsap.timeline({
+        onComplete: () => {
+          setShowSuccessModal(true);
+        },
+      });
+      tl.to(modalRef.current, {
+        scale: 0.9,
+        opacity: 0,
+        duration: 0.25,
+        ease: 'power2.in',
+      });
+      tl.to(overlayRef.current, { opacity: 0, duration: 0.2 }, '-=0.15');
+    } else {
+      setShowSuccessModal(true);
+    }
+  };
+
   const handleConfirm = async () => {
     // Submit current items
     const success = await submitConsumption(currentItems);
     if (success) {
-      // Close this modal first? Or keep it open and show success on top?
-      // Design flow: ConsumptionModal -> Success
-      // We can close ConsumptionModal and open SuccessModal.
-      // But SuccessModal is separate.
-      // Better to close ConsumptionModal then show SuccessModal?
-      // Or show SuccessModal which covers ConsumptionModal?
-      // Since SuccessModal is full screen portal, it covers.
-      // But we should probably close ConsumptionModal to clean up.
-      // However, if we close ConsumptionModal, we loose state unless we lift it.
-      // Here we can just show SuccessModal and close ConsumptionModal "behind" it or after.
-
-      // Let's set open SuccessModal, then close ConsumptionModal?
-      // If I close ConsumptionModal, this component unmounts -> SuccessModal (child) unmounts?
-      // Yes, SuccessModal is child here.
-      // So I must keep ConsumptionModal mounted OR move SuccessModal up.
-      // Given constraints, I will keep ConsumptionModal mounted but hidden?
-      // Or just render SuccessModal *instead* of ConsumptionModal content?
-      // Or use state to switch View.
-
-      setShowSuccessModal(true);
+      // 播放離場動畫後再顯示成功 modal
+      animateOutAndShowSuccess();
     }
   };
 
@@ -219,29 +229,49 @@ export const ConsumptionModal = ({
     const success = await submitConsumption(updatedItems);
     if (success) {
       setShowEditModal(false);
-      setShowSuccessModal(true);
+      // 播放離場動畫後再顯示成功 modal
+      animateOutAndShowSuccess();
     }
   };
 
+  // 點擊返回鍵：只關閉成功 modal，回到食材詳細頁面
   const handleSuccessClose = () => {
     setShowSuccessModal(false);
-    onConfirm(true); // Notify parent to refresh
-    handleClose();
+    onConfirm(true); // 通知父層刷新數據
+    // 不呼叫 handleClose()，讓食材詳細頁繼續顯示
+    onClose(); // 只關閉 ConsumptionModal 本身
   };
 
+  // 點擊返回庫房：先關閉食材詳細頁，再關閉成功頁面，最後導航
   const handleBackToInventory = () => {
-    setShowSuccessModal(false);
-    navigate('/inventory');
     onConfirm(true);
-    handleClose();
+    
+    if (onCloseAll) {
+      // 使用 onCloseAll：先讓食材詳細頁播放離場動畫
+      // 動畫完成後的 callback 中：關閉成功頁面並導航
+      onCloseAll(() => {
+        // 食材詳細頁動畫完成後，關閉成功頁面
+        setShowSuccessModal(false);
+        // 稍微延遲讓成功頁面有時間開始動畫
+        setTimeout(() => {
+          navigate('/inventory');
+        }, 350); // 配合成功頁面的離場動畫時間 0.3s
+      });
+    } else {
+      // Fallback：直接關閉並導航
+      setShowSuccessModal(false);
+      onClose();
+      navigate('/inventory');
+    }
   };
 
   if (!isOpen) return null;
 
   return (
     <>
-      {createPortal(
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+      {/* 消耗通知 Modal - 當成功 modal 顯示時隱藏 */}
+      {!showSuccessModal && createPortal(
+        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
           <div
             ref={overlayRef}
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -306,12 +336,34 @@ export const ConsumptionModal = ({
 
             {/* Footer Actions */}
             <div className="p-5 bg-white border-t border-gray-100">
-              <button
-                onClick={handleConfirm}
-                className="w-full py-3.5 bg-[#EE5D50] text-white rounded-xl font-bold text-base hover:bg-[#D64D40] transition-colors shadow-lg shadow-orange-500/20 active:scale-95"
-              >
-                完成
-              </button>
+              {showShoppingListButton ? (
+                // 雙按鈕佈局：加入採買清單 + 完成消耗
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      onAddToShoppingList?.();
+                      handleConfirm();
+                    }}
+                    className="flex-1 py-3.5 bg-white border border-neutral-300 rounded-xl font-bold text-base text-neutral-900 hover:bg-gray-50 transition-colors active:scale-95"
+                  >
+                    加入採買清單
+                  </button>
+                  <button
+                    onClick={handleConfirm}
+                    className="flex-1 py-3.5 bg-[#EE5D50] text-white rounded-xl font-bold text-base hover:bg-[#D64D40] transition-colors shadow-lg shadow-orange-500/20 active:scale-95"
+                  >
+                    完成消耗
+                  </button>
+                </div>
+              ) : (
+                // 單按鈕佈局：完成
+                <button
+                  onClick={handleConfirm}
+                  className="w-full py-3.5 bg-[#EE5D50] text-white rounded-xl font-bold text-base hover:bg-[#D64D40] transition-colors shadow-lg shadow-orange-500/20 active:scale-95"
+                >
+                  完成
+                </button>
+              )}
             </div>
           </div>
         </div>,
