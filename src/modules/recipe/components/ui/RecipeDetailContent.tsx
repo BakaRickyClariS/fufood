@@ -25,6 +25,9 @@ type RecipeDetailContentProps = {
   showShoppingListButton?: boolean;
   onAddToShoppingList?: () => void;
   isLoading?: boolean;
+  // Parent visibility controls
+  onHideParent?: () => void;
+  onShowParent?: () => void;
 };
 
 /**
@@ -41,13 +44,15 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
   showShoppingListButton = false,
   onAddToShoppingList,
   isLoading = false,
+  onHideParent,
+  onShowParent,
 }) => {
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
       const { isFavorite } = await recipeApi.toggleFavorite(
         recipe.id,
-        !recipe.isFavorite
+        !recipe.isFavorite,
       );
       onRecipeUpdate?.({ ...recipe, isFavorite });
       toast.success(isFavorite ? '已加入收藏' : '已取消收藏');
@@ -65,6 +70,8 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
         items={consumptionItems}
         showShoppingListButton={showShoppingListButton}
         onAddToShoppingList={onAddToShoppingList}
+        onHideParent={onHideParent}
+        onShowParent={onShowParent}
         onConfirm={(success) => {
           onShowConsumptionModal(false);
           onConfirmConsumption?.(success);
@@ -119,7 +126,7 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
           {/* 烹煮方式按鈕 */}
           <Sheet>
             <SheetTrigger asChild>
-              <button 
+              <button
                 disabled={isLoading}
                 className="flex items-center gap-1.5 px-6 py-3 bg-white border-2 border-neutral-300 rounded-sm hover:bg-gray-50 transition-colors shrink-0 disabled:opacity-50"
               >
@@ -154,8 +161,8 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
         {/* 食材列表 */}
         {isLoading ? (
           <div className="py-8 text-center text-gray-400 flex flex-col items-center gap-2">
-             <Loader2 className="w-6 h-6 animate-spin" />
-             <span className="text-sm">載入食材與詳細資訊...</span>
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span className="text-sm">載入食材與詳細資訊...</span>
           </div>
         ) : (
           <>
@@ -177,4 +184,3 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
     </>
   );
 };
-

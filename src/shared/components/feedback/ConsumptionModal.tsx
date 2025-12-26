@@ -42,6 +42,9 @@ type ConsumptionModalProps = {
     unit: string;
     expiryDate?: string;
   };
+  // Callbacks to control parent visibility/animation
+  onHideParent?: () => void;
+  onShowParent?: () => void;
 };
 
 export const ConsumptionModal = ({
@@ -53,6 +56,8 @@ export const ConsumptionModal = ({
   onAddToShoppingList,
   items = [],
   singleItem,
+  onHideParent,
+  onShowParent,
 }: ConsumptionModalProps) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -195,6 +200,9 @@ export const ConsumptionModal = ({
 
   // 播放消耗通知 modal 離場動畫，然後顯示成功 modal
   const animateOutAndShowSuccess = () => {
+    // If provided, signal parent to hide/animate out concurrently
+    onHideParent?.();
+
     if (modalRef.current && overlayRef.current) {
       const tl = gsap.timeline({
         onComplete: () => {
@@ -237,6 +245,10 @@ export const ConsumptionModal = ({
   // 點擊返回鍵：只關閉成功 modal，回到食材詳細頁面
   const handleSuccessClose = () => {
     setShowSuccessModal(false);
+
+    // Signal parent to show/animate in
+    onShowParent?.();
+
     onConfirm(true); // 通知父層刷新數據
     // 不呼叫 handleClose()，讓食材詳細頁繼續顯示
     onClose(); // 只關閉 ConsumptionModal 本身
@@ -245,7 +257,7 @@ export const ConsumptionModal = ({
   // 點擊返回庫房：先關閉食材詳細頁，再關閉成功頁面，最後導航
   const handleBackToInventory = () => {
     onConfirm(true);
-    
+
     if (onCloseAll) {
       // 使用 onCloseAll：先讓食材詳細頁播放離場動畫
       // 動畫完成後的 callback 中：關閉成功頁面並導航
@@ -270,105 +282,106 @@ export const ConsumptionModal = ({
   return (
     <>
       {/* 消耗通知 Modal - 當成功 modal 顯示時隱藏 */}
-      {!showSuccessModal && createPortal(
-        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
-          <div
-            ref={overlayRef}
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => handleClose()}
-          />
+      {!showSuccessModal &&
+        createPortal(
+          <div className="fixed inset-0 z-140 flex items-center justify-center p-4">
+            <div
+              ref={overlayRef}
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => handleClose()}
+            />
 
-          <div
-            ref={modalRef}
-            className="relative bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl"
-          >
-            {/* Header */}
-            <div className="p-5 flex justify-between items-center bg-white border-b border-gray-100">
-              <h3 className="font-bold text-lg text-neutral-900 tracking-tight">
-                消耗通知
-              </h3>
-              <button
-                onClick={() => setShowEditModal(true)}
-                className="flex items-center gap-1 text-[#EE5D50] text-base font-medium hover:opacity-80 transition-opacity"
-              >
-                <span className="text-lg">✎</span>
-                <span>編輯消耗原因</span>
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="px-5 py-4 bg-gray-50/50">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1 h-4 bg-[#EE5D50] rounded-full"></div>
-                <h4 className="font-bold text-base text-neutral-900">
-                  本次消耗
-                </h4>
+            <div
+              ref={modalRef}
+              className="relative bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl"
+            >
+              {/* Header */}
+              <div className="p-5 flex justify-between items-center bg-white border-b border-gray-100">
+                <h3 className="font-bold text-lg text-neutral-900 tracking-tight">
+                  消耗通知
+                </h3>
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="flex items-center gap-1 text-[#EE5D50] text-base font-medium hover:opacity-80 transition-opacity"
+                >
+                  <span className="text-lg">✎</span>
+                  <span>編輯消耗原因</span>
+                </button>
               </div>
 
-              <div className="space-y-3 max-h-[50vh] overflow-y-auto custom-scrollbar pr-1">
-                {currentItems.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-100 shadow-sm"
-                  >
-                    <div>
-                      <div className="font-bold text-neutral-900 mb-1 text-base">
-                        {item.ingredientName}
-                      </div>
-                      {item.expiryDate && (
-                        <div className="text-[#EE5D50] text-base font-medium">
-                          {item.expiryDate} 過期
+              {/* Content */}
+              <div className="px-5 py-4 bg-gray-50/50">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-1 h-4 bg-[#EE5D50] rounded-full"></div>
+                  <h4 className="font-bold text-base text-neutral-900">
+                    本次消耗
+                  </h4>
+                </div>
+
+                <div className="space-y-3 max-h-[50vh] overflow-y-auto custom-scrollbar pr-1">
+                  {currentItems.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-100 shadow-sm"
+                    >
+                      <div>
+                        <div className="font-bold text-neutral-900 mb-1 text-base">
+                          {item.ingredientName}
                         </div>
-                      )}
+                        {item.expiryDate && (
+                          <div className="text-[#EE5D50] text-base font-medium">
+                            {item.expiryDate} 過期
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="font-bold text-neutral-900 text-lg">
+                          {item.consumedQuantity}
+                        </span>
+                        <span className="font-bold text-neutral-500 text-base">
+                          {item.unit}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <span className="font-bold text-neutral-900 text-lg">
-                        {item.consumedQuantity}
-                      </span>
-                      <span className="font-bold text-neutral-500 text-base">
-                        {item.unit}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Footer Actions */}
-            <div className="p-5 bg-white border-t border-gray-100">
-              {showShoppingListButton ? (
-                // 雙按鈕佈局：加入採買清單 + 完成消耗
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      onAddToShoppingList?.();
-                      handleConfirm();
-                    }}
-                    className="flex-1 py-3.5 bg-white border border-neutral-300 rounded-xl font-bold text-base text-neutral-900 hover:bg-gray-50 transition-colors active:scale-95"
-                  >
-                    加入採買清單
-                  </button>
+              {/* Footer Actions */}
+              <div className="p-5 bg-white border-t border-gray-100">
+                {showShoppingListButton ? (
+                  // 雙按鈕佈局：加入採買清單 + 完成消耗
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        onAddToShoppingList?.();
+                        handleConfirm();
+                      }}
+                      className="flex-1 py-3.5 bg-white border border-neutral-300 rounded-xl font-bold text-base text-neutral-900 hover:bg-gray-50 transition-colors active:scale-95"
+                    >
+                      加入採買清單
+                    </button>
+                    <button
+                      onClick={handleConfirm}
+                      className="flex-1 py-3.5 bg-[#EE5D50] text-white rounded-xl font-bold text-base hover:bg-[#D64D40] transition-colors shadow-lg shadow-orange-500/20 active:scale-95"
+                    >
+                      完成消耗
+                    </button>
+                  </div>
+                ) : (
+                  // 單按鈕佈局：完成
                   <button
                     onClick={handleConfirm}
-                    className="flex-1 py-3.5 bg-[#EE5D50] text-white rounded-xl font-bold text-base hover:bg-[#D64D40] transition-colors shadow-lg shadow-orange-500/20 active:scale-95"
+                    className="w-full py-3.5 bg-[#EE5D50] text-white rounded-xl font-bold text-base hover:bg-[#D64D40] transition-colors shadow-lg shadow-orange-500/20 active:scale-95"
                   >
-                    完成消耗
+                    完成
                   </button>
-                </div>
-              ) : (
-                // 單按鈕佈局：完成
-                <button
-                  onClick={handleConfirm}
-                  className="w-full py-3.5 bg-[#EE5D50] text-white rounded-xl font-bold text-base hover:bg-[#D64D40] transition-colors shadow-lg shadow-orange-500/20 active:scale-95"
-                >
-                  完成
-                </button>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        </div>,
-        document.body,
-      )}
+          </div>,
+          document.body,
+        )}
 
       {showEditModal && (
         <EditConsumptionReasonModal
