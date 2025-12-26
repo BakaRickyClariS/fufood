@@ -113,7 +113,7 @@ export const createInventoryApi = (): InventoryApi => {
      */
     consumeItem: async (
       id: string,
-      data: { quantity: number; reason: string; note?: string },
+      data: { quantity: number; reasons: string[]; customReason?: string },
     ): Promise<ApiSuccess<{ id: string; remainingQuantity: number }>> => {
       return backendApi.post<
         ApiSuccess<{ id: string; remainingQuantity: number }>

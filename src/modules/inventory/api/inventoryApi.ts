@@ -54,6 +54,6 @@ export type InventoryApi = {
   // 消耗食材
   consumeItem: (
     id: string,
-    data: { quantity: number; reason: string; note?: string },
+    data: { quantity: number; reasons: string[]; customReason?: string },
   ) => Promise<ApiSuccess<{ id: string; remainingQuantity: number }>>;
 };
