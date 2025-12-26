@@ -417,7 +417,7 @@ export const createMockInventoryApi = (): InventoryApi => {
 
   const consumeItem = async (
     id: string,
-    data: { quantity: number; reason: string; note?: string },
+    data: { quantity: number; reasons: string[]; customReason?: string },
   ): Promise<{
     status: true;
     message?: string;
