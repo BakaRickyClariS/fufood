@@ -3,10 +3,7 @@ import { toast } from 'sonner';
 import { recipeApi } from '@/modules/recipe/services';
 import { useConsumption } from '@/modules/recipe/hooks/useConsumption';
 import { parseQuantity } from '@/modules/recipe/utils/parseQuantity';
-import type {
-  Recipe,
-  ConsumptionItem,
-} from '@/modules/recipe/types';
+import type { Recipe, ConsumptionItem } from '@/modules/recipe/types';
 
 type UseRecipeDetailLogicProps = {
   recipeId?: string;
@@ -17,13 +14,14 @@ type UseRecipeDetailLogicProps = {
 export const useRecipeDetailLogic = ({
   recipeId,
   initialRecipe = null,
-  onClose,
 }: UseRecipeDetailLogicProps) => {
   const [recipe, setRecipe] = useState<Recipe | null>(initialRecipe);
   const [isLoading, setIsLoading] = useState(!initialRecipe);
   const [error, setError] = useState<string | null>(null);
-  const [consumptionItems, setConsumptionItems] = useState<ConsumptionItem[]>([]);
-  
+  const [consumptionItems, setConsumptionItems] = useState<ConsumptionItem[]>(
+    [],
+  );
+
   // Consumption related state
   const [showConsumptionModal, setShowConsumptionModal] = useState(false);
   const { confirmConsumption } = useConsumption();
@@ -77,7 +75,7 @@ export const useRecipeDetailLogic = ({
     try {
       const { isFavorite } = await recipeApi.toggleFavorite(
         recipe.id,
-        !recipe.isFavorite
+        !recipe.isFavorite,
       );
       setRecipe((prev) => (prev ? { ...prev, isFavorite } : null));
       toast.success(isFavorite ? '已加入收藏' : '已取消收藏');
@@ -86,7 +84,7 @@ export const useRecipeDetailLogic = ({
     }
   };
 
-  // Handle consumption confirmation
+  // Handle consumption confirmation - 只負責通知數據更新，不處理關閉邏輯
   const handleConfirmConsumption = async (success: boolean) => {
     if (!success || !recipe) return;
 
@@ -98,10 +96,9 @@ export const useRecipeDetailLogic = ({
         addToShoppingList: false, // Default to false, handled by modal internal logic if needed
         timestamp: new Date().toISOString(),
       });
-      
-      toast.success('消耗記錄已更新');
-      setShowConsumptionModal(false);
-      onClose?.();
+
+      // 不在此處關閉 modal 或父層，由 ConsumptionModal 內部處理
+      // setShowConsumptionModal 和 onClose 的調用已移至 RecipeDetailContent 的 onConfirm callback
     } catch (err) {
       console.error('Consumption failed:', err);
       toast.error('更新失敗', {
