@@ -12,6 +12,10 @@ type InventoryState = {
   currentLayout: LayoutType;
   categoryOrder: string[];
   settings: import('../types').InventorySettings | null;
+  layoutAppliedNotification: {
+    show: boolean;
+    timestamp: number | null;
+  };
 };
 
 const initialState: InventoryState = {
@@ -30,6 +34,10 @@ const initialState: InventoryState = {
   currentLayout: 'layout-a',
   categoryOrder: [],
   settings: null,
+  layoutAppliedNotification: {
+    show: false,
+    timestamp: null,
+  },
 };
 
 const inventorySlice = createSlice({
@@ -96,6 +104,18 @@ const inventorySlice = createSlice({
         state.categoryOrder = action.payload.categoryOrder;
       }
     },
+    showLayoutAppliedNotification: (state) => {
+      state.layoutAppliedNotification = {
+        show: true,
+        timestamp: Date.now(),
+      };
+    },
+    hideLayoutAppliedNotification: (state) => {
+      state.layoutAppliedNotification = {
+        show: false,
+        timestamp: null,
+      };
+    },
   },
 });
 
@@ -113,6 +133,8 @@ export const {
   setCategoryOrder,
   setSettings,
   toggleLowStockAlert,
+  showLayoutAppliedNotification,
+  hideLayoutAppliedNotification,
 } = inventorySlice.actions;
 
 // Selectors
@@ -138,5 +160,8 @@ export const selectCategoryOrder = (state: { inventory: InventoryState }) =>
   state.inventory.categoryOrder;
 export const selectSettings = (state: { inventory: InventoryState }) =>
   state.inventory.settings;
+export const selectLayoutAppliedNotification = (
+  state: { inventory: InventoryState }
+) => state.inventory.layoutAppliedNotification;
 
 export default inventorySlice.reducer;

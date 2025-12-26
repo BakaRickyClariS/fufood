@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useRecipes } from '@/modules/recipe/hooks';
 import {
   CategoryGrid,
@@ -11,6 +10,7 @@ import {
   RECIPE_CATEGORIES,
   CATEGORY_IMAGES,
 } from '@/modules/recipe/constants/categories';
+import { RecipeDetailModal } from '@/modules/recipe/components/ui/RecipeDetailModal';
 
 // 烹飪時間分類
 const COOKING_TIME_SECTIONS = [
@@ -29,10 +29,11 @@ const categoryItems: Category<RecipeCategory>[] = RECIPE_CATEGORIES.map(
 );
 
 export const RecipeList = () => {
-  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<
     RecipeCategory | undefined
   >();
+  const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<RecipeListItem | null>(null);
 
   const { recipes, isLoading, error } = useRecipes(selectedCategory);
 
@@ -67,7 +68,16 @@ export const RecipeList = () => {
   }, [recipes]);
 
   const handleRecipeClick = (id: string) => {
-    navigate(`/planning/recipes/${id}`);
+    const recipe = recipes.find(r => r.id === id);
+    if (recipe) {
+      setSelectedRecipe(recipe);
+      setSelectedRecipeId(id);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setSelectedRecipeId(null);
+    setSelectedRecipe(null);
   };
 
   if (error) {
@@ -79,36 +89,44 @@ export const RecipeList = () => {
   }
 
   return (
-    <div className="space-y-6 bg-white pt-7">
-      <div className="pl-0">
-        <CategoryGrid
-          categories={categoryItems}
-          selectedId={selectedCategory}
-          onCategoryClick={setSelectedCategory}
-          title="主題探索"
-          showScrollButton
-        />
-      </div>
-
-      <div className="space-y-6 -mb-13">
-        {COOKING_TIME_SECTIONS.map((section) => (
-          <RecipeCardCarousel
-            key={section.id}
-            title={section.title}
-            recipes={groupedRecipes[section.id]}
-            onRecipeClick={handleRecipeClick}
-          />
-        ))}
-
-        {/* 收藏食譜區塊 */}
-        <div className="bg-neutral-100 py-7">
-          <RecipeCardCarousel
-            title="收藏食譜"
-            recipes={groupedRecipes.favorites}
-            onRecipeClick={handleRecipeClick}
+    <>
+      <div className="space-y-6 bg-white pt-7">
+        <div className="pl-0">
+          <CategoryGrid
+            categories={categoryItems}
+            selectedId={selectedCategory}
+            onCategoryClick={setSelectedCategory}
+            title="主題探索"
+            showScrollButton
           />
         </div>
+
+        <div className="space-y-6 -mb-13">
+          {COOKING_TIME_SECTIONS.map((section) => (
+            <RecipeCardCarousel
+              key={section.id}
+              title={section.title}
+              recipes={groupedRecipes[section.id]}
+              onRecipeClick={handleRecipeClick}
+            />
+          ))}
+
+          {/* 收藏食譜區塊 */}
+          <div className="bg-neutral-100 py-7">
+            <RecipeCardCarousel
+              title="收藏食譜"
+              recipes={groupedRecipes.favorites}
+              onRecipeClick={handleRecipeClick}
+            />
+          </div>
+        </div>
       </div>
-    </div>
+
+      <RecipeDetailModal
+        recipe={selectedRecipe}
+        isOpen={!!selectedRecipeId}
+        onClose={handleCloseModal}
+      />
+    </>
   );
 };
