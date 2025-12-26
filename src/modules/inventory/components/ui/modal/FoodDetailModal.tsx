@@ -159,11 +159,27 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
           unit: item.unit || '個',
           expiryDate: item.expiryDate,
         }}
-        onConfirm={(addToShoppingList) => {
-          console.log('消耗確認:', addToShoppingList);
-          // TODO: 呼叫 API 更新數量
+        onConfirm={() => {
+          // 消耗完成後只關閉 ConsumptionModal
+          // 不自動關閉食材詳細頁面，讓用戶決定是否返回
           setShowConsumptionModal(false);
-          handleClose(); // 消耗完通常會關閉詳情?
+          onItemUpdate?.(); // 刷新數據
+        }}
+        onCloseAll={(onParentClosed) => {
+          // 返回庫房時：先播放食材詳細頁的離場動畫
+          if (modalRef.current) {
+            gsap.to(modalRef.current, {
+              x: '100%',
+              duration: 0.3,
+              ease: 'power3.in',
+              onComplete: () => {
+                // 動畫完成後呼叫 callback
+                onParentClosed();
+              },
+            });
+          } else {
+            onParentClosed();
+          }
         }}
       />
 

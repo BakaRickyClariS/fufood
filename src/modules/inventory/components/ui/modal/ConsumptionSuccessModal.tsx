@@ -1,19 +1,16 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import gsap from 'gsap';
-import { ChevronLeft, ArrowRight } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import type {
   ConsumptionItem,
   ConsumptionReason,
 } from '@/modules/recipe/types';
+import type { RecipeListItem } from '@/modules/recipe/types';
+import { RecipeCardCarousel } from '@/shared/components/recipe';
+import { RecipeDetailModal } from '@/modules/recipe/components/ui/RecipeDetailModal';
+import { recipeApi } from '@/modules/recipe/services';
 import successImage from '@/assets/images/recipe/consumption-success.png';
-// Mock data for recommendations or pass in? Using static for now as per design
-// Need to check if these exist, or use placeholders.
-// User didn't provide recipe images. I'll use placeholders or skip if not available.
-// I'll check available images later, for now comment out or use safe imports if possible.
-// Actually, I'll use a placeholder div or check what's available.
-// The user "updated" specific images for consumption, but not recommendation.
-// I will just use text or placeholders for recommendation to avoid breaking build.
 
 type ItemWithReason = ConsumptionItem & {
   selectedReasons?: ConsumptionReason[];
@@ -37,6 +34,36 @@ export const ConsumptionSuccessModal: React.FC<
   ConsumptionSuccessModalProps
 > = ({ isOpen, onClose, onBackToInventory, items }) => {
   const modalRef = useRef<HTMLDivElement>(null);
+  
+  // 食譜詳細 modal 狀態
+  const [selectedRecipe, setSelectedRecipe] = useState<RecipeListItem | null>(null);
+  const [showRecipeDetail, setShowRecipeDetail] = useState(false);
+  
+  // 推薦食譜狀態
+  const [recommendedRecipes, setRecommendedRecipes] = useState<RecipeListItem[]>([]);
+  const [isLoadingRecipes, setIsLoadingRecipes] = useState(false);
+
+  // 根據被消耗的食材載入推薦食譜
+  useEffect(() => {
+    const loadRecommendedRecipes = async () => {
+      if (!isOpen || items.length === 0) return;
+      
+      setIsLoadingRecipes(true);
+      try {
+        // 從消耗項目中提取食材名稱
+        const ingredientNames = items.map(item => item.ingredientName);
+        const recipes = await recipeApi.getRecommendedRecipes(ingredientNames);
+        setRecommendedRecipes(recipes.slice(0, 4)); // 最多顯示 4 個
+      } catch (error) {
+        console.error('載入推薦食譜失敗', error);
+        setRecommendedRecipes([]);
+      } finally {
+        setIsLoadingRecipes(false);
+      }
+    };
+
+    loadRecommendedRecipes();
+  }, [isOpen, items]);
 
   useEffect(() => {
     if (isOpen && modalRef.current) {
@@ -160,52 +187,43 @@ export const ConsumptionSuccessModal: React.FC<
             返回庫房
           </button>
 
-          {/* Recommendation - Placeholder */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-lg text-neutral-900">
-                你可能會喜歡...
-              </h3>
-              <button className="p-2 rounded-full hover:bg-gray-100">
-                <ArrowRight size={20} className="text-neutral-400" />
-              </button>
+          {/* 推薦食譜區塊 - 使用共用的 RecipeCardCarousel 元件 */}
+          {isLoadingRecipes ? (
+            <div className="text-center py-8 text-gray-500">
+              載入推薦食譜中...
             </div>
-            {/* Mock Cards */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="relative rounded-2xl overflow-hidden aspect-[4/5] bg-gray-200">
-                <div className="absolute top-2 left-2 bg-[#EE5D50] text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
-                  熱門
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                <div className="absolute bottom-3 left-3 text-white">
-                  <div className="text-xs bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-md inline-block mb-1">
-                    甜品
-                  </div>
-                  <div className="font-bold text-sm mb-1">莓果巴斯克蛋糕</div>
-                  <div className="text-[10px] opacity-90">
-                    👤 6人份 🕒 30分鐘
-                  </div>
-                </div>
-              </div>
-              <div className="relative rounded-2xl overflow-hidden aspect-[4/5] bg-gray-200">
-                <div className="absolute top-2 left-2 bg-[#EE5D50] text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
-                  熱門
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                <div className="absolute bottom-3 left-3 text-white">
-                  <div className="text-xs bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-md inline-block mb-1">
-                    中式
-                  </div>
-                  <div className="font-bold text-sm mb-1">汕頭牛肉火鍋</div>
-                  <div className="text-[10px] opacity-90">
-                    👤 6人份 🕒 30分鐘
-                  </div>
-                </div>
-              </div>
+          ) : recommendedRecipes.length > 0 ? (
+            <div className="-mx-5">
+              <RecipeCardCarousel
+                title="你可能會喜歡..."
+                recipes={recommendedRecipes}
+                onRecipeClick={(id) => {
+                  const recipe = recommendedRecipes.find(r => r.id === id);
+                  if (recipe) {
+                    setSelectedRecipe(recipe);
+                    setShowRecipeDetail(true);
+                  }
+                }}
+                showPopularTag={true}
+              />
             </div>
-          </div>
+          ) : (
+            <div className="text-center py-8 text-gray-400">
+              暫無相關食譜推薦
+            </div>
+          )}
         </div>
       </div>
+      
+      {/* 食譜詳細 Modal */}
+      <RecipeDetailModal
+        recipe={selectedRecipe}
+        isOpen={showRecipeDetail}
+        onClose={() => {
+          setShowRecipeDetail(false);
+          setSelectedRecipe(null);
+        }}
+      />
     </div>,
     document.body,
   );
