@@ -384,6 +384,72 @@ type Food = {
 
 ---
 
+### 3.12 消耗食材
+
+消耗指定庫存食材，扣減數量並記錄消耗原因。
+
+- **Method**: `POST`
+- **Path**: `/api/v1/inventory/{id}/consume`
+- **Request Body**:
+  ```json
+  {
+    "quantity": 1,
+    "reasons": ["recipe_consumption", "short_shelf"],
+    "customReason": "保存期限快到了"
+  }
+  ```
+
+**請求欄位說明**:
+
+| 欄位           | 類型                | 必填 | 說明                                     |
+| :------------- | :------------------ | :--: | :--------------------------------------- |
+| `quantity`     | number              |  ✅  | 消耗數量                                 |
+| `reasons`      | ConsumptionReason[] |  ✅  | 消耗原因陣列（可多選）                   |
+| `customReason` | string              |  ❌  | 自訂原因文字（當 reasons 包含 'custom'） |
+
+**ConsumptionReason 值**:
+
+| 值                   | 說明         |
+| :------------------- | :----------- |
+| `recipe_consumption` | 食譜消耗     |
+| `duplicate`          | 重複購買     |
+| `short_shelf`        | 保存時間太短 |
+| `bought_too_much`    | 買太多       |
+| `custom`             | 自訂         |
+
+- **Success Response (200)**:
+
+  ```json
+  {
+    "status": true,
+    "message": "Consumed successfully",
+    "data": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "remainingQuantity": 2,
+      "consumedAt": "2025-12-27T10:00:00Z"
+    }
+  }
+  ```
+
+- **回應欄位說明**:
+
+| 欄位                | 類型   | 說明                                           |
+| :------------------ | :----- | :--------------------------------------------- |
+| `id`                | string | 食材 ID                                        |
+| `remainingQuantity` | number | 剩餘數量（若為 0，後端可選擇保留或刪除該食材） |
+| `consumedAt`        | string | 消耗時間 (ISO 8601)                            |
+
+- **錯誤回應**:
+
+| 狀態碼 | 代碼      | 說明               |
+| :----- | :-------- | :----------------- |
+| 400    | `INV_001` | 缺少 quantity 欄位 |
+| 400    | `INV_002` | quantity 超過庫存  |
+| 401    | `INV_003` | 未授權             |
+| 404    | `INV_004` | 找不到該食材       |
+
+---
+
 ## 4. Foods API（食材主檔）
 
 ### 4.1 取得食材清單（以 category 查詢）

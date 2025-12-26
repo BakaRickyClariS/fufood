@@ -1,8 +1,8 @@
 # Fufood API 參考 v2.2（精簡版）
 
-**版本**: v2.3  
-**最後更新**: 2025-12-16  
-**說明**: 依需求精簡路由，新增 `/api/v1/profile` 端點（HttpOnly Cookie 認證），整合 TanStack Query。保留必要驗證（含 `/auth/check`）、社群貼文按讚／留言，並將「批次新增／批次修改」標註暫緩。
+**版本**: v2.4  
+**最後更新**: 2025-12-27  
+**說明**: 依需求精簡路由，新增 `/api/v1/profile` 端點（HttpOnly Cookie 認證），整合 TanStack Query。保留必要驗證（含 `/auth/check`）、社群貼文按讚／留言，並將「批次新增／批次修改」標註暫緩。新增消耗食材 API 端點。
 
 ---
 
@@ -231,12 +231,13 @@
 | 27                                           | Inventory | GET    | `/api/v1/inventory/summary`              | 庫存摘要                                                                                            | 若用 include 可移除                  |
 | **暫緩**                                     | Inventory | POST   | `/api/v1/inventory/batch`                | 批次新增                                                                                            | 先不做                               |
 | **暫緩**                                     | Inventory | PUT    | `/api/v1/inventory/batch`                | 批次修改                                                                                            | 先不做                               |
+| 28                                           | Inventory | POST   | `/api/v1/inventory/{id}/consume`         | 消耗食材，扣減數量並記錄原因                                                                        | 新增                                 |
 | **Foods（合併 category 查詢）**              |
-| 28                                           | Foods     | GET    | `/api/v1/foods`                          | 食材列表，`?category=` 篩選                                                                         | 取代 `/foods/category/{catId}`       |
-| 29                                           | Foods     | GET    | `/api/v1/foods/{id}`                     | 食材詳情                                                                                            | 取代 `/foods/category/{catId}/{id}`  |
-| 30                                           | Foods     | POST   | `/api/v1/foods`                          | 建立食材                                                                                            |                                      |
-| 31                                           | Foods     | PUT    | `/api/v1/foods/{id}`                     | 更新食材                                                                                            |                                      |
-| 32                                           | Foods     | DELETE | `/api/v1/foods/{id}`                     | 刪除食材                                                                                            |                                      |
+| 29                                           | Foods     | GET    | `/api/v1/foods`                          | 食材列表，`?category=` 篩選                                                                         | 取代 `/foods/category/{catId}`       |
+| 30                                           | Foods     | GET    | `/api/v1/foods/{id}`                     | 食材詳情                                                                                            | 取代 `/foods/category/{catId}/{id}`  |
+| 31                                           | Foods     | POST   | `/api/v1/foods`                          | 建立食材                                                                                            |                                      |
+| 32                                           | Foods     | PUT    | `/api/v1/foods/{id}`                     | 更新食材                                                                                            |                                      |
+| 33                                           | Foods     | DELETE | `/api/v1/foods/{id}`                     | 刪除食材                                                                                            |                                      |
 | **Recipes（烹煮改用 PATCH）**                |
 | 33                                           | Recipes   | GET    | `/api/v1/recipes`                        | 食譜列表（`category`、`favorite=true`）                                                             |                                      |
 | 34                                           | Recipes   | GET    | `/api/v1/recipes/{id}`                   | 食譜詳情                                                                                            |                                      |
