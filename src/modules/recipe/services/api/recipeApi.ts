@@ -21,6 +21,8 @@ export type RecipeApi = {
     shouldFavorite?: boolean,
   ): Promise<{ isFavorite: boolean }>;
   getFavorites(): Promise<RecipeListItem[]>;
+  // 根據食材名稱推薦相關食譜
+  getRecommendedRecipes(ingredientNames: string[]): Promise<RecipeListItem[]>;
   confirmCook(
     data: ConsumptionConfirmation,
   ): Promise<{ success: boolean; message: string }>;
@@ -71,6 +73,13 @@ export class RealRecipeApi implements RecipeApi {
   getFavorites = async (): Promise<RecipeListItem[]> => {
     return backendApi.get<RecipeListItem[]>(
       '/api/v1/recipes?favorite=true',
+    );
+  };
+
+  getRecommendedRecipes = async (ingredientNames: string[]): Promise<RecipeListItem[]> => {
+    const query = ingredientNames.map(name => `ingredients=${encodeURIComponent(name)}`).join('&');
+    return backendApi.get<RecipeListItem[]>(
+      `/api/v1/recipes/recommended?${query}`,
     );
   };
 
