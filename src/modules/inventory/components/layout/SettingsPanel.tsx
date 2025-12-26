@@ -27,6 +27,7 @@ import {
   selectCategoryOrder,
   setCategoryOrder,
   setLayout,
+  showLayoutAppliedNotification,
 } from '@/modules/inventory/store/inventorySlice';
 import type { CategoryInfo } from '@/modules/inventory/types';
 import type { LayoutType } from '@/modules/inventory/types/layoutTypes';
@@ -303,7 +304,7 @@ const SettingsPanel: React.FC = () => {
 
       setSavedLayoutType(selectedLayoutType);
       setSavedCategories([...sortedEditedCategories]);
-      toast.success('設定已套用');
+      dispatch(showLayoutAppliedNotification());
     } catch (error) {
       console.error('Failed to apply settings:', error);
       toast.error('套用失敗，請稍後再試');
