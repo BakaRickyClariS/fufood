@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import { useNavigate } from 'react-router-dom';
 import type {
   ConsumptionItem,
@@ -42,6 +43,7 @@ type ConsumptionModalProps = {
     unit: string;
     expiryDate?: string;
   };
+  defaultReasons?: ConsumptionReason[];
   // Callbacks to control parent visibility/animation
   onHideParent?: () => void;
   onShowParent?: () => void;
@@ -56,12 +58,14 @@ export const ConsumptionModal = ({
   onAddToShoppingList,
   items = [],
   singleItem,
+  defaultReasons = [],
   onHideParent,
   onShowParent,
 }: ConsumptionModalProps) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { contextSafe } = useGSAP({ scope: modalRef }); // Initialize scope for contextSafe
 
   // State for sub-modals
   const [showEditModal, setShowEditModal] = useState(false);
@@ -73,6 +77,34 @@ export const ConsumptionModal = ({
   // Track previous isOpen to detect open transition
   const wasOpenRef = useRef(false);
 
+  // Helper to handle opening edit modal
+  const handleOpenEdit = contextSafe(() => {
+    if (modalRef.current && overlayRef.current) {
+      const tl = gsap.timeline({
+        onComplete: () => {
+          setShowEditModal(true);
+        },
+      });
+      tl.to(modalRef.current, {
+        scale: 0.9,
+        opacity: 0,
+        duration: 0.2,
+        ease: 'power2.in',
+      });
+      tl.to(overlayRef.current, { opacity: 0, duration: 0.2 }, '-=0.2');
+    } else {
+      setShowEditModal(true);
+    }
+  });
+
+  // Helper to handle closing edit modal (returning to consumption modal)
+  const handleCloseEdit = contextSafe(() => {
+    setShowEditModal(false);
+    // The main view will re-mount and `useGSAP` will trigger the entrance animation automatically
+    // because `showEditModal` changing to false renders the elements again.
+    // We added `showEditModal` to the dependency array of the main animation effect to ensure it runs.
+  });
+
   // Initialize items ONLY when modal opens (transition from closed -> open)
   // This avoids the infinite loop caused by singleItem/items object references
   // Note: We intentionally do NOT include singleItem/items in dependencies
@@ -81,46 +113,64 @@ export const ConsumptionModal = ({
   useEffect(() => {
     if (isOpen && !wasOpenRef.current) {
       // Modal just opened
-      const initItems: ItemWithReason[] = singleItem
-        ? [
-            {
-              id: singleItem.id,
-              ingredientName: singleItem.name,
-              originalQuantity: singleItem.quantity.toString(),
-              consumedQuantity: singleItem.quantity,
-              unit: singleItem.unit,
-              expiryDate: singleItem.expiryDate,
-              reasons: [],
-              customReason: '',
-            },
-          ]
-        : items.map((i) => ({ ...i, reasons: [], customReason: '' }));
-
-      setCurrentItems(initItems);
+      if (singleItem) {
+        // If singleItem exists (Recipe flow), default reason is 'recipe_consumption'
+        setCurrentItems([
+          {
+            ingredientName: singleItem.name,
+            originalQuantity: '',
+            consumedQuantity: singleItem.quantity,
+            unit: singleItem.unit,
+            expiryDate: singleItem.expiryDate,
+            reasons: [...defaultReasons], // Use defaultReasons prop
+            customReason: '',
+            id: singleItem.id,
+          } as ItemWithReason,
+        ]);
+      } else if (items.length > 0) {
+        setCurrentItems(
+          items.map((i) => ({
+            ...i,
+            reasons: [...defaultReasons],
+            customReason: '',
+          })),
+        );
+      }
     }
     wasOpenRef.current = isOpen;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   // Animation
-  useEffect(() => {
-    if (isOpen && modalRef.current && overlayRef.current) {
-      const tl = gsap.timeline();
-      tl.fromTo(
-        overlayRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.2 },
-      );
-      tl.fromTo(
-        modalRef.current,
-        { scale: 0.9, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(1.2)' },
-        '-=0.1',
-      );
-    }
-  }, [isOpen]);
+  // Animation handled by useGSAP
+  useGSAP(
+    () => {
+      // Run animation if isOpen is true AND we are NOT in sub-modals (which means refs are present)
+      if (
+        isOpen &&
+        !showEditModal &&
+        !showSuccessModal &&
+        modalRef.current &&
+        overlayRef.current
+      ) {
+        const tl = gsap.timeline();
+        tl.fromTo(
+          overlayRef.current,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.2 },
+        );
+        tl.fromTo(
+          modalRef.current,
+          { scale: 0.9, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(1.2)' },
+          '-=0.1',
+        );
+      }
+    },
+    { dependencies: [isOpen, showEditModal, showSuccessModal] },
+  );
 
-  const handleClose = (callback?: () => void) => {
+  const handleClose = contextSafe((callback?: () => void) => {
     if (modalRef.current && overlayRef.current) {
       const tl = gsap.timeline({
         onComplete: () => {
@@ -139,7 +189,7 @@ export const ConsumptionModal = ({
       onClose();
       callback?.();
     }
-  };
+  });
 
   const submitConsumption = async (itemsToConsume: ItemWithReason[]) => {
     // Call API for each item
@@ -157,36 +207,15 @@ export const ConsumptionModal = ({
           // Or pick primary reason?
           // Implementation Plan said:
           // Duplicate -> other?
-          // Let's assume we map the FIRST reason to `reason` field, or 'other' if custom/multiple.
-          // And put full details in `note`.
-
-          const primaryReason = item.selectedReasons?.[0] || 'other';
-          // Map UI reason to API reason
-          let apiReason = 'other';
-          if (primaryReason === 'short_shelf') apiReason = 'expired';
-          else if (primaryReason === 'duplicate')
-            apiReason = 'other'; // Spec table said duplicate -> other
-          else if (primaryReason === 'bought_too_much') apiReason = 'other';
-          else if (primaryReason === 'custom') apiReason = 'other';
-          else apiReason = primaryReason; // Fallback
-
-          // Combine all reasons into note
-          const reasonLabels = item.selectedReasons
-            ?.map((r) => {
-              if (r === 'custom') return item.customReasonStr;
-              return r; // or label
-            })
-            .join(', ');
-
-          const note = item.customReasonStr || reasonLabels || 'Consuming item';
+          // API now accepts reasons array directly
+          const reasons = item.selectedReasons || [];
 
           // NOTE: We rely on inventoryApi.consumeItem existing.
-          // If it doesn't, this will fail. I'll need to check/add it.
-          // For now I assume it takes (id, quantity, reason, note).
+          // API now takes (id, { quantity, reasons, customReason })
           return inventoryApi.consumeItem(item.id, {
             quantity: item.consumedQuantity,
-            reason: apiReason,
-            note: note,
+            reasons: reasons,
+            customReason: item.customReasonStr,
           });
         }),
       );
@@ -199,7 +228,7 @@ export const ConsumptionModal = ({
   };
 
   // 播放消耗通知 modal 離場動畫，然後顯示成功 modal
-  const animateOutAndShowSuccess = () => {
+  const animateOutAndShowSuccess = contextSafe(() => {
     // If provided, signal parent to hide/animate out concurrently
     onHideParent?.();
 
@@ -219,7 +248,7 @@ export const ConsumptionModal = ({
     } else {
       setShowSuccessModal(true);
     }
-  };
+  });
 
   const handleConfirm = async () => {
     // Submit current items
@@ -232,13 +261,18 @@ export const ConsumptionModal = ({
 
   const handleEditSave = async (updatedItems: ItemWithReason[]) => {
     setCurrentItems(updatedItems);
+    setShowEditModal(false); // Close edit modal first
+
     // User requested: Save -> Success directly.
     // So we submit immediately.
     const success = await submitConsumption(updatedItems);
     if (success) {
-      setShowEditModal(false);
-      // 播放離場動畫後再顯示成功 modal
+      // Direct transition to success
       animateOutAndShowSuccess();
+    } else {
+      // If failed, maybe show consumption modal again?
+      // For now let's show consumption modal again
+      handleCloseEdit();
     }
   };
 
@@ -250,8 +284,8 @@ export const ConsumptionModal = ({
     onShowParent?.();
 
     onConfirm(true); // 通知父層刷新數據
-    // 不呼叫 handleClose()，讓食材詳細頁繼續顯示
-    onClose(); // 只關閉 ConsumptionModal 本身
+    // 不呼叫 onClose()，讓食材詳細頁繼續顯示
+    // 只關閉成功 modal 本身（透過 setShowSuccessModal(false) 已完成）
   };
 
   // 點擊返回庫房：先關閉食材詳細頁，再關閉成功頁面，最後導航
@@ -281,8 +315,9 @@ export const ConsumptionModal = ({
 
   return (
     <>
-      {/* 消耗通知 Modal - 當成功 modal 顯示時隱藏 */}
+      {/* 消耗通知 Modal - 當成功 modal 顯示時隱藏，且當編輯 modal 顯示時也隱藏 */}
       {!showSuccessModal &&
+        !showEditModal &&
         createPortal(
           <div className="fixed inset-0 z-140 flex items-center justify-center p-4">
             <div
@@ -293,26 +328,26 @@ export const ConsumptionModal = ({
 
             <div
               ref={modalRef}
-              className="relative bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl"
+              className="relative bg-white rounded-2xl w-full max-w-sm overflow-hidden"
             >
               {/* Header */}
-              <div className="p-5 flex justify-between items-center bg-white border-b border-gray-100">
+              <div className="p-5 flex justify-between items-center bg-white">
                 <h3 className="font-bold text-lg text-neutral-900 tracking-tight">
                   消耗通知
                 </h3>
                 <button
-                  onClick={() => setShowEditModal(true)}
-                  className="flex items-center gap-1 text-[#EE5D50] text-base font-medium hover:opacity-80 transition-opacity"
+                  onClick={handleOpenEdit}
+                  className="flex items-center gap-1 text-primary-500 text-base font-medium hover:opacity-80 transition-opacity"
                 >
-                  <span className="text-lg">✎</span>
-                  <span>編輯消耗原因</span>
+                  <span className="text-base">✎</span>
+                  <span className="text-base">編輯消耗原因</span>
                 </button>
               </div>
 
               {/* Content */}
-              <div className="px-5 py-4 bg-gray-50/50">
+              <div className="px-5 py-4 ">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-1 h-4 bg-[#EE5D50] rounded-full"></div>
+                  <div className="w-1 h-4 bg-primary-500 rounded-full"></div>
                   <h4 className="font-bold text-base text-neutral-900">
                     本次消耗
                   </h4>
@@ -322,25 +357,23 @@ export const ConsumptionModal = ({
                   {currentItems.map((item, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-100 shadow-sm"
+                      className="flex items-center justify-between bg-neutral-200 p-4 rounded-xl"
                     >
                       <div>
-                        <div className="font-bold text-neutral-900 mb-1 text-base">
+                        <div className="font-bold text-neutral-600 mb-1 text-base">
                           {item.ingredientName}
                         </div>
                         {item.expiryDate && (
-                          <div className="text-[#EE5D50] text-base font-medium">
+                          <div className="text-primary-400 text-base font-medium">
                             {item.expiryDate} 過期
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-1">
-                        <span className="font-bold text-neutral-900 text-lg">
+                      <div className="flex items-center gap-1 text-neutral-900">
+                        <span className="font-bold text-base">
                           {item.consumedQuantity}
                         </span>
-                        <span className="font-bold text-neutral-500 text-base">
-                          {item.unit}
-                        </span>
+                        <span className="font-bold text-base">{item.unit}</span>
                       </div>
                     </div>
                   ))}
@@ -348,7 +381,7 @@ export const ConsumptionModal = ({
               </div>
 
               {/* Footer Actions */}
-              <div className="p-5 bg-white border-t border-gray-100">
+              <div className="p-5 bg-white">
                 {showShoppingListButton ? (
                   // 雙按鈕佈局：加入採買清單 + 完成消耗
                   <div className="flex gap-3">
@@ -363,16 +396,15 @@ export const ConsumptionModal = ({
                     </button>
                     <button
                       onClick={handleConfirm}
-                      className="flex-1 py-3.5 bg-[#EE5D50] text-white rounded-xl font-bold text-base hover:bg-[#D64D40] transition-colors shadow-lg shadow-orange-500/20 active:scale-95"
+                      className="flex-1 py-3.5 bg-primary-500 text-white rounded-xl font-bold text-base hover:bg-primary-600 transition-colors active:scale-95"
                     >
                       完成消耗
                     </button>
                   </div>
                 ) : (
-                  // 單按鈕佈局：完成
                   <button
                     onClick={handleConfirm}
-                    className="w-full py-3.5 bg-[#EE5D50] text-white rounded-xl font-bold text-base hover:bg-[#D64D40] transition-colors shadow-lg shadow-orange-500/20 active:scale-95"
+                    className="w-full py-3.5 bg-primary-500 text-white rounded-xl font-bold text-base hover:bg-primary-600 transition-colors active:scale-95"
                   >
                     完成
                   </button>
@@ -386,7 +418,7 @@ export const ConsumptionModal = ({
       {showEditModal && (
         <EditConsumptionReasonModal
           isOpen={showEditModal}
-          onClose={() => setShowEditModal(false)}
+          onClose={handleCloseEdit}
           onConfirm={handleEditSave}
           items={currentItems}
         />

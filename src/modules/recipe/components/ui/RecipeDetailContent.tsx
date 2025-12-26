@@ -70,6 +70,7 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
         items={consumptionItems}
         showShoppingListButton={showShoppingListButton}
         onAddToShoppingList={onAddToShoppingList}
+        defaultReasons={['recipe_consumption']}
         onHideParent={onHideParent}
         onShowParent={onShowParent}
         onConfirm={(success) => {

@@ -14,6 +14,7 @@ import successImage from '@/assets/images/recipe/consumption-success.png';
 
 type ItemWithReason = ConsumptionItem & {
   selectedReasons?: ConsumptionReason[];
+  customReasonStr?: string;
 };
 
 type ConsumptionSuccessModalProps = {
@@ -24,6 +25,7 @@ type ConsumptionSuccessModalProps = {
 };
 
 const REASON_LABELS: Record<string, string> = {
+  recipe_consumption: '食譜消耗',
   duplicate: '重複購買',
   short_shelf: '保存時間太短',
   bought_too_much: '買太多',
@@ -34,24 +36,28 @@ export const ConsumptionSuccessModal: React.FC<
   ConsumptionSuccessModalProps
 > = ({ isOpen, onClose, onBackToInventory, items }) => {
   const modalRef = useRef<HTMLDivElement>(null);
-  
+
   // 食譜詳細 modal 狀態
-  const [selectedRecipe, setSelectedRecipe] = useState<RecipeListItem | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<RecipeListItem | null>(
+    null,
+  );
   const [showRecipeDetail, setShowRecipeDetail] = useState(false);
-  
+
   // 推薦食譜狀態
-  const [recommendedRecipes, setRecommendedRecipes] = useState<RecipeListItem[]>([]);
+  const [recommendedRecipes, setRecommendedRecipes] = useState<
+    RecipeListItem[]
+  >([]);
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(false);
 
   // 根據被消耗的食材載入推薦食譜
   useEffect(() => {
     const loadRecommendedRecipes = async () => {
       if (!isOpen || items.length === 0) return;
-      
+
       setIsLoadingRecipes(true);
       try {
         // 從消耗項目中提取食材名稱
-        const ingredientNames = items.map(item => item.ingredientName);
+        const ingredientNames = items.map((item) => item.ingredientName);
         const recipes = await recipeApi.getRecommendedRecipes(ingredientNames);
         setRecommendedRecipes(recipes.slice(0, 4)); // 最多顯示 4 個
       } catch (error) {
@@ -165,12 +171,14 @@ export const ConsumptionSuccessModal: React.FC<
                   </div>
                   {item.selectedReasons && item.selectedReasons.length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      {item.selectedReasons.map((r) => (
+                      {item.selectedReasons.map((r, reasonIndex) => (
                         <span
-                          key={r}
+                          key={`${r}-${reasonIndex}`}
                           className="px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-medium"
                         >
-                          {REASON_LABELS[r] || '自訂'}
+                          {r === 'custom' && item.customReasonStr
+                            ? item.customReasonStr
+                            : REASON_LABELS[r] || r}
                         </span>
                       ))}
                     </div>
@@ -198,7 +206,7 @@ export const ConsumptionSuccessModal: React.FC<
                 title="你可能會喜歡..."
                 recipes={recommendedRecipes}
                 onRecipeClick={(id) => {
-                  const recipe = recommendedRecipes.find(r => r.id === id);
+                  const recipe = recommendedRecipes.find((r) => r.id === id);
                   if (recipe) {
                     setSelectedRecipe(recipe);
                     setShowRecipeDetail(true);
@@ -214,7 +222,7 @@ export const ConsumptionSuccessModal: React.FC<
           )}
         </div>
       </div>
-      
+
       {/* 食譜詳細 Modal */}
       <RecipeDetailModal
         recipe={selectedRecipe}

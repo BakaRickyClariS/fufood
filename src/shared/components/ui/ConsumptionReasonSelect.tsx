@@ -4,9 +4,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/shared/components/ui/select';
-import { Input } from '@/shared/components/ui/input';
 import { X } from 'lucide-react';
 import type { ConsumptionReason } from '@/modules/recipe/types';
 
@@ -18,6 +16,7 @@ interface ConsumptionReasonSelectProps {
 }
 
 const REASON_OPTIONS: { value: ConsumptionReason; label: string }[] = [
+  { value: 'recipe_consumption', label: '食譜消耗' },
   { value: 'duplicate', label: '重複購買' },
   { value: 'short_shelf', label: '保存時間太短' },
   { value: 'bought_too_much', label: '買太多' },
@@ -35,48 +34,84 @@ export const ConsumptionReasonSelect: React.FC<
 
   const handleRemove = (reasonToRemove: ConsumptionReason) => {
     onChange(value.filter((r) => r !== reasonToRemove));
+    if (reasonToRemove === 'custom') {
+      onCustomReasonChange('');
+    }
   };
 
   const getLabel = (r: ConsumptionReason) =>
     REASON_OPTIONS.find((opt) => opt.value === r)?.label || '自訂';
 
+  // Determine if we should show the custom input (if 'custom' is selected)
+  // For 'custom', we treat it as a selected tag.
+  // The input should probably be separate or conditionally shown.
+  // Design: "Select Custom then type to add" -> Implicitly means type into a field.
+  // Current design: Tags inside.
+  // Let's make the Trigger contain the tags.
+
   return (
     <div className="space-y-2">
-      {/* Selected Reasons Pills */}
-      {value.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-2">
-          {value.map((reason) => (
-            <span
-              key={reason}
-              className="inline-flex items-center gap-1 bg-[#EE5D50] text-white px-2 py-1 rounded-full text-sm"
-            >
-              {getLabel(reason)}
-              <button
-                type="button"
-                onClick={() => handleRemove(reason)}
-                className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
-                aria-label={`移除 ${getLabel(reason)}`}
-              >
-                <X size={14} />
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Dropdown */}
       <Select
         onValueChange={(v) => handleSelect(v as ConsumptionReason)}
-        // Use key to force re-mounting if needed, or better, pass undefined to value if we want it uncontrolled for display but we are using it as trigger.
-        // Radix UI Select value prop: "The controlled value of the select."
-        // If we want it to be empty/reset, we should pass a value that doesn't match?
-        // Let's passed undefined.
-        value={undefined}
+        value=""
       >
-        <SelectTrigger className="w-full bg-white border border-neutral-200 rounded-lg">
-          <SelectValue placeholder="填入消耗原因..." />
+        <SelectTrigger className="w-full bg-white border border-neutral-200 rounded-lg min-h-10 h-auto py-2 px-3">
+          <div className="flex flex-wrap gap-2 w-full items-center">
+            {value.length > 0 ? (
+              value.map((reason) => {
+                const isCustom = reason === 'custom';
+                return (
+                  <span
+                    key={reason}
+                    className="inline-flex items-center gap-1 bg-primary-500 text-white px-3 py-1 rounded-full text-sm font-medium"
+                    onPointerDown={(e) => e.stopPropagation()} // Prevent opening select when clicking tag
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Focus input if clicking the tag container
+                      if (isCustom) {
+                        const input = e.currentTarget.querySelector('input');
+                        input?.focus();
+                      }
+                    }}
+                  >
+                    {!isCustom && getLabel(reason)}
+
+                    {isCustom && (
+                      <input
+                        value={customReason}
+                        onChange={(e) => onCustomReasonChange(e.target.value)}
+                        maxLength={10}
+                        placeholder=""
+                        style={{
+                          width: `${Math.max(2, customReason.length)}em`,
+                        }}
+                        className="bg-transparent border-none outline-none text-white placeholder:text-white/70 h-5 active:border-none focus:border-none ring-0 focus:ring-0 min-w-[2em] text-center"
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemove(reason);
+                      }}
+                      className="hover:bg-white/20 rounded-full p-0.5 transition-colors ml-0.5"
+                    >
+                      <X size={14} />
+                    </button>
+                  </span>
+                );
+              })
+            ) : (
+              <span className="text-muted-foreground text-sm">
+                填入消耗原因...
+              </span>
+            )}
+          </div>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="z-200">
           {REASON_OPTIONS.filter((opt) => !value.includes(opt.value)).map(
             (option) => (
               <SelectItem key={option.value} value={option.value}>
@@ -86,17 +121,6 @@ export const ConsumptionReasonSelect: React.FC<
           )}
         </SelectContent>
       </Select>
-
-      {/* Custom Reason Input */}
-      {value.includes('custom') && (
-        <Input
-          value={customReason}
-          onChange={(e) => onCustomReasonChange(e.target.value)}
-          maxLength={10}
-          placeholder="請輸入原因 (最多10字)"
-          className="mt-2"
-        />
-      )}
     </div>
   );
 };
