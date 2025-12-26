@@ -371,26 +371,26 @@ Authorization: Bearer <access_token>
 ```json
 {
   "quantity": 1,
-  "reason": "expired",
-  "note": "過期丟掉"
+  "reasons": ["recipe_consumption", "short_shelf"],
+  "customReason": "保存期限快到了"
 }
 ```
 
-| 欄位       | 類型              | 必填 | 說明                                 |
-| ---------- | ----------------- | :--: | ------------------------------------ |
-| `quantity` | number            |  ✅  | 消耗數量（若為全部則等於當前庫存量） |
-| `reason`   | ConsumptionReason |  ✅  | 主要消耗原因 (`expired`, `other` 等) |
-| `note`     | string            |  ❌  | 備註 (包含自訂原因、多選原因詳情)    |
+| 欄位           | 類型                | 必填 | 說明                                     |
+| -------------- | ------------------- | :--: | ---------------------------------------- |
+| `quantity`     | number              |  ✅  | 消耗數量（若為全部則等於當前庫存量）     |
+| `reasons`      | ConsumptionReason[] |  ✅  | 消耗原因陣列（可多選）                   |
+| `customReason` | string              |  ❌  | 自訂原因文字（當 reasons 包含 'custom'） |
 
 **消耗原因 (ConsumptionReason)**
 
-| 值        | 說明      |
-| --------- | --------- |
-| `cooking` | 煮菜用掉  |
-| `expired` | 過期丟掉  |
-| `spoiled` | 變質/壞掉 |
-| `given`   | 送人      |
-| `other`   | 其他      |
+| 值                   | 說明         |
+| -------------------- | ------------ |
+| `recipe_consumption` | 食譜消耗     |
+| `duplicate`          | 重複購買     |
+| `short_shelf`        | 保存時間太短 |
+| `bought_too_much`    | 買太多       |
+| `custom`             | 自訂         |
 
 **成功回應 (200)**
 
@@ -418,7 +418,9 @@ Authorization: Bearer <access_token>
 取得待填寫消耗原因的食材（過期或數量為 0 的食材）
 
 ```
+
 GET /api/v1/inventory/consumed?status=pending
+
 ```
 
 **Query 參數**
