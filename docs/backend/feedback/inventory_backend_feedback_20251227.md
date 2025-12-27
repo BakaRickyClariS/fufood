@@ -167,9 +167,60 @@ Swagger 文件引入了新的概念結構：
 
 ---
 
+## 6. Dashboard 模組所需 API (Dashboard Module API Requirements)
+
+### 說明
+
+Dashboard（首頁儀表板）需要顯示庫存摘要統計，包括總庫存、低庫存數量、即將到期數量。
+
+### 需要的 API
+
+| 狀態 (Status) | Method | Endpoint Path | 說明 (Note) |
+| :--- | :--- | :--- | :--- |
+| **🆕 需確認** | `GET` | `/api/v1/inventory/summary` | 取得庫存摘要統計（Dashboard 首頁使用） |
+| **🆕 需確認** | `GET` | `/api/v1/refrigerators/{id}/inventory/summary` | 若採用冰箱架構，需要此端點 |
+
+### 預期回應格式
+
+```json
+{
+  "success": true,
+  "data": {
+    "summary": {
+      "total": 25,
+      "lowStock": 3,
+      "expiring": 5
+    }
+  }
+}
+```
+
+### 欄位說明
+
+| 欄位 | 類型 | 說明 |
+|------|------|------|
+| `total` | number | 總庫存數量 |
+| `lowStock` | number | 低庫存項目數量（數量 ≤ 設定的低庫存閾值） |
+| `expiring` | number | 即將到期項目數量（通常為 7 天內到期） |
+
+### 前端使用位置
+
+- `src/modules/dashboard/components/InventorySection.tsx`
+- 使用 Hook: `useInventorySummaryQuery`
+
+### 需要確認
+
+1. 後端是否已實作 `/api/v1/inventory/summary` 端點？
+2. 若採用 refrigerator 架構，摘要 API 是否也需要 refrigeratorId？
+3. `lowStock` 和 `expiring` 的判斷邏輯是什麼（閾值設定）？
+
+---
+
 ## 參考資料
 
 - [Swagger UI](https://api.fufood.jocelynh.me/swagger/index.html)
 - [Inventory API Mapping](file:///d:/User/Ricky/HexSchool/finalProject/fufood/docs/api/inventory_api_mapping.md)
+- [Dashboard API Mapping](file:///d:/User/Ricky/HexSchool/finalProject/fufood/docs/api/dashboard_api_mapping.md)
+- [Dashboard API Spec](file:///d:/User/Ricky/HexSchool/finalProject/fufood/docs/backend/dashboard_api_spec.md)
 - [API Reference V2](file:///d:/User/Ricky/HexSchool/finalProject/fufood/src/modules/API_REFERENCE_V2.md)
 - [Inventory API Spec](file:///d:/User/Ricky/HexSchool/finalProject/fufood/docs/backend/inventory_api_spec.md)
