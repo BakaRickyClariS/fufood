@@ -100,6 +100,39 @@ const wrapApiCall = async <T>(
   }
 };
 
+/**
+ * 嘗試真實 API，失敗時 fallback 到 mock 資料
+ * 當 USE_MOCK 開啟時，會先嘗試真實 API，只有在失敗時才使用 mock 資料
+ */
+const tryRealApiWithMockFallback = async <T>(
+  method: string,
+  endpoint: string,
+  realApiCall: () => Promise<T>,
+  mockFallback: () => Promise<T>,
+): Promise<T> => {
+  // 如果 mock 未開啟，直接使用真實 API
+  if (!USE_MOCK) {
+    return wrapApiCall(method, endpoint, realApiCall);
+  }
+
+  // Mock 開啟時：優先嘗試真實 API，失敗才 fallback 到 mock
+  console.log(`🔵 [Groups API] ${method} ${endpoint} (優先嘗試真實 API)`);
+  
+  try {
+    const result = await realApiCall();
+    console.log(`🟢 [Groups API] ${method} ${endpoint} 真實 API 成功`, result);
+    return result;
+  } catch (error) {
+    console.warn(`🟠 [Groups API] ${method} ${endpoint} 真實 API 失敗，fallback 到 Mock 資料`);
+    console.warn('失敗原因:', error instanceof Error ? error.message : error);
+    
+    // Fallback 到 mock 資料
+    const mockResult = await mockFallback();
+    console.log(`🟡 [Groups API] ${method} ${endpoint} 使用 Mock 資料`, mockResult);
+    return mockResult;
+  }
+};
+
 // ============================================================
 // API 方法
 // ============================================================
@@ -110,26 +143,30 @@ export const groupsApi = {
    * GET /api/v1/refrigerators
    */
   getAll: async (): Promise<Group[]> => {
-    if (USE_MOCK) {
-      console.log('🟡 [Groups API] 使用 Mock 資料 - getAll');
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      return mockGroups;
-    }
-
-    return wrapApiCall('GET', API_BASE, async () => {
-      const response = await backendApi.get<Group[] | { data: Group[] }>(API_BASE);
-      
-      // 處理可能的回應格式：直接陣列 或 { data: [...] }
-      if (Array.isArray(response)) {
-        return response;
-      }
-      if (response && typeof response === 'object' && 'data' in response) {
-        return response.data;
-      }
-      
-      console.warn('⚠️ [Groups API] 非預期的回應格式:', response);
-      return [];
-    });
+    return tryRealApiWithMockFallback(
+      'GET',
+      API_BASE,
+      // 真實 API 呼叫
+      async () => {
+        const response = await backendApi.get<Group[] | { data: Group[] }>(API_BASE);
+        
+        // 處理可能的回應格式：直接陣列 或 { data: [...] }
+        if (Array.isArray(response)) {
+          return response;
+        }
+        if (response && typeof response === 'object' && 'data' in response) {
+          return response.data;
+        }
+        
+        console.warn('⚠️ [Groups API] 非預期的回應格式:', response);
+        return [];
+      },
+      // Mock fallback
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return mockGroups;
+      },
+    );
   },
 
   /**
@@ -139,23 +176,27 @@ export const groupsApi = {
   getById: async (id: string): Promise<Group> => {
     const endpoint = `${API_BASE}/${id}`;
 
-    if (USE_MOCK) {
-      console.log('🟡 [Groups API] 使用 Mock 資料 - getById:', id);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const group = mockGroups.find((g) => g.id === id);
-      if (!group) throw new Error(`群組不存在 (id: ${id})`);
-      return group;
-    }
-
-    return wrapApiCall('GET', endpoint, async () => {
-      const response = await backendApi.get<Group | { data: Group }>(endpoint);
-      
-      // 處理可能的回應格式
-      if (response && typeof response === 'object' && 'data' in response) {
-        return (response as { data: Group }).data;
-      }
-      return response as Group;
-    });
+    return tryRealApiWithMockFallback(
+      'GET',
+      endpoint,
+      // 真實 API 呼叫
+      async () => {
+        const response = await backendApi.get<Group | { data: Group }>(endpoint);
+        
+        // 處理可能的回應格式
+        if (response && typeof response === 'object' && 'data' in response) {
+          return (response as { data: Group }).data;
+        }
+        return response as Group;
+      },
+      // Mock fallback
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        const group = mockGroups.find((g) => g.id === id);
+        if (!group) throw new Error(`群組不存在 (id: ${id})`);
+        return group;
+      },
+    );
   },
 
   /**
@@ -165,28 +206,32 @@ export const groupsApi = {
   getMembers: async (groupId: string): Promise<GroupMember[]> => {
     const endpoint = `${API_BASE}/${groupId}/members`;
 
-    if (USE_MOCK) {
-      console.log('🟡 [Groups API] 使用 Mock 資料 - getMembers:', groupId);
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      const group = mockGroups.find((g) => g.id === groupId);
-      if (group && group.members) return group.members;
-      return mockMembers;
-    }
-
-    return wrapApiCall('GET', endpoint, async () => {
-      const response = await backendApi.get<GroupMember[] | { data: GroupMember[] }>(endpoint);
-      
-      // 處理可能的回應格式
-      if (Array.isArray(response)) {
-        return response;
-      }
-      if (response && typeof response === 'object' && 'data' in response) {
-        return response.data;
-      }
-      
-      console.warn('⚠️ [Groups API] 非預期的成員回應格式:', response);
-      return [];
-    });
+    return tryRealApiWithMockFallback(
+      'GET',
+      endpoint,
+      // 真實 API 呼叫
+      async () => {
+        const response = await backendApi.get<GroupMember[] | { data: GroupMember[] }>(endpoint);
+        
+        // 處理可能的回應格式
+        if (Array.isArray(response)) {
+          return response;
+        }
+        if (response && typeof response === 'object' && 'data' in response) {
+          return response.data;
+        }
+        
+        console.warn('⚠️ [Groups API] 非預期的成員回應格式:', response);
+        return [];
+      },
+      // Mock fallback
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        const group = mockGroups.find((g) => g.id === groupId);
+        if (group && group.members) return group.members;
+        return mockMembers;
+      },
+    );
   },
 
   /**
@@ -196,28 +241,32 @@ export const groupsApi = {
    * @param data - 群組資料 { name: string }
    */
   create: async (data: CreateGroupForm): Promise<Group> => {
-    if (USE_MOCK) {
-      console.log('🟡 [Groups API] 使用 Mock 資料 - create:', data);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      return {
-        id: Math.random().toString(36).substr(2, 9),
-        name: data.name,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as Group;
-    }
-
     console.log('📤 [Groups API] 建立群組請求資料:', data);
 
-    return wrapApiCall('POST', API_BASE, async () => {
-      const response = await backendApi.post<Group | { data: Group }>(API_BASE, data);
-      
-      // 處理可能的回應格式
-      if (response && typeof response === 'object' && 'data' in response) {
-        return (response as { data: Group }).data;
-      }
-      return response as Group;
-    });
+    return tryRealApiWithMockFallback(
+      'POST',
+      API_BASE,
+      // 真實 API 呼叫
+      async () => {
+        const response = await backendApi.post<Group | { data: Group }>(API_BASE, data);
+        
+        // 處理可能的回應格式
+        if (response && typeof response === 'object' && 'data' in response) {
+          return (response as { data: Group }).data;
+        }
+        return response as Group;
+      },
+      // Mock fallback
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return {
+          id: Math.random().toString(36).substr(2, 9),
+          name: data.name,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as Group;
+      },
+    );
   },
 
   /**
@@ -229,26 +278,29 @@ export const groupsApi = {
    */
   update: async (id: string, data: UpdateGroupForm): Promise<Group> => {
     const endpoint = `${API_BASE}/${id}`;
+    console.log('� [Groups API] 更新群組請求資料:', { id, data });
 
-    if (USE_MOCK) {
-      console.log('🟡 [Groups API] 使用 Mock 資料 - update:', id, data);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const group = mockGroups.find((g) => g.id === id);
-      if (!group) throw new Error(`群組不存在 (id: ${id})`);
-      return { ...group, ...data, updatedAt: new Date() } as Group;
-    }
-
-    console.log('📤 [Groups API] 更新群組請求資料:', { id, data });
-
-    return wrapApiCall('PUT', endpoint, async () => {
-      const response = await backendApi.put<Group | { data: Group }>(endpoint, data);
-      
-      // 處理可能的回應格式
-      if (response && typeof response === 'object' && 'data' in response) {
-        return (response as { data: Group }).data;
-      }
-      return response as Group;
-    });
+    return tryRealApiWithMockFallback(
+      'PUT',
+      endpoint,
+      // 真實 API 呼叫
+      async () => {
+        const response = await backendApi.put<Group | { data: Group }>(endpoint, data);
+        
+        // 處理可能的回應格式
+        if (response && typeof response === 'object' && 'data' in response) {
+          return (response as { data: Group }).data;
+        }
+        return response as Group;
+      },
+      // Mock fallback
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        const group = mockGroups.find((g) => g.id === id);
+        if (!group) throw new Error(`群組不存在 (id: ${id})`);
+        return { ...group, ...data, updatedAt: new Date() } as Group;
+      },
+    );
   },
 
   /**
@@ -257,16 +309,19 @@ export const groupsApi = {
    */
   delete: async (id: string): Promise<void> => {
     const endpoint = `${API_BASE}/${id}`;
+    console.log('� [Groups API] 刪除群組:', id);
 
-    if (USE_MOCK) {
-      console.log('🟡 [Groups API] 使用 Mock 資料 - delete:', id);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      return;
-    }
-
-    console.log('📤 [Groups API] 刪除群組:', id);
-
-    return wrapApiCall('DELETE', endpoint, () => backendApi.delete<void>(endpoint));
+    return tryRealApiWithMockFallback(
+      'DELETE',
+      endpoint,
+      // 真實 API 呼叫
+      () => backendApi.delete<void>(endpoint),
+      // Mock fallback
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return;
+      },
+    );
   },
 
   /**
@@ -278,16 +333,19 @@ export const groupsApi = {
     data: InviteMemberForm,
   ): Promise<void> => {
     const endpoint = `${API_BASE}/${groupId}/members`;
+    console.log('� [Groups API] 邀請成員:', { groupId, data });
 
-    if (USE_MOCK) {
-      console.log('🟡 [Groups API] 使用 Mock 資料 - inviteMember:', groupId, data);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      return;
-    }
-
-    console.log('📤 [Groups API] 邀請成員:', { groupId, data });
-
-    return wrapApiCall('POST', endpoint, () => backendApi.post<void>(endpoint, data));
+    return tryRealApiWithMockFallback(
+      'POST',
+      endpoint,
+      // 真實 API 呼叫
+      () => backendApi.post<void>(endpoint, data),
+      // Mock fallback
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return;
+      },
+    );
   },
 
   /**
@@ -296,16 +354,19 @@ export const groupsApi = {
    */
   join: async (groupId: string, data: JoinGroupForm): Promise<void> => {
     const endpoint = `${API_BASE}/${groupId}/members`;
+    console.log('� [Groups API] 加入群組:', { groupId, data });
 
-    if (USE_MOCK) {
-      console.log('🟡 [Groups API] 使用 Mock 資料 - join:', groupId, data);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      return;
-    }
-
-    console.log('📤 [Groups API] 加入群組:', { groupId, data });
-
-    return wrapApiCall('POST', endpoint, () => backendApi.post<void>(endpoint, data));
+    return tryRealApiWithMockFallback(
+      'POST',
+      endpoint,
+      // 真實 API 呼叫
+      () => backendApi.post<void>(endpoint, data),
+      // Mock fallback
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return;
+      },
+    );
   },
 
   /**
@@ -314,16 +375,19 @@ export const groupsApi = {
    */
   leave: async (groupId: string, memberId: string): Promise<void> => {
     const endpoint = `${API_BASE}/${groupId}/members/${memberId}`;
+    console.log('� [Groups API] 離開群組:', { groupId, memberId });
 
-    if (USE_MOCK) {
-      console.log('🟡 [Groups API] 使用 Mock 資料 - leave:', groupId, memberId);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      return;
-    }
-
-    console.log('📤 [Groups API] 離開群組:', { groupId, memberId });
-
-    return wrapApiCall('DELETE', endpoint, () => backendApi.delete<void>(endpoint));
+    return tryRealApiWithMockFallback(
+      'DELETE',
+      endpoint,
+      // 真實 API 呼叫
+      () => backendApi.delete<void>(endpoint),
+      // Mock fallback
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return;
+      },
+    );
   },
 
   /**
@@ -332,16 +396,19 @@ export const groupsApi = {
    */
   removeMember: async (groupId: string, memberId: string): Promise<void> => {
     const endpoint = `${API_BASE}/${groupId}/members/${memberId}`;
+    console.log('� [Groups API] 移除成員:', { groupId, memberId });
 
-    if (USE_MOCK) {
-      console.log('🟡 [Groups API] 使用 Mock 資料 - removeMember:', groupId, memberId);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      return;
-    }
-
-    console.log('📤 [Groups API] 移除成員:', { groupId, memberId });
-
-    return wrapApiCall('DELETE', endpoint, () => backendApi.delete<void>(endpoint));
+    return tryRealApiWithMockFallback(
+      'DELETE',
+      endpoint,
+      // 真實 API 呼叫
+      () => backendApi.delete<void>(endpoint),
+      // Mock fallback
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return;
+      },
+    );
   },
 
   /**
@@ -354,17 +421,18 @@ export const groupsApi = {
     role: GroupMember['role'],
   ): Promise<void> => {
     const endpoint = `${API_BASE}/${groupId}/members/${memberId}`;
+    console.log(' [Groups API] 更新成員權限:', { groupId, memberId, role });
 
-    if (USE_MOCK) {
-      console.log('🟡 [Groups API] 使用 Mock 資料 - updateMemberRole:', groupId, memberId, role);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      return;
-    }
-
-    console.log('📤 [Groups API] 更新成員權限:', { groupId, memberId, role });
-
-    return wrapApiCall('PATCH', endpoint, () =>
-      backendApi.patch<void>(endpoint, { role }),
+    return tryRealApiWithMockFallback(
+      'PATCH',
+      endpoint,
+      // 真實 API 呼叫
+      () => backendApi.patch<void>(endpoint, { role }),
+      // Mock fallback
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return;
+      },
     );
   },
 
@@ -375,24 +443,28 @@ export const groupsApi = {
   searchFriends: async (query: string): Promise<import('../types/group.types').Friend[]> => {
     const endpoint = `/api/v1/users/friends?q=${encodeURIComponent(query)}`;
 
-    if (USE_MOCK) {
-      console.log('🟡 [Groups API] 使用 Mock 資料 - searchFriends:', query);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      // Mock search result
-      if (!query) return [];
-      const allFriends = [
-        { id: 'f1', name: 'Ricky', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ricky', lineId: 'ricky_123' },
-        { id: 'f2', name: '_ricky.yang', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Yang', lineId: 'yang_456' },
-        { id: 'f3', name: 'Alice', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice', lineId: 'alice_789' },
-      ];
-      return allFriends.filter(f => f.name.toLowerCase().includes(query.toLowerCase()) || f.lineId?.toLowerCase().includes(query.toLowerCase()));
-    }
-
-    return wrapApiCall('GET', endpoint, async () => {
-      const response = await backendApi.get<any>(endpoint);
-      if (response && response.data) return response.data;
-      return Array.isArray(response) ? response : [];
-    });
+    return tryRealApiWithMockFallback(
+      'GET',
+      endpoint,
+      // 真實 API 呼叫
+      async () => {
+        const response = await backendApi.get<any>(endpoint);
+        if (response && response.data) return response.data;
+        return Array.isArray(response) ? response : [];
+      },
+      // Mock fallback
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        // Mock search result
+        if (!query) return [];
+        const allFriends = [
+          { id: 'f1', name: 'Ricky', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ricky', lineId: 'ricky_123' },
+          { id: 'f2', name: '_ricky.yang', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Yang', lineId: 'yang_456' },
+          { id: 'f3', name: 'Alice', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice', lineId: 'alice_789' },
+        ];
+        return allFriends.filter(f => f.name.toLowerCase().includes(query.toLowerCase()) || f.lineId?.toLowerCase().includes(query.toLowerCase()));
+      },
+    );
   },
 
   /**
@@ -402,21 +474,25 @@ export const groupsApi = {
   getInviteCode: async (groupId: string): Promise<import('../types/group.types').InviteCodeResponse> => {
     const endpoint = `${API_BASE}/${groupId}/invite-code`;
 
-    if (USE_MOCK) {
-      console.log('🟡 [Groups API] 使用 Mock 資料 - getInviteCode:', groupId);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      return {
-        code: `INV-${Math.floor(Math.random() * 10000)}`,
-        expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://fufood.app/join?g=${groupId}`,
-      };
-    }
-
-    return wrapApiCall('POST', endpoint, async () => {
-      const response = await backendApi.post<any>(endpoint, {});
-      if (response && response.data) return response.data;
-      return response;
-    });
+    return tryRealApiWithMockFallback(
+      'POST',
+      endpoint,
+      // 真實 API 呼叫
+      async () => {
+        const response = await backendApi.post<any>(endpoint, {});
+        if (response && response.data) return response.data;
+        return response;
+      },
+      // Mock fallback
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return {
+          code: `INV-${Math.floor(Math.random() * 10000)}`,
+          expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://fufood.app/join?g=${groupId}`,
+        };
+      },
+    );
   },
 };
 
