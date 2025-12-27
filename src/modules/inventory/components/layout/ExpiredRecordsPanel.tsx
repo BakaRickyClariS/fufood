@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import CommonItemCard from '@/modules/inventory/components/ui/card/CommonItemCard';
 import { useInventoryExtras } from '@/modules/inventory/hooks';
 import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
@@ -47,6 +48,7 @@ const ExpiredRecordsPanel: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const [filter, setFilter] = useState<'expired' | 'completed'>('expired');
   const [isContentLoading, setIsContentLoading] = useState(false);
+  const { groupId } = useParams<{ groupId: string }>();
 
   // 使用共用的淡入動畫 hook
   const { ref: contentRef, resetAnimation } = useFadeInAnimation<HTMLDivElement>({
@@ -55,8 +57,8 @@ const ExpiredRecordsPanel: React.FC = () => {
 
   // 初次載入
   useEffect(() => {
-    fetchExpiredItems(filter);
-  }, []);
+    fetchExpiredItems(filter, 1, 20, groupId);
+  }, [fetchExpiredItems, filter, groupId]);
 
   // 切換篩選的處理函數
   const handleFilterChange = useCallback(
@@ -66,7 +68,7 @@ const ExpiredRecordsPanel: React.FC = () => {
       setIsContentLoading(true);
       resetAnimation(); // 重置動畫狀態，讓下次載入完成時可以再次播放動畫
       setFilter(newFilter);
-      fetchExpiredItems(newFilter);
+      fetchExpiredItems(newFilter, 1, 20, groupId);
 
       // 模擬載入完成（實際上 isLoading 會由 hook 控制）
       // 這裡需要等待實際的 isLoading 變化
@@ -157,7 +159,7 @@ const ExpiredRecordsPanel: React.FC = () => {
           item={selectedItem}
           isOpen={!!selectedItem}
           onClose={() => setSelectedItem(null)}
-          onItemUpdate={() => fetchExpiredItems(filter)}
+          onItemUpdate={() => fetchExpiredItems(filter, 1, 20, groupId)}
         />
       )}
     </>

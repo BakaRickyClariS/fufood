@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import CommonItemCard from '@/modules/inventory/components/ui/card/CommonItemCard';
 import { useInventoryExtras } from '@/modules/inventory/hooks';
 import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
@@ -10,9 +11,11 @@ const CommonItemsPanel: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const { ref: contentRef } = useFadeInAnimation<HTMLDivElement>({ isLoading });
 
+  const { groupId } = useParams<{ groupId: string }>();
+
   useEffect(() => {
-    fetchFrequentItems();
-  }, [fetchFrequentItems]);
+    fetchFrequentItems(10, groupId);
+  }, [fetchFrequentItems, groupId]);
 
   // Group items by category
   const groupedItems = useMemo(() => {
@@ -81,7 +84,7 @@ const CommonItemsPanel: React.FC = () => {
           item={selectedItem}
           isOpen={!!selectedItem}
           onClose={() => setSelectedItem(null)}
-          onItemUpdate={fetchFrequentItems}
+          onItemUpdate={() => fetchFrequentItems(10, groupId)}
         />
       )}
     </>

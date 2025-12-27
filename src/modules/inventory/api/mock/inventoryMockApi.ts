@@ -161,6 +161,7 @@ export const createMockInventoryApi = (): InventoryApi => {
 
   const getItem = async (
     id: string,
+    _refrigeratorId?: string,
   ): Promise<{ status: true; data: { item: FoodItem } }> => {
     await delay(200);
     const items = getStoredItems();
@@ -171,6 +172,7 @@ export const createMockInventoryApi = (): InventoryApi => {
 
   const addItem = async (
     data: AddFoodItemRequest,
+    _refrigeratorId?: string,
   ): Promise<AddFoodItemResponse> => {
     await delay(300);
     const items = getStoredItems();
@@ -193,6 +195,7 @@ export const createMockInventoryApi = (): InventoryApi => {
   const updateItem = async (
     id: string,
     data: UpdateFoodItemRequest,
+    _refrigeratorId?: string,
   ): Promise<UpdateFoodItemResponse> => {
     await delay(300);
     const items = getStoredItems();
@@ -213,7 +216,10 @@ export const createMockInventoryApi = (): InventoryApi => {
     };
   };
 
-  const deleteItem = async (id: string): Promise<DeleteFoodItemResponse> => {
+  const deleteItem = async (
+    id: string,
+    _refrigeratorId?: string,
+  ): Promise<DeleteFoodItemResponse> => {
     await delay(300);
     const items = getStoredItems();
     const filtered = items.filter((i) => i.id !== id);
@@ -228,6 +234,7 @@ export const createMockInventoryApi = (): InventoryApi => {
 
   const batchDelete = async (
     data: BatchDeleteInventoryRequest,
+    _refrigeratorId?: string,
   ): Promise<{
     status: true;
     message?: string;
@@ -240,7 +247,9 @@ export const createMockInventoryApi = (): InventoryApi => {
     return { status: true, data: {} };
   };
 
-  const getCategories = async (): Promise<{
+  const getCategories = async (
+    _refrigeratorId?: string,
+  ): Promise<{
     status: true;
     data: { categories: CategoryInfo[] };
   }> => {
@@ -299,7 +308,9 @@ export const createMockInventoryApi = (): InventoryApi => {
     };
   };
 
-  const getSummary = async (): Promise<{
+  const getSummary = async (
+    _refrigeratorId?: string,
+  ): Promise<{
     status: true;
     data: { summary: InventorySummary };
   }> => {
@@ -333,7 +344,9 @@ export const createMockInventoryApi = (): InventoryApi => {
     };
   };
 
-  const getSettings = async (): Promise<{
+  const getSettings = async (
+    _refrigeratorId?: string,
+  ): Promise<{
     status: true;
     data: { settings: InventorySettings };
   }> => {
@@ -372,6 +385,7 @@ export const createMockInventoryApi = (): InventoryApi => {
 
   const updateSettings = async (
     data: UpdateInventorySettingsRequest,
+    _refrigeratorId?: string,
   ): Promise<{
     status: true;
     message?: string;
@@ -418,6 +432,7 @@ export const createMockInventoryApi = (): InventoryApi => {
   const consumeItem = async (
     id: string,
     data: { quantity: number; reasons: string[]; customReason?: string },
+    _refrigeratorId?: string,
   ): Promise<{
     status: true;
     message?: string;

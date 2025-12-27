@@ -29,7 +29,7 @@ export const useInventory = (groupId?: string) => {
   const addItem = async (data: AddFoodItemRequest) => {
     setIsLoading(true);
     try {
-      await inventoryApi.addItem(data);
+      await inventoryApi.addItem(data, data.groupId);
       await fetchItems(); // Refresh list
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to add item'));
@@ -42,7 +42,7 @@ export const useInventory = (groupId?: string) => {
   const updateItem = async (id: string, data: UpdateFoodItemRequest) => {
     setIsLoading(true);
     try {
-      await inventoryApi.updateItem(id, data);
+      await inventoryApi.updateItem(id, data, groupId);
       await fetchItems(); // Refresh list
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to update item'));
@@ -55,7 +55,7 @@ export const useInventory = (groupId?: string) => {
   const deleteItem = async (id: string) => {
     setIsLoading(true);
     try {
-      await inventoryApi.deleteItem(id);
+      await inventoryApi.deleteItem(id, groupId);
       setItems((prev) => prev.filter((item) => item.id !== id));
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to delete item'));
@@ -68,9 +68,12 @@ export const useInventory = (groupId?: string) => {
   const batchDelete = async (ids: string[]) => {
     setIsLoading(true);
     try {
-      await inventoryApi.batchDelete({
-        ids: ids,
-      });
+      await inventoryApi.batchDelete(
+        {
+          ids: ids,
+        },
+        groupId,
+      );
       await fetchItems(); // Refresh list
     } catch (err) {
       setError(

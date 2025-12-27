@@ -73,8 +73,8 @@ export const inventoryService = {
   },
 
   // 取得分類資訊
-  getCategories: async () => {
-    const response = await inventoryApi.getCategories();
+  getCategories: async (refrigeratorId?: string) => {
+    const response = await inventoryApi.getCategories(refrigeratorId);
     return response.data.categories;
   },
 };

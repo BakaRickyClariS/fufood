@@ -64,3 +64,11 @@ export type UpdateSettingsRequest = Partial<NotificationSettings>;
 export type UpdateSettingsResponse = ApiSuccess<{
   settings: NotificationSettings;
 }>;
+
+// 批次刪除請求/回應
+export type BatchDeleteRequest = { ids: string[] };
+export type BatchDeleteResponse = ApiSuccess<{ deletedCount: number }>;
+
+// 批次標記已讀請求/回應
+export type BatchMarkAsReadRequest = { ids: string[]; isRead: boolean };
+export type BatchMarkAsReadResponse = ApiSuccess<{ updatedCount: number }>;

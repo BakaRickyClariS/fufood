@@ -5,7 +5,7 @@ import type { Recipe, ConsumptionItem } from '@/modules/recipe/types';
 import { recipeApi } from '@/modules/recipe/services';
 import { IngredientList } from '@/modules/recipe/components/ui/IngredientList';
 import { CookingSteps } from '@/modules/recipe/components/ui/CookingSteps';
-import { ConsumptionModal } from '@/shared/components/feedback/ConsumptionModal';
+import { ConsumptionModal } from '@/modules/inventory/components/consumption';
 import {
   Sheet,
   SheetContent,
@@ -28,6 +28,7 @@ type RecipeDetailContentProps = {
   // Parent visibility controls
   onHideParent?: () => void;
   onShowParent?: () => void;
+  refrigeratorId?: string;
 };
 
 /**
@@ -46,6 +47,7 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
   isLoading = false,
   onHideParent,
   onShowParent,
+  refrigeratorId,
 }) => {
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -73,6 +75,7 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
         defaultReasons={['recipe_consumption']}
         onHideParent={onHideParent}
         onShowParent={onShowParent}
+        refrigeratorId={refrigeratorId}
         onConfirm={(success) => {
           onShowConsumptionModal(false);
           onConfirmConsumption?.(success);
@@ -110,7 +113,7 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
 
             <div className="flex items-center gap-2 text-sm flex-wrap">
               <span className="px-2 py-1 bg-primary-500 text-white rounded-sm font-medium text-[10px] shrink-0">
-                {recipe.category.slice(0, 2)}
+                {recipe.category?.slice(0, 2) || '料理'}
               </span>
 
               <div className="flex items-center gap-1 text-primary-500 font-medium text-[16px] shrink-0">

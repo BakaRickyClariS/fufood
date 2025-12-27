@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   setLayout,
@@ -35,6 +36,7 @@ const OverviewPanel: React.FC = () => {
   const currentLayout = useSelector(selectCurrentLayout);
   const categoryOrder = useSelector(selectCategoryOrder);
   const dispatch = useDispatch();
+  const { groupId } = useParams<{ groupId: string }>();
 
   // 初次載入時從 API 取得資料
   useEffect(() => {
@@ -44,8 +46,8 @@ const OverviewPanel: React.FC = () => {
 
         // 同時載入設定和類別
         const [settingsResponse, categoriesResponse] = await Promise.all([
-          inventoryApi.getSettings(),
-          inventoryApi.getCategories(),
+          inventoryApi.getSettings(groupId),
+          inventoryApi.getCategories(groupId),
         ]);
 
         // 更新設定到 Redux

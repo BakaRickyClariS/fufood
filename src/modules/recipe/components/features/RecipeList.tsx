@@ -28,14 +28,48 @@ const categoryItems: Category<RecipeCategory>[] = RECIPE_CATEGORIES.map(
   }),
 );
 
+import { useSearchParams, useLocation } from 'react-router-dom';
+
+// ... (imports)
+
 export const RecipeList = () => {
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+
+  // 優先從 location.state 取得 ID (通知點擊)，其次從 URL searchParams 取得 (分享連結)
+  const recipeIdFromState = (location.state as { openRecipeId?: string })
+    ?.openRecipeId;
+  const recipeIdFromUrl = recipeIdFromState || searchParams.get('id');
+
   const [selectedCategory, setSelectedCategory] = useState<
     RecipeCategory | undefined
   >();
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
-  const [selectedRecipe, setSelectedRecipe] = useState<RecipeListItem | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<RecipeListItem | null>(
+    null,
+  );
 
   const { recipes, isLoading, error } = useRecipes(selectedCategory);
+
+  // Handle recipe selection (from State or URL)
+  useEffect(() => {
+    if (recipeIdFromUrl && recipes.length > 0) {
+      const recipe = recipes.find((r) => r.id === recipeIdFromUrl);
+      if (recipe) {
+        setSelectedRecipe(recipe);
+        setSelectedRecipeId(recipeIdFromUrl);
+      }
+    }
+  }, [recipeIdFromUrl, recipes]);
+
+  // Handle manual recipe click
+  const handleRecipeClick = (id: string) => {
+    const recipe = recipes.find((r) => r.id === id);
+    if (recipe) {
+      setSelectedRecipe(recipe);
+      setSelectedRecipeId(id);
+    }
+  };
 
   // 按烹飪時間分組
   const groupedRecipes = useMemo(() => {
@@ -66,14 +100,6 @@ export const RecipeList = () => {
 
     return groups;
   }, [recipes]);
-
-  const handleRecipeClick = (id: string) => {
-    const recipe = recipes.find(r => r.id === id);
-    if (recipe) {
-      setSelectedRecipe(recipe);
-      setSelectedRecipeId(id);
-    }
-  };
 
   const handleCloseModal = () => {
     setSelectedRecipeId(null);
