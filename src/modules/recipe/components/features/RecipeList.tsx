@@ -52,7 +52,7 @@ export const RecipeList = () => {
   const { recipes, isLoading, error } = useRecipes(selectedCategory);
 
   // Handle recipe selection (from State or URL)
-  useMemo(() => {
+  useEffect(() => {
     if (recipeIdFromUrl && recipes.length > 0) {
       const recipe = recipes.find((r) => r.id === recipeIdFromUrl);
       if (recipe) {
