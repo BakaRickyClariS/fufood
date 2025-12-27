@@ -37,9 +37,7 @@ export const CreateGroupModal: FC<CreateGroupModalProps> = ({
   onClose,
   onBack,
 }) => {
-  const { createGroup, isGroupsLoading: isLoading } = useGroupModal();
-
-
+  const { createGroup, switchGroup, isGroupsLoading: isLoading } = useGroupModal();
 
   const [name, setName] = useState('');
   const [selectedImage, setSelectedImage] = useState(
@@ -50,9 +48,17 @@ export const CreateGroupModal: FC<CreateGroupModalProps> = ({
     e.preventDefault();
     if (!name.trim()) return;
 
-    await createGroup({
-      name,
-    });
+    try {
+      const newGroup = await createGroup({
+        name,
+      });
+
+      if (newGroup && newGroup.id) {
+        switchGroup(newGroup.id);
+      }
+    } catch (error) {
+      console.error('Failed to create group:', error);
+    }
 
     // Reset form
     setName('');
