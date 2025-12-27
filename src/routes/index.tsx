@@ -8,6 +8,7 @@ import AuthRoutes from './Auth';
 import SettingsRoutes from './Settings';
 import NotificationsRoutes from './Notifications';
 import CategoryPage from './Inventory/CategoryPage';
+import { RecipeDetailView } from '@/modules/recipe/components/features/RecipeDetailView';
 
 import { useAuth } from '@/modules/auth';
 
@@ -110,6 +111,16 @@ export const router = createBrowserRouter([
             ),
           },
         ],
+      },
+
+      // 食譜詳情頁 (獨立路由)
+      {
+        path: 'recipe/:id',
+        element: (
+          <ProtectedRoute>
+            <RecipeDetailView />
+          </ProtectedRoute>
+        ),
       },
 
       ...wrapRoutesWithProtection(PlanningRoutes),

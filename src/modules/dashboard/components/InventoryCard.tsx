@@ -7,6 +7,7 @@ type InventoryCardProps = {
   img: string; // local image path
   boxShadow?: string; // ex: "shadow-[0_8px_15px_-3px_rgba(0,0,0,0.1)]"
   borderColor?: string; // ex: "border-neutral-100"
+  isLoading?: boolean;
 };
 
 const InventoryCard: React.FC<InventoryCardProps> = ({
@@ -16,13 +17,18 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
   boxShadow = '',
   borderColor = 'border-neutral-100',
   img,
+  isLoading = false,
 }) => (
   <Card
     className={`flex flex-row items-center justify-between px-5 py-4 rounded-2xl border-2 relative overflow-hidden h-36 ${borderColor} ${boxShadow} ${bgColor}`}
   >
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full z-10">
       <p className="text-lg font-semibold text-primary-900">{title}</p>
-      <p className="mt-1 text-4xl font-bold text-neutral-900">{value}</p>
+      {isLoading ? (
+        <div className="mt-1 h-9 w-16 bg-neutral-200 rounded animate-pulse" />
+      ) : (
+        <p className="mt-1 text-4xl font-bold text-neutral-900">{value}</p>
+      )}
     </div>
 
     <img
