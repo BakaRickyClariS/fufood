@@ -6,7 +6,6 @@ import type {
 import type {
   SharedListPost,
   CreatePostInput,
-  PostComment,
 } from '@/modules/planning/types/post';
 import { MockSharedListApi } from '../mock/mockSharedListApi';
 import { backendApi } from '@/api/client';
@@ -18,9 +17,6 @@ export type SharedListApi = {
   deleteSharedList(id: string): Promise<void>;
   getPosts(listId: string): Promise<SharedListPost[]>;
   createPost(input: CreatePostInput): Promise<SharedListPost>;
-  togglePostLike(postId: string, listId: string): Promise<SharedListPost>;
-  getPostComments(postId: string): Promise<PostComment[]>;
-  createPostComment(postId: string, content: string): Promise<PostComment>;
   deletePost(postId: string, listId: string): Promise<void>;
   updatePost(
     postId: string,
@@ -74,26 +70,6 @@ export class RealSharedListApi implements SharedListApi {
       `/api/v1/shopping-lists/${input.listId}/posts`,
       input,
     );
-  }
-
-  async togglePostLike(
-    postId: string,
-    listId: string,
-  ): Promise<SharedListPost> {
-    return backendApi.post<SharedListPost>(
-      `/api/v1/posts/${postId}/like`,
-      { listId },
-    );
-  }
-
-  async getPostComments(postId: string): Promise<PostComment[]> {
-    return backendApi.get<PostComment[]>(`/api/v1/posts/${postId}/comments`);
-  }
-
-  async createPostComment(postId: string, content: string): Promise<PostComment> {
-    return backendApi.post<PostComment>(`/api/v1/posts/${postId}/comments`, {
-      content,
-    });
   }
 
   async deletePost(postId: string, listId: string): Promise<void> {

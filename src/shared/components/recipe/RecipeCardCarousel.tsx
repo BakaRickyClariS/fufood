@@ -11,7 +11,10 @@ type RecipeCardCarouselProps = {
   showPopularTag?: boolean;
   showScrollButton?: boolean;
   showMoreLink?: string;
+  isLoading?: boolean;
 };
+
+import { RecipeCardSkeleton } from './RecipeCardSkeleton';
 
 export const RecipeCardCarousel = ({
   title,
@@ -20,6 +23,7 @@ export const RecipeCardCarousel = ({
   showPopularTag = false,
   showScrollButton = true,
   showMoreLink,
+  isLoading = false,
 }: RecipeCardCarouselProps) => {
   const navigate = useNavigate();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -38,7 +42,7 @@ export const RecipeCardCarousel = ({
     }
   };
 
-  if (recipes.length === 0) return null;
+  if (!isLoading && recipes.length === 0) return null;
 
   return (
     <div className="space-y-3">
@@ -67,18 +71,22 @@ export const RecipeCardCarousel = ({
         ref={scrollContainerRef}
         className="overflow-x-auto px-4 flex gap-3 pb-2"
       >
-        {recipes.map((recipe) => (
-          <div
-            key={recipe.id}
-            className="flex-shrink-0 w-[200px] cursor-pointer hover:shadow-xl transition-shadow"
-          >
-            <RecipeCard
-              recipe={recipe}
-              onClick={handleRecipeClick}
-              showPopularTag={showPopularTag}
-            />
-          </div>
-        ))}
+        {isLoading
+          ? Array.from({ length: 3 }).map((_, index) => (
+              <RecipeCardSkeleton key={`skeleton-${index}`} />
+            ))
+          : recipes.map((recipe) => (
+              <div
+                key={recipe.id}
+                className="flex-shrink-0 w-[200px] cursor-pointer hover:shadow-xl transition-shadow"
+              >
+                <RecipeCard
+                  recipe={recipe}
+                  onClick={handleRecipeClick}
+                  showPopularTag={showPopularTag}
+                />
+              </div>
+            ))}
       </div>
     </div>
   );
