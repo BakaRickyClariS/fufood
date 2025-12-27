@@ -8,15 +8,17 @@
 
 ## 路由總表
 
-| #   | Method | Path                             | 功能                         |
-| --- | ------ | -------------------------------- | ---------------------------- |
-| 1   | GET    | `/api/v1/notifications`          | 取得通知列表（支援分類篩選） |
-| 2   | GET    | `/api/v1/notifications/{id}`     | 取得單一通知詳情             |
-| 3   | PATCH  | `/api/v1/notifications/{id}`     | 標記已讀                     |
-| 4   | DELETE | `/api/v1/notifications/{id}`     | 刪除通知                     |
-| 5   | POST   | `/api/v1/notifications/read-all` | 全部標記已讀                 |
-| 6   | GET    | `/api/v1/notifications/settings` | 取得通知設定                 |
-| 7   | PATCH  | `/api/v1/notifications/settings` | 更新通知設定                 |
+| #   | Method | Path                                 | 功能                         |
+| --- | ------ | ------------------------------------ | ---------------------------- |
+| 1   | GET    | `/api/v1/notifications`              | 取得通知列表（支援分類篩選） |
+| 2   | GET    | `/api/v1/notifications/{id}`         | 取得單一通知詳情             |
+| 3   | PATCH  | `/api/v1/notifications/{id}`         | 標記已讀                     |
+| 4   | DELETE | `/api/v1/notifications/{id}`         | 刪除通知                     |
+| 5   | POST   | `/api/v1/notifications/read-all`     | 全部標記已讀                 |
+| 6   | POST   | `/api/v1/notifications/batch/delete` | 批次刪除通知                 |
+| 7   | POST   | `/api/v1/notifications/batch/read`   | 批次標記已讀                 |
+| 8   | GET    | `/api/v1/notifications/settings`     | 取得通知設定                 |
+| 9   | PATCH  | `/api/v1/notifications/settings`     | 更新通知設定                 |
 
 ---
 
@@ -167,7 +169,53 @@ type NotificationSettings = {
 
 ---
 
-### 3.6 取得通知設定
+### 3.6 批次刪除通知
+
+**POST** `/api/v1/notifications/batch/delete`
+
+**Body**:
+
+```json
+{
+  "ids": ["id-1", "id-2"]
+}
+```
+
+**Response 200**:
+
+```json
+{
+  "status": true,
+  "data": { "deletedIds": ["id-1", "id-2"] }
+}
+```
+
+---
+
+### 3.7 批次標記已讀
+
+**POST** `/api/v1/notifications/batch/read`
+
+**Body**:
+
+```json
+{
+  "ids": ["id-1", "id-2"]
+}
+```
+
+**Response 200**:
+
+```json
+{
+  "status": true,
+  "data": { "updatedIds": ["id-1", "id-2"] }
+}
+```
+
+---
+
+### 3.8 取得通知設定
 
 **GET** `/api/v1/notifications/settings`
 
@@ -182,7 +230,7 @@ type NotificationSettings = {
 
 ---
 
-### 3.7 更新通知設定
+### 3.9 更新通知設定
 
 **PATCH** `/api/v1/notifications/settings`
 
@@ -199,14 +247,16 @@ type NotificationSettings = {
 
 ---
 
-## 4. 點擊跳轉邏輯
+## 4. 點擊行為 (Action Type)
 
-| actionType    | 前端跳轉目標                        |
-| ------------- | ----------------------------------- |
-| inventory     | `/inventory/:itemId`                |
-| shopping-list | `/planning?tab=shopping&id=:listId` |
-| recipe        | `/recipes/:recipeId`                |
-| detail        | `/notifications/:id`                |
+主要採用 **Inline Modal** 以避免頁面跳轉，提升使用者體驗。
+
+| actionType      | 行為描述                                                 |
+| --------------- | -------------------------------------------------------- |
+| `inventory`     | **Inline Modal**: 在通知頁面直接開啟 `FoodDetailModal`   |
+| `shopping-list` | **Navigate**: 跳轉至 `/planning?tab=shopping&id=:listId` |
+| `recipe`        | **Inline Modal**: 在通知頁面直接開啟 `RecipeDetailModal` |
+| `detail`        | **Navigate**: 跳轉至 `/notifications/:id`                |
 
 ---
 

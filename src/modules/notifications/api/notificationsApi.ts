@@ -12,6 +12,8 @@ import type {
   GetSettingsResponse,
   UpdateSettingsRequest,
   UpdateSettingsResponse,
+  BatchDeleteResponse,
+  BatchMarkAsReadResponse,
 } from '../types';
 
 export type NotificationsApi = {
@@ -42,4 +44,13 @@ export type NotificationsApi = {
   updateSettings: (
     data: UpdateSettingsRequest,
   ) => Promise<UpdateSettingsResponse>;
+
+  // 批次刪除
+  deleteNotifications: (ids: string[]) => Promise<BatchDeleteResponse>;
+
+  // 批次標記已讀
+  markAsReadBatch: (
+    ids: string[],
+    isRead: boolean,
+  ) => Promise<BatchMarkAsReadResponse>;
 };
