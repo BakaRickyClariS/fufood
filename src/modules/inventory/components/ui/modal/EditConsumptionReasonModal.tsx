@@ -100,14 +100,11 @@ export const EditConsumptionReasonModal: React.FC<
         <div className="flex-1 overflow-y-auto px-5 py-6">
           {/* Hero Section */}
           <div className="flex flex-col items-center mb-8">
-            <h2 className="text-xl font-bold text-neutral-800 mb-6 tracking-wider">
-              食材消耗中...
-            </h2>
             <div className="relative w-48 h-48">
               <img
                 src={consumingImage}
                 alt="Consuming Mascot"
-                className="w-full h-full object-contain drop-shadow-lg"
+                className="w-full h-full object-contain scale-130"
               />
             </div>
           </div>

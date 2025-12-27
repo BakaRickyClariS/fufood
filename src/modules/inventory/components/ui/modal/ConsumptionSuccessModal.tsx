@@ -133,14 +133,11 @@ export const ConsumptionSuccessModal: React.FC<
         <div className="px-5 py-6 pb-24">
           {/* Success Section */}
           <div className="flex flex-col items-center mb-8">
-            <h2 className="text-xl font-bold text-neutral-800 mb-4 tracking-wider">
-              \ 食材消耗成功！/
-            </h2>
             <div className="relative w-48 h-48">
               <img
                 src={successImage}
                 alt="Success"
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain scale-130"
               />
             </div>
           </div>
@@ -148,7 +145,7 @@ export const ConsumptionSuccessModal: React.FC<
           {/* Result Section */}
           <div className="bg-white rounded-3xl p-5 shadow-sm mb-6">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-1 h-5 bg-[#EE5D50] rounded-full"></div>
+              <div className="w-1 h-5 bg-primary-500 rounded-full"></div>
               <h3 className="font-bold text-neutral-900 text-base">
                 食材消耗結果
               </h3>
@@ -161,7 +158,7 @@ export const ConsumptionSuccessModal: React.FC<
                   className="border-b border-gray-100 last:border-0 pb-4 last:pb-0"
                 >
                   <div className="flex justify-between items-center mb-2">
-                    <div className="font-bold text-neutral-900 text-base">
+                    <div className="font-bold text-neutral-600 text-base">
                       {item.ingredientName}
                     </div>
                     <div className="font-bold text-neutral-900 text-base">
@@ -174,7 +171,7 @@ export const ConsumptionSuccessModal: React.FC<
                       {item.selectedReasons.map((r, reasonIndex) => (
                         <span
                           key={`${r}-${reasonIndex}`}
-                          className="px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-medium"
+                          className="px-3 py-1 bg-neutral-100 text-neutral-600 rounded-full text-sm font-medium border border-neutral-400"
                         >
                           {r === 'custom' && item.customReasonStr
                             ? item.customReasonStr
