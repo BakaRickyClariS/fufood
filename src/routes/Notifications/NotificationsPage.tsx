@@ -292,24 +292,22 @@ const NotificationsPage = () => {
           或者如果 RecipeDetailModal 支援傳入完整 recipe，則更佳。
           目前 RecipeDetailModal 接受 RecipeListItem。
       */}
-      <RecipeDetailModal
-        recipe={
-          recipeData
-            ? ({
-                id: recipeData.id,
-                name: recipeData.name,
-                imageUrl: recipeData.imageUrl,
-                category: recipeData.category,
-                cookTime: recipeData.cookTime,
-                servings: recipeData.servings,
-                difficulty: recipeData.difficulty as any,
-                isFavorite: recipeData.isFavorite,
-              } as RecipeListItem)
-            : ({ id: openRecipeId } as unknown as RecipeListItem)
-        }
-        isOpen={!!openRecipeId}
-        onClose={() => setOpenRecipeId(null)}
-      />
+      {openRecipeId && recipeData && (
+        <RecipeDetailModal
+          recipe={{
+            id: recipeData.id,
+            name: recipeData.name,
+            imageUrl: recipeData.imageUrl,
+            category: recipeData.category,
+            cookTime: recipeData.cookTime,
+            servings: recipeData.servings,
+            difficulty: recipeData.difficulty, // Ensure Recipe['difficulty'] and RecipeListItem['difficulty'] are compatible
+            isFavorite: recipeData.isFavorite,
+          } as RecipeListItem}
+          isOpen={true}
+          onClose={() => setOpenRecipeId(null)}
+        />
+      )}
     </div>
   );
 };
