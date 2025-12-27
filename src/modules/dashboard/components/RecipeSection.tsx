@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { RecipeCardCarousel } from '@/shared/components/recipe';
 import { useRecipesQuery } from '@/modules/recipe/api/queries';
 import { RecipeDetailModal } from '@/modules/recipe/components/ui/RecipeDetailModal';
@@ -7,7 +6,6 @@ import type { RecipeListItem } from '@/modules/recipe/types';
 import AiRecommendCard from './AiRecommendCard';
 
 const RecipeSection = () => {
-  const navigate = useNavigate();
   const { data, isLoading, isError } = useRecipesQuery();
   const recipes = data?.slice(0, 6) ?? []; // 首頁最多顯示 6 筆
 

@@ -114,11 +114,6 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
     setIsSettingsOpen(true);
   };
 
-  const handleBackToMembers = () => {
-    setIsInviteOpen(false);
-    setIsMembersOpen(true);
-  };
-
   return (
     <GroupModalContext.Provider
       value={{

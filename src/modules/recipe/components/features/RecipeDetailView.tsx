@@ -9,8 +9,7 @@ export const RecipeDetailView = () => {
   const navigate = useNavigate();
 
   // 1. 先獲取基本查詢資料（快取優先）
-  const { data: apiResponse, isLoading: isQueryLoading } = useRecipeQuery(id || '');
-  const recipe = apiResponse?.data;
+  const { data: recipe, isLoading: isQueryLoading } = useRecipeQuery(id || '');
 
   // 2. 使用詳細頁邏輯 Hook（處理步驟、食材、消耗邏輯）
   const {

@@ -137,9 +137,6 @@ export const AIQueryModal = ({
         servings: recipe.servings,
         cookTime: recipe.cookTime,
         isFavorite: recipe.isFavorite,
-        // 補足缺少屬性以符合 RecipeListItem (若有缺)
-        calories: 0, 
-        createdAt: new Date().toISOString()
       };
       
       setSelectedRecipe(listItem);

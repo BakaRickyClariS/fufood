@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { Group, CreateGroupForm, UpdateGroupForm, Friend, InviteCodeResponse } from '../types/group.types';
 import { groupsApi, GroupsApiError } from '../api';
 
