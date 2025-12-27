@@ -7,7 +7,8 @@ export type InventoryStatus =
   | 'low-stock'
   | 'expired'
   | 'expiring-soon'
-  | 'frequent';
+  | 'frequent'
+  | 'completed';
 
 export type FoodItem = {
   id: string;
@@ -25,6 +26,8 @@ export type FoodItem = {
   createdAt: string;
   updatedAt?: string;
   attributes?: string[]; // e.g. ['葉菜類', '有機']
+  purchaseCount?: number; // 購買次數(頻率)，用於常買項目排序
+  lastPurchaseQuantity?: number; // 上次購買數量，用於顯示
 };
 
 export type CategoryInfo = {

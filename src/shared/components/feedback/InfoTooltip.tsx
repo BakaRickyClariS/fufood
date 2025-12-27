@@ -91,7 +91,7 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
           scale: 1,
           duration: 0.3,
           ease: 'back.out(1.7)',
-        }
+        },
       );
     }
   }, [isVisible, position]);
@@ -210,7 +210,7 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
           />
 
           {/* Tooltip 內容 */}
-          <div className="bg-neutral-100 text-neutral-700 text-sm leading-relaxed px-4 py-3 rounded-xl shadow-lg min-w-[200px] max-w-[280px]">
+          <div className="bg-neutral-100 text-neutral-700 text-sm leading-relaxed px-4 py-3 rounded-xl shadow-[0_0_12px_rgba(0,0,0,0.2)] min-w-[200px] max-w-[280px]">
             {content}
           </div>
         </div>

@@ -31,7 +31,7 @@ export const FavoriteRecipes = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <RecipeHeader title="我的收藏" />
+      <RecipeHeader />
 
       <div className="p-4">
         {isLoading ? (

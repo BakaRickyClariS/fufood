@@ -80,7 +80,15 @@ export type InventorySettings = {
   categoryOrder?: string[]; // 儲存類別 ID 的順序陣列
 };
 
-export type UpdateInventorySettingsRequest = Partial<InventorySettings>;
+export type UpdateInventorySettingsRequest = Partial<InventorySettings> & {
+  categories?: EditableCategoryInfo[]; // 可更新類別名稱與順序
+};
+
+// 可編輯的類別資訊
+export type EditableCategoryInfo = {
+  id: string;
+  title: string;
+};
 
 export type InventorySummary = {
   total: number;

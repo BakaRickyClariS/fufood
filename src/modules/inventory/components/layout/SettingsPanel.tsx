@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Info, Minus, Plus } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Minus, Plus } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   DndContext,
@@ -19,16 +19,24 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import gsap from 'gsap';
 import { Button } from '@/shared/components/ui/button';
-import LayoutAppearanceSection from '@/modules/inventory/components/ui/other/LayoutAppearanceSection';
+import InfoTooltip from '@/shared/components/feedback/InfoTooltip';
 import { inventoryApi } from '@/modules/inventory/api';
 import {
   selectCategoryOrder,
   setCategoryOrder,
+  setLayout,
+  showLayoutAppliedNotification,
 } from '@/modules/inventory/store/inventorySlice';
 import type { CategoryInfo } from '@/modules/inventory/types';
+import type { LayoutType } from '@/modules/inventory/types/layoutTypes';
+import { LAYOUT_CONFIGS } from '@/modules/inventory/types/layoutTypes';
 import { toast } from 'sonner';
 
+
+
+// 計數器項目元件
 const CounterItem = ({
   label,
   value,
@@ -85,10 +93,10 @@ const SortableCategoryItem: React.FC<SortableCategoryItemProps> = ({
       {...attributes}
       className="flex items-center gap-2 mb-3 group"
     >
-      {/* Drag Handle - 只有這個區域可以觸發拖拉 */}
+      {/* Drag Handle */}
       <div
         {...listeners}
-        className="p-2 transition-colors cursor-grab active:cursor-grabbing touch-none hover:bg-primary-50 rounded-lg"
+        className="p-2 transition-colors cursor-grab active:cursor-grabbing touch-none hover:bg-neutral-100 rounded-lg"
       >
         <svg
           width="24"
@@ -106,20 +114,33 @@ const SortableCategoryItem: React.FC<SortableCategoryItemProps> = ({
           <circle cx="16" cy="20" r="2" fill="currentColor" />
         </svg>
       </div>
-      <span className="text-base font-bold text-neutral-900 bg-primary-50 px-6 py-4 rounded-xl w-full select-none group-hover:bg-primary-100 transition-colors">
+      {/* 靜態類別名稱 (已禁用編輯) */}
+      <div className="text-base font-bold text-neutral-900 bg-white px-4 py-3 rounded-lg w-full border border-neutral-200">
         {category.title}
-      </span>
+      </div>
     </div>
   );
 };
 
 const SettingsPanel: React.FC = () => {
+  // 版型狀態
+  const [savedLayoutType, setSavedLayoutType] =
+    useState<LayoutType>('layout-a');
+  const [selectedLayoutType, setSelectedLayoutType] =
+    useState<LayoutType>('layout-a');
+
+  // 類別狀態
+  const [categories, setCategories] = useState<CategoryInfo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 主控庫存提醒設定狀態
   const [totalInventory, setTotalInventory] = useState(1);
   const [expiredCount, setExpiredCount] = useState(1);
   const [expiringSoonCount, setExpiringSoonCount] = useState(1);
 
-  const [categories, setCategories] = useState<CategoryInfo[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // 三角形指示器 ref
+  const triangleRef = useRef<HTMLDivElement>(null);
+  const layoutContainerRef = useRef<HTMLDivElement>(null);
 
   const categoryOrder = useSelector(selectCategoryOrder);
   const dispatch = useDispatch();
@@ -132,125 +153,260 @@ const SettingsPanel: React.FC = () => {
     }),
   );
 
-  // 取得類別列表
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        const response = await inventoryApi.getCategories();
-        setCategories(response.data.categories);
 
-        // 如果還沒有設定順序，使用 API 回傳的順序
+        const settingsResponse = await inventoryApi.getSettings();
+        const layoutType =
+          settingsResponse.data.settings.layoutType || 'layout-a';
+        setSavedLayoutType(layoutType);
+        setSelectedLayoutType(layoutType);
+        dispatch(setLayout(layoutType));
+
+        const categoriesResponse = await inventoryApi.getCategories();
+        setCategories(categoriesResponse.data.categories);
+
+
+
         if (categoryOrder.length === 0) {
-          const ids = response.data.categories.map((c) => c.id);
+          const ids = categoriesResponse.data.categories.map((c) => c.id);
           dispatch(setCategoryOrder(ids));
         }
       } catch (error) {
-        console.error('Failed to fetch categories:', error);
-        toast.error('無法載入類別列表');
+        console.error('Failed to fetch data:', error);
+        toast.error('無法載入設定');
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchCategories();
+    fetchData();
   }, []);
 
-  // 根據 categoryOrder 排序類別
   const sortedCategories = useMemo(() => {
     if (!categoryOrder || categoryOrder.length === 0) {
       return categories;
     }
-
     const ordered: CategoryInfo[] = [];
-
-    // 按照 categoryOrder 順序添加類別
     categoryOrder.forEach((id) => {
       const category = categories.find((c) => c.id === id);
-      if (category) {
-        ordered.push(category);
-      }
+      if (category) ordered.push(category);
     });
-
-    // 添加不在 categoryOrder 中的類別（如果有新類別）
     categories.forEach((category) => {
-      if (!categoryOrder.includes(category.id)) {
-        ordered.push(category);
-      }
+      if (!categoryOrder.includes(category.id)) ordered.push(category);
     });
-
     return ordered;
   }, [categories, categoryOrder]);
 
-  // 處理拖拉結束 - 直接儲存
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
 
+
+  // 只追蹤類別順序的變化
+  const savedCategoryOrder = useMemo(
+    () => categories.map((c) => c.id),
+    [categories],
+  );
+
+  const hasChanges = useMemo(() => {
+    if (selectedLayoutType !== savedLayoutType) return true;
+    // 比較目前順序和原始順序
+    if (JSON.stringify(categoryOrder) !== JSON.stringify(savedCategoryOrder))
+      return true;
+    return false;
+  }, [selectedLayoutType, savedLayoutType, categoryOrder, savedCategoryOrder]);
+
+  // 三角形動畫 - offset 修正為 16 (對應 16px border)
+  const animateTriangle = (targetIndex: number) => {
+    if (!triangleRef.current || !layoutContainerRef.current) return;
+
+    const layoutItems =
+      layoutContainerRef.current.querySelectorAll('[data-layout-item]');
+    if (layoutItems[targetIndex]) {
+      const targetItem = layoutItems[targetIndex] as HTMLElement;
+      const containerRect = layoutContainerRef.current.getBoundingClientRect();
+      const targetRect = targetItem.getBoundingClientRect();
+      const targetX =
+        targetRect.left + targetRect.width / 2 - containerRect.left;
+
+      gsap.to(triangleRef.current, {
+        x: targetX - 16, // Offset for 32px width triangle center
+        duration: 0.3,
+        ease: 'power2.out',
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (!isLoading) {
+      const targetIndex = LAYOUT_CONFIGS.findIndex(
+        (c) => c.id === selectedLayoutType,
+      );
+      requestAnimationFrame(() => animateTriangle(targetIndex));
+    }
+  }, [isLoading, selectedLayoutType]);
+
+  const handleSelectLayout = (layoutId: LayoutType) => {
+    setSelectedLayoutType(layoutId);
+    dispatch(setLayout(layoutId));
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
     if (over && active.id !== over.id) {
-      const oldOrderIds = [...categoryOrder]; // 保存原始順序
       const oldIndex = sortedCategories.findIndex((c) => c.id === active.id);
       const newIndex = sortedCategories.findIndex((c) => c.id === over.id);
-
-      const newOrder = arrayMove(sortedCategories, oldIndex, newIndex);
-      const newOrderIds = newOrder.map((c) => c.id);
-
-      // 樂觀更新
+      const newOrderIds = arrayMove(sortedCategories, oldIndex, newIndex).map(
+        (c) => c.id,
+      );
       dispatch(setCategoryOrder(newOrderIds));
+    }
+  };
 
-      // 自動儲存到後端
-      try {
-        await inventoryApi.updateSettings({ categoryOrder: newOrderIds });
-      } catch (error) {
-        console.error('Failed to save category order:', error);
-        toast.error('儲存失敗，請稍後再試');
-        // 失敗時還原狀態
-        dispatch(setCategoryOrder(oldOrderIds));
-      }
+  const handleApply = async () => {
+    try {
+      await inventoryApi.updateSettings({
+        layoutType: selectedLayoutType,
+        categoryOrder: categoryOrder,
+      });
+
+      setSavedLayoutType(selectedLayoutType);
+      dispatch(showLayoutAppliedNotification());
+    } catch (error) {
+      console.error('Failed to apply settings:', error);
+      toast.error('套用失敗，請稍後再試');
     }
   };
 
   return (
     <div className="pb-24 space-y-8 px-1 mt-8">
-      {/* Inventory Layout Settings */}
-      <LayoutAppearanceSection />
-
-      {/* Inventory Sort Settings */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-bold text-neutral-900">庫存排序設定</h2>
-          <Info className="w-4 h-4 text-neutral-500" />
+          <h2 className="text-lg font-bold text-neutral-900">庫存外觀</h2>
+          <InfoTooltip
+            content="您可以在此選擇喜歡的庫存呈現版型，設定將即時套用至您的庫存管理頁面。"
+            className="text-neutral-400"
+          />
         </div>
 
-        <div className="bg-white rounded-[20px] p-4 space-y-2">
-          {isLoading ? (
-            <div className="text-center py-8 text-neutral-500">載入中...</div>
-          ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-              modifiers={[restrictToVerticalAxis]}
-            >
-              <SortableContext
-                items={sortedCategories.map((c) => c.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {sortedCategories.map((category) => (
-                  <SortableCategoryItem key={category.id} category={category} />
-                ))}
-              </SortableContext>
-            </DndContext>
-          )}
+        <div className="bg-white rounded-[20px] p-4 space-y-6">
+          <div ref={layoutContainerRef} className="relative z-10">
+            <div className="grid grid-cols-3 gap-3">
+              {LAYOUT_CONFIGS.map((config) => {
+                const isSelected = selectedLayoutType === config.id;
+                const isSaved = savedLayoutType === config.id;
+                return (
+                  // 為此 Div 加上 relative，以便定位「目前」標籤
+                  <div
+                    key={config.id}
+                    data-layout-item
+                    className="flex flex-col items-center cursor-pointer group relative"
+                    onClick={() => handleSelectLayout(config.id)}
+                  >
+                    <div className="relative w-full h-[156px] rounded-xl overflow-hidden transition-all duration-200">
+                      <img
+                        src={
+                          isSelected ? config.imageActive : config.imageDefault
+                        }
+                        alt={config.name}
+                        className="w-full h-full object-contain"
+                      />
+                      {/* 「目前」標籤已移出此 overflow-hidden 容器 */}
+                    </div>
+
+                    {/* 「目前」標籤 - 移至圖片容器外，並定位於底部 */}
+                    {isSaved && (
+                      <span className="absolute top-[37%] left-1/2 -translate-x-1/2 px-2.5 py-1 bg-primary-400 text-white text-[10px] rounded-full whitespace-nowrap z-20">
+                        目前
+                      </span>
+                    )}
+
+                    <div className="flex flex-col items-center gap-2 mt-4">
+                      <span
+                        className={`text-sm font-medium ${isSelected ? 'text-primary-400' : 'text-neutral-600'}`}
+                      >
+                        {config.name}
+                      </span>
+                      <div
+                        className={`
+                          w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors
+                          ${isSelected ? 'bg-primary-400 border-primary-400' : 'bg-white border-neutral-400'}
+                        `}
+                      >
+                        {isSelected && (
+                          <div className="w-3.5 h-3.5 bg-primary-400 rounded-full border-white border-2" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {/* 三角形指示器 - border 16px */}
+            <div
+              ref={triangleRef}
+              className="absolute -bottom-6 left-0 w-0 h-0 border-l-[16px] border-r-[16px] border-b-[16px] border-l-transparent border-r-transparent border-b-primary-50"
+            />
+          </div>
+
+          {/* 庫存排序設定 */}
+          <div className="bg-primary-50 rounded-lg px-4 py-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-5 bg-primary-400" />
+              <h3 className="text-base font-bold text-neutral-900">
+                庫存排序設定
+              </h3>
+            </div>
+
+            <div className="space-y-2">
+              {isLoading ? (
+                <div className="text-center py-8 text-neutral-500">
+                  載入中...
+                </div>
+              ) : (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                  modifiers={[restrictToVerticalAxis]}
+                >
+                  <SortableContext
+                    items={sortedCategories.map((c) => c.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {sortedCategories.map((category) => {
+                      return (
+                        <SortableCategoryItem
+                          key={category.id}
+                          category={category}
+                        />
+                      );
+                    })}
+                  </SortableContext>
+                </DndContext>
+              )}
+            </div>
+          </div>
+
+          <Button
+            className="w-full bg-primary-400 hover:bg-primary-500 text-white rounded-xl h-12 text-base font-bold active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleApply}
+            disabled={!hasChanges}
+          >
+            套用版型
+          </Button>
         </div>
       </div>
 
-      {/* Main Inventory Reminder Settings */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-bold text-neutral-900">
             主控庫存提醒設定
           </h2>
-          <Info className="w-4 h-4 text-neutral-400" />
+          <InfoTooltip
+            content="設定庫存管理頁面上方資訊卡顯示的預設數值。"
+            className="text-neutral-400"
+          />
         </div>
 
         <div className="bg-white rounded-[20px] px-6 py-2">

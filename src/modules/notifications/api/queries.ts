@@ -1,0 +1,127 @@
+/**
+ * Notifications TanStack Query Hooks
+ *
+ * 提供通知模組的快取和狀態管理
+ */
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { notificationsApi } from './index';
+import type { GetNotificationsRequest, NotificationCategory } from '../types';
+
+// Query Keys
+export const notificationKeys = {
+  all: ['notifications'] as const,
+  lists: () => [...notificationKeys.all, 'list'] as const,
+  list: (params?: GetNotificationsRequest) =>
+    [...notificationKeys.lists(), params] as const,
+  byCategory: (category: NotificationCategory) =>
+    [...notificationKeys.lists(), { category }] as const,
+  details: () => [...notificationKeys.all, 'detail'] as const,
+  detail: (id: string) => [...notificationKeys.details(), id] as const,
+  settings: () => [...notificationKeys.all, 'settings'] as const,
+};
+
+/**
+ * 取得通知列表
+ */
+export const useNotificationsQuery = (params?: GetNotificationsRequest) => {
+  return useQuery({
+    queryKey: notificationKeys.list(params),
+    queryFn: () => notificationsApi.getNotifications(params),
+    staleTime: 1000 * 60 * 2, // 2 分鐘
+  });
+};
+
+/**
+ * 依分類取得通知
+ */
+export const useNotificationsByCategoryQuery = (
+  category: NotificationCategory,
+) => {
+  return useQuery({
+    queryKey: notificationKeys.byCategory(category),
+    queryFn: () => notificationsApi.getNotifications({ category }),
+    staleTime: 1000 * 60 * 2,
+  });
+};
+
+/**
+ * 取得單一通知
+ */
+export const useNotificationQuery = (id: string) => {
+  return useQuery({
+    queryKey: notificationKeys.detail(id),
+    queryFn: () => notificationsApi.getNotification(id),
+    enabled: !!id,
+  });
+};
+
+/**
+ * 取得通知設定
+ */
+export const useNotificationSettingsQuery = () => {
+  return useQuery({
+    queryKey: notificationKeys.settings(),
+    queryFn: () => notificationsApi.getSettings(),
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+/**
+ * 標記已讀 Mutation
+ */
+export const useMarkAsReadMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, isRead }: { id: string; isRead: boolean }) =>
+      notificationsApi.markAsRead(id, { isRead }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: notificationKeys.detail(variables.id),
+      });
+      queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
+    },
+  });
+};
+
+/**
+ * 刪除通知 Mutation
+ */
+export const useDeleteNotificationMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => notificationsApi.deleteNotification(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
+    },
+  });
+};
+
+/**
+ * 全部標記已讀 Mutation
+ */
+export const useReadAllMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => notificationsApi.readAll(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
+    },
+  });
+};
+
+/**
+ * 更新設定 Mutation
+ */
+export const useUpdateNotificationSettingsMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: notificationsApi.updateSettings,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationKeys.settings() });
+    },
+  });
+};

@@ -13,6 +13,7 @@ import {
   selectCurrentLayout,
   selectCategoryOrder,
 } from '@/modules/inventory/store/inventorySlice';
+import useFadeInAnimation from '@/shared/hooks/useFadeInAnimation';
 import type { CategoryInfo } from '@/modules/inventory/types';
 
 const DynamicGridAreaStyles = ({
@@ -30,6 +31,7 @@ const DynamicGridAreaStyles = ({
 const OverviewPanel: React.FC = () => {
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { ref: contentRef } = useFadeInAnimation<HTMLElement>({ isLoading });
   const currentLayout = useSelector(selectCurrentLayout);
   const categoryOrder = useSelector(selectCategoryOrder);
   const dispatch = useDispatch();
@@ -138,11 +140,15 @@ const OverviewPanel: React.FC = () => {
   }, [layoutSlots, sortedCategories]);
 
   if (isLoading) {
-    return <div className="p-4 text-center">Loading categories...</div>;
+    return (
+      <div className="p-4 text-center text-neutral-400">
+        Loading categories...
+      </div>
+    );
   }
 
   return (
-    <section className="pb-30 relative">
+    <section ref={contentRef} className="pb-30 relative">
       <DynamicGridAreaStyles categories={categories} />
 
       <div
