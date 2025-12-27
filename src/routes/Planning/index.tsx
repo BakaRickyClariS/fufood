@@ -4,9 +4,8 @@ import CreateSharedList from './CreateSharedList';
 import SharedListDetail from './SharedListDetail';
 import CreatePost from './CreatePost';
 import AIQueryPage from './AIQueryPage';
-import { RecipeDetailView } from '@/modules/recipe/components/features/RecipeDetailView';
-import { FavoriteRecipes } from '@/modules/recipe/components/features/FavoriteRecipes';
 import { RecipeList } from '@/modules/recipe/components/features/RecipeList';
+import { FavoriteRecipes } from '@/modules/recipe/components/features/FavoriteRecipes';
 
 const PlanningRoutes = [
   {
@@ -31,11 +30,6 @@ const PlanningRoutes = [
       { path: 'list/:listId/post/create', element: <CreatePost /> },
       // 食譜相關
       { path: 'recipes', element: <RecipeList /> },
-      {
-        path: 'recipes/:id',
-        element: <RecipeDetailView />,
-        handle: { headerVariant: 'none' },
-      },
       { path: 'recipes/favorites', element: <FavoriteRecipes /> },
       { path: 'recipes/ai-query', element: <AIQueryPage /> },
     ],
