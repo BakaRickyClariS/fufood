@@ -34,11 +34,7 @@ import type { LayoutType } from '@/modules/inventory/types/layoutTypes';
 import { LAYOUT_CONFIGS } from '@/modules/inventory/types/layoutTypes';
 import { toast } from 'sonner';
 
-// 可編輯類別項目
-type EditableCategoryInfo = {
-  id: string;
-  title: string;
-};
+
 
 // 計數器項目元件
 const CounterItem = ({
@@ -135,12 +131,6 @@ const SettingsPanel: React.FC = () => {
 
   // 類別狀態
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
-  const [savedCategories, setSavedCategories] = useState<
-    EditableCategoryInfo[]
-  >([]);
-  const [editedCategories, setEditedCategories] = useState<
-    EditableCategoryInfo[]
-  >([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // 主控庫存提醒設定狀態
@@ -178,12 +168,7 @@ const SettingsPanel: React.FC = () => {
         const categoriesResponse = await inventoryApi.getCategories();
         setCategories(categoriesResponse.data.categories);
 
-        const catInfos = categoriesResponse.data.categories.map((c) => ({
-          id: c.id,
-          title: c.title,
-        }));
-        setSavedCategories(catInfos);
-        setEditedCategories(catInfos);
+
 
         if (categoryOrder.length === 0) {
           const ids = categoriesResponse.data.categories.map((c) => c.id);
@@ -215,37 +200,21 @@ const SettingsPanel: React.FC = () => {
     return ordered;
   }, [categories, categoryOrder]);
 
-  const sortedEditedCategories = useMemo(() => {
-    if (!categoryOrder || categoryOrder.length === 0) {
-      return editedCategories;
-    }
-    const ordered: EditableCategoryInfo[] = [];
-    categoryOrder.forEach((id) => {
-      const cat = editedCategories.find((c) => c.id === id);
-      if (cat) ordered.push(cat);
-    });
-    editedCategories.forEach((cat) => {
-      if (!categoryOrder.includes(cat.id)) ordered.push(cat);
-    });
-    return ordered;
-  }, [editedCategories, categoryOrder]);
+
+
+  // 只追蹤類別順序的變化
+  const savedCategoryOrder = useMemo(
+    () => categories.map((c) => c.id),
+    [categories],
+  );
 
   const hasChanges = useMemo(() => {
     if (selectedLayoutType !== savedLayoutType) return true;
-    const savedOrder = savedCategories.map((c) => c.id);
-    const editedOrder = sortedEditedCategories.map((c) => c.id);
-    if (JSON.stringify(savedOrder) !== JSON.stringify(editedOrder)) return true;
-    for (const edited of sortedEditedCategories) {
-      const saved = savedCategories.find((c) => c.id === edited.id);
-      if (saved && saved.title !== edited.title) return true;
-    }
+    // 比較目前順序和原始順序
+    if (JSON.stringify(categoryOrder) !== JSON.stringify(savedCategoryOrder))
+      return true;
     return false;
-  }, [
-    selectedLayoutType,
-    savedLayoutType,
-    savedCategories,
-    sortedEditedCategories,
-  ]);
+  }, [selectedLayoutType, savedLayoutType, categoryOrder, savedCategoryOrder]);
 
   // 三角形動畫 - offset 修正為 16 (對應 16px border)
   const animateTriangle = (targetIndex: number) => {
@@ -298,12 +267,10 @@ const SettingsPanel: React.FC = () => {
     try {
       await inventoryApi.updateSettings({
         layoutType: selectedLayoutType,
-        categoryOrder: sortedEditedCategories.map((c) => c.id),
-        categories: sortedEditedCategories,
+        categoryOrder: categoryOrder,
       });
 
       setSavedLayoutType(selectedLayoutType);
-      setSavedCategories([...sortedEditedCategories]);
       dispatch(showLayoutAppliedNotification());
     } catch (error) {
       console.error('Failed to apply settings:', error);

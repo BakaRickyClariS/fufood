@@ -2,11 +2,13 @@ import { useState, useEffect, useMemo } from 'react';
 import CommonItemCard from '@/modules/inventory/components/ui/card/CommonItemCard';
 import { useInventoryExtras } from '@/modules/inventory/hooks';
 import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
+import useFadeInAnimation from '@/shared/hooks/useFadeInAnimation';
 import type { FoodItem } from '@/modules/inventory/types';
 
 const CommonItemsPanel: React.FC = () => {
   const { frequentItems, isLoading, fetchFrequentItems } = useInventoryExtras();
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
+  const { ref: contentRef } = useFadeInAnimation<HTMLDivElement>({ isLoading });
 
   useEffect(() => {
     fetchFrequentItems();
@@ -37,12 +39,12 @@ const CommonItemsPanel: React.FC = () => {
   }, [frequentItems]);
 
   if (isLoading) {
-    return <div className="p-4 text-center">Loading...</div>;
+    return <div className="p-4 text-center text-neutral-400">Loading...</div>;
   }
 
   return (
     <>
-      <div className="pb-24 space-y-6">
+      <div ref={contentRef} className="pb-24 space-y-6">
         {groupedItems.map((group) => (
           <div key={group.category}>
             <div className="flex items-center justify-between mb-3 px-1">
@@ -87,3 +89,4 @@ const CommonItemsPanel: React.FC = () => {
 };
 
 export default CommonItemsPanel;
+
