@@ -95,6 +95,8 @@ export const createMockInventoryApi = (): InventoryApi => {
             );
           case 'frequent':
             return true;
+          case 'completed':
+            return item.quantity === 0;
           case 'normal':
           default:
             return (
@@ -248,9 +250,17 @@ export const createMockInventoryApi = (): InventoryApi => {
     const settingsResponse = await getSettings();
     const categoryOrder = settingsResponse.data.settings.categoryOrder;
 
+    // 取得自訂類別名稱
+    const storedCategoryTitles = mockRequestHandlers.getItem(
+      'mock_category_titles',
+    );
+    const categoryTitles: Record<string, string> = storedCategoryTitles
+      ? JSON.parse(storedCategoryTitles)
+      : {};
+
     const allCategories = categories.map((c) => ({
       id: c.id,
-      title: c.title,
+      title: categoryTitles[c.id] || c.title, // 優先使用自訂名稱
       count: c.value,
       imageUrl: c.img,
       bgColor: c.bgColor,
@@ -369,7 +379,30 @@ export const createMockInventoryApi = (): InventoryApi => {
   }> => {
     await delay(150);
     const current = await getSettings();
+
+    // 處理類別名稱更新
+    if (data.categories && data.categories.length > 0) {
+      const storedCategoryTitles = mockRequestHandlers.getItem(
+        'mock_category_titles',
+      );
+      const categoryTitles: Record<string, string> = storedCategoryTitles
+        ? JSON.parse(storedCategoryTitles)
+        : {};
+
+      data.categories.forEach((cat) => {
+        categoryTitles[cat.id] = cat.title;
+      });
+
+      mockRequestHandlers.setItem(
+        'mock_category_titles',
+        JSON.stringify(categoryTitles),
+      );
+    }
+
     const updated = { ...current.data.settings, ...data };
+    // 移除 categories 欄位，因為它不是 InventorySettings 的一部分
+    delete (updated as UpdateInventorySettingsRequest).categories;
+
     memorySettings = updated;
     mockRequestHandlers.setItem(
       'mock_inventory_settings',
@@ -379,6 +412,36 @@ export const createMockInventoryApi = (): InventoryApi => {
       status: true,
       message: 'Updated successfully',
       data: { settings: updated },
+    };
+  };
+
+  const consumeItem = async (
+    id: string,
+    data: { quantity: number; reasons: string[]; customReason?: string },
+  ): Promise<{
+    status: true;
+    message?: string;
+    data: { id: string; remainingQuantity: number };
+  }> => {
+    await delay(300);
+    const items = getStoredItems();
+    const index = items.findIndex((i) => i.id === id);
+    if (index === -1) throw new Error('Item not found');
+
+    const item = items[index];
+    const newQuantity = Math.max(0, item.quantity - data.quantity);
+
+    items[index] = {
+      ...item,
+      quantity: newQuantity,
+      updatedAt: new Date().toISOString(),
+    };
+    setStoredItems(items);
+
+    return {
+      status: true,
+      message: 'Consumed successfully',
+      data: { id, remainingQuantity: newQuantity },
     };
   };
 
@@ -393,5 +456,6 @@ export const createMockInventoryApi = (): InventoryApi => {
     getSummary,
     getSettings,
     updateSettings,
+    consumeItem,
   };
 };

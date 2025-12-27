@@ -107,6 +107,18 @@ export const createInventoryApi = (): InventoryApi => {
         data,
       );
     },
+
+    /**
+     * 消耗食材
+     */
+    consumeItem: async (
+      id: string,
+      data: { quantity: number; reasons: string[]; customReason?: string },
+    ): Promise<ApiSuccess<{ id: string; remainingQuantity: number }>> => {
+      return backendApi.post<
+        ApiSuccess<{ id: string; remainingQuantity: number }>
+      >(`/inventory/${id}/consume`, data);
+    },
   };
 };
 

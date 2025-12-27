@@ -1,135 +1,447 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
-import { ChevronLeft, Image as ImageIcon } from 'lucide-react';
+import { ChevronLeft, Plus, Trash2, Minus } from 'lucide-react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import { usePosts } from '@/modules/planning/hooks/usePosts';
-import { ShoppingItemEditor } from '../ui/ShoppingItemEditor';
-import type { ShoppingItem } from '@/modules/planning/types';
-import { COVER_IMAGES } from '@/modules/planning/constants/coverImages';
+import { mediaApi } from '@/modules/media/api/mediaApi';
+import type { ShoppingItem, SharedListPost } from '@/modules/planning/types';
 
-type CreatePostFeatureProps = {
-  listId?: string;
+
+
+
+
+const UNITS = ['個', '包', '條', '罐', '瓶', '盒', '袋', '台斤', '公克', '公斤', 'ml', 'L'];
+
+const UnitSelector = ({ value, onChange }: { value?: string; onChange: (val: string) => void }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (isOpen && menuRef.current) {
+      gsap.fromTo(menuRef.current,
+        { opacity: 0, y: -10, scaleY: 0.95 },
+        { opacity: 1, y: 0, scaleY: 1, duration: 0.2, ease: 'power2.out' }
+      );
+    }
+  }, [isOpen]);
+
+  // Click outside to close
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full px-4 py-3 rounded-xl border flex items-center justify-between bg-white transition-all ${
+          isOpen ? 'border-primary-default ring-1 ring-primary-default' : 'border-neutral-200'
+        }`}
+      >
+        <span className={value ? 'text-neutral-800' : 'text-neutral-400'}>
+          {value || '請選擇單位'}
+        </span>
+        <ChevronLeft 
+          className={`w-5 h-5 text-neutral-400 transition-transform duration-200 ${
+            isOpen ? 'rotate-90' : '-rotate-90'
+          }`} 
+        />
+      </button>
+
+      {isOpen && (
+        <div 
+          ref={menuRef}
+          className="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-neutral-100 overflow-hidden z-[100] max-h-60 overflow-y-auto origin-top"
+        >
+          {UNITS.map((unit) => (
+            <button
+              key={unit}
+              type="button"
+              onClick={() => {
+                onChange(unit);
+                setIsOpen(false);
+              }}
+              className={`w-full text-left px-4 py-3 hover:bg-neutral-50 transition-colors ${
+                value === unit ? 'text-primary-default font-bold bg-primary-light/10' : 'text-neutral-600'
+              }`}
+            >
+              {unit}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 };
 
-export const CreatePostFeature = ({ listId }: CreatePostFeatureProps) => {
-  const navigate = useNavigate();
-  const { createPost } = usePosts(listId);
+type PostFormProps = {
+  listId?: string;
+  mode: 'create' | 'edit';
+  initialData?: SharedListPost | null;
+  onClose: () => void;
+};
+
+export const PostFormFeature = ({
+  listId,
+  mode,
+  initialData,
+  onClose,
+}: PostFormProps) => {
+  const { createPost, updatePost } = usePosts(listId);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [content, setContent] = useState('');
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
 
-  // Mock 圖片選擇 (隨機選一張)
-  const addMockImage = () => {
-    if (selectedImages.length >= 3) return;
-    const randomImg =
-      COVER_IMAGES[Math.floor(Math.random() * COVER_IMAGES.length)];
-    setSelectedImages([...selectedImages, randomImg]);
+  
+  // Track which item is currently uploading an image
+  const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
+  
+  // Store pending files for batch upload execution
+  const [pendingUploads, setPendingUploads] = useState<Record<string, File>>({});
+
+  // Initialize data for edit mode or create mode
+  useEffect(() => {
+    if (mode === 'edit' && initialData) {
+      setContent(initialData.content || '');
+      setItems(initialData.items || []);
+      setSelectedImages(initialData.images || []);
+    } else if (mode === 'create') {
+      // Default empty item for create mode
+      setItems([{
+        id: `item_${Date.now()}`,
+        name: '',
+        quantity: 1,
+        unit: '',
+      }]);
+      setContent('');
+      setSelectedImages([]);
+    }
+  }, [mode, initialData]);
+
+  // GSAP Animation
+  useGSAP(
+    () => {
+      gsap.from(containerRef.current, {
+        x: '100%',
+        duration: 0.5,
+        ease: 'power2.out',
+      });
+    },
+    { scope: containerRef },
+  );
+
+  const handleClose = () => {
+    gsap.to(containerRef.current, {
+      x: '100%',
+      duration: 0.3,
+      ease: 'power2.in',
+      onComplete: onClose,
+    });
+  };
+
+  const handleAddItem = () => {
+    const newItem: ShoppingItem = {
+      id: `item_${Date.now()}`,
+      name: '',
+      quantity: 1,
+      unit: '',
+    };
+    setItems([...items, newItem]);
+  };
+
+  const handleRemoveItem = (id: string) => {
+    setItems(items.filter((item) => item.id !== id));
+  };
+
+  const handleUpdateItem = (id: string, field: keyof ShoppingItem, value: any) => {
+    setItems(
+      items.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
+    );
+  };
+
+  const handleUploadClick = (itemId: string) => {
+    setUploadingItemId(itemId);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !uploadingItemId) return;
+
+    // Reset input value so same file can be selected again if needed
+    e.target.value = '';
+
+    // 1. Create local preview URL
+    const previewUrl = URL.createObjectURL(file);
+    
+    // 2. Update item with preview URL
+    handleUpdateItem(uploadingItemId, 'imageUrl', previewUrl);
+    
+    // 3. Store file in pendingUploads
+    setPendingUploads(prev => ({
+      ...prev,
+      [uploadingItemId]: file
+    }));
+    
+    setUploadingItemId(null);
+  };
+  
+  // 元件卸載時清理 blob URL，釋放記憶體資源
+  useEffect(() => {
+    // 保存當前的 items 參照，用於 cleanup 時存取
+    const currentItems = items;
+    return () => {
+      currentItems.forEach(item => {
+        if (item.imageUrl && item.imageUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(item.imageUrl);
+        }
+      });
+    };
+  }, [items]);
+
+  const handleRemoveImage = (itemId: string) => {
+    handleUpdateItem(itemId, 'imageUrl', undefined);
+  };
+
+  // 處理數量增減
+  const handleQuantityChange = (id: string, delta: number) => {
+    setItems(
+      items.map((item) => {
+        if (item.id !== id) return item;
+        const newQuantity = Math.max(1, (item.quantity || 1) + delta);
+        return { ...item, quantity: newQuantity };
+      })
+    );
   };
 
   const handleSubmit = async () => {
     if (!listId) return;
-    if (content.length > 40) {
-      toast.warning('說明文字不能超過 40 字');
-      return;
+    
+    // 驗證: 至少要有一個商品 或 有內文
+    // Filter out empty items (no name)
+    const validItems = items.filter(item => item.name.trim() !== '');
+
+    if (validItems.length === 0 && content.length === 0) {
+        toast.warning('請至少新增一個商品或填寫說明');
+        return;
     }
 
     setIsSubmitting(true);
+    let toastId;
+    
     try {
-      await createPost({
+      toastId = toast.loading('正在處理...');
+      
+      // 1. Process pending uploads
+      const processedItems = [...validItems];
+      const uploadPromises: Promise<void>[] = [];
+      
+      for (let i = 0; i < processedItems.length; i++) {
+        const item = processedItems[i];
+        const pendingFile = pendingUploads[item.id];
+        
+        if (pendingFile) {
+          uploadPromises.push(
+            (async () => {
+               try {
+                 const url = await mediaApi.uploadImage(pendingFile);
+                 processedItems[i] = { ...item, imageUrl: url };
+               } catch (error) {
+                 console.error(`Failed to upload image for item ${item.name}`, error);
+                 // If upload fails, keep the error or allow post without image?
+                 // For now, removing the failed image url (which was a blob)
+                 processedItems[i] = { ...item, imageUrl: undefined };
+                 toast.error(`商品 ${item.name} 圖片上傳失敗`);
+               }
+            })()
+          );
+        }
+      }
+      
+      if (uploadPromises.length > 0) {
+        toast.loading(`正在上傳 ${uploadPromises.length} 張圖片...`, { id: toastId });
+        await Promise.all(uploadPromises);
+      }
+
+      const postData = {
         listId,
         content,
         images: selectedImages,
-        items,
-      });
-      navigate(-1);
+        items: processedItems,
+      };
+
+      if (mode === 'edit' && initialData) {
+        await updatePost(initialData.id, postData);
+        toast.dismiss(toastId);
+        toast.success('更新成功');
+      } else {
+        await createPost(postData);
+        toast.dismiss(toastId);
+        toast.success('發布成功');
+      }
+      handleClose();
     } catch (err) {
       console.error(err);
-      toast.error('發布失敗');
+      toast.dismiss(toastId);
+      toast.error(mode === 'create' ? '發布失敗' : '更新失敗');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!listId) return <div>Invalid List ID</div>;
-
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div
+      ref={containerRef}
+      className="fixed inset-0 z-100 bg-neutral-100 flex flex-col"
+    >
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white px-4 py-3 flex items-center justify-between border-b border-neutral-100">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-1">
-            <ChevronLeft className="w-6 h-6 text-neutral-700" />
-          </button>
-          <h1 className="text-lg font-bold text-neutral-800">新增貼文</h1>
-        </div>
+      <header className="bg-white px-4 py-3 flex items-center gap-3 border-b border-neutral-100 shadow-sm shrink-0">
+        <button onClick={handleClose} className="p-1">
+          <ChevronLeft className="w-6 h-6 text-neutral-700" />
+        </button>
+        <h1 className="text-base font-bold text-neutral-800">
+          {mode === 'create' ? '新增採買清單' : '編輯採買清單'}
+        </h1>
       </header>
 
-      <div className="p-4 space-y-6">
-        {/* Photo Upload */}
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          <button
-            onClick={addMockImage}
-            disabled={selectedImages.length >= 3}
-            className="w-24 h-24 rounded-xl bg-neutral-50 border border-dashed border-neutral-300 flex flex-col items-center justify-center gap-1 text-neutral-400 flex-shrink-0 active:bg-neutral-100"
-          >
-            <ImageIcon className="w-6 h-6" />
-            <span className="text-xs">新增照片</span>
-          </button>
-
-          {selectedImages.map((img, idx) => (
-            <div
-              key={idx}
-              className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0"
-            >
-              <img
-                src={img}
-                alt="Selected"
-                className="w-full h-full object-cover"
-              />
-              <button
-                onClick={() =>
-                  setSelectedImages(selectedImages.filter((_, i) => i !== idx))
-                }
-                className="absolute top-1 right-1 w-5 h-5 bg-black/50 rounded-full text-white flex items-center justify-center text-xs"
-              >
-                ×
-              </button>
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-32 space-y-4" ref={contentRef}>
+        
+        {/* Shopping Items List */}
+        {items.map((item) => (
+          <div key={item.id} className="bg-white rounded-2xl p-5 space-y-4">
+             {/* Title Row */}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <div className="w-1 h-4 bg-primary-default rounded-full" />
+                    <h3 className="font-bold text-neutral-800">
+                        購物明細
+                    </h3>
+                </div>
+                <button 
+                    onClick={() => handleRemoveItem(item.id)}
+                    className="flex items-center gap-1 text-primary-default text-sm font-medium active:opacity-70"
+                >
+                    <Trash2 className="w-4 h-4" />
+                    刪除
+                </button>
             </div>
-          ))}
-        </div>
 
-        {/* Content Input */}
-        <div>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="這東西超好用！大家要不要一起買？(限40字)"
-            rows={3}
-            className="w-full p-3 bg-neutral-50 rounded-xl border border-transparent focus:bg-white focus:border-red-400 focus:outline-none resize-none"
-          />
-          <div
-            className={`text-right text-xs mt-1 ${content.length > 40 ? 'text-red-500' : 'text-neutral-400'}`}
-          >
-            {content.length}/40
+            {/* Product Name */}
+             <div className="space-y-2">
+                <label className="block text-base font-bold text-neutral-800">商品名</label>
+                <input
+                    type="text"
+                    value={item.name}
+                    onChange={(e) => handleUpdateItem(item.id, 'name', e.target.value)}
+                    placeholder="Add value"
+                    className="w-full px-4 py-3 rounded-xl border border-neutral-200 text-neutral-800 placeholder:text-neutral-300 focus:border-primary-default focus:ring-1 focus:ring-primary-default bg-white outline-none"
+                />
+            </div>
+
+            {/* Quantity */}
+            <div className="flex items-center justify-between">
+                <label className="text-base font-bold text-neutral-800">商品數量</label>
+                <div className="flex items-center gap-6">
+                    <button
+                        onClick={() => handleQuantityChange(item.id, -1)}
+                        className="w-8 h-8 rounded-full bg-primary-light text-neutral-800 flex items-center justify-center active:scale-95 transition-transform"
+                    >
+                        <Minus className="w-5 h-5" />
+                    </button>
+                    <span className="text-lg font-mono font-medium min-w-[1ch] text-center">{item.quantity}</span>
+                    <button
+                        onClick={() => handleQuantityChange(item.id, 1)}
+                        className="w-8 h-8 rounded-full bg-primary-light text-neutral-800 flex items-center justify-center active:scale-95 transition-transform"
+                    >
+                         <Plus className="w-5 h-5" />
+                    </button>
+                </div>
+            </div>
+
+            {/* Unit */}
+            <div className="space-y-2">
+                <label className="block text-base font-bold text-neutral-800">單位</label>
+                <div className="relative">
+                   <UnitSelector 
+                     value={item.unit}
+                     onChange={(val) => handleUpdateItem(item.id, 'unit', val)}
+                   />
+                </div>
+            </div>
+
+             {/* Add/Show Photo */}
+             {item.imageUrl ? (
+               <div className="relative w-full h-48 rounded-xl overflow-hidden group bg-neutral-100">
+                 <img 
+                   src={item.imageUrl} 
+                   alt={item.name} 
+                   className="w-full h-full object-cover"
+                 />
+                 <button
+                   onClick={() => handleRemoveImage(item.id)}
+                   className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                 >
+                   <Trash2 className="w-4 h-4" />
+                 </button>
+               </div>
+             ) : (
+               <button 
+                 onClick={() => handleUploadClick(item.id)}
+                 disabled={!!uploadingItemId}
+                 className="w-full py-3 rounded-xl border border-neutral-200 flex items-center justify-center gap-2 text-neutral-800 font-bold bg-white hover:bg-neutral-50 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+               >
+                 <Plus className="w-5 h-5" />
+                 {uploadingItemId === item.id ? '上傳中...' : '新增商品照'}
+               </button>
+             )}
           </div>
-        </div>
+        ))}
 
-        {/* Shopping Items */}
-        <ShoppingItemEditor items={items} onChange={setItems} />
+        {/* Add Item Button */}
+        <button
+            onClick={handleAddItem}
+            className="w-full py-4 rounded-2xl border-2 border-dashed border-neutral-300 text-neutral-400 flex items-center justify-center gap-2 hover:bg-white/50 active:scale-98 transition-all"
+        >
+            <Plus className="w-6 h-6" />
+        </button>
       </div>
 
-      {/* Footer */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-neutral-100">
+      {/* Hidden File Input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/*"
+        onChange={handleFileSelect}
+      />
+
+      {/* Fixed Footer */}
+      <div className="fixed bottom-0 left-0 right-0 px-4 py-6 bg-white rounded-t-3xl shadow-[0_-4px_10px_rgba(0,0,0,0.1)] z-50">
         <button
           onClick={handleSubmit}
-          disabled={
-            isSubmitting || (content.length === 0 && items.length === 0)
-          }
-          className="w-full py-3.5 bg-red-400 text-white rounded-xl font-bold shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-98 transition-all"
+          disabled={isSubmitting || (items.length === 0 && content.length === 0)}
+          className="w-full py-3.5 bg-primary-default text-white rounded-xl font-bold shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-98 transition-all"
         >
-          {isSubmitting ? '發布中...' : '分享發布'}
+          {isSubmitting 
+            ? (mode === 'create' ? '發布中...' : '更新中...') 
+            : (mode === 'create' ? '加入清單' : '更新清單')
+          }
         </button>
       </div>
     </div>

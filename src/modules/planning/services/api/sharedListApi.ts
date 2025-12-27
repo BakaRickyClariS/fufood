@@ -6,6 +6,7 @@ import type {
 import type {
   SharedListPost,
   CreatePostInput,
+  PostComment,
 } from '@/modules/planning/types/post';
 import { MockSharedListApi } from '../mock/mockSharedListApi';
 import { backendApi } from '@/api/client';
@@ -14,9 +15,18 @@ export type SharedListApi = {
   getSharedLists(year?: number, month?: number): Promise<SharedListItem[]>;
   getSharedListById(id: string): Promise<SharedList>;
   createSharedList(input: CreateSharedListInput): Promise<SharedList>;
+  deleteSharedList(id: string): Promise<void>;
   getPosts(listId: string): Promise<SharedListPost[]>;
   createPost(input: CreatePostInput): Promise<SharedListPost>;
   togglePostLike(postId: string, listId: string): Promise<SharedListPost>;
+  getPostComments(postId: string): Promise<PostComment[]>;
+  createPostComment(postId: string, content: string): Promise<PostComment>;
+  deletePost(postId: string, listId: string): Promise<void>;
+  updatePost(
+    postId: string,
+    listId: string,
+    input: CreatePostInput,
+  ): Promise<SharedListPost>;
 };
 
 // 真實 API 實作
@@ -49,6 +59,10 @@ export class RealSharedListApi implements SharedListApi {
     );
   }
 
+  async deleteSharedList(id: string): Promise<void> {
+    return backendApi.delete<void>(`/api/v1/shopping-lists/${id}`);
+  }
+
   async getPosts(listId: string): Promise<SharedListPost[]> {
     return backendApi.get<SharedListPost[]>(
       `/api/v1/shopping-lists/${listId}/posts`,
@@ -70,6 +84,33 @@ export class RealSharedListApi implements SharedListApi {
       `/api/v1/posts/${postId}/like`,
       { listId },
     );
+  }
+
+  async getPostComments(postId: string): Promise<PostComment[]> {
+    return backendApi.get<PostComment[]>(`/api/v1/posts/${postId}/comments`);
+  }
+
+  async createPostComment(postId: string, content: string): Promise<PostComment> {
+    return backendApi.post<PostComment>(`/api/v1/posts/${postId}/comments`, {
+      content,
+    });
+  }
+
+  async deletePost(postId: string, listId: string): Promise<void> {
+    return backendApi.delete<void>(`/api/v1/posts/${postId}`, {
+      body: { listId },
+    });
+  }
+
+  async updatePost(
+    postId: string,
+    listId: string,
+    input: CreatePostInput,
+  ): Promise<SharedListPost> {
+    return backendApi.put<SharedListPost>(`/api/v1/posts/${postId}`, {
+      ...input,
+      listId,
+    });
   }
 }
 

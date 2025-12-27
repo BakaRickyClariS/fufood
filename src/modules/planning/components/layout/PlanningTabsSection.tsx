@@ -1,9 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Tabs, type Tab } from '@/shared/components/ui/animated-tabs';
-import { useSharedLists } from '@/modules/planning/hooks/useSharedLists';
+import { useSharedListsContext } from '@/modules/planning/contexts/SharedListsContext';
 import { MonthTimelinePicker } from '@/modules/planning/components/ui/MonthTimelinePicker';
-import { SharedListsProvider } from '@/modules/planning/contexts/SharedListsContext';
 
 type MainTabId = 'planning' | 'recipes';
 type SubTabId = 'in-progress' | 'pending-purchase' | 'completed';
@@ -20,8 +19,8 @@ type PlanningTabsSectionProps = {
 const PlanningTabsSection = ({ children }: PlanningTabsSectionProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // 取得共享清單資料
-  const sharedLists = useSharedLists();
+  // 從 Layout 層級的 Context 取得共享清單資料
+  const sharedLists = useSharedListsContext();
 
   // 計算每月的清單數量供時間軸使用
   const planCountByMonth = useMemo(() => {
@@ -81,9 +80,9 @@ const PlanningTabsSection = ({ children }: PlanningTabsSectionProps) => {
   ];
 
   return (
-    <SharedListsProvider value={sharedLists}>
-      <section>
+    <section>
         <div className="max-w-layout-container mx-auto">
+          {/* 主 Tabs */}
           {/* 主 Tabs */}
           <Tabs
             variant="underline"
@@ -91,12 +90,13 @@ const PlanningTabsSection = ({ children }: PlanningTabsSectionProps) => {
             activeTab={mainTab}
             onTabChange={setMainTab}
             animated
+            className={mainTab === 'planning' ? 'shadow-none' : ''}
           />
-          <div className="mx-4 mt-4">
+          <div>
             {mainTab === 'planning' && (
-              <div className="mb-4">
+              <div className="bg-white pb-4 mb-4 rounded-b-xl">
                 {/* 月份時間軸 */}
-                <div className="mb-4">
+                <div className="p-4">
                   <MonthTimelinePicker
                     selectedYear={selectedYear}
                     selectedMonth={selectedMonth}
@@ -111,17 +111,16 @@ const PlanningTabsSection = ({ children }: PlanningTabsSectionProps) => {
                   activeTab={subTab}
                   onTabChange={setSubTab}
                   animated
-                  className="mb-6"
+                  className="mx-4"
                 />
               </div>
             )}
 
             {/* 子內容渲染 */}
-            {children(mainTab, subTab, selectedYear, selectedMonth)}
+            <div>{children(mainTab, subTab, selectedYear, selectedMonth)}</div>
           </div>
         </div>
-      </section>
-    </SharedListsProvider>
+    </section>
   );
 };
 

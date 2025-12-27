@@ -4,6 +4,7 @@ export type ShoppingItem = {
   name: string;
   quantity: number;
   unit?: string;
+  imageUrl?: string;
 };
 
 /** 清單貼文 */

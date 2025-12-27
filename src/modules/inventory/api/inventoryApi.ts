@@ -50,4 +50,10 @@ export type InventoryApi = {
   updateSettings: (
     data: UpdateInventorySettingsRequest,
   ) => Promise<InventorySettingsResponse>;
+
+  // 消耗食材
+  consumeItem: (
+    id: string,
+    data: { quantity: number; reasons: string[]; customReason?: string },
+  ) => Promise<ApiSuccess<{ id: string; remainingQuantity: number }>>;
 };
