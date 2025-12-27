@@ -14,7 +14,7 @@ export const STOCK_NOTIFICATIONS: NotificationMessage[] = [
     isRead: false,
     createdAt: '2026-01-05T10:30:00Z',
     actionType: 'inventory',
-    actionPayload: { itemId: 'item-1' },
+    actionPayload: { itemId: 'veg-1' },
   },
   {
     id: 'stock-2',
@@ -26,7 +26,7 @@ export const STOCK_NOTIFICATIONS: NotificationMessage[] = [
     isRead: false,
     createdAt: '2026-01-05T09:00:00Z',
     actionType: 'inventory',
-    actionPayload: { itemId: 'item-2' },
+    actionPayload: { itemId: 'manual-expired-1' },
   },
   {
     id: 'stock-3',
@@ -50,7 +50,7 @@ export const STOCK_NOTIFICATIONS: NotificationMessage[] = [
     isRead: true,
     createdAt: '2026-01-03T16:45:00Z',
     actionType: 'recipe',
-    actionPayload: { recipeId: 'recipe-1' },
+    actionPayload: { recipeId: 'dashboard-1' },
   },
   {
     id: 'stock-5',
@@ -62,7 +62,7 @@ export const STOCK_NOTIFICATIONS: NotificationMessage[] = [
     isRead: true,
     createdAt: '2026-01-03T11:30:00Z',
     actionType: 'inventory',
-    actionPayload: { itemId: 'item-5' },
+    actionPayload: { itemId: 'veg-3' },
   },
 ];
 
@@ -78,7 +78,7 @@ export const INSPIRATION_NOTIFICATIONS: NotificationMessage[] = [
     isRead: false,
     createdAt: '2026-01-05T18:00:00Z',
     actionType: 'recipe',
-    actionPayload: { recipeId: 'recipe-2' },
+    actionPayload: { recipeId: 'dashboard-2' },
   },
   {
     id: 'insp-2',

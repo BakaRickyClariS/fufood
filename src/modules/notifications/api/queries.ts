@@ -21,6 +21,35 @@ export const notificationKeys = {
 };
 
 /**
+ * 批次刪除通知 Mutation
+ */
+export const useDeleteNotificationsMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (ids: string[]) => notificationsApi.deleteNotifications(ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
+    },
+  });
+};
+
+/**
+ * 批次標記已讀 Mutation
+ */
+export const useMarkAsReadBatchMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ ids, isRead }: { ids: string[]; isRead: boolean }) =>
+      notificationsApi.markAsReadBatch(ids, isRead),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
+    },
+  });
+};
+
+/**
  * 取得通知列表
  */
 export const useNotificationsQuery = (params?: GetNotificationsRequest) => {
