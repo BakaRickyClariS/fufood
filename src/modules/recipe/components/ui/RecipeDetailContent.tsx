@@ -5,7 +5,7 @@ import type { Recipe, ConsumptionItem } from '@/modules/recipe/types';
 import { recipeApi } from '@/modules/recipe/services';
 import { IngredientList } from '@/modules/recipe/components/ui/IngredientList';
 import { CookingSteps } from '@/modules/recipe/components/ui/CookingSteps';
-import { ConsumptionModal } from '@/shared/components/feedback/ConsumptionModal';
+import { ConsumptionModal } from '@/modules/inventory/components/consumption';
 import {
   Sheet,
   SheetContent,
@@ -28,6 +28,7 @@ type RecipeDetailContentProps = {
   // Parent visibility controls
   onHideParent?: () => void;
   onShowParent?: () => void;
+  refrigeratorId?: string;
 };
 
 /**
@@ -46,6 +47,7 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
   isLoading = false,
   onHideParent,
   onShowParent,
+  refrigeratorId,
 }) => {
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -73,6 +75,7 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
         defaultReasons={['recipe_consumption']}
         onHideParent={onHideParent}
         onShowParent={onShowParent}
+        refrigeratorId={refrigeratorId}
         onConfirm={(success) => {
           onShowConsumptionModal(false);
           onConfirmConsumption?.(success);
