@@ -139,4 +139,39 @@ export const notificationsMockApi: NotificationsApi = {
       data: { settings },
     };
   },
+
+  // 批次刪除
+  deleteNotifications: async (ids: string[]) => {
+    await delay(200);
+
+    const initialLength = notifications.length;
+    notifications = notifications.filter((n) => !ids.includes(n.id));
+    const deletedCount = initialLength - notifications.length;
+
+    return {
+      status: true,
+      data: { deletedCount },
+    };
+  },
+
+  // 批次標記已讀
+  markAsReadBatch: async (ids: string[], isRead: boolean) => {
+    await delay(300);
+
+    let updatedCount = 0;
+    notifications = notifications.map((n) => {
+      if (ids.includes(n.id)) {
+        if (n.isRead !== isRead) {
+          updatedCount++;
+        }
+        return { ...n, isRead };
+      }
+      return n;
+    });
+
+    return {
+      status: true,
+      data: { updatedCount },
+    };
+  },
 };
