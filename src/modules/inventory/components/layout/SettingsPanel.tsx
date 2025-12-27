@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Minus, Plus } from 'lucide-react';
+import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   DndContext,
@@ -144,6 +145,7 @@ const SettingsPanel: React.FC = () => {
 
   const categoryOrder = useSelector(selectCategoryOrder);
   const dispatch = useDispatch();
+  const { groupId } = useParams<{ groupId: string }>();
 
   // 設定拖拉感應器
   const sensors = useSensors(
@@ -158,14 +160,14 @@ const SettingsPanel: React.FC = () => {
       try {
         setIsLoading(true);
 
-        const settingsResponse = await inventoryApi.getSettings();
+        const settingsResponse = await inventoryApi.getSettings(groupId);
         const layoutType =
           settingsResponse.data.settings.layoutType || 'layout-a';
         setSavedLayoutType(layoutType);
         setSelectedLayoutType(layoutType);
         dispatch(setLayout(layoutType));
 
-        const categoriesResponse = await inventoryApi.getCategories();
+        const categoriesResponse = await inventoryApi.getCategories(groupId);
         setCategories(categoriesResponse.data.categories);
 
 
@@ -265,10 +267,13 @@ const SettingsPanel: React.FC = () => {
 
   const handleApply = async () => {
     try {
-      await inventoryApi.updateSettings({
-        layoutType: selectedLayoutType,
-        categoryOrder: categoryOrder,
-      });
+      await inventoryApi.updateSettings(
+        {
+          layoutType: selectedLayoutType,
+          categoryOrder: categoryOrder,
+        },
+        groupId,
+      );
 
       setSavedLayoutType(selectedLayoutType);
       dispatch(showLayoutAppliedNotification());

@@ -8,30 +8,35 @@ export const useInventoryExtras = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchFrequentItems = useCallback(async (limit = 10) => {
-    setIsLoading(true);
-    try {
-      const response = await inventoryApi.getInventory({
-        status: 'frequent',
-        limit,
-      });
-      setFrequentItems(response.data.items);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err
-          : new Error('Failed to fetch frequent items'),
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const fetchFrequentItems = useCallback(
+    async (limit = 10, groupId?: string) => {
+      setIsLoading(true);
+      try {
+        const response = await inventoryApi.getInventory({
+          status: 'frequent',
+          limit,
+          groupId,
+        });
+        setFrequentItems(response.data.items);
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err
+            : new Error('Failed to fetch frequent items'),
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
 
   const fetchExpiredItems = useCallback(
     async (
       status: 'expired' | 'completed' = 'expired',
       page = 1,
       limit = 20,
+      groupId?: string,
     ) => {
       setIsLoading(true);
       try {
@@ -39,6 +44,7 @@ export const useInventoryExtras = () => {
           status,
           page,
           limit,
+          groupId,
         });
         setExpiredItems(response.data.items);
       } catch (err) {
