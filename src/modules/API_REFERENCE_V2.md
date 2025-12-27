@@ -455,22 +455,26 @@ await queryClient.invalidateQueries({ queryKey: ['GET_USER_PROFILE'] });
 
 ### 路由列表
 
+### 路由列表
+
 - `GET /notifications`：取得通知列表（支援 `?category=` 篩選）。
 - `GET /notifications/{id}`：取得單一通知。
 - `PATCH /notifications/{id}`：標記已讀 `{ isRead: true }`。
 - `DELETE /notifications/{id}`：刪除通知。
 - `POST /notifications/read-all`：全部標記已讀。
+- `POST /notifications/batch/delete`：批次刪除通知 `{ ids: [] }`。
+- `POST /notifications/batch/read`：批次標記已讀 `{ ids: [] }`。
 - `GET /notifications/settings`：取得通知設定。
 - `PATCH /notifications/settings`：更新通知設定。
 
-### 點擊跳轉
+### 點擊行為 (Action Type)
 
-| actionType    | 跳轉目標                            |
-| ------------- | ----------------------------------- |
-| inventory     | `/inventory/:itemId`                |
-| shopping-list | `/planning?tab=shopping&id=:listId` |
-| recipe        | `/recipes/:recipeId`                |
-| detail        | `/notifications/:id`                |
+| actionType    | 行為描述                                 |
+| ------------- | ---------------------------------------- |
+| inventory     | **Inline Modal** (不換頁)                |
+| shopping-list | 跳轉 `/planning?tab=shopping&id=:listId` |
+| recipe        | **Inline Modal** (不換頁)                |
+| detail        | 跳轉 `/notifications/:id`                |
 
 ---
 
