@@ -60,16 +60,19 @@ type InviteMemberForm = {
 
 ## 3. Groups API
 
+> [!IMPORTANT]
+> 後端實際使用 `/refrigerators` 作為群組的路由前綴，前端 API 已對應調整。
+
 ### 3.1 取得群組列表
 
-- **GET** `/api/v1/groups`
+- **GET** `/api/v1/refrigerators`
 - 200 → `Group[]`
 
 ### 3.2 建立群組
 
-- **POST** `/api/v1/groups`
+- **POST** `/api/v1/refrigerators`
 - Body: `{ name, color?, characterColor? }`
-- 201 → `Group`
+- 201 → `Group` (需包含完整 DTO 與 ID)
 
 ### 3.3 取得群組詳情
 
@@ -78,31 +81,56 @@ type InviteMemberForm = {
 
 ### 3.4 更新群組
 
-- **PUT** `/api/v1/groups/{id}`
+- **PUT** `/api/v1/refrigerators/{id}`
 - Body: `{ name?, color?, characterColor? }`
 - 200 → `Group`
 
 ### 3.5 刪除群組
 
-- **DELETE** `/api/v1/groups/{id}`
+- **DELETE** `/api/v1/refrigerators/{id}`
 - 204 或 `{ success: true }`
 
-### 3.6 邀請/加入成員（合併路由）
+### 3.6 取得群組成員列表
 
-- **POST** `/api/v1/groups/{id}/members`
+- **GET** `/api/v1/refrigerators/{id}/members`
+- 200 → `GroupMember[]`
+
+### 3.7 邀請/加入成員（合併路由）
+
+- **POST** `/api/v1/refrigerators/{id}/members`
 - Body: `InviteMemberForm & { mode?: 'invite' | 'join'; inviteCode?: string }`
 - 204 或 `{ success: true }`
 
-### 3.7 離開/移除成員
+### 3.8 離開/移除成員
 
-- **DELETE** `/api/v1/groups/{id}/members/{memberId}`
+- **DELETE** `/api/v1/refrigerators/{id}/members/{memberId}`
 - 204 或 `{ success: true }`（memberId 為自己代表離開）
 
-### 3.8 更新成員權限
+### 3.9 更新成員權限
 
-- **PATCH** `/api/v1/groups/{id}/members/{memberId}`
+- **PATCH** `/api/v1/refrigerators/{id}/members/{memberId}`
 - Body: `{ role: 'owner' | 'organizer' | 'member' }`
 - 204 或 `{ success: true }`
+
+---
+
+## 3.10 邀請好友 API (NEW - 待後端實作)
+
+### 3.10.1 搜尋好友
+
+- **GET** `/api/v1/users/friends?q={keyword}`
+- 200 → `User[]` (搜尋結果)
+
+### 3.10.2 產生邀請碼/QR Code
+
+- **POST** `/api/v1/refrigerators/{id}/invite-code`
+- 200 → `{ code: string, expiry: string, qrUrl?: string }`
+
+### 3.10.3 發送邀請通知
+
+- **POST** `/api/v1/refrigerators/{id}/invitations`
+- Body: `{ targetUserId: string }` 或 `{ email: string }`
+- 200/201 → 成功
 
 ---
 
