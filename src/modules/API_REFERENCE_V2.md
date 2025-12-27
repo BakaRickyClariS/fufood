@@ -223,19 +223,19 @@
 | 16                                           | Groups    | DELETE | `/api/v1/groups/{id}/members/{memberId}` | 離開或移除成員                                                                                      | 合併 leave/remove                    |
 | 17                                           | Groups    | PATCH  | `/api/v1/groups/{id}/members/{memberId}` | 更新成員權限                                                                                        |                                      |
 | **Inventory（庫存，批次新增/修改暫緩）**     |
-| 18                                           | Inventory | GET    | `/api/v1/inventory`                      | 庫存列表，`status` 篩選（expired/expiring-soon/low-stock/frequent/normal），`include=summary,stats` | 取代 expired/frequent/stats 獨立路由 |
-| 19                                           | Inventory | GET    | `/api/v1/inventory/{id}`                 | 單一食材詳情                                                                                        |                                      |
-| 20                                           | Inventory | POST   | `/api/v1/inventory`                      | 新增食材                                                                                            |                                      |
-| 21                                           | Inventory | PUT    | `/api/v1/inventory/{id}`                 | 更新食材                                                                                            |                                      |
-| 22                                           | Inventory | DELETE | `/api/v1/inventory/{id}`                 | 刪除食材                                                                                            |                                      |
-| 23                                           | Inventory | DELETE | `/api/v1/inventory/batch`                | 批次刪除                                                                                            | 可選；前端可迭代單刪                 |
-| 24                                           | Inventory | GET    | `/api/v1/inventory/categories`           | 類別列表                                                                                            |                                      |
-| 25                                           | Inventory | GET    | `/api/v1/inventory/settings`             | 取得庫存設定                                                                                        |                                      |
-| 26                                           | Inventory | PUT    | `/api/v1/inventory/settings`             | 更新庫存設定                                                                                        |                                      |
-| 27                                           | Inventory | GET    | `/api/v1/inventory/summary`              | 庫存摘要                                                                                            | 若用 include 可移除                  |
-| **暫緩**                                     | Inventory | POST   | `/api/v1/inventory/batch`                | 批次新增                                                                                            | 先不做                               |
-| **暫緩**                                     | Inventory | PUT    | `/api/v1/inventory/batch`                | 批次修改                                                                                            | 先不做                               |
-| 28                                           | Inventory | POST   | `/api/v1/inventory/{id}/consume`         | 消耗食材，扣減數量並記錄原因                                                                        | 新增                                 |
+| 18                                           | Inventory | GET    | `/api/v1/refrigerators/{id}/inventory`   | 庫存列表 | `status` 篩選 (expired/normal...) |
+| 19                                           | Inventory | GET    | `/api/v1/refrigerators/{id}/inventory/{id}`     | 單一食材詳情 | |
+| 20                                           | Inventory | POST   | `/api/v1/refrigerators/{id}/inventory`   | 新增食材 | |
+| 21                                           | Inventory | PUT    | `/api/v1/refrigerators/{id}/inventory/{id}`     | 更新食材 | |
+| 22                                           | Inventory | DELETE | `/api/v1/refrigerators/{id}/inventory/{id}`     | 刪除食材 | |
+| 23                                           | Inventory | DELETE | `/api/v1/refrigerators/{id}/inventory/batch` | 批次刪除 | 可選 |
+| 24                                           | Inventory | GET    | `/api/v1/refrigerators/{id}/inventory/categories` | 類別列表 | |
+| 25                                           | Inventory | GET    | `/api/v1/refrigerators/{id}/inventory/settings` | 取得庫存設定 | |
+| 26                                           | Inventory | PUT    | `/api/v1/refrigerators/{id}/inventory/settings` | 更新庫存設定 | |
+| 27                                           | Inventory | GET    | `/api/v1/refrigerators/{id}/inventory/summary` | 庫存摘要 | 若用 include 可移除 |
+| **暫緩**                                     | Inventory | POST   | `/api/v1/refrigerators/{id}/inventory/batch` | 批次新增 | 先不做 |
+| **暫緩**                                     | Inventory | PUT    | `/api/v1/refrigerators/{id}/inventory/batch` | 批次修改 | 先不做 |
+| 28                                           | Inventory | POST   | `/api/v1/refrigerators/{id}/inventory/{id}/consume` | 消耗食材 | 新增 |
 | **Foods（合併 category 查詢）**              |
 | 29                                           | Foods     | GET    | `/api/v1/foods`                          | 食材列表，`?category=` 篩選                                                                         | 取代 `/foods/category/{catId}`       |
 | 30                                           | Foods     | GET    | `/api/v1/foods/{id}`                     | 食材詳情                                                                                            | 取代 `/foods/category/{catId}/{id}`  |
@@ -389,17 +389,18 @@ await queryClient.invalidateQueries({ queryKey: ['GET_USER_PROFILE'] });
 
 ### 路由
 
-- `GET /inventory`：列表，支援 `groupId`, `category`, `status`（expired/expiring-soon/low-stock/frequent/normal），`page/limit`，`include=summary,stats`。
-- `GET /inventory/{id}`：單筆。
-- `POST /inventory`：新增。
-- `PUT /inventory/{id}`：更新。
-- `DELETE /inventory/{id}`：刪除。
-- `DELETE /inventory/batch`：批次刪除（可選）。
-- `GET /inventory/categories`：類別列表。
-- `GET /inventory/settings` / `PUT /inventory/settings`：設定讀/寫。
-- `GET /inventory/summary`：摘要（若列表已 include，則可移除）。
-- **暫緩** `POST /inventory/batch`：批次新增。
-- **暫緩** `PUT /inventory/batch`：批次修改。
+- `GET /refrigerators/{id}/inventory`：列表。
+- `GET /refrigerators/{id}/inventory/{itemId}`：單筆。
+- `POST /refrigerators/{id}/inventory`：新增。
+- `PUT /refrigerators/{id}/inventory/{itemId}`：更新。
+- `DELETE /refrigerators/{id}/inventory/{itemId}`：刪除。
+- `DELETE /refrigerators/{id}/inventory/batch`：批次刪除（可選）。
+- `GET /refrigerators/{id}/inventory/categories`：類別列表。
+- `GET /refrigerators/{id}/inventory/settings` / `PUT /refrigerators/{id}/inventory/settings`：設定讀/寫。
+- `GET /refrigerators/{id}/inventory/summary`：摘要。
+- **暫緩** `POST /refrigerators/{id}/inventory/batch`：批次新增。
+- **暫緩** `PUT /refrigerators/{id}/inventory/batch`：批次修改。
+- `POST /refrigerators/{id}/inventory/{itemId}/consume`：消耗食材。
 
 ---
 

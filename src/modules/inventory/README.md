@@ -19,7 +19,8 @@
 
 本模組負責管理使用者的 **食材庫存**。提供庫存列表檢視、食材新增/編輯/刪除、過期狀態追蹤、以及庫存統計功能。支援多種篩選與排序方式，並透過 Redux 管理全域狀態。
 
-> 新版 API（參考 `API_REFERENCE_V2.md`）：以 `status` / `include` 參數整合過期、常用、統計路由；批次新增/批次更新暫緩，批次刪除仍可選。
+> 新版 API（參考 `API_REFERENCE_V2.md`）：全面採用 `/refrigerators/{refrigeratorId}/inventory` 路徑。已整合過期、常用、統計路由；新增消耗功能。
+
 
 ### 核心功能
 
@@ -45,7 +46,9 @@ inventory/
 │       └── inventoryMockData.ts
 ├── components/           # UI 元件
 │   ├── layout/           # 佈局元件 (OverviewPanel, CommonItemsPanel...)
-│   └── ui/               # 基礎元件 (FoodCard, CategoryCard...)
+│   ├── ui/               # 基礎元件 (FoodCard, CategoryCard...)
+│   └── consumption/      # 消耗相關元件 (ConsumptionModal, etc.)
+
 ├── hooks/                # 自定義 Hooks
 │   ├── index.ts
 │   ├── useInventory.ts         # 庫存管理 Hook
@@ -128,25 +131,36 @@ export type FoodCategory =
 export const inventoryApi = {
   getInventory: (
     params?: GetInventoryRequest,
+    refrigeratorId?: string,
   ) => Promise<{ status: true; data: { items: FoodItem[]; total: number; stats?: InventoryStats; summary?: InventorySummary } }>;
-  getItem: (id: string) => Promise<{ status: true; data: { item: FoodItem } }>;
+  getItem: (id: string, refrigeratorId?: string) => Promise<{ status: true; data: { item: FoodItem } }>;
   addItem: (
     data: AddFoodItemRequest,
+    refrigeratorId?: string,
   ) => Promise<{ status: true; message: string; data: { id: string } }>;
   updateItem: (
     id: string,
     data: UpdateFoodItemRequest,
+    refrigeratorId?: string,
   ) => Promise<{ status: true; message: string; data: { id: string } }>;
-  deleteItem: (id: string) => Promise<{ status: true; message: string }>;
+  deleteItem: (id: string, refrigeratorId?: string) => Promise<{ status: true; message: string }>;
   batchDelete: (
     data: BatchDeleteInventoryRequest,
+    refrigeratorId?: string,
   ) => Promise<{ status: true; message?: string; data: Record<string, never> }>;
-  getCategories: () => Promise<{ status: true; data: { categories: CategoryInfo[] } }>;
-  getSummary: () => Promise<{ status: true; data: { summary: InventorySummary } }>;
-  getSettings: () => Promise<{ status: true; data: { settings: InventorySettings } }>;
+  getCategories: (refrigeratorId?: string) => Promise<{ status: true; data: { categories: CategoryInfo[] } }>;
+  getSummary: (refrigeratorId?: string) => Promise<{ status: true; data: { summary: InventorySummary } }>;
+  getSettings: (refrigeratorId?: string) => Promise<{ status: true; data: { settings: InventorySettings } }>;
   updateSettings: (
     data: UpdateInventorySettingsRequest,
+    refrigeratorId?: string,
   ) => Promise<{ status: true; message?: string; data: { settings: InventorySettings } }>;
+  consumeItem: (
+    id: string,
+    data: ConsumeFoodItemRequest,
+    refrigeratorId?: string,
+  ) => Promise<{ status: true; message: string; data: { id: string; remainingQuantity: number; consumedAt: string } }>;
+
 };
 ```
 
@@ -178,7 +192,8 @@ export const foodsApi = {
 **Endpoint**
 
 ```
-GET /api/v1/inventory
+GET /api/v1/refrigerators/{refrigeratorId}/inventory
+
 ```
 
 **Query**
@@ -208,7 +223,8 @@ GET /api/v1/inventory
 **Endpoint**
 
 ```
-POST /api/v1/inventory
+POST /api/v1/refrigerators/{refrigeratorId}/inventory
+
 ```
 
 **Body**: `AddFoodItemRequest`  
@@ -226,13 +242,15 @@ POST /api/v1/inventory
 
 ### 3. 其他核心端點（皆含 `/api/v1` 前綴）
 
-- `GET /inventory/{id}`：單一食材
-- `PUT /inventory/{id}`：更新食材
-- `DELETE /inventory/{id}`：刪除食材
-- `DELETE /inventory/batch`：批次刪除（可選）
-- `GET /inventory/categories`：分類清單
-- `GET /inventory/summary`：庫存摘要（若列表已 include，可省略）
-- `GET /inventory/settings` / `PUT /inventory/settings`：取得 / 更新庫存設定
+- `GET /refrigerators/{id}/inventory/{itemId}`：單一食材
+- `PUT /refrigerators/{id}/inventory/{itemId}`：更新食材
+- `DELETE /refrigerators/{id}/inventory/{itemId}`：刪除食材
+- `DELETE /refrigerators/{id}/inventory/batch`：批次刪除（可選）
+- `GET /refrigerators/{id}/inventory/categories`：分類清單
+- `GET /refrigerators/{id}/inventory/summary`：庫存摘要
+- `GET /refrigerators/{id}/inventory/settings` / `PUT ...`：取得 / 更新庫存設定
+- `POST /refrigerators/{id}/inventory/{itemId}/consume`：消耗食材
+
 
 > 舊路由 `/inventory/frequent`、`/inventory/expired`、`/inventory/stats` 已被整合；批次新增/更新暫緩。
 
@@ -243,19 +261,21 @@ POST /api/v1/inventory
 ### `useInventory.ts`
 
 ```typescript
-const useInventory = (groupId?: string) => {
+```typescript
+const useInventory = (groupId?: string) => { // groupId 即 refrigeratorId
   return {
     items: FoodItem[];
     isLoading: boolean;
     error: Error | null;
-    addItem: (data: AddFoodItemRequest) => Promise<void>;
-    updateItem: (id: string, data: UpdateFoodItemRequest) => Promise<void>;
-    deleteItem: (id: string) => Promise<void>;
-    batchDelete: (ids: string[]) => Promise<void>;
+    addItem: (data: AddFoodItemRequest, refrigeratorId?: string) => Promise<void>;
+    updateItem: (id: string, data: UpdateFoodItemRequest, refrigeratorId?: string) => Promise<void>;
+    deleteItem: (id: string, refrigeratorId?: string) => Promise<void>;
+    batchDelete: (ids: string[], refrigeratorId?: string) => Promise<void>;
     refetch: () => Promise<void>;
   };
 };
 ```
+
 
 **功能**：管理庫存 CRUD，處理 loading/error，支援批次刪除。
 
