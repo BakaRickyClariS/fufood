@@ -1,15 +1,6 @@
-export type FoodCategory =
-  | '蔬菜'
-  | '水果'
-  | '肉類'
-  | '海鮮'
-  | '乳製品'
-  | '飲品'
-  | '零食'
-  | '調味料'
-  | '其他';
+export type FoodCategory = string;
 
-export type FoodAttribute = '常溫' | '冷藏' | '冷凍';
+export type FoodAttribute = string;
 
 export type FoodUnit =
   | '個'

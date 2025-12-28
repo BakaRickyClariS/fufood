@@ -9,6 +9,8 @@ import type {
   FoodItem,
 } from '../../types';
 
+import { categories } from '@/modules/inventory/constants/categories';
+
 // Internal type for raw API response
 type RawScanResponsePayload = {
   productName?: string;
@@ -37,12 +39,72 @@ export const createRealFoodScanApi = (): FoodScanApi => {
       (resp as RawScanResponse) ??
       {};
 
+    // Helper to find the closest matching category from our constant list
+    const normalizeCategory = (input?: string): string => {
+      if (!input) return '其他';
+
+      // 1. Try exact match with title
+      const exactMatch = categories.find((c) => c.title === input);
+      if (exactMatch) return exactMatch.title;
+
+      // 2. Try partial match with title or keywords (simple mapping)
+      // This can be expanded based on real API behavior
+      if (input.includes('菜') || input.includes('果')) return '蔬果類';
+      if (
+        input.includes('肉') ||
+        input.includes('牛') ||
+        input.includes('豬') ||
+        input.includes('雞')
+      )
+        return '肉品類';
+      if (
+        input.includes('海鮮') ||
+        input.includes('魚') ||
+        input.includes('蝦')
+      )
+        return '冷凍海鮮類';
+      if (
+        input.includes('奶') ||
+        input.includes('蛋') ||
+        input.includes('喝') ||
+        input.includes('乳')
+      )
+        return '乳品飲料類';
+      if (input.includes('凍') || input.includes('冰')) return '冷凍調理類';
+      if (input.includes('麵') || input.includes('飯') || input.includes('粉'))
+        return '主食烘焙類';
+
+      return '乾貨醬料類';
+    };
+
+    const normalizeAttributes = (category: string, input?: string): string => {
+      // Ideally we match against the description list in categories.ts
+      // For now, we return input if present, or a default based on category
+      if (input && input !== '常溫' && input !== '冷藏' && input !== '冷凍')
+        return input;
+
+      const catDef = categories.find((c) => c.title === category);
+      if (catDef && catDef.description.length > 0) {
+        // Clean up the description string (remove punctuations if needed)
+        // For simple fallback, just return the first part of description without commas
+        const firstDesc = catDef.description[0].split('、')[0];
+        return firstDesc;
+      }
+      return '其他';
+    };
+
+    const finalCategory = normalizeCategory(payload.category);
+    const finalAttributes = normalizeAttributes(
+      finalCategory,
+      payload.attributes,
+    );
+
     // Best-effort mapping to FoodItemInput; provide sensible defaults
     const today = new Date().toISOString().slice(0, 10);
     const mapped: FoodItemInput = {
       productName: payload.productName ?? payload.name ?? '',
-      category: (payload.category ?? '其他') as FoodItemInput['category'],
-      attributes: (payload.attributes ?? '常溫') as FoodItemInput['attributes'],
+      category: finalCategory as FoodItemInput['category'],
+      attributes: finalAttributes as FoodItemInput['attributes'],
       purchaseQuantity: Number(payload.purchaseQuantity ?? 1),
       unit: (payload.unit ?? '份') as FoodItemInput['unit'],
       purchaseDate: payload.purchaseDate ?? today,
