@@ -116,23 +116,43 @@ type JoinGroupForm = {
 
 ---
 
-## 3.10 邀請好友 API (NEW - 待後端實作)
+## 3.10 邀請好友 API
 
 ### 3.10.1 搜尋好友
 
 - **GET** `/api/v1/users/friends?q={keyword}`
 - 200 → `User[]` (搜尋結果)
 
-### 3.10.2 產生邀請碼/QR Code
-
-- **POST** `/api/v1/refrigerators/{id}/invite-code`
-- 200 → `{ code: string, expiry: string, qrUrl?: string }`
-
-### 3.10.3 發送邀請通知
+### 3.10.2 產生邀請 Token（QR Code 邀請）
 
 - **POST** `/api/v1/refrigerators/{id}/invitations`
-- Body: `{ targetUserId: string }` 或 `{ email: string }`
-- 200/201 → 成功
+- 200 →
+
+```json
+{
+  "data": {
+    "id": "string",
+    "token": "string",
+    "viewCount": 0,
+    "refrigeratorId": "string",
+    "refrigerator": { ... },
+    "creatorId": "string",
+    "creator": { ... },
+    "expiresAt": "ISO8601",
+    "createdAt": "ISO8601",
+    "updatedAt": "ISO8601"
+  }
+}
+```
+
+> [!NOTE]
+> 邀請為**單次使用**，使用後即作廢。前端使用 token 組合邀請連結：`/invite/{token}`
+
+### 3.10.3 驗證邀請 Token
+
+- **GET** `/api/v1/invitations/{token}`
+- 200 → 邀請詳情與群組資訊（GET 時自動標記為已使用）
+- 回應格式同 3.10.2，但 `token` 欄位為 `null`
 
 ---
 
