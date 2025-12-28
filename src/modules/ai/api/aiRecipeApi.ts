@@ -184,4 +184,174 @@ export const aiRecipeApi = {
    * 檢查是否使用 Mock 模式
    */
   isMockMode: (): boolean => USE_MOCK,
+
+  // ============================================================
+  // 儲存食譜 API (gemini-ai-recipe-gen-mvp.vercel.app)
+  // ============================================================
+
+  /**
+   * 取得使用者 ID (從 localStorage 讀取)
+   */
+  getUserId: (): string | null => {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        return user.id || null;
+      }
+    } catch (e) {
+      console.warn('Failed to get user id from local storage', e);
+    }
+    return null;
+  },
+
+  /**
+   * 儲存 AI 生成的食譜到資料庫
+   */
+  saveRecipe: async (recipe: SaveRecipeInput): Promise<SavedRecipe> => {
+    const userId = aiRecipeApi.getUserId();
+    if (!userId) {
+      throw new Error('User ID not found. Please login first.');
+    }
+
+    const SAVED_RECIPES_API = import.meta.env.VITE_AI_API_URL || 'https://gemini-ai-recipe-gen-mvp.vercel.app';
+    
+    const response = await fetch(`${SAVED_RECIPES_API}/api/v1/recipes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+      },
+      body: JSON.stringify(recipe),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to save recipe: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return result.data;
+  },
+
+  /**
+   * 取得使用者已儲存的食譜列表
+   */
+  getSavedRecipes: async (): Promise<SavedRecipeListItem[]> => {
+    const userId = aiRecipeApi.getUserId();
+    if (!userId) {
+      console.warn('No user ID, returning empty list');
+      return [];
+    }
+
+    const SAVED_RECIPES_API = import.meta.env.VITE_AI_API_URL || 'https://gemini-ai-recipe-gen-mvp.vercel.app';
+    
+    const response = await fetch(`${SAVED_RECIPES_API}/api/v1/recipes?userId=${userId}&limit=50`);
+
+    if (!response.ok) {
+      if (response.status === 404) return [];
+      throw new Error(`Failed to get saved recipes: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return result.data.recipes || [];
+  },
+
+  /**
+   * 取得單一已儲存食譜詳情
+   */
+  getSavedRecipeById: async (id: string): Promise<SavedRecipe> => {
+    const SAVED_RECIPES_API = import.meta.env.VITE_AI_API_URL || 'https://gemini-ai-recipe-gen-mvp.vercel.app';
+    
+    const response = await fetch(`${SAVED_RECIPES_API}/api/v1/recipes/${id}`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to get recipe detail: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return result.data;
+  },
+
+  /**
+   * 更新已儲存的食譜 (例如更新收藏狀態)
+   */
+  updateSavedRecipe: async (id: string, data: Partial<SavedRecipe>): Promise<SavedRecipe> => {
+    const userId = aiRecipeApi.getUserId();
+    if (!userId) {
+      throw new Error('User ID not found. Please login first.');
+    }
+
+    const SAVED_RECIPES_API = import.meta.env.VITE_AI_API_URL || 'https://gemini-ai-recipe-gen-mvp.vercel.app';
+    
+    const response = await fetch(`${SAVED_RECIPES_API}/api/v1/recipes/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update recipe: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return result.data;
+  },
 };
+
+// ============================================================
+// 儲存食譜型別
+// ============================================================
+
+/** 儲存食譜的輸入格式 */
+export type SaveRecipeInput = {
+  name: string;
+  category?: string;
+  description?: string;
+  imageUrl?: string;
+  servings?: number;
+  cookTime?: number;
+  difficulty?: '簡單' | '中等' | '困難';
+  ingredients: { name: string; amount: string; unit: string }[];
+  seasonings?: { name: string; amount: string; unit: string }[];
+  steps: { step: number; description: string }[];
+  originalPrompt?: string;
+};
+
+/** 已儲存的食譜 (完整) */
+export type SavedRecipe = {
+  id: string;
+  userId: string;
+  name: string;
+  category: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  servings: number;
+  cookTime: number | null;
+  difficulty: '簡單' | '中等' | '困難' | null;
+  ingredients: { name: string; amount: string; unit: string }[];
+  seasonings: { name: string; amount: string; unit: string }[];
+  steps: { step: number; description: string }[];
+  source: 'ai_generated' | 'manual';
+  originalPrompt: string | null;
+  isFavorite: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** 已儲存的食譜列表項目 */
+export type SavedRecipeListItem = {
+  id: string;
+  name: string;
+  category: string | null;
+  imageUrl: string | null;
+  servings: number;
+  cookTime: number | null;
+  difficulty: '簡單' | '中等' | '困難' | null;
+  isFavorite: boolean;
+  createdAt: string;
+};
+
