@@ -109,20 +109,36 @@ export type ProfileResponse = {
 
 ## API 規格
 
-### 路由（對應 API_REFERENCE_V2 #1-#9）
+### API 整合與 Mock 策略
 
-| 路由 | 說明 |
-|------|------|
-| `POST /api/v1/auth/register` | 註冊 |
-| `POST /api/v1/auth/login` | 登入 |
-| `POST /api/v1/auth/logout` | 登出（清除 Cookie/Session） |
-| `POST /api/v1/auth/refresh` | 用 refresh token 換 access token |
-| `GET /api/v1/auth/me` | 取得登入者資訊（401 視為未登入） |
-| `GET /api/v1/auth/check` | 輕量驗證 Token（回 204/200 或 401） |
-| `GET /oauth/line/init` | LINE OAuth 入口 |
-| `GET /oauth/line/callback` | LINE OAuth 回呼 |
-| `GET /api/v1/profile` | 取得當前用戶 Profile（HttpOnly Cookie 認證） |
-| `PUT /api/v1/auth/update-profile` | 更新個人資料 |
+Auth 模組採用「**真實 API 優先，Mock 作為備援**」的混合策略 (`Real -> Mock Fallback`)：
+
+1.  **資料讀取 (Queries)**：
+    *   優先嘗試呼叫真實後端 API (透過 HttpOnly Cookie)。
+    *   若 API 回應失敗 (非 401 錯誤) 且 `VITE_USE_MOCK_API=true`，則回退使用 Mock 資料。
+    *   這確保在後端 API 不穩定或開發中時，前端功能仍能運作。
+
+2.  **資料寫入 (Mutations)**：
+    *   如 `updateProfile`，先嘗試真實 API。
+    *   若失敗，則進行本地模擬更新 (更新 `localStorage`)，讓 UI 能即時反應。
+    *   **注意**：本地模擬的變更在清除瀏覽器快取後會消失。
+
+3.  **持久化 (Persistence)**：
+    *   資料會同步備份至 `localStorage` (`user` key)。
+    *   這解決了頁面重整後，若 API 暫時無法存取時的資料空白問題。
+
+### API 路由對照
+
+| Method | Endpoint | 描述 | 備註 |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/auth/login` | 帳號登入 | Email/Password |
+| `POST` | `/api/v1/auth/register` | 註冊帳號 | |
+| `POST` | `/api/v1/auth/logout` | 登出 | 清除 Cookie |
+| `GET` | `/api/v1/auth/me` | 取得當前用戶 | 需 Token |
+| `GET` | `/api/v1/profile` | 取得個人資料 | 透過 Cookie 驗證 |
+| `PUT` | `/api/v1/auth/update-profile` | 更新個人資料 | 修正為 v1 路徑 |
+| `GET` | `/oauth/line/init` | LINE 登入導向 | |
+| `GET` | `/oauth/line/callback` | LINE 登入回調 | 回呼 |
 
 ### AuthApi 介面
 
