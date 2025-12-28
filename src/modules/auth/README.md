@@ -40,6 +40,7 @@ auth/
 ├── api/                  # API 層
 │   ├── authApi.ts        # 傳統 API 定義（Mock 支援）
 │   ├── queries.ts        # TanStack Query Hooks
+│   ├── mutations.ts      # (NEW) Mutation Hooks
 │   ├── mock/             # Mock 資料
 │   │   └── authMockData.ts
 │   └── index.ts
@@ -67,24 +68,44 @@ auth/
 
 ```typescript
 export type MembershipTier = 'free' | 'premium' | 'vip';
+export type CookingFrequency = '1-2' | '3-4' | '5-7' | 'daily';
+export type PrepTime = 'under15' | '15-30' | 'over30';
+export type SeasoningLevel = 'light' | 'moderate' | 'spicy' | 'rich';
+
+export type DietaryRestriction = 
+  | 'none'
+  | 'vegan'
+  | 'vegetarian'
+  | 'omnivore'
+  | 'seafood-allergy'
+  | 'gluten-allergy'
+  | 'dairy-egg-allergy'
+  | 'nut-allergy';
+
+export type DietaryPreference = {
+  cookingFrequency: CookingFrequency;
+  prepTime: PrepTime;
+  seasoningLevel: SeasoningLevel;
+  restrictions: DietaryRestriction[];
+};
 
 export type User = {
   id: string;
   email?: string;           // LINE 登入可能無 email
   name?: string;
   avatar: string;
+  phone?: string;
+  gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
   createdAt: Date;
+  updatedAt: Date;
   // LINE 專屬欄位
   lineId?: string;
   displayName?: string;
   pictureUrl?: string;      // LINE 頭貼 URL（用於 TopNav 顯示）
-  // 個人詳細資料
-  phone?: string;
-  gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
-  // 飲食喜好
-  dietaryPreference?: DietaryPreference;
   // 會員等級
   membershipTier?: MembershipTier;
+  // 飲食喜好
+  dietaryPreference?: DietaryPreference;
 };
 
 export type AuthToken = {
@@ -98,6 +119,11 @@ export type ProfileData = {
   lineId: string;
   name: string;
   profilePictureUrl: string;
+  phone?: string;
+  gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
+  dietaryPreference?: DietaryPreference;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type ProfileResponse = {

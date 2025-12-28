@@ -32,6 +32,7 @@
 groups/
 ├── api/
 │   ├── groupsApi.ts          # API 呼叫 (使用 /refrigerators 端點)
+│   ├── queries.ts            # React Query hooks
 │   └── index.ts
 ├── mock/
 │   └── groupsMockData.ts
@@ -39,7 +40,7 @@ groups/
 │   ├── modals/
 │   │   ├── HomeModal.tsx         # 群組首頁 Modal
 │   │   ├── MembersModal.tsx      # 成員列表 Modal
-│   │   ├── InviteFriendModal.tsx # 邀請好友 Modal (NEW)
+│   │   ├── InviteFriendModal.tsx # 邀請好友 Modal
 │   │   ├── CreateGroupModal.tsx  # 建立群組 Modal
 │   │   ├── EditGroupModal.tsx    # 編輯群組 Modal
 │   │   └── SettingsModal.tsx     # 群組設定 Modal
@@ -51,7 +52,7 @@ groups/
 ├── providers/
 │   └── GroupModalProvider.tsx    # 集中管理所有 Modal 狀態
 ├── store/
-│   └── groupsSlice.ts            # Redux Toolkit slice (NEW)
+│   └── groupsSlice.ts            # Redux Toolkit slice
 ├── types/
 │   └── group.types.ts
 └── index.ts
@@ -83,6 +84,20 @@ export type Group = {
 export type CreateGroupForm = { name: string };
 export type UpdateGroupForm = { name?: string };
 export type InviteMemberForm = { email: string; role?: GroupMember['role'] };
+export type JoinGroupForm = { inviteCode: string };
+
+export interface Friend {
+  id: string;
+  name: string;
+  avatar: string;
+  lineId?: string;
+}
+
+export interface InviteCodeResponse {
+  code: string;
+  expiry: string;
+  qrUrl?: string;
+}
 ```
 
 ---
@@ -115,9 +130,13 @@ export const groupsApi = {
   create: (data: CreateGroupForm) => Promise<Group>;
   update: (id: string, data: UpdateGroupForm) => Promise<Group>;
   delete: (id: string) => Promise<void>;
-  addOrInviteMember: (groupId: string, data: InviteMemberForm & { mode?: 'invite' | 'join' }) => Promise<void>;
+  join: (groupId: string, data: JoinGroupForm) => Promise<void>;
+  leave: (groupId: string, memberId: string) => Promise<void>;
+  inviteMember: (groupId: string, data: InviteMemberForm) => Promise<void>;
   removeMember: (groupId: string, memberId: string) => Promise<void>;
   updateMemberRole: (groupId: string, memberId: string, role: GroupMember['role']) => Promise<void>;
+  searchFriends: (query: string) => Promise<Friend[]>;
+  getInviteCode: (groupId: string) => Promise<InviteCodeResponse>;
 };
 ```
 
