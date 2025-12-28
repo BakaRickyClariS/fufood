@@ -1,84 +1,84 @@
-import { useState, useEffect } from 'react';
-import { groupsApi } from '../api';
-import type {
-  Group,
-  CreateGroupForm,
-  UpdateGroupForm,
-} from '../types/group.types';
-// Temporarily import mockGroups to ensure images work during dev if API is not ready
-import { mockGroups } from '../mocks/mockData';
+import { useEffect, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import type { AppDispatch, RootState } from '@/store';
+import {
+  fetchGroups as fetchGroupsAction,
+  createGroup as createGroupAction,
+  updateGroup as updateGroupAction,
+  deleteGroup as deleteGroupAction,
+  selectAllGroups,
+  selectGroupsLoading,
+  selectGroupsError,
+} from '../store/groupsSlice';
+import type { CreateGroupForm, UpdateGroupForm } from '../types/group.types';
 
 /**
- * 群組資料管理 Hook
+ * 群組資料管理 Hook (Redux Version)
+ * 
+ * 整合 Redux 全域狀態管理，確保所有群組資料的變更都能即時同步到所有組件。
  */
 export const useGroups = () => {
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const dispatch = useDispatch<AppDispatch>();
+  
+  // Select state from Redux
+  const groups = useSelector((state: RootState) => selectAllGroups(state));
+  const isLoading = useSelector((state: RootState) => selectGroupsLoading(state));
+  const errorMsg = useSelector((state: RootState) => selectGroupsError(state));
 
-  const fetchGroups = async () => {
-    setIsLoading(true);
-    try {
-      const data = await groupsApi.getAll();
-      // 確保資料是陣列，避免 API 回傳非預期格式導致 .map() 錯誤
-      setGroups(Array.isArray(data) ? data : []);
-    } catch (err) {
-      // API 失敗時使用 mock 資料作為 fallback
-      console.warn('Failed to fetch groups from API, using mock data:', err);
-      setGroups(Array.isArray(mockGroups) ? mockGroups : []);
-      setError(err as Error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const fetchGroups = useCallback(() => {
+    dispatch(fetchGroupsAction());
+  }, [dispatch]);
 
   const createGroup = async (form: CreateGroupForm) => {
-    setIsLoading(true);
     try {
-      const newGroup = await groupsApi.create(form);
-      setGroups((prev) => [...prev, newGroup]);
+      const resultAction = await dispatch(createGroupAction(form));
+      if (createGroupAction.fulfilled.match(resultAction)) {
+        return resultAction.payload;
+      } else {
+        throw new Error(resultAction.payload as string);
+      }
     } catch (err) {
-      setError(err as Error);
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const updateGroup = async (id: string, form: UpdateGroupForm) => {
-    setIsLoading(true);
     try {
-      const updatedGroup = await groupsApi.update(id, form);
-      setGroups((prev) => prev.map((g) => (g.id === id ? updatedGroup : g)));
+      const resultAction = await dispatch(updateGroupAction({ id, data: form }));
+      if (updateGroupAction.fulfilled.match(resultAction)) {
+        return resultAction.payload;
+      } else {
+        throw new Error(resultAction.payload as string);
+      }
     } catch (err) {
-      setError(err as Error);
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const deleteGroup = async (id: string) => {
-    setIsLoading(true);
     try {
-      await groupsApi.delete(id);
-      setGroups((prev) => prev.filter((g) => g.id !== id));
+      const resultAction = await dispatch(deleteGroupAction(id));
+      if (deleteGroupAction.fulfilled.match(resultAction)) {
+        return;
+      } else {
+        throw new Error(resultAction.payload as string);
+      }
     } catch (err) {
-      setError(err as Error);
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   };
 
+  // Initial fetch on mount
+  // 注意：這會導致每個使用此 Hook 的組件都觸發一次 fetch
+  // 但目前主要由 GroupModalProvider 使用，作為 Singleton 存在
   useEffect(() => {
     fetchGroups();
-  }, []);
+  }, [fetchGroups]);
 
   return {
     groups,
     isLoading,
-    error,
+    error: errorMsg ? new Error(errorMsg) : null,
     createGroup,
     updateGroup,
     deleteGroup,

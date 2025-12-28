@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   setLayout,
@@ -13,6 +14,7 @@ import {
   selectCurrentLayout,
   selectCategoryOrder,
 } from '@/modules/inventory/store/inventorySlice';
+import useFadeInAnimation from '@/shared/hooks/useFadeInAnimation';
 import type { CategoryInfo } from '@/modules/inventory/types';
 
 const DynamicGridAreaStyles = ({
@@ -30,9 +32,11 @@ const DynamicGridAreaStyles = ({
 const OverviewPanel: React.FC = () => {
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { ref: contentRef } = useFadeInAnimation<HTMLElement>({ isLoading });
   const currentLayout = useSelector(selectCurrentLayout);
   const categoryOrder = useSelector(selectCategoryOrder);
   const dispatch = useDispatch();
+  const { groupId } = useParams<{ groupId: string }>();
 
   // 初次載入時從 API 取得資料
   useEffect(() => {
@@ -42,8 +46,8 @@ const OverviewPanel: React.FC = () => {
 
         // 同時載入設定和類別
         const [settingsResponse, categoriesResponse] = await Promise.all([
-          inventoryApi.getSettings(),
-          inventoryApi.getCategories(),
+          inventoryApi.getSettings(groupId),
+          inventoryApi.getCategories(groupId),
         ]);
 
         // 更新設定到 Redux
@@ -138,11 +142,15 @@ const OverviewPanel: React.FC = () => {
   }, [layoutSlots, sortedCategories]);
 
   if (isLoading) {
-    return <div className="p-4 text-center">Loading categories...</div>;
+    return (
+      <div className="p-4 text-center text-neutral-400">
+        Loading categories...
+      </div>
+    );
   }
 
   return (
-    <section className="pb-30 relative">
+    <section ref={contentRef} className="pb-30 relative">
       <DynamicGridAreaStyles categories={categories} />
 
       <div

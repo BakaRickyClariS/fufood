@@ -48,7 +48,26 @@ export type JoinGroupForm = {
   inviteCode: string;
 };
 
-/**
- * Modal 狀態型別
- */
-export type GroupModalView = 'list' | 'create' | 'edit' | 'members';
+export interface Friend {
+  id: string;
+  name: string;
+  avatar: string;
+  lineId?: string;
+}
+
+export interface InviteCodeResponse {
+  code: string;
+  expiry: string;
+  qrUrl?: string;
+}
+
+export interface GroupModalView {
+  type:
+    | 'home'
+    | 'settings'
+    | 'create'
+    | 'edit'
+    | 'members'
+    | 'invite'; // Added invite
+  data?: any;
+}

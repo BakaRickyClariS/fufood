@@ -8,7 +8,7 @@ import { useExpiryCheck } from '@/modules/inventory/hooks';
 import { inventoryApi } from '@/modules/inventory/api';
 // 引入 AI API
 import { aiRecipeApi } from '@/modules/ai/api/aiRecipeApi';
-import { ConsumptionModal } from '@/shared/components/feedback/ConsumptionModal';
+import { ConsumptionModal } from '@/modules/inventory/components/consumption';
 
 type FoodDetailModalProps = {
   item: FoodItem;
@@ -79,9 +79,13 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
     setIsUpdating(true);
 
     try {
-      await inventoryApi.updateItem(item.id, {
-        lowStockAlert: newValue,
-      });
+      await inventoryApi.updateItem(
+        item.id,
+        {
+          lowStockAlert: newValue,
+        },
+        item.groupId,
+      );
       onItemUpdate?.();
     } catch (error) {
       setLowStockAlertEnabled(!newValue);
@@ -159,6 +163,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
           unit: item.unit || '個',
           expiryDate: item.expiryDate,
         }}
+        refrigeratorId={item.groupId}
         onConfirm={() => {
           // 消耗完成後只關閉 ConsumptionModal
           // 不自動關閉食材詳細頁面，讓用戶決定是否返回

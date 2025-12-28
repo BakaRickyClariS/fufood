@@ -25,21 +25,38 @@ export const createInventoryApi = (): InventoryApi => {
     getInventory: async (
       params?: GetInventoryRequest,
     ): Promise<GetInventoryResponse> => {
-      return backendApi.get<GetInventoryResponse>('/inventory', params);
+      const refrigeratorId = params?.groupId;
+      const baseUrl = refrigeratorId
+        ? `/refrigerators/${refrigeratorId}/inventory`
+        : '/inventory';
+      return backendApi.get<GetInventoryResponse>(baseUrl, params);
     },
 
     /**
      * 取得單一食材
      */
-    getItem: async (id: string): Promise<ApiSuccess<{ item: FoodItem }>> => {
-      return backendApi.get<ApiSuccess<{ item: FoodItem }>>(`/inventory/${id}`);
+    getItem: async (
+      id: string,
+      refrigeratorId?: string,
+    ): Promise<ApiSuccess<{ item: FoodItem }>> => {
+      const baseUrl = refrigeratorId
+        ? `/refrigerators/${refrigeratorId}/inventory`
+        : '/inventory';
+      return backendApi.get<ApiSuccess<{ item: FoodItem }>>(`${baseUrl}/${id}`);
     },
 
     /**
      * 新增食材
      */
-    addItem: async (data: AddFoodItemRequest): Promise<AddFoodItemResponse> => {
-      return backendApi.post<AddFoodItemResponse>('/inventory', data);
+    addItem: async (
+      data: AddFoodItemRequest,
+      refrigeratorId?: string,
+    ): Promise<AddFoodItemResponse> => {
+      const targetId = refrigeratorId || data.groupId;
+      const baseUrl = targetId
+        ? `/refrigerators/${targetId}/inventory`
+        : '/inventory';
+      return backendApi.post<AddFoodItemResponse>(baseUrl, data);
     },
 
     /**
@@ -48,15 +65,25 @@ export const createInventoryApi = (): InventoryApi => {
     updateItem: async (
       id: string,
       data: UpdateFoodItemRequest,
+      refrigeratorId?: string,
     ): Promise<UpdateFoodItemResponse> => {
-      return backendApi.put<UpdateFoodItemResponse>(`/inventory/${id}`, data);
+      const baseUrl = refrigeratorId
+        ? `/refrigerators/${refrigeratorId}/inventory`
+        : '/inventory';
+      return backendApi.put<UpdateFoodItemResponse>(`${baseUrl}/${id}`, data);
     },
 
     /**
      * 刪除食材
      */
-    deleteItem: async (id: string): Promise<DeleteFoodItemResponse> => {
-      return backendApi.delete<DeleteFoodItemResponse>(`/inventory/${id}`);
+    deleteItem: async (
+      id: string,
+      refrigeratorId?: string,
+    ): Promise<DeleteFoodItemResponse> => {
+      const baseUrl = refrigeratorId
+        ? `/refrigerators/${refrigeratorId}/inventory`
+        : '/inventory';
+      return backendApi.delete<DeleteFoodItemResponse>(`${baseUrl}/${id}`);
     },
 
     /**
@@ -64,9 +91,13 @@ export const createInventoryApi = (): InventoryApi => {
      */
     batchDelete: async (
       data: BatchDeleteInventoryRequest,
+      refrigeratorId?: string,
     ): Promise<ApiSuccess<Record<string, never>>> => {
+      const baseUrl = refrigeratorId
+        ? `/refrigerators/${refrigeratorId}/inventory`
+        : '/inventory';
       return backendApi.delete<ApiSuccess<Record<string, never>>>(
-        '/inventory/batch',
+        `${baseUrl}/batch`,
         {
           body: data,
         },
@@ -76,24 +107,39 @@ export const createInventoryApi = (): InventoryApi => {
     /**
      * 庫存概要（可選）
      */
-    getSummary: async (): Promise<InventorySummaryResponse> => {
-      return backendApi.get<InventorySummaryResponse>('/inventory/summary');
+    getSummary: async (
+      refrigeratorId?: string,
+    ): Promise<InventorySummaryResponse> => {
+      const baseUrl = refrigeratorId
+        ? `/refrigerators/${refrigeratorId}/inventory`
+        : '/inventory';
+      return backendApi.get<InventorySummaryResponse>(`${baseUrl}/summary`);
     },
 
     /**
      * 類別列表
      */
-    getCategories: async (): Promise<InventoryCategoriesResponse> => {
+    getCategories: async (
+      refrigeratorId?: string,
+    ): Promise<InventoryCategoriesResponse> => {
+      const baseUrl = refrigeratorId
+        ? `/refrigerators/${refrigeratorId}/inventory`
+        : '/inventory';
       return backendApi.get<InventoryCategoriesResponse>(
-        '/inventory/categories',
+        `${baseUrl}/categories`,
       );
     },
 
     /**
      * 庫存設定
      */
-    getSettings: async (): Promise<InventorySettingsResponse> => {
-      return backendApi.get<InventorySettingsResponse>('/inventory/settings');
+    getSettings: async (
+      refrigeratorId?: string,
+    ): Promise<InventorySettingsResponse> => {
+      const baseUrl = refrigeratorId
+        ? `/refrigerators/${refrigeratorId}/inventory`
+        : '/inventory';
+      return backendApi.get<InventorySettingsResponse>(`${baseUrl}/settings`);
     },
 
     /**
@@ -101,9 +147,13 @@ export const createInventoryApi = (): InventoryApi => {
      */
     updateSettings: async (
       data: UpdateInventorySettingsRequest,
+      refrigeratorId?: string,
     ): Promise<InventorySettingsResponse> => {
+      const baseUrl = refrigeratorId
+        ? `/refrigerators/${refrigeratorId}/inventory`
+        : '/inventory';
       return backendApi.put<InventorySettingsResponse>(
-        '/inventory/settings',
+        `${baseUrl}/settings`,
         data,
       );
     },
@@ -114,10 +164,14 @@ export const createInventoryApi = (): InventoryApi => {
     consumeItem: async (
       id: string,
       data: { quantity: number; reasons: string[]; customReason?: string },
+      refrigeratorId?: string,
     ): Promise<ApiSuccess<{ id: string; remainingQuantity: number }>> => {
+      const baseUrl = refrigeratorId
+        ? `/refrigerators/${refrigeratorId}/inventory`
+        : '/inventory';
       return backendApi.post<
         ApiSuccess<{ id: string; remainingQuantity: number }>
-      >(`/inventory/${id}/consume`, data);
+      >(`${baseUrl}/${id}/consume`, data);
     },
   };
 };

@@ -54,15 +54,19 @@
 | 7                                                          | Auth      | GET    | `/api/v1/auth/line/login`                | LINE OAuth 入口                                                                                          |                                      |
 | 8                                                          | Auth      | GET    | `/api/v1/auth/line/callback`             | LINE OAuth 回呼                                                                                          |                                      |
 | 9                                                          | Auth      | PUT    | `/api/v1/auth/update-profile`            | 更新個人資料                                                                                             |                                      |
-| **Groups（合併成員操作）**                                 |
-| 10                                                         | Groups    | GET    | `/api/v1/groups`                         | 群組列表                                                                                                 |                                      |
-| 11                                                         | Groups    | POST   | `/api/v1/groups`                         | 建立群組                                                                                                 |                                      |
-| 12                                                         | Groups    | GET    | `/api/v1/groups/{id}`                    | 群組詳情                                                                                                 |                                      |
-| 13                                                         | Groups    | PUT    | `/api/v1/groups/{id}`                    | 更新群組                                                                                                 |                                      |
-| 14                                                         | Groups    | DELETE | `/api/v1/groups/{id}`                    | 刪除群組                                                                                                 |                                      |
-| 15                                                         | Groups    | POST   | `/api/v1/groups/{id}/members`            | 加入／邀請成員（依 body 區分）                                                                           | 合併 join/invite                     |
-| 16                                                         | Groups    | DELETE | `/api/v1/groups/{id}/members/{memberId}` | 離開或移除成員                                                                                           | 合併 leave/remove                    |
-| 17                                                         | Groups    | PATCH  | `/api/v1/groups/{id}/members/{memberId}` | 更新成員權限                                                                                             |                                      |
+| **Groups（合併成員操作 - 使用 /refrigerators）**           |
+| 10                                                         | Groups    | GET    | `/api/v1/refrigerators`                         | 群組列表                                                                                                 |                                      |
+| 11                                                         | Groups    | POST   | `/api/v1/refrigerators`                         | 建立群組                                                                                                 |                                      |
+| 12                                                         | Groups    | GET    | `/api/v1/refrigerators/{id}`                    | 群組詳情                                                                                                 |                                      |
+| 13                                                         | Groups    | PUT    | `/api/v1/refrigerators/{id}`                    | 更新群組                                                                                                 |                                      |
+| 14                                                         | Groups    | DELETE | `/api/v1/refrigerators/{id}`                    | 刪除群組                                                                                                 |                                      |
+| 15                                                         | Groups    | GET    | `/api/v1/refrigerators/{id}/members`            | 取得成員列表                                                                                             |                                      |
+| 16                                                         | Groups    | POST   | `/api/v1/refrigerators/{id}/members`            | 加入／邀請成員（依 body 區分）                                                                           | 合併 join/invite                     |
+| 17                                                         | Groups    | DELETE | `/api/v1/refrigerators/{id}/members/{memberId}` | 離開或移除成員                                                                                           | 合併 leave/remove                    |
+| 18                                                         | Groups    | PATCH  | `/api/v1/refrigerators/{id}/members/{memberId}` | 更新成員權限                                                                                             |                                      |
+| 19                                                         | Groups    | POST   | `/api/v1/refrigerators/{id}/invite-code`        | 產生邀請碼/QR Code                                                                                       | NEW                                  |
+| 20                                                         | Groups    | POST   | `/api/v1/refrigerators/{id}/invitations`        | 發送邀請通知                                                                                             | NEW                                  |
+| 21                                                         | Groups    | GET    | `/api/v1/users/friends`                         | 搜尋好友                                                                                                 | NEW (query: ?q=keyword)              |
 | **Inventory（庫存，批次新增/修改暫緩）**                   |
 | 18                                                         | Inventory | GET    | `/api/v1/inventory`                      | 庫存列表，可用 `status` 篩選（expired/expiring-soon/low-stock/frequent/normal），`include=summary,stats` | 取代 expired/frequent/stats 獨立路由 |
 | 19                                                         | Inventory | GET    | `/api/v1/inventory/{id}`                 | 單一食材詳情                                                                                             |                                      |
@@ -219,19 +223,19 @@
 | 16                                           | Groups    | DELETE | `/api/v1/groups/{id}/members/{memberId}` | 離開或移除成員                                                                                      | 合併 leave/remove                    |
 | 17                                           | Groups    | PATCH  | `/api/v1/groups/{id}/members/{memberId}` | 更新成員權限                                                                                        |                                      |
 | **Inventory（庫存，批次新增/修改暫緩）**     |
-| 18                                           | Inventory | GET    | `/api/v1/inventory`                      | 庫存列表，`status` 篩選（expired/expiring-soon/low-stock/frequent/normal），`include=summary,stats` | 取代 expired/frequent/stats 獨立路由 |
-| 19                                           | Inventory | GET    | `/api/v1/inventory/{id}`                 | 單一食材詳情                                                                                        |                                      |
-| 20                                           | Inventory | POST   | `/api/v1/inventory`                      | 新增食材                                                                                            |                                      |
-| 21                                           | Inventory | PUT    | `/api/v1/inventory/{id}`                 | 更新食材                                                                                            |                                      |
-| 22                                           | Inventory | DELETE | `/api/v1/inventory/{id}`                 | 刪除食材                                                                                            |                                      |
-| 23                                           | Inventory | DELETE | `/api/v1/inventory/batch`                | 批次刪除                                                                                            | 可選；前端可迭代單刪                 |
-| 24                                           | Inventory | GET    | `/api/v1/inventory/categories`           | 類別列表                                                                                            |                                      |
-| 25                                           | Inventory | GET    | `/api/v1/inventory/settings`             | 取得庫存設定                                                                                        |                                      |
-| 26                                           | Inventory | PUT    | `/api/v1/inventory/settings`             | 更新庫存設定                                                                                        |                                      |
-| 27                                           | Inventory | GET    | `/api/v1/inventory/summary`              | 庫存摘要                                                                                            | 若用 include 可移除                  |
-| **暫緩**                                     | Inventory | POST   | `/api/v1/inventory/batch`                | 批次新增                                                                                            | 先不做                               |
-| **暫緩**                                     | Inventory | PUT    | `/api/v1/inventory/batch`                | 批次修改                                                                                            | 先不做                               |
-| 28                                           | Inventory | POST   | `/api/v1/inventory/{id}/consume`         | 消耗食材，扣減數量並記錄原因                                                                        | 新增                                 |
+| 18                                           | Inventory | GET    | `/api/v1/refrigerators/{id}/inventory`   | 庫存列表 | `status` 篩選 (expired/normal...) |
+| 19                                           | Inventory | GET    | `/api/v1/refrigerators/{id}/inventory/{id}`     | 單一食材詳情 | |
+| 20                                           | Inventory | POST   | `/api/v1/refrigerators/{id}/inventory`   | 新增食材 | |
+| 21                                           | Inventory | PUT    | `/api/v1/refrigerators/{id}/inventory/{id}`     | 更新食材 | |
+| 22                                           | Inventory | DELETE | `/api/v1/refrigerators/{id}/inventory/{id}`     | 刪除食材 | |
+| 23                                           | Inventory | DELETE | `/api/v1/refrigerators/{id}/inventory/batch` | 批次刪除 | 可選 |
+| 24                                           | Inventory | GET    | `/api/v1/refrigerators/{id}/inventory/categories` | 類別列表 | |
+| 25                                           | Inventory | GET    | `/api/v1/refrigerators/{id}/inventory/settings` | 取得庫存設定 | |
+| 26                                           | Inventory | PUT    | `/api/v1/refrigerators/{id}/inventory/settings` | 更新庫存設定 | |
+| 27                                           | Inventory | GET    | `/api/v1/refrigerators/{id}/inventory/summary` | 庫存摘要 | 若用 include 可移除 |
+| **暫緩**                                     | Inventory | POST   | `/api/v1/refrigerators/{id}/inventory/batch` | 批次新增 | 先不做 |
+| **暫緩**                                     | Inventory | PUT    | `/api/v1/refrigerators/{id}/inventory/batch` | 批次修改 | 先不做 |
+| 28                                           | Inventory | POST   | `/api/v1/refrigerators/{id}/inventory/{id}/consume` | 消耗食材 | 新增 |
 | **Foods（合併 category 查詢）**              |
 | 29                                           | Foods     | GET    | `/api/v1/foods`                          | 食材列表，`?category=` 篩選                                                                         | 取代 `/foods/category/{catId}`       |
 | 30                                           | Foods     | GET    | `/api/v1/foods/{id}`                     | 食材詳情                                                                                            | 取代 `/foods/category/{catId}/{id}`  |
@@ -385,17 +389,18 @@ await queryClient.invalidateQueries({ queryKey: ['GET_USER_PROFILE'] });
 
 ### 路由
 
-- `GET /inventory`：列表，支援 `groupId`, `category`, `status`（expired/expiring-soon/low-stock/frequent/normal），`page/limit`，`include=summary,stats`。
-- `GET /inventory/{id}`：單筆。
-- `POST /inventory`：新增。
-- `PUT /inventory/{id}`：更新。
-- `DELETE /inventory/{id}`：刪除。
-- `DELETE /inventory/batch`：批次刪除（可選）。
-- `GET /inventory/categories`：類別列表。
-- `GET /inventory/settings` / `PUT /inventory/settings`：設定讀/寫。
-- `GET /inventory/summary`：摘要（若列表已 include，則可移除）。
-- **暫緩** `POST /inventory/batch`：批次新增。
-- **暫緩** `PUT /inventory/batch`：批次修改。
+- `GET /refrigerators/{id}/inventory`：列表。
+- `GET /refrigerators/{id}/inventory/{itemId}`：單筆。
+- `POST /refrigerators/{id}/inventory`：新增。
+- `PUT /refrigerators/{id}/inventory/{itemId}`：更新。
+- `DELETE /refrigerators/{id}/inventory/{itemId}`：刪除。
+- `DELETE /refrigerators/{id}/inventory/batch`：批次刪除（可選）。
+- `GET /refrigerators/{id}/inventory/categories`：類別列表。
+- `GET /refrigerators/{id}/inventory/settings` / `PUT /refrigerators/{id}/inventory/settings`：設定讀/寫。
+- `GET /refrigerators/{id}/inventory/summary`：摘要。
+- **暫緩** `POST /refrigerators/{id}/inventory/batch`：批次新增。
+- **暫緩** `PUT /refrigerators/{id}/inventory/batch`：批次修改。
+- `POST /refrigerators/{id}/inventory/{itemId}/consume`：消耗食材。
 
 ---
 
@@ -450,22 +455,26 @@ await queryClient.invalidateQueries({ queryKey: ['GET_USER_PROFILE'] });
 
 ### 路由列表
 
+### 路由列表
+
 - `GET /notifications`：取得通知列表（支援 `?category=` 篩選）。
 - `GET /notifications/{id}`：取得單一通知。
 - `PATCH /notifications/{id}`：標記已讀 `{ isRead: true }`。
 - `DELETE /notifications/{id}`：刪除通知。
 - `POST /notifications/read-all`：全部標記已讀。
+- `POST /notifications/batch/delete`：批次刪除通知 `{ ids: [] }`。
+- `POST /notifications/batch/read`：批次標記已讀 `{ ids: [] }`。
 - `GET /notifications/settings`：取得通知設定。
 - `PATCH /notifications/settings`：更新通知設定。
 
-### 點擊跳轉
+### 點擊行為 (Action Type)
 
-| actionType    | 跳轉目標                            |
-| ------------- | ----------------------------------- |
-| inventory     | `/inventory/:itemId`                |
-| shopping-list | `/planning?tab=shopping&id=:listId` |
-| recipe        | `/recipes/:recipeId`                |
-| detail        | `/notifications/:id`                |
+| actionType    | 行為描述                                 |
+| ------------- | ---------------------------------------- |
+| inventory     | **Inline Modal** (不換頁)                |
+| shopping-list | 跳轉 `/planning?tab=shopping&id=:listId` |
+| recipe        | **Inline Modal** (不換頁)                |
+| detail        | 跳轉 `/notifications/:id`                |
 
 ---
 

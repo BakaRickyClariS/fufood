@@ -7,10 +7,11 @@ import type {
   ConsumptionItem,
   ConsumptionReason,
 } from '@/modules/recipe/types';
-import { EditConsumptionReasonModal } from '@/modules/inventory/components/ui/modal/EditConsumptionReasonModal';
-import { ConsumptionSuccessModal } from '@/modules/inventory/components/ui/modal/ConsumptionSuccessModal';
-import { inventoryApi } from '@/modules/inventory/api'; // Need to ensure this is exported and has consumeItem
-// If inventoryApi doesn't have consumeItem yet, I need to add it or use axios directly.
+import { EditConsumptionReasonModal } from './EditConsumptionReasonModal';
+import { ConsumptionSuccessModal } from './ConsumptionSuccessModal';
+import { useConsumeItemMutation } from '@/modules/inventory/api/queries';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 // The user said "Execute and update ... docs". I should check inventoryApi first?
 // I'll proceed assuming I might need to add it or it exists.
 // Based on file reads, I saw `inventoryApi` but didn't check `consumeItem`.
@@ -47,6 +48,7 @@ type ConsumptionModalProps = {
   // Callbacks to control parent visibility/animation
   onHideParent?: () => void;
   onShowParent?: () => void;
+  refrigeratorId?: string;
 };
 
 export const ConsumptionModal = ({
@@ -61,6 +63,7 @@ export const ConsumptionModal = ({
   defaultReasons = [],
   onHideParent,
   onShowParent,
+  refrigeratorId,
 }: ConsumptionModalProps) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -70,6 +73,9 @@ export const ConsumptionModal = ({
   // State for sub-modals
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { mutateAsync: consumeItem } = useConsumeItemMutation();
 
   // State for items including their reasons
   const [currentItems, setCurrentItems] = useState<ItemWithReason[]>([]);
@@ -192,38 +198,33 @@ export const ConsumptionModal = ({
   });
 
   const submitConsumption = async (itemsToConsume: ItemWithReason[]) => {
-    // Call API for each item
+    setIsSubmitting(true);
     try {
-      // Parallel requests
       await Promise.all(
         itemsToConsume.map((item) => {
           if (!item.id) return Promise.resolve();
-          // Map reasons to API format
-          // API spec says `reason: ConsumptionReason`. If multiple, maybe we join them or pick first?
-          // User spec says API takes `reason` and `note`.
-          // If UI supports multiple reasons, how does API handle it?
-          // API spec: `reason` is enum. `note` is string.
-          // Maybe we use 'other' and put all reasons in note?
-          // Or pick primary reason?
-          // Implementation Plan said:
-          // Duplicate -> other?
-          // API now accepts reasons array directly
           const reasons = item.selectedReasons || [];
-
-          // NOTE: We rely on inventoryApi.consumeItem existing.
-          // API now takes (id, { quantity, reasons, customReason })
-          return inventoryApi.consumeItem(item.id, {
-            quantity: item.consumedQuantity,
-            reasons: reasons,
-            customReason: item.customReasonStr,
+          
+          return consumeItem({
+            id: item.id,
+            data: {
+              quantity: item.consumedQuantity,
+              reasons: reasons,
+              customReason: item.customReasonStr,
+            },
+            refrigeratorId,
           });
         }),
       );
 
+      // Mutate will trigger invalidation automatically
       return true;
     } catch (error) {
       console.error('Consumption failed', error);
+      toast.error('消耗操作失敗，請稍後再試');
       return false;
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -404,9 +405,11 @@ export const ConsumptionModal = ({
                 ) : (
                   <button
                     onClick={handleConfirm}
-                    className="w-full py-3.5 bg-primary-500 text-white rounded-xl font-bold text-base hover:bg-primary-600 transition-colors active:scale-95"
+                    disabled={isSubmitting}
+                    className="w-full py-3.5 bg-primary-500 text-white rounded-xl font-bold text-base hover:bg-primary-600 transition-colors active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    完成
+                    {isSubmitting && <Loader2 className="w-5 h-5 animate-spin" />}
+                    {isSubmitting ? '處理中...' : '完成'}
                   </button>
                 )}
               </div>
