@@ -7,6 +7,7 @@ import FoodScanRoutes from './FoodScan';
 import AuthRoutes from './Auth';
 import SettingsRoutes from './Settings';
 import NotificationsRoutes from './Notifications';
+import InviteRoutes from './Invite';
 import CategoryPage from './Inventory/CategoryPage';
 import { RecipeDetailView } from '@/modules/recipe/components/features/RecipeDetailView';
 
@@ -127,6 +128,8 @@ export const router = createBrowserRouter([
       ...wrapRoutesWithProtection(FoodScanRoutes),
       ...wrapRoutesWithProtection(SettingsRoutes),
       ...wrapRoutesWithProtection(NotificationsRoutes),
+      // 邀請路由（公開，不需要登入即可查看邀請資訊）
+      ...InviteRoutes,
     ],
   },
 ]);

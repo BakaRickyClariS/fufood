@@ -37,10 +37,14 @@ export type Recipe = {
   cookTime: number;
   difficulty: RecipeDifficulty;
   ingredients: RecipeIngredient[];
+  seasonings?: RecipeIngredient[];
   steps: CookingStep[];
   isFavorite?: boolean;
   createdAt: string;
   updatedAt?: string;
+  source?: 'ai_generated' | 'manual';
+  originalPrompt?: string;
+  description?: string;
 };
 
 export type RecipeListItem = {
@@ -51,4 +55,18 @@ export type RecipeListItem = {
   servings: number;
   cookTime: number;
   isFavorite?: boolean;
+};
+
+export type CreateRecipeInput = {
+  name: string;
+  category?: string;
+  description?: string;
+  imageUrl?: string;
+  servings?: number;
+  cookTime?: number;
+  difficulty?: RecipeDifficulty;
+  ingredients: RecipeIngredient[];
+  seasonings?: RecipeIngredient[];
+  steps: CookingStep[];
+  originalPrompt?: string;
 };
