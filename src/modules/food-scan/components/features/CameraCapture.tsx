@@ -11,6 +11,7 @@ import {
   retake as retakeAction,
   setUploadStatus,
 } from '@/modules/food-scan/store/cameraSlice';
+import { setItems } from '@/modules/food-scan/store/batchScanSlice';
 import { useToast } from '@/shared/contexts/ToastContext';
 import { ScanFrame } from '../ui/ScanFrame';
 
@@ -139,16 +140,40 @@ export const CameraCapture: React.FC = () => {
     }
   };
 
+  // Import setItems and types
   const handleConfirm = async () => {
     if (img) {
       setScanError(null); // Clear previous error
       try {
         const result = await uploadImage(img);
-        if (result) {
+        if (result && result.success) {
           showToast('掃描成功！', 'success');
-          navigate('/upload/scan-result', {
-            state: { result: result.data, imageUrl: img },
-          });
+
+          // Check if it's a MultipleScanResult (has ingredients array)
+          // We cast to any to check for property existence easily or use type guard
+          const multiResult = result as any;
+          if (multiResult.data && Array.isArray(multiResult.data.ingredients)) {
+            const ingredients = multiResult.data.ingredients;
+            // Dispatch to batch store
+            const batchItems = ingredients.map((item: any) => ({
+              id: crypto.randomUUID(), // or some unique id
+              data: {
+                ...item,
+                imageUrl: item.imageUrl || img, // Use cropped image if available, else original
+              },
+              imageUrl: item.imageUrl || img,
+              status: 'pending',
+            }));
+
+            dispatch(setItems(batchItems));
+
+            navigate('/upload/scan-result');
+          } else {
+            // Legacy / Single item fallback
+            navigate('/upload/scan-result', {
+              state: { result: result.data, imageUrl: img },
+            });
+          }
         } else {
           const msg = '掃描失敗，請重試';
           setScanError(msg);
