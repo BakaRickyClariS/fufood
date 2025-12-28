@@ -2,6 +2,7 @@ import { aiApi, backendApi } from '@/api/client';
 import type {
   FoodScanApi,
   ScanResult,
+  MultipleScanResult,
   FoodItemInput,
   FoodItemResponse,
   FoodItemFilters,
@@ -72,6 +73,39 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     }
   };
 
+  /**
+   * 辨識圖片中的多個食材 (Real API)
+   */
+  const recognizeMultipleImages = async (
+    file: File,
+    options?: { cropImages?: boolean; maxIngredients?: number },
+  ): Promise<MultipleScanResult> => {
+    try {
+      const { cropImages = true, maxIngredients = 10 } = options || {};
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('cropImages', String(cropImages));
+      formData.append('maxIngredients', String(maxIngredients));
+
+      // Updated endpoint to match v2.1 spec
+      const response = await aiApi.post<MultipleScanResult>(
+        '/ai/analyze-image/multiple',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
+
+      return response;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(`FoodScan 多重分析錯誤：${message}`);
+    }
+  };
+
   const submitFoodItem = async (
     data: FoodItemInput,
   ): Promise<FoodItemResponse> => {
@@ -109,6 +143,7 @@ export const createRealFoodScanApi = (): FoodScanApi => {
 
   return {
     recognizeImage,
+    recognizeMultipleImages,
     submitFoodItem,
     updateFoodItem,
     deleteFoodItem,

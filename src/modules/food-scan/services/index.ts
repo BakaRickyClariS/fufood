@@ -33,6 +33,23 @@ const createHybridFoodScanApi = (): FoodScanApi => {
         return mockApi.recognizeImage(imageUrl);
       }
     },
+    recognizeMultipleImages: async (
+      file: File,
+      options?: { cropImages?: boolean; maxIngredients?: number },
+    ) => {
+      try {
+        console.log('[FoodScan] 嘗試連接後端 API (Multiple)...');
+        const result = await realApi.recognizeMultipleImages(file, options);
+        console.log('[FoodScan] 後端 API 連接成功', result);
+        return result;
+      } catch (error) {
+        console.warn(
+          '[FoodScan] 後端 API 連接失敗，切換至 Mock 資料模式',
+          error,
+        );
+        return mockApi.recognizeMultipleImages(file, options);
+      }
+    },
   };
 };
 
