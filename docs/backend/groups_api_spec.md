@@ -25,14 +25,12 @@
 type Group = {
   id: string;
   name: string;
-  admin: string; // 建立者名稱
-  members: GroupMember[];
-  color: string;
-  characterColor: string;
+  admin?: string; // 建立者 ID 或名稱
+  members?: GroupMember[];
   imageUrl?: string; // 群組自定義圖片 URL
-  plan: 'free' | 'premium';
-  createdAt: string;
-  updatedAt: string;
+  plan?: 'free' | 'premium';
+  createdAt?: string;
+  updatedAt?: string;
 };
 ```
 
@@ -43,16 +41,20 @@ type GroupMember = {
   id: string;
   name: string;
   avatar: string;
-  role: 'owner' | 'organizer' | 'member';
+  role: 'owner' | 'member';
 };
 ```
 
-### 2.3 InviteMemberForm
+### 2.3 Forms
 
 ```typescript
 type InviteMemberForm = {
   email: string;
   role?: GroupMember['role']; // default member
+};
+
+type JoinGroupForm = {
+  inviteCode: string;
 };
 ```
 
@@ -109,7 +111,7 @@ type InviteMemberForm = {
 ### 3.9 更新成員權限
 
 - **PATCH** `/api/v1/refrigerators/{id}/members/{memberId}`
-- Body: `{ role: 'owner' | 'organizer' | 'member' }`
+- Body: `{ role: 'owner' | 'member' }`
 - 204 或 `{ success: true }`
 
 ---
@@ -136,12 +138,12 @@ type InviteMemberForm = {
 
 ## 4. 角色權限建議
 
-| 操作          | owner | organizer | member |
-| ------------- | ----- | --------- | ------ |
-| 編輯/刪除群組 | ✓     | ✓         | ✗      |
-| 邀請/移除成員 | ✓     | ✓         | ✗      |
-| 更新成員角色  | ✓     | ✗         | ✗      |
-| 離開群組      | ✗     | ✓         | ✓      |
+| 操作          | owner | member |
+| ------------- | ----- | ------ |
+| 編輯/刪除群組 | ✓     | ✗      |
+| 邀請/移除成員 | ✓     | ✗      |
+| 更新成員角色  | ✓     | ✗      |
+| 離開群組      | ✗     | ✓      |
 
 ---
 
