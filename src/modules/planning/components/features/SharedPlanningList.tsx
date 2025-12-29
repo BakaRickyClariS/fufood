@@ -23,7 +23,6 @@ export const SharedPlanningList = ({
 
   const statusTextMap: Record<string, string> = {
     'in-progress': '進行中',
-    'pending-purchase': '待採買',
     completed: '已完成',
   };
 
@@ -33,9 +32,9 @@ export const SharedPlanningList = ({
       lists.filter((list) => {
         if (list.status !== statusFilter) return false;
         if (!year || !month) return true;
-        if (!list.scheduledDate) return false;
+        if (!list.startsAt) return false;
 
-        const date = new Date(list.scheduledDate);
+        const date = new Date(list.startsAt);
         return date.getFullYear() === year && date.getMonth() + 1 === month;
       }),
     [lists, month, statusFilter, year],
@@ -52,7 +51,7 @@ export const SharedPlanningList = ({
           <p>目前沒有符合「{statusTextMap[statusFilter] ?? '該狀態'}」的清單</p>
         </div>
       ) : (
-      <div className="space-y-4">
+        <div className="space-y-4">
           {filteredLists.map((list) => (
             <SharedListCard
               key={list.id}
@@ -62,7 +61,9 @@ export const SharedPlanningList = ({
                 navigate(`/planning/list/${listItem.id}/edit`);
               }}
               onDelete={async (listItem) => {
-                if (confirm(`確定要刪除「${listItem.name}」嗎？此動作無法復原。`)) {
+                if (
+                  confirm(`確定要刪除「${listItem.title}」嗎？此動作無法復原。`)
+                ) {
                   try {
                     await deleteList(listItem.id);
                     toast.success('清單已刪除');
