@@ -630,6 +630,7 @@ export const AI_SUGGESTION_PROMPTS = [
 
 | 檔案 | 說明 |
 | ---- | ---- |
+| [前端串接整合指南](./frontend_integration_guide.md) | **必讀**：所有受影響 API 的欄位對照 |
 | `src/types/aiRecipe.ts` | 請求與回應型別定義 |
 | `src/types/aiStreamEvents.ts` | SSE 事件型別定義 |
 | `src/services/aiRecipeService.ts` | AI 食譜生成服務 |

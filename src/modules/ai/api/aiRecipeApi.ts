@@ -5,6 +5,7 @@
  * 支援 Mock 模式（VITE_USE_MOCK_API=true）
  */
 import { aiApi } from '@/api/client';
+import { identity } from '@/shared/utils/identity';
 import type {
   AIRecipeRequest,
   AIRecipeResponse,
@@ -184,4 +185,128 @@ export const aiRecipeApi = {
    * 檢查是否使用 Mock 模式
    */
   isMockMode: (): boolean => USE_MOCK,
+
+  // ============================================================
+  // 儲存食譜 API (改用 aiApi 統一處理)
+  // ============================================================
+
+  /**
+   * 儲存 AI 生成的食譜到資料庫
+   */
+  saveRecipe: async (recipe: SaveRecipeInput): Promise<SavedRecipe> => {
+    // 雖然 aiApi 會自動帶 header，但此處業務邏輯需要確保已登入
+    const userId = identity.getUserId();
+    if (!userId) {
+      throw new Error('User ID not found. Please login first.');
+    }
+
+    const response = await aiApi.post<{ data: SavedRecipe }>(
+      '/recipes',
+      recipe,
+    );
+    return response.data;
+  },
+
+  /**
+   * 取得使用者已儲存的食譜列表
+   */
+  getSavedRecipes: async (): Promise<SavedRecipeListItem[]> => {
+    const userId = identity.getUserId();
+    if (!userId) {
+      console.warn('No user ID, returning empty list');
+      return [];
+    }
+
+    try {
+      // aiApi.get 第二個參數為 query params
+      const response = await aiApi.get<{
+        data: { recipes: SavedRecipeListItem[] };
+      }>('/recipes', { userId, limit: 50 });
+      return response.data.recipes || [];
+    } catch (error) {
+      console.warn('Failed to get saved recipes', error);
+      // 保持原有行為，失敗時回傳空陣列 (例如 404)
+      return [];
+    }
+  },
+
+  /**
+   * 取得單一已儲存食譜詳情
+   */
+  getSavedRecipeById: async (id: string): Promise<SavedRecipe> => {
+    const response = await aiApi.get<{ data: SavedRecipe }>(`/recipes/${id}`);
+    return response.data;
+  },
+
+  /**
+   * 更新已儲存的食譜 (例如更新收藏狀態)
+   */
+  updateSavedRecipe: async (
+    id: string,
+    data: Partial<SavedRecipe>,
+  ): Promise<SavedRecipe> => {
+    const userId = identity.getUserId();
+    if (!userId) {
+      throw new Error('User ID not found. Please login first.');
+    }
+
+    const response = await aiApi.put<{ data: SavedRecipe }>(
+      `/recipes/${id}`,
+      data,
+    );
+    return response.data;
+  },
+};
+
+// ============================================================
+// 儲存食譜型別
+// ============================================================
+
+/** 儲存食譜的輸入格式 */
+export type SaveRecipeInput = {
+  name: string;
+  category?: string;
+  description?: string;
+  imageUrl?: string;
+  servings?: number;
+  cookTime?: number;
+  difficulty?: '簡單' | '中等' | '困難';
+  ingredients: { name: string; amount: string; unit: string }[];
+  seasonings?: { name: string; amount: string; unit: string }[];
+  steps: { step: number; description: string }[];
+  originalPrompt?: string;
+};
+
+/** 已儲存的食譜 (完整) */
+export type SavedRecipe = {
+  id: string;
+  userId: string;
+  name: string;
+  category: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  servings: number;
+  cookTime: number | null;
+  difficulty: '簡單' | '中等' | '困難' | null;
+  ingredients: { name: string; amount: string; unit: string }[];
+  seasonings: { name: string; amount: string; unit: string }[];
+  steps: { step: number; description: string }[];
+  source: 'ai_generated' | 'manual';
+  originalPrompt: string | null;
+  isFavorite: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** 已儲存的食譜列表項目 */
+export type SavedRecipeListItem = {
+  id: string;
+  name: string;
+  category: string | null;
+  imageUrl: string | null;
+  servings: number;
+  cookTime: number | null;
+  difficulty: '簡單' | '中等' | '困難' | null;
+  isFavorite: boolean;
+  createdAt: string;
 };

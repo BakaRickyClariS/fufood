@@ -1,11 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit';
 import cameraReducer from '@/modules/food-scan/store/cameraSlice';
+import batchScanReducer from '@/modules/food-scan/store/batchScanSlice';
 import inventoryReducer from '@/modules/inventory/store/inventorySlice';
+import groupsReducer from '@/modules/groups/store/groupsSlice';
 
 export const store = configureStore({
   reducer: {
     camera: cameraReducer,
+    batchScan: batchScanReducer,
     inventory: inventoryReducer,
+    groups: groupsReducer,
   },
 });
 

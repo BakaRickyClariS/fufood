@@ -20,26 +20,23 @@ export const CreateSharedListDrawer = ({
   const drawerRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
 
-  const [name, setName] = useState('');
-  const [scheduledDate, setScheduledDate] = useState(
+  const [title, setTitle] = useState('');
+  const [startsAt, setStartsAt] = useState(
     new Date().toISOString().split('T')[0],
   );
-  const [notifyEnabled, setNotifyEnabled] = useState(true);
-  const [coverImage, setCoverImage] = useState('');
+  const [enableNotifications, setEnableNotifications] = useState(true);
+  const [coverPhotoPath, setCoverPhotoPath] = useState('');
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // 模擬群組 ID
-  const GROUP_ID = 'group_001';
 
   // 開啟動畫
   useEffect(() => {
     if (isOpen && drawerRef.current && backdropRef.current) {
       // 重設表單
-      setName('');
-      setScheduledDate(new Date().toISOString().split('T')[0]);
-      setNotifyEnabled(true);
-      setCoverImage('');
+      setTitle('');
+      setStartsAt(new Date().toISOString().split('T')[0]);
+      setEnableNotifications(true);
+      setCoverPhotoPath('');
 
       // 動畫：Drawer 從右側滑入
       gsap.fromTo(
@@ -75,16 +72,15 @@ export const CreateSharedListDrawer = ({
   };
 
   const handleSubmit = async () => {
-    if (!name.trim()) return;
+    if (!title.trim()) return;
 
     setIsSubmitting(true);
     try {
       await createList({
-        name,
-        scheduledDate: new Date(scheduledDate).toISOString(),
-        coverImageUrl: coverImage || COVER_IMAGES[0],
-        notifyEnabled,
-        groupId: GROUP_ID,
+        title,
+        startsAt: new Date(startsAt).toISOString(),
+        coverPhotoPath: coverPhotoPath || COVER_IMAGES[0],
+        enableNotifications,
       });
       toast.success('清單建立成功');
       handleClose();
@@ -170,8 +166,8 @@ export const CreateSharedListDrawer = ({
               </label>
               <input
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 placeholder="Add value"
                 className="w-full px-4 py-3 bg-white rounded-xl border border-neutral-300 text-neutral-800 placeholder:text-neutral-300 focus:border-primary-default focus:ring-1 focus:ring-primary-default focus:outline-none transition-all"
               />
@@ -185,8 +181,8 @@ export const CreateSharedListDrawer = ({
               <div className="relative">
                 <input
                   type="date"
-                  value={scheduledDate}
-                  onChange={(e) => setScheduledDate(e.target.value)}
+                  value={startsAt}
+                  onChange={(e) => setStartsAt(e.target.value)}
                   placeholder="Add value"
                   className="w-full px-4 py-3 bg-white rounded-xl border border-neutral-300 text-neutral-800 text-left focus:border-primary-default focus:ring-1 focus:ring-primary-default focus:outline-none transition-all appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer relative z-10"
                   style={{ minHeight: '48px' }}
@@ -197,13 +193,15 @@ export const CreateSharedListDrawer = ({
 
             {/* 通知開關 */}
             <div className="flex items-center justify-between pt-2">
-              <span className="text-sm font-bold text-neutral-800">開啟通知</span>
+              <span className="text-sm font-bold text-neutral-800">
+                開啟通知
+              </span>
               <button
-                onClick={() => setNotifyEnabled(!notifyEnabled)}
-                className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out ${notifyEnabled ? 'bg-primary-default' : 'bg-neutral-200'}`}
+                onClick={() => setEnableNotifications(!enableNotifications)}
+                className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out ${enableNotifications ? 'bg-primary-default' : 'bg-neutral-200'}`}
               >
                 <div
-                  className={`w-5 h-5 rounded-full bg-white transition-transform duration-200 ease-in-out ${notifyEnabled ? 'translate-x-5' : 'translate-x-0'}`}
+                  className={`w-5 h-5 rounded-full bg-white transition-transform duration-200 ease-in-out ${enableNotifications ? 'translate-x-5' : 'translate-x-0'}`}
                 />
               </button>
             </div>
@@ -213,13 +211,15 @@ export const CreateSharedListDrawer = ({
           <div className="bg-white rounded-2xl p-5 space-y-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-1 h-6 bg-primary-default rounded-full" />
-              <h2 className="text-base font-bold text-neutral-800">清單封面照</h2>
+              <h2 className="text-base font-bold text-neutral-800">
+                清單封面照
+              </h2>
             </div>
 
-            {coverImage ? (
+            {coverPhotoPath ? (
               <div className="relative aspect-video rounded-xl overflow-hidden bg-neutral-100 mb-3 group">
                 <img
-                  src={coverImage}
+                  src={coverPhotoPath}
                   alt="Cover"
                   className="w-full h-full object-cover"
                 />
@@ -247,7 +247,7 @@ export const CreateSharedListDrawer = ({
         <div className="my-6 px-4 border-t border-neutral-100">
           <button
             onClick={handleSubmit}
-            disabled={!name.trim() || isSubmitting}
+            disabled={!title.trim() || isSubmitting}
             className="w-full py-3.5 bg-primary-default text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
           >
             {isSubmitting ? '儲存中...' : '儲存'}
@@ -258,8 +258,8 @@ export const CreateSharedListDrawer = ({
         <CoverImagePicker
           open={isPickerOpen}
           onOpenChange={setIsPickerOpen}
-          selectedImage={coverImage}
-          onSelect={setCoverImage}
+          selectedImage={coverPhotoPath}
+          onSelect={setCoverPhotoPath}
         />
       </div>
     </div>,

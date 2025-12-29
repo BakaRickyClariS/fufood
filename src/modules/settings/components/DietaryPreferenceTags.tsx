@@ -45,8 +45,7 @@ const DietaryPreferenceTags = ({ preference }: DietaryPreferenceTagsProps) => {
     preference.seasoningLevel &&
       `調味強度：${getLabel(SEASONING_LEVEL_OPTIONS, preference.seasoningLevel) || preference.seasoningLevel}`,
     ...(preference.restrictions || []).map(
-      (r) =>
-        `特殊限制：${getLabel(DIETARY_RESTRICTION_OPTIONS, r) || r}`,
+      (r) => `特殊限制：${getLabel(DIETARY_RESTRICTION_OPTIONS, r) || r}`,
     ),
   ].filter(Boolean) as string[];
 
@@ -56,7 +55,7 @@ const DietaryPreferenceTags = ({ preference }: DietaryPreferenceTagsProps) => {
         <div className="w-1 h-4 bg-primary-500 rounded-full" />
         <h3 className="text-lg font-bold text-neutral-800">飲食喜好</h3>
       </div>
-      
+
       <div className="flex flex-wrap gap-2 mb-4">
         {tags.map((tag) => (
           <span

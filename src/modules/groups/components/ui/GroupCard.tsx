@@ -118,27 +118,29 @@ export const GroupCard: FC<GroupCardProps> = ({
           成員 ({group.members?.length ?? 0})
         </span>
         <div className="flex">
-          {(group.members ?? []).slice(0, MAX_AVATARS_DISPLAY).map((member, index) => {
-            const isCurrentUser = user?.id === member.id;
-            return (
-              <div
-                key={member.id}
-                className={`w-9 h-9 rounded-full border-2 overflow-hidden bg-gray-100 ${
-                  isCurrentUser ? 'border-primary-400' : 'border-neutral-500'
-                }`}
-                style={{
-                  marginLeft: index === 0 ? 0 : '-0.75rem',
-                  zIndex: (group.members?.length ?? 0) - index,
-                }}
-              >
-                <img
-                  src={member.avatar || ''}
-                  alt={member.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            );
-          })}
+          {(group.members ?? [])
+            .slice(0, MAX_AVATARS_DISPLAY)
+            .map((member, index) => {
+              const isCurrentUser = user?.id === member.id;
+              return (
+                <div
+                  key={member.id}
+                  className={`w-9 h-9 rounded-full border-2 overflow-hidden bg-gray-100 ${
+                    isCurrentUser ? 'border-primary-400' : 'border-neutral-500'
+                  }`}
+                  style={{
+                    marginLeft: index === 0 ? 0 : '-0.75rem',
+                    zIndex: (group.members?.length ?? 0) - index,
+                  }}
+                >
+                  <img
+                    src={member.avatar || ''}
+                    alt={member.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              );
+            })}
         </div>
       </div>
 

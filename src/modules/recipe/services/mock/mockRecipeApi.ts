@@ -111,16 +111,19 @@ export class MockRecipeApi implements RecipeApi {
     return MOCK_RECIPE_LIST.filter((recipe) => favorites.includes(recipe.id));
   };
 
-  getRecommendedRecipes = async (ingredientNames: string[]): Promise<RecipeListItem[]> => {
+  getRecommendedRecipes = async (
+    ingredientNames: string[],
+  ): Promise<RecipeListItem[]> => {
     await this.delay(500);
 
     // 根據食材名稱搜尋包含這些食材的食譜
     const recommendedRecipes = MOCK_RECIPES.filter((recipe) => {
       return recipe.ingredients.some((ing) =>
-        ingredientNames.some((name) =>
-          ing.name.toLowerCase().includes(name.toLowerCase()) ||
-          name.toLowerCase().includes(ing.name.toLowerCase())
-        )
+        ingredientNames.some(
+          (name) =>
+            ing.name.toLowerCase().includes(name.toLowerCase()) ||
+            name.toLowerCase().includes(ing.name.toLowerCase()),
+        ),
       );
     });
 

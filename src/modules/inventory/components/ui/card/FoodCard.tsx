@@ -73,9 +73,14 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
 
     try {
       // Persist change to the backend
-      await inventoryApi.updateItem(item.id, {
-        lowStockAlert: !item.lowStockAlert,
-      });
+      // Persist change to the backend
+      await inventoryApi.updateItem(
+        item.id,
+        {
+          lowStockAlert: !item.lowStockAlert,
+        },
+        item.groupId,
+      );
     } catch (error) {
       console.error('Failed to update low stock alert:', error);
       // Revert on failure

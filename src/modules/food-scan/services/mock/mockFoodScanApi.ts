@@ -1,5 +1,5 @@
 import type { FoodScanApi } from '../api/foodScanApi';
-import type { ScanResult } from '../../types/scanResult';
+import type { ScanResult, MultipleScanResult } from '../../types/scanResult';
 import type {
   FoodItemInput,
   FoodItemResponse,
@@ -44,6 +44,46 @@ export const createMockFoodScanApi = (): FoodScanApi => {
     return {
       success: true,
       data: mockResult,
+      timestamp: new Date().toISOString(),
+    };
+  };
+
+  const recognizeMultipleImages = async (
+    _file: File,
+    options?: { cropImages?: boolean; maxIngredients?: number },
+  ): Promise<MultipleScanResult> => {
+    await delay(2000);
+    const max = options?.maxIngredients || 5;
+    const count = Math.min(
+      Math.max(1, Math.floor(Math.random() * max) + 1),
+      max,
+    );
+
+    // generate multiple mock results
+    const ingredients = Array.from({ length: count }).map((_, i) => {
+      const mockBase =
+        MOCK_SCAN_RESULTS[Math.floor(Math.random() * MOCK_SCAN_RESULTS.length)];
+      return {
+        ...mockBase,
+        imageUrl: `https://loremflickr.com/150/150/food?random=${i}`, // mock cropped image
+        boundingBox: {
+          x: 0.1 * i,
+          y: 0.1,
+          width: 0.2,
+          height: 0.2,
+        },
+        confidence: 0.8 + Math.random() * 0.2,
+      };
+    });
+
+    return {
+      success: true,
+      data: {
+        originalImageUrl: 'https://loremflickr.com/600/800/food',
+        totalCount: ingredients.length,
+        ingredients,
+        analyzedAt: new Date().toISOString(),
+      },
       timestamp: new Date().toISOString(),
     };
   };
@@ -132,6 +172,7 @@ export const createMockFoodScanApi = (): FoodScanApi => {
 
   return {
     recognizeImage,
+    recognizeMultipleImages,
     submitFoodItem,
     updateFoodItem,
     deleteFoodItem,

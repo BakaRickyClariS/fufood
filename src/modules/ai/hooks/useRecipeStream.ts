@@ -50,11 +50,12 @@ const initialState: StreamState = {
 export const useRecipeStream = () => {
   const [state, setState] = useState<StreamState>(initialState);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const currentPromptRef = useRef<string>('');
 
   /**
    * 解析 SSE 事件並更新狀態
    */
-  const handleEvent = useCallback((event: AIStreamEvent) => {
+  const handleEvent = useCallback(async (event: AIStreamEvent) => {
     switch (event.event) {
       case 'start':
         setState((s) => ({
@@ -82,16 +83,76 @@ export const useRecipeStream = () => {
         }));
         break;
 
-      case 'done':
+      case 'done': {
+        let finalRecipes = event.data.recipes;
+
+        // 自動儲存食譜到後端
+        if (finalRecipes && finalRecipes.length > 0) {
+          try {
+            // 引入儲存服務 (使用同模組的 aiRecipeApi)
+            const { aiRecipeApi: savedRecipeApi } = await import(
+              '@/modules/ai/api/aiRecipeApi'
+            );
+
+            const savedRecipes = await Promise.all(
+              finalRecipes.map(async (recipe) => {
+                // SaveRecipeInput 格式: { name, amount, unit }
+                const input = {
+                  name: recipe.name,
+                  category: recipe.category,
+                  imageUrl: recipe.imageUrl,
+                  servings: recipe.servings,
+                  cookTime: recipe.cookTime,
+                  difficulty: recipe.difficulty,
+                  ingredients: (recipe.ingredients || []).map((i) => ({
+                    name: i.name,
+                    amount: i.amount,
+                    unit: i.unit,
+                  })),
+                  seasonings: (recipe.seasonings || []).map((s) => ({
+                    name: s.name,
+                    amount: s.amount,
+                    unit: s.unit,
+                  })),
+                  steps: (recipe.steps || []).map((s) => ({
+                    step: s.step,
+                    description: s.description,
+                  })),
+                  originalPrompt: currentPromptRef.current,
+                };
+                return savedRecipeApi.saveRecipe(input);
+              }),
+            );
+
+            // 將回傳的已儲存食譜 (含 ID + source) 轉換回 AIRecipeItem 格式供 UI 顯示
+            finalRecipes = savedRecipes.map((r) => ({
+              id: r.id,
+              name: r.name,
+              category: r.category || '其他',
+              imageUrl: r.imageUrl || '',
+              servings: r.servings,
+              cookTime: r.cookTime || 0,
+              isFavorite: r.isFavorite ?? false,
+              difficulty: r.difficulty || '簡單',
+              ingredients: r.ingredients,
+              seasonings: r.seasonings,
+              steps: r.steps,
+            }));
+          } catch (err) {
+            console.error('Auto-save recipes failed:', err);
+          }
+        }
+
         setState((s) => ({
           ...s,
           isStreaming: false,
           progress: 100,
           stage: '完成',
-          recipes: event.data.recipes,
+          recipes: finalRecipes,
           remainingQueries: event.data.remainingQueries,
         }));
         break;
+      }
 
       case 'error':
         setState((s) => ({
@@ -108,6 +169,9 @@ export const useRecipeStream = () => {
    */
   const startStream = useCallback(
     async (request: AIRecipeRequest) => {
+      // 儲存 Prompt
+      currentPromptRef.current = request.prompt;
+
       // 中止之前的請求
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();

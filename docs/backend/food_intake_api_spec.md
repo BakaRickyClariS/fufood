@@ -31,10 +31,10 @@
 
 前端會先呼叫 AI 服務取得辨識結果，再提交到後端入庫：
 
-| Method | 端點                       | 說明                                   |
-| :----: | -------------------------- | -------------------------------------- |
-| `POST` | `/api/v1/media/upload`     | 上傳圖片至 Cloudinary                  |
-| `POST` | `/api/v1/ai/analyze-image` | AI 辨識食材，回傳 `FoodItemInput` 格式 |
+| Method | 端點                       | 說明                                                                      |
+| :----: | -------------------------- | ------------------------------------------------------------------------- |
+| `POST` | `/api/v1/media/upload`     | 上傳圖片至 Cloudinary                                                     |
+| `POST` | `/api/v1/ai/analyze-image` | AI 辨識食材，回傳 `FoodItemInput` 格式 (支援 `multiple` 路由進行批次分析) |
 
 ---
 

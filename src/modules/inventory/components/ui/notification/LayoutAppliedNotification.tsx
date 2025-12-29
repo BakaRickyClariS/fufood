@@ -24,11 +24,11 @@ const LayoutAppliedNotification = ({
         gsap.fromTo(
           notificationRef.current,
           { y: -50, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out' }
+          { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out' },
         );
       }
     },
-    { scope: containerRef }
+    { scope: containerRef },
   );
 
   // 自動隱藏計時器
@@ -55,7 +55,10 @@ const LayoutAppliedNotification = ({
   };
 
   return (
-    <div ref={containerRef} className="fixed top-32 left-4 right-4 z-50 max-w-layout-container mx-auto">
+    <div
+      ref={containerRef}
+      className="fixed top-32 left-4 right-4 z-50 max-w-layout-container mx-auto"
+    >
       <div
         ref={notificationRef}
         className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-success-200/50 backdrop-blur-md"

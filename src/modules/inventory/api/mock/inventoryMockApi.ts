@@ -15,17 +15,22 @@ import type {
   InventorySummary,
   InventorySettings,
   UpdateInventorySettingsRequest,
+  CategorySettingItem,
 } from '../../types';
 import { MOCK_INVENTORY } from './inventoryMockData';
 import { categories } from '../../constants/categories';
 import { mockRequestHandlers } from '@/utils/debug/mockRequestHandlers';
 
 const createCategoryCounters = (): Record<FoodCategory, number> => {
-  const counters: Record<FoodCategory, number> = {};
-  MOCK_INVENTORY.forEach((item) => {
-    counters[item.category] = 0;
-  });
-  return counters;
+  return {
+    fruit: 0,
+    frozen: 0,
+    bake: 0,
+    milk: 0,
+    seafood: 0,
+    meat: 0,
+    others: 0,
+  };
 };
 
 export const createMockInventoryApi = (): InventoryApi => {
@@ -74,7 +79,7 @@ export const createMockInventoryApi = (): InventoryApi => {
     if (params?.groupId) {
       items = items.filter((item) => item.groupId === params.groupId);
     }
-    if (params?.category && params.category !== 'all') {
+    if (params?.category && (params.category as string) !== 'all') {
       items = items.filter((item) => item.category === params.category);
     }
     if (params?.status) {
@@ -94,7 +99,8 @@ export const createMockInventoryApi = (): InventoryApi => {
               item.lowStockAlert && item.quantity <= item.lowStockThreshold
             );
           case 'frequent':
-            return true;
+            // Mock: return items with purchaseCount > 5 or just true for now
+            return (item.purchaseCount || 0) > 5;
           case 'completed':
             return item.quantity === 0;
           case 'normal':
@@ -161,6 +167,7 @@ export const createMockInventoryApi = (): InventoryApi => {
 
   const getItem = async (
     id: string,
+    _refrigeratorId?: string,
   ): Promise<{ status: true; data: { item: FoodItem } }> => {
     await delay(200);
     const items = getStoredItems();
@@ -171,6 +178,7 @@ export const createMockInventoryApi = (): InventoryApi => {
 
   const addItem = async (
     data: AddFoodItemRequest,
+    _refrigeratorId?: string,
   ): Promise<AddFoodItemResponse> => {
     await delay(300);
     const items = getStoredItems();
@@ -193,6 +201,7 @@ export const createMockInventoryApi = (): InventoryApi => {
   const updateItem = async (
     id: string,
     data: UpdateFoodItemRequest,
+    _refrigeratorId?: string,
   ): Promise<UpdateFoodItemResponse> => {
     await delay(300);
     const items = getStoredItems();
@@ -213,7 +222,10 @@ export const createMockInventoryApi = (): InventoryApi => {
     };
   };
 
-  const deleteItem = async (id: string): Promise<DeleteFoodItemResponse> => {
+  const deleteItem = async (
+    id: string,
+    _refrigeratorId?: string,
+  ): Promise<DeleteFoodItemResponse> => {
     await delay(300);
     const items = getStoredItems();
     const filtered = items.filter((i) => i.id !== id);
@@ -228,6 +240,7 @@ export const createMockInventoryApi = (): InventoryApi => {
 
   const batchDelete = async (
     data: BatchDeleteInventoryRequest,
+    _refrigeratorId?: string,
   ): Promise<{
     status: true;
     message?: string;
@@ -240,66 +253,9 @@ export const createMockInventoryApi = (): InventoryApi => {
     return { status: true, data: {} };
   };
 
-  const getCategories = async (): Promise<{
-    status: true;
-    data: { categories: CategoryInfo[] };
-  }> => {
-    await delay(150);
-
-    // 取得使用者設定的類別順序
-    const settingsResponse = await getSettings();
-    const categoryOrder = settingsResponse.data.settings.categoryOrder;
-
-    // 取得自訂類別名稱
-    const storedCategoryTitles = mockRequestHandlers.getItem(
-      'mock_category_titles',
-    );
-    const categoryTitles: Record<string, string> = storedCategoryTitles
-      ? JSON.parse(storedCategoryTitles)
-      : {};
-
-    const allCategories = categories.map((c) => ({
-      id: c.id,
-      title: categoryTitles[c.id] || c.title, // 優先使用自訂名稱
-      count: c.value,
-      imageUrl: c.img,
-      bgColor: c.bgColor,
-      slogan: c.slogan,
-      description: c.description,
-    }));
-
-    // 如果有自訂順序，則根據順序排序
-    if (categoryOrder && categoryOrder.length > 0) {
-      const orderedCategories: CategoryInfo[] = [];
-
-      // 按照 categoryOrder 順序添加類別
-      categoryOrder.forEach((id) => {
-        const category = allCategories.find((c) => c.id === id);
-        if (category) {
-          orderedCategories.push(category);
-        }
-      });
-
-      // 添加不在 categoryOrder 中的類別（如果有新類別）
-      allCategories.forEach((category) => {
-        if (!categoryOrder.includes(category.id)) {
-          orderedCategories.push(category);
-        }
-      });
-
-      return {
-        status: true,
-        data: { categories: orderedCategories },
-      };
-    }
-
-    return {
-      status: true,
-      data: { categories: allCategories },
-    };
-  };
-
-  const getSummary = async (): Promise<{
+  const getSummary = async (
+    _refrigeratorId?: string,
+  ): Promise<{
     status: true;
     data: { summary: InventorySummary };
   }> => {
@@ -333,7 +289,9 @@ export const createMockInventoryApi = (): InventoryApi => {
     };
   };
 
-  const getSettings = async (): Promise<{
+  const getSettings = async (
+    _refrigeratorId?: string,
+  ): Promise<{
     status: true;
     data: { settings: InventorySettings };
   }> => {
@@ -355,13 +313,24 @@ export const createMockInventoryApi = (): InventoryApi => {
       return { status: true, data: { settings: parsed } };
     }
 
+    // Default Settings based on constants/categories
+    const defaultCategories: CategorySettingItem[] = categories.map((c) => ({
+      id: c.id,
+      title: c.title,
+      isVisible: true,
+      subCategories: c.description, // Mapping description to subCategories for initial mock
+    }));
+
     const defaults: InventorySettings = {
       lowStockThreshold: 2,
       expiringSoonDays: 3,
       notifyOnExpiry: true,
       notifyOnLowStock: true,
       layoutType: 'layout-a',
+      categoryOrder: defaultCategories.map((c) => c.id),
+      categories: defaultCategories,
     };
+
     memorySettings = defaults;
     mockRequestHandlers.setItem(
       'mock_inventory_settings',
@@ -372,6 +341,7 @@ export const createMockInventoryApi = (): InventoryApi => {
 
   const updateSettings = async (
     data: UpdateInventorySettingsRequest,
+    _refrigeratorId?: string,
   ): Promise<{
     status: true;
     message?: string;
@@ -380,28 +350,12 @@ export const createMockInventoryApi = (): InventoryApi => {
     await delay(150);
     const current = await getSettings();
 
-    // 處理類別名稱更新
-    if (data.categories && data.categories.length > 0) {
-      const storedCategoryTitles = mockRequestHandlers.getItem(
-        'mock_category_titles',
-      );
-      const categoryTitles: Record<string, string> = storedCategoryTitles
-        ? JSON.parse(storedCategoryTitles)
-        : {};
-
-      data.categories.forEach((cat) => {
-        categoryTitles[cat.id] = cat.title;
-      });
-
-      mockRequestHandlers.setItem(
-        'mock_category_titles',
-        JSON.stringify(categoryTitles),
-      );
-    }
-
-    const updated = { ...current.data.settings, ...data };
-    // 移除 categories 欄位，因為它不是 InventorySettings 的一部分
-    delete (updated as UpdateInventorySettingsRequest).categories;
+    // Partial update logic (recursive merge not needed for simple object like this unless categories changes)
+    const updated: InventorySettings = {
+      ...current.data.settings,
+      ...data,
+      // If data.categories is provided, it replaces the old one. We might want to merge if we were being fancy, but replacement is standard for optional array field
+    };
 
     memorySettings = updated;
     mockRequestHandlers.setItem(
@@ -415,9 +369,74 @@ export const createMockInventoryApi = (): InventoryApi => {
     };
   };
 
+  const getCategories = async (
+    _refrigeratorId?: string,
+  ): Promise<{
+    status: true;
+    data: { categories: CategoryInfo[] };
+  }> => {
+    await delay(150);
+
+    // Get settings to check order and customized titles/visibility
+    const settingsResponse = await getSettings();
+    const { settings } = settingsResponse.data;
+
+    // Create base category map
+    const categoryMap = new Map<string, CategoryInfo>();
+
+    // Add default categories
+    categories.forEach((c) => {
+      categoryMap.set(c.id, {
+        id: c.id,
+        title: c.title,
+        count: c.value,
+        imageUrl: c.img,
+        bgColor: c.bgColor,
+        slogan: c.slogan,
+        description: c.description,
+      });
+    });
+
+    // Apply settings override (titles)
+    if (settings.categories) {
+      settings.categories.forEach((c) => {
+        const existing = categoryMap.get(c.id);
+        if (existing) {
+          // If title changed in settings, use it
+          existing.title = c.title;
+        }
+      });
+    }
+
+    // Sort by settings.categoryOrder
+    const result: CategoryInfo[] = [];
+    if (settings.categoryOrder) {
+      settings.categoryOrder.forEach((id) => {
+        const cat = categoryMap.get(id);
+        if (cat) {
+          result.push(cat);
+          categoryMap.delete(id); // Remove so we don't add again
+        }
+      });
+    }
+
+    // specific business rule: should we include hidden categories in "getCategories"?
+    // getCategories is mostly used for "Adding Items" -> dropdown should typically show ALL valid categories even if hidden in dashboard?
+    // Or maybe we respect visibility? For now, I'll include all but sorted.
+
+    // Add remaining categories
+    categoryMap.forEach((cat) => result.push(cat));
+
+    return {
+      status: true,
+      data: { categories: result },
+    };
+  };
+
   const consumeItem = async (
     id: string,
     data: { quantity: number; reasons: string[]; customReason?: string },
+    _refrigeratorId?: string,
   ): Promise<{
     status: true;
     message?: string;

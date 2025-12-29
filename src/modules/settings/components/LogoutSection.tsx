@@ -6,13 +6,15 @@ type LogoutSectionProps = {
   isLoggingOut?: boolean;
 };
 
-const LogoutSection = ({ email, onLogout, isLoggingOut }: LogoutSectionProps) => {
+const LogoutSection = ({
+  email,
+  onLogout,
+  isLoggingOut,
+}: LogoutSectionProps) => {
   return (
     <div className="bg-white rounded-3xl p-6 shadow-sm space-y-4">
       {email && (
-        <div className="text-base font-bold text-neutral-800 px-1">
-          {email}
-        </div>
+        <div className="text-base font-bold text-neutral-800 px-1">{email}</div>
       )}
       <button
         onClick={onLogout}

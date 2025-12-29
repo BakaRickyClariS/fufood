@@ -25,11 +25,11 @@ import frozenCauliflower from '@/assets/images/foods/frozenCauliflower.png';
 import chocoIceCream from '@/assets/images/foods/chocoIceCream.png';
 
 export const MOCK_INVENTORY: FoodItem[] = [
-  // 蔬果類
+  // 蔬果類 (fruit)
   {
     id: 'manual-expired-1',
     name: '今日到期香蕉',
-    category: '蔬果類',
+    category: 'fruit',
     quantity: 3,
     unit: '根',
     imageUrl: banana,
@@ -44,7 +44,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'manual-expired-2',
     name: '即將過期軟餅乾',
-    category: '其他',
+    category: 'others',
     quantity: 5,
     unit: '片',
     imageUrl: americanSoft,
@@ -59,7 +59,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'manual-expired-3',
     name: '即將過期捲心菜',
-    category: '蔬果類',
+    category: 'fruit',
     quantity: 1,
     unit: '顆',
     imageUrl: cabbage,
@@ -74,7 +74,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'veg-expired-1',
     name: '過期青江菜',
-    category: '蔬果類',
+    category: 'fruit',
     quantity: 1,
     unit: '把',
     imageUrl: mainlandAchoy,
@@ -89,7 +89,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'veg-expired-2',
     name: '枯萎萵苣',
-    category: '蔬果類',
+    category: 'fruit',
     quantity: 2,
     unit: '顆',
     imageUrl: cabbage,
@@ -104,7 +104,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'veg-1',
     name: '大陸A菜',
-    category: '蔬果類',
+    category: 'fruit',
     quantity: 6,
     unit: '把',
     imageUrl: mainlandAchoy,
@@ -121,7 +121,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'veg-2',
     name: '結球甘藍',
-    category: '蔬果類',
+    category: 'fruit',
     quantity: 24,
     unit: '顆',
     imageUrl: cabbage,
@@ -138,7 +138,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'veg-3',
     name: '白花椰菜',
-    category: '蔬果類',
+    category: 'fruit',
     quantity: 1,
     unit: '顆',
     imageUrl: cauliflower,
@@ -154,7 +154,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'veg-4',
     name: '好市多香蕉',
-    category: '蔬果類',
+    category: 'fruit',
     quantity: 10,
     unit: '根',
     imageUrl: banana,
@@ -169,7 +169,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'veg-5',
     name: '紅羅蔔',
-    category: '蔬果類',
+    category: 'fruit',
     quantity: 5,
     unit: '根',
     imageUrl: carrot,
@@ -185,7 +185,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'veg-more-1',
     name: '青蔥',
-    category: '蔬果類',
+    category: 'fruit',
     quantity: 3,
     unit: '把',
     imageUrl: mainlandAchoy,
@@ -200,7 +200,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'veg-more-2',
     name: '洋蔥',
-    category: '蔬果類',
+    category: 'fruit',
     quantity: 6,
     unit: '顆',
     imageUrl: cauliflower, // reuse image
@@ -215,7 +215,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'fruit-1',
     name: '柑橘',
-    category: '蔬果類',
+    category: 'fruit',
     quantity: 3,
     unit: '顆',
     imageUrl: citrus,
@@ -231,7 +231,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'fruit-2',
     name: '柿子',
-    category: '蔬果類',
+    category: 'fruit',
     quantity: 3,
     unit: '顆',
     imageUrl: persimmon,
@@ -246,7 +246,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'fruit-3',
     name: '苗栗內湖草莓',
-    category: '蔬果類',
+    category: 'fruit',
     quantity: 40,
     unit: '顆',
     imageUrl: strawBerries,
@@ -260,11 +260,11 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lastPurchaseQuantity: 40,
   },
 
-  // 冷凍調理類
+  // 冷凍調理類 (frozen)
   {
     id: 'frozen-expired-1',
     name: '過期冷凍水餃',
-    category: '冷凍調理類',
+    category: 'frozen',
     quantity: 1,
     unit: '包',
     imageUrl: frozenCabbage,
@@ -279,7 +279,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'frozen-1',
     name: '帶皮薯條',
-    category: '冷凍調理類',
+    category: 'frozen',
     quantity: 50,
     unit: '根',
     imageUrl: skinOn,
@@ -295,7 +295,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'frozen-2',
     name: '冷凍富麗菜水餃',
-    category: '冷凍調理類',
+    category: 'frozen',
     quantity: 40,
     unit: '顆',
     imageUrl: frozenCabbage,
@@ -310,7 +310,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'frozen-3',
     name: '冷凍莓果',
-    category: '冷凍調理類',
+    category: 'frozen',
     quantity: 30,
     unit: '顆',
     imageUrl: frozenBerries,
@@ -325,7 +325,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'frozen-4',
     name: '冷凍毛豆',
-    category: '冷凍調理類',
+    category: 'frozen',
     quantity: 40,
     unit: '顆',
     imageUrl: edamame,
@@ -340,7 +340,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'frozen-5',
     name: '墨西哥薯球',
-    category: '冷凍調理類',
+    category: 'frozen',
     quantity: 50,
     unit: '顆',
     imageUrl: mexicanPotato,
@@ -355,7 +355,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'frozen-6',
     name: '冷凍花椰菜',
-    category: '冷凍調理類',
+    category: 'frozen',
     quantity: 50,
     unit: '顆',
     imageUrl: frozenCauliflower,
@@ -370,7 +370,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'frozen-more-1',
     name: '冷凍蔥抓餅',
-    category: '冷凍調理類',
+    category: 'frozen',
     quantity: 10,
     unit: '片',
     imageUrl: skinOn,
@@ -383,11 +383,11 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lastPurchaseQuantity: 10,
   },
 
-  // 主食烘焙類
+  // 主食烘焙類 (bake)
   {
     id: 'staple-expired-1',
     name: '乾硬佛卡夏',
-    category: '主食烘焙類',
+    category: 'bake',
     quantity: 1,
     unit: '條',
     imageUrl: freshToast,
@@ -402,7 +402,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'staple-1',
     name: '原味生吐司',
-    category: '主食烘焙類',
+    category: 'bake',
     quantity: 1,
     unit: '條',
     imageUrl: freshToast,
@@ -418,7 +418,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'staple-2',
     name: '早餐沒吃完的三明治',
-    category: '主食烘焙類',
+    category: 'bake',
     quantity: 1,
     unit: '個',
     imageUrl: breakfastLeftover,
@@ -433,7 +433,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'staple-3',
     name: '米',
-    category: '主食烘焙類',
+    category: 'bake',
     quantity: 1,
     unit: '包',
     imageUrl: rice,
@@ -449,7 +449,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'staple-4',
     name: '生烏龍麵',
-    category: '主食烘焙類',
+    category: 'bake',
     quantity: 3,
     unit: '包',
     imageUrl: freshUdon,
@@ -464,7 +464,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'staple-5',
     name: '奶油餐包',
-    category: '主食烘焙類',
+    category: 'bake',
     quantity: 12,
     unit: '個',
     imageUrl: butterRoll,
@@ -479,7 +479,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'staple-more-1',
     name: '貝果',
-    category: '主食烘焙類',
+    category: 'bake',
     quantity: 6,
     unit: '個',
     imageUrl: butterRoll, // reuse image
@@ -492,11 +492,11 @@ export const MOCK_INVENTORY: FoodItem[] = [
     lastPurchaseQuantity: 6,
   },
 
-  // 其他
+  // 其他 (others)
   {
     id: 'dessert-1',
     name: '檸檬冰淇淋',
-    category: '其他',
+    category: 'others',
     quantity: 1,
     unit: '桶',
     imageUrl: lemonIce,
@@ -511,7 +511,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'dessert-2',
     name: '桶裝巧克力冰淇淋',
-    category: '其他',
+    category: 'others',
     quantity: 1,
     unit: '桶',
     imageUrl: chocoIceCream,
@@ -526,7 +526,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'dessert-3',
     name: '肉桂捲',
-    category: '其他',
+    category: 'others',
     quantity: 9,
     unit: '顆',
     imageUrl: cinnamonRoll,
@@ -541,7 +541,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'dessert-4',
     name: '美式軟餅乾',
-    category: '其他',
+    category: 'others',
     quantity: 20,
     unit: '片',
     imageUrl: americanSoft,
@@ -556,7 +556,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'dessert-5',
     name: '檸檬塔',
-    category: '其他',
+    category: 'others',
     quantity: 2,
     unit: '個',
     imageUrl: lemonTart,
@@ -571,7 +571,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'dessert-expired-1',
     name: '過期檸檬派',
-    category: '其他',
+    category: 'others',
     quantity: 1,
     unit: '個',
     imageUrl: lemonTart,
@@ -586,7 +586,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'dessert-completed-1',
     name: '已吃完的布丁',
-    category: '其他',
+    category: 'others',
     quantity: 0,
     unit: '個',
     imageUrl: lemonTart,
@@ -601,7 +601,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'veg-completed-1',
     name: '用完的蔥',
-    category: '蔬果類',
+    category: 'fruit',
     quantity: 0,
     unit: '把',
     imageUrl: mainlandAchoy,
@@ -616,7 +616,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'staple-completed-1',
     name: '吃光的吐司',
-    category: '主食烘焙類',
+    category: 'bake',
     quantity: 0,
     unit: '條',
     imageUrl: freshToast,
@@ -631,7 +631,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'frozen-completed-1',
     name: '完食水餃',
-    category: '冷凍調理類',
+    category: 'frozen',
     quantity: 0,
     unit: '包',
     imageUrl: frozenCabbage,
@@ -646,7 +646,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'staple-completed-2',
     name: '已煮完的烏龍麵',
-    category: '主食烘焙類',
+    category: 'bake',
     quantity: 0,
     unit: '包',
     imageUrl: freshUdon,
@@ -661,7 +661,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'veg-completed-2',
     name: '吃完的草莓',
-    category: '蔬果類',
+    category: 'fruit',
     quantity: 0,
     unit: '顆',
     imageUrl: strawBerries,
@@ -676,7 +676,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
   {
     id: 'dessert-more-1',
     name: '布丁',
-    category: '其他',
+    category: 'others',
     quantity: 3,
     unit: '個',
     imageUrl: lemonTart, // reuse image
@@ -692,7 +692,7 @@ export const MOCK_INVENTORY: FoodItem[] = [
 
 export const MOCK_CATEGORIES: CategoryInfo[] = [
   {
-    id: 'cat-1',
+    id: 'fruit',
     title: '蔬果類',
     count: 10,
     imageUrl: cabbage,
@@ -701,7 +701,7 @@ export const MOCK_CATEGORIES: CategoryInfo[] = [
     description: ['每日五蔬果', '健康生活'],
   },
   {
-    id: 'cat-2',
+    id: 'frozen',
     title: '冷凍調理類',
     count: 7,
     imageUrl: frozenCabbage,
@@ -710,7 +710,7 @@ export const MOCK_CATEGORIES: CategoryInfo[] = [
     description: ['快速上桌', '美味不打折'],
   },
   {
-    id: 'cat-3',
+    id: 'bake',
     title: '主食烘焙類',
     count: 6,
     imageUrl: freshToast,
@@ -719,7 +719,7 @@ export const MOCK_CATEGORIES: CategoryInfo[] = [
     description: ['飽足感', '美味烘焙'],
   },
   {
-    id: 'cat-4',
+    id: 'others',
     title: '其他',
     count: 6,
     imageUrl: lemonIce,

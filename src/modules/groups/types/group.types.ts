@@ -27,6 +27,7 @@ export type Group = {
  */
 export type CreateGroupForm = {
   name: string;
+  colour?: string; // 選填，冰箱顏色
 };
 
 /**
@@ -45,10 +46,57 @@ export type InviteMemberForm = {
 };
 
 export type JoinGroupForm = {
-  inviteCode: string;
+  invitationToken: string;
+};
+
+export type Friend = {
+  id: string;
+  name: string;
+  avatar: string;
+  lineId?: string;
 };
 
 /**
- * Modal 狀態型別
+ * 邀請建立者資訊
  */
-export type GroupModalView = 'list' | 'create' | 'edit' | 'members';
+export type InvitationCreator = {
+  id: string;
+  lineId?: string;
+  name: string;
+  profilePictureUrl?: string;
+  subscriptionTier?: string;
+};
+
+/**
+ * 邀請 API 回應型別（對應後端 GET /api/v1/invitations/{token}）
+ */
+export type InvitationResponse = {
+  id: string;
+  token: string;
+  refrigeratorId: string;
+  refrigeratorName?: string;
+  invitedById: string;
+  inviterName?: string;
+  expiresAt: string;
+  // 保留舊欄位以防萬一，但標記為可選
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+/**
+ * 邀請碼回應型別（前端使用）
+ */
+export type InviteCodeResponse = {
+  // 新 API 格式
+  token?: string;
+  inviteUrl?: string;
+  expiresAt?: string;
+  // 舊 API 格式（保留相容性）
+  code?: string;
+  expiry?: string;
+};
+
+export interface GroupModalView {
+  type: 'home' | 'settings' | 'create' | 'edit' | 'members' | 'invite'; // Added invite
+  data?: any;
+}

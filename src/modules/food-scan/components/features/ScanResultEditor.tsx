@@ -11,6 +11,8 @@ type ScanResultEditorProps = {
   onBack: () => void;
   onRetake?: () => void;
   onPickImage?: () => void;
+  currentIndex?: number;
+  totalCount?: number;
 };
 
 export const ScanResultEditor: React.FC<ScanResultEditorProps> = ({
@@ -20,6 +22,8 @@ export const ScanResultEditor: React.FC<ScanResultEditorProps> = ({
   onBack,
   onRetake,
   onPickImage,
+  currentIndex,
+  totalCount,
 }) => {
   const {
     register,
@@ -38,6 +42,14 @@ export const ScanResultEditor: React.FC<ScanResultEditorProps> = ({
       onSuccess();
     }
   };
+
+  const isBatchMode = totalCount && totalCount > 1;
+  const isLastItem = isBatchMode && currentIndex === totalCount;
+  const submitButtonText = isSubmitting
+    ? '處理中...'
+    : isBatchMode && !isLastItem
+      ? '確認並繼續'
+      : '確認歸納';
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -59,6 +71,11 @@ export const ScanResultEditor: React.FC<ScanResultEditorProps> = ({
           </svg>
         </button>
         <h1 className="text-lg font-bold">確認食材資訊</h1>
+        {isBatchMode && (
+          <span className="ml-auto text-sm font-medium text-slate-500">
+            {currentIndex} / {totalCount}
+          </span>
+        )}
       </div>
 
       <div className="p-4">
@@ -85,7 +102,7 @@ export const ScanResultEditor: React.FC<ScanResultEditorProps> = ({
               disabled={isSubmitting}
               className="flex-1 py-3 px-4 bg-red-500 text-white rounded-xl font-medium shadow-lg shadow-red-500/30 disabled:opacity-50"
             >
-              {isSubmitting ? '處理中...' : '確認歸納'}
+              {submitButtonText}
             </button>
           </div>
 

@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   setLayout,
@@ -13,8 +14,14 @@ import {
   selectCurrentLayout,
   selectCategoryOrder,
 } from '@/modules/inventory/store/inventorySlice';
+import {
+  selectAllGroups,
+  fetchGroups,
+} from '@/modules/groups/store/groupsSlice';
 import useFadeInAnimation from '@/shared/hooks/useFadeInAnimation';
 import type { CategoryInfo } from '@/modules/inventory/types';
+import { categories as defaultCategories } from '@/modules/inventory/constants/categories';
+import { getRefrigeratorId } from '@/modules/inventory/utils/getRefrigeratorId';
 
 const DynamicGridAreaStyles = ({
   categories,
@@ -35,42 +42,90 @@ const OverviewPanel: React.FC = () => {
   const currentLayout = useSelector(selectCurrentLayout);
   const categoryOrder = useSelector(selectCategoryOrder);
   const dispatch = useDispatch();
+  const { groupId } = useParams<{ groupId: string }>();
 
-  // 初次載入時從 API 取得資料
+  // Get groups to derive default ID
+  const groups = useSelector(selectAllGroups);
+  const firstGroupId = groups[0]?.id;
+
+  // Effect 1: 確保 groups 已載入
   useEffect(() => {
+    if (groups.length === 0) {
+      // @ts-ignore
+      dispatch(fetchGroups());
+    }
+  }, [dispatch, groups.length]);
+
+  // Effect 2: 當 groups 已載入時，載入 settings
+  useEffect(() => {
+    // 計算 refrigeratorId
+    const refId = getRefrigeratorId(groupId, groups);
+
+    // 如果還沒有 refId，不執行
+    if (!refId) {
+      if (groups.length > 0) {
+        console.error('[Overview] 無法取得 refrigeratorId');
+        setIsLoading(false);
+      }
+      return;
+    }
+
     const fetchData = async () => {
       try {
         setIsLoading(true);
 
-        // 同時載入設定和類別
-        const [settingsResponse, categoriesResponse] = await Promise.all([
-          inventoryApi.getSettings(),
-          inventoryApi.getCategories(),
-        ]);
+        // 載入設定
+        const settingsResponse = await inventoryApi.getSettings(refId);
+        const settings = settingsResponse.data.settings;
 
         // 更新設定到 Redux
-        dispatch(setSettings(settingsResponse.data.settings));
+        dispatch(setSettings(settings));
 
         // 如果設定中有 layoutType，更新 layout
-        if (settingsResponse.data.settings.layoutType) {
-          dispatch(setLayout(settingsResponse.data.settings.layoutType));
+        if (settings.layoutType) {
+          dispatch(setLayout(settings.layoutType));
+        }
+
+        // 建立預設類別對照表
+        const defaultCategoryMap = new Map(
+          defaultCategories.map((c) => [c.id, c]),
+        );
+
+        // 優先使用 settings 內的 categories，若無則 fallback 到 categories API
+        let categoryData: CategoryInfo[] = [];
+
+        if (settings.categories && settings.categories.length > 0) {
+          // 從 settings.categories 轉換為 CategoryInfo 格式
+          // 使用預設類別常數補充樣式資訊
+          categoryData = settings.categories.map((cat) => {
+            const defaults = defaultCategoryMap.get(cat.id);
+            return {
+              id: cat.id,
+              title: cat.title,
+              count: 0, // settings 不含 count，預設為 0
+              imageUrl: defaults?.img || '',
+              bgColor: defaults?.bgColor || '',
+              slogan: defaults?.slogan || '',
+              description: cat.subCategories || defaults?.description || [],
+            };
+          });
+        } else {
+          // Fallback 到 categories API
+          const categoriesResponse = await inventoryApi.getCategories(refId);
+          categoryData = categoriesResponse.data.categories;
         }
 
         // 如果設定中有 categoryOrder，更新順序
-        if (settingsResponse.data.settings.categoryOrder) {
-          dispatch(
-            setCategoryOrder(settingsResponse.data.settings.categoryOrder),
-          );
+        if (settings.categoryOrder) {
+          dispatch(setCategoryOrder(settings.categoryOrder));
         } else {
-          // 如果沒有設定順序，使用 API 回傳的預設順序
-          const defaultOrder = categoriesResponse.data.categories.map(
-            (c) => c.id,
-          );
+          // 如果沒有設定順序，使用類別資料的預設順序
+          const defaultOrder = categoryData.map((c) => c.id);
           dispatch(setCategoryOrder(defaultOrder));
         }
 
-        // 設定原始類別資料
-        setCategories(categoriesResponse.data.categories);
+        // 設定類別資料
+        setCategories(categoryData);
       } catch (error) {
         console.error('Failed to fetch data:', error);
       } finally {
@@ -79,7 +134,7 @@ const OverviewPanel: React.FC = () => {
     };
 
     fetchData();
-  }, [dispatch]);
+  }, [groupId, firstGroupId, dispatch]);
 
   // 根據 Redux 的 categoryOrder 排序類別（這會在 categoryOrder 變化時自動更新）
   const sortedCategories = useMemo(() => {

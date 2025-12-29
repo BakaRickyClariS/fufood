@@ -48,7 +48,7 @@ export const categories: CategoryItem[] = [
   },
   {
     id: 'milk',
-    title: '乳製品飲料類',
+    title: '乳品飲料類',
     value: 3,
     img: milkImg,
     bgColor: 'bg-[#DDF0FF]',
@@ -79,7 +79,7 @@ export const categories: CategoryItem[] = [
   },
   {
     id: 'others',
-    title: '其他',
+    title: '乾貨醬料類',
     value: 6,
     img: otherImg,
     bgColor: 'bg-[#E2E2E2]',

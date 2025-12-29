@@ -1,4 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  selectAllGroups,
+  fetchGroups,
+} from '@/modules/groups/store/groupsSlice';
 import CommonItemCard from '@/modules/inventory/components/ui/card/CommonItemCard';
 import { useInventoryExtras } from '@/modules/inventory/hooks';
 import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
@@ -47,16 +53,33 @@ const ExpiredRecordsPanel: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const [filter, setFilter] = useState<'expired' | 'completed'>('expired');
   const [isContentLoading, setIsContentLoading] = useState(false);
+  const { groupId } = useParams<{ groupId: string }>();
+  const dispatch = useDispatch();
+  const groups = useSelector(selectAllGroups);
+  const targetGroupId = groupId || groups[0]?.id;
 
   // 使用共用的淡入動畫 hook
-  const { ref: contentRef, resetAnimation } = useFadeInAnimation<HTMLDivElement>({
-    isLoading: isLoading || isContentLoading,
-  });
+  const { ref: contentRef, resetAnimation } =
+    useFadeInAnimation<HTMLDivElement>({
+      isLoading: isLoading || isContentLoading,
+    });
 
-  // 初次載入
+  // Effect 1: 確保 groups 已載入
   useEffect(() => {
-    fetchExpiredItems(filter);
-  }, []);
+    if (groups.length === 0) {
+      // @ts-ignore
+      dispatch(fetchGroups());
+    }
+  }, [dispatch, groups.length]);
+
+  // Effect 2: 當有有效 targetGroupId 時才載入資料
+  useEffect(() => {
+    if (!targetGroupId) {
+      // groups 還在載入，不執行任何動作
+      return;
+    }
+    fetchExpiredItems(filter, 1, 20, targetGroupId);
+  }, [fetchExpiredItems, filter, targetGroupId]);
 
   // 切換篩選的處理函數
   const handleFilterChange = useCallback(
@@ -66,7 +89,9 @@ const ExpiredRecordsPanel: React.FC = () => {
       setIsContentLoading(true);
       resetAnimation(); // 重置動畫狀態，讓下次載入完成時可以再次播放動畫
       setFilter(newFilter);
-      fetchExpiredItems(newFilter);
+      if (targetGroupId) {
+        fetchExpiredItems(newFilter, 1, 20, targetGroupId);
+      }
 
       // 模擬載入完成（實際上 isLoading 會由 hook 控制）
       // 這裡需要等待實際的 isLoading 變化
@@ -157,7 +182,9 @@ const ExpiredRecordsPanel: React.FC = () => {
           item={selectedItem}
           isOpen={!!selectedItem}
           onClose={() => setSelectedItem(null)}
-          onItemUpdate={() => fetchExpiredItems(filter)}
+          onItemUpdate={() => {
+            if (targetGroupId) fetchExpiredItems(filter, 1, 20, targetGroupId);
+          }}
         />
       )}
     </>
