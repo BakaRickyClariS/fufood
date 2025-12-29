@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 
-import type { SharedListItem } from '@/modules/planning/types';
+import type { SharedList } from '@/modules/planning/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,10 +10,12 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
 
+import { COVER_IMAGES } from '@/modules/planning/constants/coverImages';
+
 type SharedListCardProps = {
-  list: SharedListItem;
-  onEdit?: (list: SharedListItem) => void;
-  onDelete?: (list: SharedListItem) => void;
+  list: SharedList;
+  onEdit?: (list: SharedList) => void;
+  onDelete?: (list: SharedList) => void;
 };
 
 export const SharedListCard = ({
@@ -58,13 +60,13 @@ export const SharedListCard = ({
     >
       {/* 背景圖 */}
       <img
-        src={list.coverImageUrl}
-        alt={list.name}
+        src={list.coverPhotoPath || COVER_IMAGES[0]}
+        alt={list.title}
         className="absolute inset-0 w-full h-full object-cover"
       />
 
       {/* 漸層遮罩 (模糊漸層 + 黑色漸層) */}
-      <div 
+      <div
         className="absolute inset-0 backdrop-blur-md"
         style={{ maskImage: 'linear-gradient(to top, black, transparent)' }}
       />
@@ -72,12 +74,8 @@ export const SharedListCard = ({
 
       {/* 左上角日期標籤 */}
       <div className="absolute top-3 left-3 bg-white/60 backdrop-blur-sm rounded-full px-4 py-2 flex flex-row items-center justify-center gap-1.5 font-bold text-neutral-900 shadow-sm">
-        <span className="text-sm">
-          {getDayOfWeek(list.scheduledDate)}
-        </span>
-        <span className="text-xl">
-          {getDayOfMonth(list.scheduledDate)}
-        </span>
+        <span className="text-sm">{getDayOfWeek(list.startsAt)}</span>
+        <span className="text-xl">{getDayOfMonth(list.startsAt)}</span>
       </div>
 
       {/* 右上角三點選單按鈕 */}
@@ -110,7 +108,7 @@ export const SharedListCard = ({
 
       {/* 左下角標題 */}
       <div className="absolute bottom-4 left-4 text-white font-semibold text-lg drop-shadow-md">
-        {list.name}
+        {list.title}
       </div>
     </div>
   );
