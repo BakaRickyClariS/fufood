@@ -1,51 +1,46 @@
-import type { ScanResult } from '../../types/scanResult';
+import type { FoodItemInput } from '../../types/foodItem';
 
-export const MOCK_SCAN_RESULTS: ScanResult['data'][] = [
+export const MOCK_SCAN_RESULT: FoodItemInput = {
+  productName: '有機高雷菜',
+  category: 'fruit', // fixed
+  attributes: '葉菜類',
+  purchaseQuantity: 1,
+  unit: '顆',
+  purchaseDate: '2023-11-20',
+  expiryDate: '2023-12-05',
+  lowStockAlert: true,
+  lowStockThreshold: 1,
+  notes: '全聯購入',
+};
+
+export const MOCK_HISTORY: FoodItemInput[] = [
   {
-    productName: '結球甘藍',
-    category: '蔬果類',
-    attributes: '葉菜根莖類',
+    productName: '全脂鮮乳',
+    category: 'milk', // fixed
+    attributes: '乳製品',
     purchaseQuantity: 1,
-    unit: '顆',
-    purchaseDate: new Date().toISOString().split('T')[0],
-    expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split('T')[0],
-    lowStockAlert: true,
-    lowStockThreshold: 2,
-    notes: '好市多購入，季節限定',
-  },
-  {
-    productName: '鮮奶',
-    category: '乳品飲料類',
-    attributes: '鮮奶',
-    purchaseQuantity: 2,
     unit: '瓶',
-    purchaseDate: new Date().toISOString().split('T')[0],
-    expiryDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split('T')[0],
+    purchaseDate: '2023-11-18',
+    expiryDate: '2023-11-28',
     lowStockAlert: true,
     lowStockThreshold: 1,
-    notes: '早餐必備',
+    notes: '',
   },
   {
     productName: '冷凍水餃',
-    category: '冷凍調理類',
-    attributes: '冷凍調理包',
-    purchaseQuantity: 3,
+    category: 'frozen', // fixed
+    attributes: '主食',
+    purchaseQuantity: 2,
     unit: '包',
-    purchaseDate: new Date().toISOString().split('T')[0],
-    expiryDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split('T')[0],
-    lowStockAlert: false,
-    lowStockThreshold: 2,
-    notes: '宵夜',
+    purchaseDate: '2023-11-15',
+    expiryDate: '2024-05-15',
+    lowStockAlert: true,
+    lowStockThreshold: 1,
+    notes: '韭菜口味',
   },
   {
     productName: '牛小排',
-    category: '肉品類',
+    category: 'meat', // fixed
     attributes: '牛肉類',
     purchaseQuantity: 600,
     unit: 'g',
@@ -59,7 +54,7 @@ export const MOCK_SCAN_RESULTS: ScanResult['data'][] = [
   },
   {
     productName: '橄欖油',
-    category: '其他',
+    category: 'others', // fixed
     attributes: '油品與堅果',
     purchaseQuantity: 1,
     unit: '瓶',
@@ -71,4 +66,9 @@ export const MOCK_SCAN_RESULTS: ScanResult['data'][] = [
     lowStockThreshold: 1,
     notes: '義大利進口',
   },
+];
+
+export const MOCK_SCAN_RESULTS: FoodItemInput[] = [
+  MOCK_SCAN_RESULT,
+  ...MOCK_HISTORY,
 ];

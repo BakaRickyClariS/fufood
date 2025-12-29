@@ -9,13 +9,13 @@ export const useInventoryStats = (items: FoodItem[]) => {
     expiringSoonCount: 0,
     lowStockCount: 0,
     byCategory: {
-      蔬果類: 0,
-      冷凍調理類: 0,
-      主食烘焙類: 0,
-      乳製品飲料類: 0,
-      冷凍海鮮類: 0,
-      肉品類: 0,
-      其他: 0,
+      fruit: 0,
+      frozen: 0,
+      bake: 0,
+      milk: 0,
+      seafood: 0,
+      meat: 0,
+      others: 0,
     },
   });
 
@@ -26,13 +26,13 @@ export const useInventoryStats = (items: FoodItem[]) => {
       expiringSoonCount: 0,
       lowStockCount: 0,
       byCategory: {
-        蔬果類: 0,
-        冷凍調理類: 0,
-        主食烘焙類: 0,
-        乳製品飲料類: 0,
-        冷凍海鮮類: 0,
-        肉品類: 0,
-        其他: 0,
+        fruit: 0,
+        frozen: 0,
+        bake: 0,
+        milk: 0,
+        seafood: 0,
+        meat: 0,
+        others: 0,
       },
     };
 
