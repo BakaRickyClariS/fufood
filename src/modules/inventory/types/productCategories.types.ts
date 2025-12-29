@@ -57,17 +57,24 @@ export function categoryToDisplayNames(value: ProductCategory): string[] {
 }
 
 // "Frozen,Beverage" => 32 | 64 => 96
+const apiNameToCategoryMap = Object.fromEntries(
+  Object.entries(ProductCategoryApiNames).map(([key, value]) => [
+    value,
+    Number(key) as ProductCategory,
+  ]),
+);
+
 export function apiNamesToEnum(value: string): ProductCategory {
-  const segments = value.split(',');
-  let sum: ProductCategory = 0;
-  for (const segment of segments) {
-    for (const flag of Object.values(ProductCategory)) {
-      if (segment === ProductCategoryApiNames[flag]) {
-        sum |= flag;
-      }
-    }
+  if (!value) {
+    return ProductCategory.None;
   }
-  return sum;
+  return value.split(',').reduce((sum: ProductCategory, segment) => {
+    const categoryValue = apiNameToCategoryMap[segment.trim()];
+    if (categoryValue !== undefined) {
+      return sum | categoryValue;
+    }
+    return sum;
+  }, ProductCategory.None);
 }
 
 export const ProductCategoryOptions = Object.values(ProductCategory).map(

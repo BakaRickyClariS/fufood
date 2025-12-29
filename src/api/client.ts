@@ -56,15 +56,20 @@ class ApiClient {
 
     // Build URL with query params
     const url = new URL(`${this.baseUrl}${endpoint}`);
+
     if (params) {
-      url.search = new URLSearchParams(
-        params as Record<string, never>,
-      ).toString();
+      const filteredParams = Object.fromEntries(
+        Object.entries(params).filter(([, value]) => value !== undefined),
+      ) as Record<string, string>;
+      if (Object.keys(filteredParams).length > 0) {
+        url.search = new URLSearchParams(filteredParams).toString();
+      }
     }
 
     let token: string | null = '';
     let userId: string | null = '';
 
+    // Access tokens and user IDs are only used in the AI API. The backend API relies on HTTP-only cookies.
     if (this.apiType === 'ai') {
       // 使用統一的 identity 模組取得認證資訊
       token = identity.getAuthToken();
