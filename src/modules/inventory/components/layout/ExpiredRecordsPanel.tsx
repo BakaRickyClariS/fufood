@@ -60,16 +60,23 @@ const ExpiredRecordsPanel: React.FC = () => {
     isLoading: isLoading || isContentLoading,
   });
 
-  // 初次載入
+  // Effect 1: 確保 groups 已載入
   useEffect(() => {
     if (groups.length === 0) {
-        // @ts-ignore
-        dispatch(fetchGroups());
+      // @ts-ignore
+      dispatch(fetchGroups());
     }
-    if (targetGroupId) {
-        fetchExpiredItems(filter, 1, 20, targetGroupId);
+  }, [dispatch, groups.length]);
+
+  // Effect 2: 當有有效 targetGroupId 時才載入資料
+  useEffect(() => {
+    if (!targetGroupId) {
+      // groups 還在載入，不執行任何動作
+      return;
     }
-  }, [fetchExpiredItems, filter, groupId, groups.length, targetGroupId, dispatch]);
+    fetchExpiredItems(filter, 1, 20, targetGroupId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchExpiredItems, filter, targetGroupId]);
 
   // 切換篩選的處理函數
   const handleFilterChange = useCallback(

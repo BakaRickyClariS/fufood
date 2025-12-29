@@ -163,29 +163,37 @@ const SettingsPanel: React.FC = () => {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
-
+  
+  // 計算穩定的 refrigeratorId
+  const firstGroupId = groups[0]?.id;
+  
+  // Effect 1: 確保 groups 已載入
   useEffect(() => {
-    const fetchData = async () => {
+    if (groups.length === 0) {
+      // @ts-ignore - Dispatch typing
+      dispatch(fetchGroups());
+    }
+  }, [dispatch, groups.length]);
+
+  // Effect 2: 當 groups 已載入或有有效 refrigeratorId 時，載入 settings
+  useEffect(() => {
+    // 計算 refrigeratorId
+    const refId = getRefrigeratorId(groupId, groups);
+    
+    // 如果還沒有 refId，不執行
+    if (!refId) {
+      // groups 還在載入中或真的沒有冰箱
+      if (groups.length > 0) {
+        console.error('[Settings] 無法取得 refrigeratorId');
+        toast.error('無法確認冰箱，請重新登入');
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    const fetchSettings = async () => {
       try {
         setIsLoading(true);
-
-        // 嘗試載入 groups（如果還沒有的話）
-        if (groups.length === 0) {
-          // @ts-ignore - Dispatch typing
-          dispatch(fetchGroups());
-          // 給 groups 時間載入，但不 block 整個流程
-          await new Promise(r => setTimeout(r, 1000));
-        }
-
-        // 重新計算 refrigeratorId（可能 groups 已載入）
-        const refId = getRefrigeratorId(groupId, groups);
-        
-        if (!refId) {
-          console.error('[Settings] 無法取得 refrigeratorId');
-          toast.error('無法確認冰箱，請重新登入');
-          setIsLoading(false);
-          return;
-        }
 
         // Fetch settings
         const settingsResponse = await inventoryApi.getSettings(refId);
@@ -244,15 +252,15 @@ const SettingsPanel: React.FC = () => {
              setSavedCategoryOrder(savedIds);
         }
       } catch (error) {
-        console.error('Failed to fetch data:', error);
+        console.error('Failed to fetch settings:', error);
         toast.error('無法載入設定');
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchData();
-  }, [groupId, groups.length, targetGroupId]); // Add dependencies
+    fetchSettings();
+  }, [groupId, firstGroupId, dispatch, categoryOrder.length]);
 
   const sortedCategories = useMemo(() => {
     if (categories.length === 0) return [];
