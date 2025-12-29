@@ -87,7 +87,6 @@ const ScanResult: React.FC = () => {
     lowStockAlert: result.lowStockAlert ?? true,
     lowStockThreshold: result.lowStockThreshold || 2,
     notes: result.notes || '',
-    notes: result.notes || '',
     imageUrl: imageUrl,
     groupId: targetGroupId || undefined,
   };
