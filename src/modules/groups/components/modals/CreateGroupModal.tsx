@@ -64,6 +64,9 @@ export const CreateGroupModal: FC<CreateGroupModalProps> = ({
     setName('');
     setSelectedImage(AVAILABLE_GROUP_IMAGES[0].src);
     onClose();
+
+    // 重新載入頁面以顯示新群組
+    window.location.reload();
   };
 
   return (
