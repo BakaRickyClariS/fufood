@@ -83,9 +83,15 @@ class ApiClient {
 
     // Get token (if available)
     const token = getAuthToken();
+    
+    // Debug: 追蹤 Authorization header
+    // 注意：Backend API 使用 HttpOnly Cookie，所以 localStorage 沒有 token 是正常的
+    if (!token && this.apiType === 'ai') {
+      console.warn(`[${this.apiType.toUpperCase()} API] No auth token found in localStorage`);
+    }
 
-    // AI 後端需要 X-User-Id header
-    const userId = this.apiType === 'ai' ? this.getUserId() : null;
+    // 嘗試取得 User ID (AI API 必要，Backend API 可能選用)
+    const userId = this.getUserId();
     if (this.apiType === 'ai' && !userId) {
       console.warn('[AI API] No user ID found, AI backend may reject this request');
     }
@@ -98,8 +104,8 @@ class ApiClient {
           ? {}
           : { 'Content-Type': 'application/json' }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        // AI 後端需要 X-User-Id header 識別使用者
-        ...(this.apiType === 'ai' && userId ? { 'X-User-Id': userId } : {}),
+        // 嘗試為所有 API 都帶上 X-User-Id (若有)，以防後端某些 middleware 需要
+        ...(userId ? { 'X-User-Id': userId } : {}),
         // 如果 body 是 FormData，不要合併自訂 headers 中的 Content-Type
         // 讓瀏覽器自動設定正確的 multipart/form-data boundary
         ...(headers && !(body instanceof FormData)
