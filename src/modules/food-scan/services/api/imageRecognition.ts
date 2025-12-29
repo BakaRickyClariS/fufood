@@ -111,7 +111,12 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     const mapped: FoodItemInput = {
       productName: payload.productName ?? payload.name ?? '',
       category: finalCategory as FoodItemInput['category'],
-      attributes: finalAttributes ? [finalAttributes] : [],
+      attributes: finalAttributes
+        ? finalAttributes
+            .split(',')
+            .map((attr) => attr.trim())
+            .filter(Boolean)
+        : [],
       purchaseQuantity: Number(payload.purchaseQuantity ?? 1),
       unit: (payload.unit ?? '份') as FoodItemInput['unit'],
       purchaseDate: payload.purchaseDate ?? today,
