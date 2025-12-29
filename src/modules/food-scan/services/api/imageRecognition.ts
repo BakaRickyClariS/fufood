@@ -171,7 +171,19 @@ export const createRealFoodScanApi = (): FoodScanApi => {
   const submitFoodItem = async (
     data: FoodItemInput,
   ): Promise<FoodItemResponse> => {
-    // 庫存 API 已遷移至主後端
+    // 優先使用新版冰箱 API (如果資料中有 groupId)
+    if (data.groupId) {
+      // 注意：這裡使用 aiApi 因為它是我們主要的 Axios instance wrapper，
+      // 但實際上這個端點是後端的。我們確認 aiApi 或 backendApi 的設定。
+      // 根據 client.ts，backendApi 指向後端，aiApi 指向 AI 服務。
+      // 庫存 /refrigerators 是主後端的邏輯。
+      return backendApi.post<FoodItemResponse>(
+        `/refrigerators/${data.groupId}/inventory`,
+        data,
+      );
+    }
+
+    // 舊版 fallback (如果沒有 groupId)
     return backendApi.post<FoodItemResponse>('/api/v1/inventory', data);
   };
 

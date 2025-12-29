@@ -11,6 +11,9 @@ import {
   goToNext,
   reset,
 } from '@/modules/food-scan/store/batchScanSlice';
+import { selectAllGroups, fetchGroups } from '@/modules/groups/store/groupsSlice';
+import { getRefrigeratorId } from '@/modules/inventory/utils/getRefrigeratorId';
+import { useEffect } from 'react';
 
 const ScanResult: React.FC = () => {
   const location = useLocation();
@@ -21,6 +24,20 @@ const ScanResult: React.FC = () => {
   const { items, currentIndex } = useSelector(
     (state: RootState) => state.batchScan,
   );
+
+  // Groups and Refrigerator ID logic
+  const groups = useSelector(selectAllGroups);
+  // ScanResult doesn't have groupId in URL, so we rely on default/first logic
+  const targetGroupId = getRefrigeratorId(undefined, groups);
+
+  useEffect(() => {
+    // Ensure groups are loaded so we can get the ID
+    if (groups.length === 0) {
+      // @ts-ignore
+      dispatch(fetchGroups());
+    }
+  }, [dispatch, groups.length]);
+
 
   // Local state fallbacks (legacy single item flow)
   const { result: locationResult, imageUrl: locationImageUrl } =
@@ -70,8 +87,11 @@ const ScanResult: React.FC = () => {
     lowStockAlert: result.lowStockAlert ?? true,
     lowStockThreshold: result.lowStockThreshold || 2,
     notes: result.notes || '',
+    notes: result.notes || '',
     imageUrl: imageUrl,
+    groupId: targetGroupId || undefined,
   };
+
 
   const handleConfirm = async () => {
     try {
