@@ -44,12 +44,12 @@ export const ProductCategoryApiNames: Record<ProductCategory, string> = {
 
 // 3 => ["乳製品", "蔬菜類"]
 export function categoryToDisplayNames(value: ProductCategory): string[] {
-  if (value === 0) {
+  if (value === ProductCategory.None) {
     return [ProductCategoryDisplayNames[ProductCategory.None]];
   }
   const names = [];
   for (const flag of Object.values(ProductCategory)) {
-    if ((value & flag) === flag) {
+    if (flag !== 0 && (value & flag) === flag) {
       names.push(ProductCategoryDisplayNames[flag]);
     }
   }
