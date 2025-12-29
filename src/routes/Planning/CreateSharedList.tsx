@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ChevronLeft, Camera, CalendarDays, CalendarCheck } from 'lucide-react';
-import { useSharedLists } from '@/modules/planning/hooks/useSharedLists';
+import { useSharedListsContext } from '@/modules/planning/contexts/SharedListsContext';
 import { CoverImagePicker } from '@/modules/planning/components/ui/CoverImagePicker';
 import { COVER_IMAGES } from '@/modules/planning/constants/coverImages';
 import gsap from 'gsap';
@@ -10,19 +10,16 @@ import { useGSAP } from '@gsap/react';
 
 const CreateSharedList = () => {
   const navigate = useNavigate();
-  const { createList } = useSharedLists();
+  const { createList } = useSharedListsContext();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [name, setName] = useState('');
-  const [scheduledDate, setScheduledDate] = useState(
+  const [title, setTitle] = useState('');
+  const [startsAt, setStartsAt] = useState(
     new Date().toISOString().split('T')[0],
   );
-  const [notifyEnabled, setNotifyEnabled] = useState(true);
-  const [coverImage, setCoverImage] = useState('');
+  const [enableNotifications, setEnableNotifications] = useState(true);
+  const [coverPhotoPath, setCoverPhotoPath] = useState('');
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // 模擬群組 ID
-  const GROUP_ID = 'group_001';
 
   useGSAP(
     () => {
@@ -47,16 +44,15 @@ const CreateSharedList = () => {
   };
 
   const handleSubmit = async () => {
-    if (!name.trim()) return;
+    if (!title.trim()) return;
 
     setIsSubmitting(true);
     try {
       await createList({
-        name,
-        scheduledDate: new Date(scheduledDate).toISOString(),
-        coverImageUrl: coverImage || COVER_IMAGES[0], // Fallback if needed, or allow empty?
-        notifyEnabled,
-        groupId: GROUP_ID,
+        title,
+        startsAt: new Date(startsAt).toISOString(),
+        coverPhotoPath: coverPhotoPath || COVER_IMAGES[0],
+        enableNotifications,
       });
       navigate('/planning');
     } catch (error) {
@@ -125,8 +121,8 @@ const CreateSharedList = () => {
             </label>
             <input
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               placeholder="Add value"
               className="w-full px-4 py-3 bg-white rounded-xl border border-neutral-300 text-neutral-800 placeholder:text-neutral-300 focus:border-primary-default focus:ring-1 focus:ring-primary-default focus:outline-none transition-all"
             />
@@ -140,8 +136,8 @@ const CreateSharedList = () => {
             <div className="relative">
               <input
                 type="date"
-                value={scheduledDate}
-                onChange={(e) => setScheduledDate(e.target.value)}
+                value={startsAt}
+                onChange={(e) => setStartsAt(e.target.value)}
                 placeholder="Add value"
                 className="w-full px-4 py-3 bg-white rounded-xl border border-neutral-300 text-neutral-800 text-left focus:border-primary-default focus:ring-1 focus:ring-primary-default focus:outline-none transition-all appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer relative z-10"
                 style={{ minHeight: '48px' }}
@@ -154,11 +150,11 @@ const CreateSharedList = () => {
           <div className="flex items-center justify-between pt-2">
             <span className="text-sm font-bold text-neutral-800">開啟通知</span>
             <button
-              onClick={() => setNotifyEnabled(!notifyEnabled)}
-              className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out ${notifyEnabled ? 'bg-primary-default' : 'bg-neutral-200'}`}
+              onClick={() => setEnableNotifications(!enableNotifications)}
+              className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out ${enableNotifications ? 'bg-primary-default' : 'bg-neutral-200'}`}
             >
               <div
-                className={`w-5 h-5 rounded-full bg-white transition-transform duration-200 ease-in-out ${notifyEnabled ? 'translate-x-5' : 'translate-x-0'}`}
+                className={`w-5 h-5 rounded-full bg-white transition-transform duration-200 ease-in-out ${enableNotifications ? 'translate-x-5' : 'translate-x-0'}`}
               />
             </button>
           </div>
@@ -171,10 +167,10 @@ const CreateSharedList = () => {
             <h2 className="text-base font-bold text-neutral-800">清單封面照</h2>
           </div>
 
-          {coverImage ? (
+          {coverPhotoPath ? (
             <div className="relative aspect-video rounded-xl overflow-hidden bg-neutral-100 mb-3 group">
               <img
-                src={coverImage}
+                src={coverPhotoPath}
                 alt="Cover"
                 className="w-full h-full object-cover"
               />
@@ -202,7 +198,7 @@ const CreateSharedList = () => {
       <div className="my-6 px-4  border-t border-neutral-100">
         <button
           onClick={handleSubmit}
-          disabled={!name.trim() || isSubmitting}
+          disabled={!title.trim() || isSubmitting}
           className="w-full py-3.5 bg-primary-default text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
         >
           {isSubmitting ? '儲存中...' : '儲存'}
@@ -213,8 +209,8 @@ const CreateSharedList = () => {
       <CoverImagePicker
         open={isPickerOpen}
         onOpenChange={setIsPickerOpen}
-        selectedImage={coverImage}
-        onSelect={setCoverImage}
+        selectedImage={coverPhotoPath}
+        onSelect={setCoverPhotoPath}
       />
     </div>
   );
