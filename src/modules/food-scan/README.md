@@ -104,6 +104,18 @@ export type FoodItemResponse = {
 };
 ```
 
+### 欄位映射提醒
+
+> [!IMPORTANT]
+> 依據 [前端串接整合指南](../../docs/backend/frontend_integration_guide.md)，AI 回傳欄位與 Inventory API 欄位有差異，需進行轉換：
+
+| AI 回傳欄位        | Inventory API 欄位 | 備註                                    |
+| :----------------- | :----------------- | :-------------------------------------- |
+| `productName`      | `name`             | 產品名稱                                |
+| `purchaseQuantity` | `quantity`         | 數量                                    |
+| `attributes`       | `attributes`       | AI 回傳 `string`，需轉為 `string[]`     |
+| `category`         | `category`         | 必須使用英文 ID (如 `fruit`)，非中文    |
+
 ---
 
 ## API 規格
@@ -195,8 +207,9 @@ Response: `{ success, message, data: { id } }`
 
 ## 相關文件
 
-- [完整入庫 API 規格](../../../docs/backend/food_intake_api_spec.md)
-- [AI 媒體上傳規格](../../../docs/backend/ai_media_api_spec.md)
+- [前端串接整合指南](../../docs/backend/frontend_integration_guide.md) ⭐ **必讀**
+- [完整入庫 API 規格](../../docs/backend/food_intake_api_spec.md)
+- [AI 媒體上傳規格](../../docs/backend/ai_media_api_spec.md)
 
 ---
 

@@ -15,7 +15,7 @@
  * const user = await backendApi.get('/api/v1/profile');
  */
 
-import { getAuthToken } from '../modules/auth/utils/authUtils';
+import { identity } from '@/shared/utils/identity';
 
 // API 類型定義
 type ApiType = 'ai' | 'backend';
@@ -48,23 +48,6 @@ class ApiClient {
     this.baseUrl = API_BASES[apiType];
   }
 
-  /**
-   * 取得使用者 ID（用於 AI 後端請求）
-   * AI 後端沒有獨立認證機制，需要透過 X-User-Id header 識別使用者
-   */
-  private getUserId(): string | null {
-    try {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        return user.id || null;
-      }
-    } catch (e) {
-      console.warn('[API Client] Failed to get user id from localStorage', e);
-    }
-    return null;
-  }
-
   private async request<T>(
     endpoint: string,
     options: RequestOptions = {},
@@ -81,13 +64,15 @@ class ApiClient {
       });
     }
 
-    // Get token (if available)
-    const token = getAuthToken();
+    // 使用統一的 identity 模組取得認證資訊
+    const token = identity.getAuthToken();
+    const userId = identity.getUserId();
 
-    // AI 後端需要 X-User-Id header
-    const userId = this.apiType === 'ai' ? this.getUserId() : null;
+    // Debug: 僅在 AI API 且缺少必要資訊時警告
     if (this.apiType === 'ai' && !userId) {
-      console.warn('[AI API] No user ID found, AI backend may reject this request');
+      console.warn(
+        '[AI API] No user ID found, AI backend may reject this request',
+      );
     }
 
     const config: RequestInit = {
@@ -98,8 +83,8 @@ class ApiClient {
           ? {}
           : { 'Content-Type': 'application/json' }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        // AI 後端需要 X-User-Id header 識別使用者
-        ...(this.apiType === 'ai' && userId ? { 'X-User-Id': userId } : {}),
+        // 嘗試為所有 API 都帶上 X-User-Id (若有)，以防後端某些 middleware 需要
+        ...(userId ? { 'X-User-Id': userId } : {}),
         // 如果 body 是 FormData，不要合併自訂 headers 中的 Content-Type
         // 讓瀏覽器自動設定正確的 multipart/form-data boundary
         ...(headers && !(body instanceof FormData)
@@ -136,7 +121,10 @@ class ApiClient {
 
       return await response.json();
     } catch (error) {
-      console.error(`[${this.apiType.toUpperCase()} API] Request Failed:`, error);
+      console.error(
+        `[${this.apiType.toUpperCase()} API] Request Failed:`,
+        error,
+      );
       throw error;
     }
   }

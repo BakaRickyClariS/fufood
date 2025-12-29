@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import type { SharedListPost } from '@/modules/planning/types';
-import { MoreHorizontal, ChevronDown, ChevronUp, Pencil, Trash2 } from 'lucide-react';
+import {
+  MoreHorizontal,
+  ChevronDown,
+  ChevronUp,
+  Pencil,
+  Trash2,
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -31,7 +37,7 @@ export const PostCard = ({ post, onEdit, onDelete }: PostCardProps) => {
     setExpandedItems((prev) =>
       prev.includes(itemId)
         ? prev.filter((id) => id !== itemId)
-        : [...prev, itemId]
+        : [...prev, itemId],
     );
   };
 

@@ -1,4 +1,4 @@
-export type FoodCategory = string;
+import type { FoodCategory } from '@/modules/inventory/types/inventory.types'; // Import from inventory
 
 export type FoodAttribute = string;
 
@@ -17,7 +17,7 @@ export type FoodUnit =
 export type FoodItemInput = {
   productName: string;
   category: FoodCategory;
-  attributes: FoodAttribute;
+  attributes: FoodAttribute[];
   purchaseQuantity: number;
   unit: FoodUnit;
   purchaseDate: string; // YYYY-MM-DD

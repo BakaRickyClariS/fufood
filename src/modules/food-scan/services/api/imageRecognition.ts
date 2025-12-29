@@ -41,49 +41,56 @@ export const createRealFoodScanApi = (): FoodScanApi => {
 
     // Helper to find the closest matching category from our constant list
     const normalizeCategory = (input?: string): string => {
-      if (!input) return '其他';
+      if (!input) return 'others';
 
-      // 1. Try exact match with title
+      // 1. Check if input is already a valid English ID
+      const validIds = categories.map((c) => c.id);
+      if (validIds.includes(input)) return input;
+
+      // 2. Try exact match with title
       const exactMatch = categories.find((c) => c.title === input);
-      if (exactMatch) return exactMatch.title;
+      if (exactMatch) return exactMatch.id;
 
-      // 2. Try partial match with title or keywords (simple mapping)
-      // This can be expanded based on real API behavior
-      if (input.includes('菜') || input.includes('果')) return '蔬果類';
+      // 3. Try partial match with title or keywords
+      if (input.includes('菜') || input.includes('果')) return 'fruit';
       if (
         input.includes('肉') ||
         input.includes('牛') ||
         input.includes('豬') ||
         input.includes('雞')
       )
-        return '肉品類';
+        return 'meat';
       if (
         input.includes('海鮮') ||
         input.includes('魚') ||
         input.includes('蝦')
       )
-        return '冷凍海鮮類';
+        return 'seafood';
       if (
         input.includes('奶') ||
         input.includes('蛋') ||
         input.includes('喝') ||
         input.includes('乳')
       )
-        return '乳品飲料類';
-      if (input.includes('凍') || input.includes('冰')) return '冷凍調理類';
+        return 'milk';
+      if (input.includes('凍') || input.includes('冰')) return 'frozen';
       if (input.includes('麵') || input.includes('飯') || input.includes('粉'))
-        return '主食烘焙類';
+        return 'bake';
 
-      return '乾貨醬料類';
+      return 'others';
     };
 
-    const normalizeAttributes = (category: string, input?: string): string => {
-      // Ideally we match against the description list in categories.ts
-      // For now, we return input if present, or a default based on category
-      if (input && input !== '常溫' && input !== '冷藏' && input !== '冷凍')
+    const normalizeAttributes = (
+      categoryId: string,
+      input?: string,
+    ): string => {
+      // Return input if it's already a valid non-empty string and not one of the default titles
+      if (input && input !== '常溫' && input !== '冷藏' && input !== '冷凍') {
         return input;
+      }
 
-      const catDef = categories.find((c) => c.title === category);
+      // Find category by ID (since we passed standardized ID)
+      const catDef = categories.find((c) => c.id === categoryId);
       if (catDef && catDef.description.length > 0) {
         // Clean up the description string (remove punctuations if needed)
         // For simple fallback, just return the first part of description without commas
@@ -171,13 +178,26 @@ export const createRealFoodScanApi = (): FoodScanApi => {
   const submitFoodItem = async (
     data: FoodItemInput,
   ): Promise<FoodItemResponse> => {
-    // 庫存 API 在 AI 後端上 (/refrigerators/{id}/inventory)
+    // 將前端 FoodItemInput 格式轉換為 API 預期的 FoodItem 格式
+    const apiPayload = {
+      name: data.productName, // productName → name
+      category: data.category,
+      quantity: data.purchaseQuantity, // purchaseQuantity → quantity
+      unit: data.unit,
+      purchaseDate: data.purchaseDate,
+      expiryDate: data.expiryDate,
+      lowStockAlert: data.lowStockAlert,
+      lowStockThreshold: data.lowStockThreshold,
+      notes: data.notes,
+      imageUrl: data.imageUrl,
+      attributes: data.attributes ? [data.attributes] : undefined,
+    };
+
     // 庫存 API 在 AI 後端上 (/refrigerators/{id}/inventory)
     if (data.groupId) {
-      const { groupId, ...payload } = data;
       return aiApi.post<FoodItemResponse>(
-        `/refrigerators/${groupId}/inventory`,
-        payload,
+        `/refrigerators/${data.groupId}/inventory`,
+        apiPayload,
       );
     }
 
@@ -186,7 +206,7 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     if (cachedId) {
       return aiApi.post<FoodItemResponse>(
         `/refrigerators/${cachedId}/inventory`,
-        data,
+        apiPayload,
       );
     }
 

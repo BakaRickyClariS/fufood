@@ -37,9 +37,11 @@ export const AIQueryModal = ({
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   // 食譜詳細 Modal 狀態
-  const [selectedRecipe, setSelectedRecipe] = useState<RecipeListItem | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<RecipeListItem | null>(
+    null,
+  );
   const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
 
   // 取得使用者資訊
@@ -87,7 +89,7 @@ export const AIQueryModal = ({
         gsap.fromTo(
           containerRef.current,
           { x: '100%' },
-          { x: '0%', duration: 0.4, ease: 'power3.out' }
+          { x: '0%', duration: 0.4, ease: 'power3.out' },
         );
       }
       // 當 Modal 關閉時重置動畫狀態
@@ -95,7 +97,7 @@ export const AIQueryModal = ({
         hasAnimatedIn.current = false;
       }
     },
-    { scope: containerRef, dependencies: [isOpen] }
+    { scope: containerRef, dependencies: [isOpen] },
   );
 
   const { contextSafe } = useGSAP({ scope: containerRef });
@@ -129,7 +131,7 @@ export const AIQueryModal = ({
     const recipe = recipes?.find((r) => r.id === recipeId);
     if (recipe) {
       // 轉換為 RecipeListItem 格式
-       const listItem: RecipeListItem = {
+      const listItem: RecipeListItem = {
         id: recipe.id,
         name: recipe.name,
         category: recipe.category as any, // 暫時轉型
@@ -138,7 +140,7 @@ export const AIQueryModal = ({
         cookTime: recipe.cookTime,
         isFavorite: recipe.isFavorite,
       };
-      
+
       setSelectedRecipe(listItem);
       setIsRecipeModalOpen(true);
     }
@@ -148,7 +150,7 @@ export const AIQueryModal = ({
     setIsRecipeModalOpen(false);
     setTimeout(() => setSelectedRecipe(null), 300);
   };
-  
+
   if (!isOpen) return null;
 
   return (
@@ -226,7 +228,9 @@ export const AIQueryModal = ({
                         ))}
                       </div>
                     )}
-                    <p className="text-gray-800">{query || '庫存食材食譜推薦'}</p>
+                    <p className="text-gray-800">
+                      {query || '庫存食材食譜推薦'}
+                    </p>
                   </div>
                 </div>
 
@@ -398,7 +402,7 @@ export const AIQueryModal = ({
           </div>
         </div>
       </div>
-      
+
       {/* 巢狀食譜詳細 Modal (覆蓋在 AI Modal 之上) */}
       <RecipeDetailModal
         recipe={selectedRecipe}

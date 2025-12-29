@@ -9,7 +9,6 @@ import { PostFormFeature } from './CreatePost';
 import { FloatingActionButton } from '@/shared/components/ui/FloatingActionButton';
 import type { SharedListPost } from '@/modules/planning/types';
 
-
 type SharedListDetailProps = {
   listId?: string;
 };
@@ -55,10 +54,6 @@ export const SharedListDetail = ({ listId }: SharedListDetailProps) => {
       text: '進行中',
       bgClass: 'bg-success-500',
     },
-    'pending-purchase': {
-      text: '待採買',
-      bgClass: 'bg-yellow-400',
-    },
     completed: {
       text: '已完成',
       bgClass: 'bg-neutral-400',
@@ -68,8 +63,8 @@ export const SharedListDetail = ({ listId }: SharedListDetailProps) => {
   const currentStatus = statusConfig[
     list.status as keyof typeof statusConfig
   ] ?? {
-    text: '未知狀態',
-    bgClass: 'bg-neutral-400',
+    text: '進行中', // Fallback to in-progress if unknown or previously pending-purchase
+    bgClass: 'bg-success-500',
   };
 
   return (
@@ -78,8 +73,8 @@ export const SharedListDetail = ({ listId }: SharedListDetailProps) => {
       <div className="relative bg-white rounded-b-2xl overflow-hidden z-10 mb-6">
         {/* 背景圖 - 絕對定位填滿 */}
         <img
-          src={list.coverImageUrl}
-          alt={list.name}
+          src={list.coverPhotoPath || ''}
+          alt={list.title}
           className="absolute inset-0 w-full h-full object-cover"
         />
         {/* 遮罩層 */}
@@ -95,7 +90,9 @@ export const SharedListDetail = ({ listId }: SharedListDetailProps) => {
             >
               <ChevronLeft className="w-8 h-8 font-bold" />
             </button>
-            <h2 className="text-lg font-bold text-neutral-700 tracking-wide">共享清單</h2>
+            <h2 className="text-lg font-bold text-neutral-700 tracking-wide">
+              共享清單
+            </h2>
             <div className="w-10" /> {/* Spacer for centering */}
           </div>
 
@@ -109,19 +106,19 @@ export const SharedListDetail = ({ listId }: SharedListDetailProps) => {
                 {currentStatus.text}
               </div>
               <h1 className="text-2xl font-bold text-neutral-700 tracking-wide">
-                {list.name}
+                {list.title}
               </h1>
             </div>
 
             {/* Right: Date Card */}
             <div className="bg-white/70 backdrop-blur rounded-2xl p-3 min-w-[70px] flex flex-col items-center justify-center shadow-lg">
               <span className="text-xs font-medium text-neutral-600">
-                {new Date(list.scheduledDate).toLocaleDateString('zh-TW', {
+                {new Date(list.startsAt).toLocaleDateString('zh-TW', {
                   weekday: 'short',
                 })}
               </span>
               <span className="text-xl font-bold text-neutral-700">
-                {new Date(list.scheduledDate).getDate()}
+                {new Date(list.startsAt).getDate()}
               </span>
             </div>
           </div>

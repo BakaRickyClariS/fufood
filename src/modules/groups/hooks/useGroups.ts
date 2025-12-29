@@ -14,15 +14,17 @@ import type { CreateGroupForm, UpdateGroupForm } from '../types/group.types';
 
 /**
  * 群組資料管理 Hook (Redux Version)
- * 
+ *
  * 整合 Redux 全域狀態管理，確保所有群組資料的變更都能即時同步到所有組件。
  */
 export const useGroups = () => {
   const dispatch = useDispatch<AppDispatch>();
-  
+
   // Select state from Redux
   const groups = useSelector((state: RootState) => selectAllGroups(state));
-  const isLoading = useSelector((state: RootState) => selectGroupsLoading(state));
+  const isLoading = useSelector((state: RootState) =>
+    selectGroupsLoading(state),
+  );
   const errorMsg = useSelector((state: RootState) => selectGroupsError(state));
 
   const fetchGroups = useCallback(() => {
@@ -44,7 +46,9 @@ export const useGroups = () => {
 
   const updateGroup = async (id: string, form: UpdateGroupForm) => {
     try {
-      const resultAction = await dispatch(updateGroupAction({ id, data: form }));
+      const resultAction = await dispatch(
+        updateGroupAction({ id, data: form }),
+      );
       if (updateGroupAction.fulfilled.match(resultAction)) {
         return resultAction.payload;
       } else {

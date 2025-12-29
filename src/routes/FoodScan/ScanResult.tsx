@@ -11,7 +11,10 @@ import {
   goToNext,
   reset,
 } from '@/modules/food-scan/store/batchScanSlice';
-import { selectAllGroups, fetchGroups } from '@/modules/groups/store/groupsSlice';
+import {
+  selectAllGroups,
+  fetchGroups,
+} from '@/modules/groups/store/groupsSlice';
 import { getRefrigeratorId } from '@/modules/inventory/utils/getRefrigeratorId';
 import { useEffect } from 'react';
 
@@ -37,7 +40,6 @@ const ScanResult: React.FC = () => {
       dispatch(fetchGroups());
     }
   }, [dispatch, groups.length]);
-
 
   // Local state fallbacks (legacy single item flow)
   const { result: locationResult, imageUrl: locationImageUrl } =
@@ -90,7 +92,6 @@ const ScanResult: React.FC = () => {
     imageUrl: imageUrl,
     groupId: targetGroupId || undefined,
   };
-
 
   const handleConfirm = async () => {
     try {

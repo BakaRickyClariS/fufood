@@ -14,7 +14,10 @@ import {
   selectCurrentLayout,
   selectCategoryOrder,
 } from '@/modules/inventory/store/inventorySlice';
-import { selectAllGroups, fetchGroups } from '@/modules/groups/store/groupsSlice';
+import {
+  selectAllGroups,
+  fetchGroups,
+} from '@/modules/groups/store/groupsSlice';
 import useFadeInAnimation from '@/shared/hooks/useFadeInAnimation';
 import type { CategoryInfo } from '@/modules/inventory/types';
 import { categories as defaultCategories } from '@/modules/inventory/constants/categories';
@@ -40,32 +43,36 @@ const OverviewPanel: React.FC = () => {
   const categoryOrder = useSelector(selectCategoryOrder);
   const dispatch = useDispatch();
   const { groupId } = useParams<{ groupId: string }>();
-  
+
   // Get groups to derive default ID
   const groups = useSelector(selectAllGroups);
-  // 使用多來源 fallback 機制取得 refrigeratorId
-  const targetGroupId = getRefrigeratorId(groupId, groups);
+  const firstGroupId = groups[0]?.id;
 
-  // 初次載入時從 API 取得資料
+  // Effect 1: 確保 groups 已載入
   useEffect(() => {
+    if (groups.length === 0) {
+      // @ts-ignore
+      dispatch(fetchGroups());
+    }
+  }, [dispatch, groups.length]);
+
+  // Effect 2: 當 groups 已載入時，載入 settings
+  useEffect(() => {
+    // 計算 refrigeratorId
+    const refId = getRefrigeratorId(groupId, groups);
+
+    // 如果還沒有 refId，不執行
+    if (!refId) {
+      if (groups.length > 0) {
+        console.error('[Overview] 無法取得 refrigeratorId');
+        setIsLoading(false);
+      }
+      return;
+    }
+
     const fetchData = async () => {
       try {
         setIsLoading(true);
-
-        // Ensure groups are loaded
-        if (groups.length === 0) {
-            // @ts-ignore
-            dispatch(fetchGroups());
-            // 給 groups 時間載入
-            await new Promise(r => setTimeout(r, 1000));
-        }
-
-        // 重新計算 refrigeratorId
-        const refId = getRefrigeratorId(groupId, groups);
-        if (!refId) {
-          console.error('[Overview] 無法取得 refrigeratorId');
-          return;
-        }
 
         // 載入設定
         const settingsResponse = await inventoryApi.getSettings(refId);
@@ -81,12 +88,12 @@ const OverviewPanel: React.FC = () => {
 
         // 建立預設類別對照表
         const defaultCategoryMap = new Map(
-          defaultCategories.map((c) => [c.id, c])
+          defaultCategories.map((c) => [c.id, c]),
         );
 
         // 優先使用 settings 內的 categories，若無則 fallback 到 categories API
         let categoryData: CategoryInfo[] = [];
-        
+
         if (settings.categories && settings.categories.length > 0) {
           // 從 settings.categories 轉換為 CategoryInfo 格式
           // 使用預設類別常數補充樣式資訊
@@ -127,7 +134,7 @@ const OverviewPanel: React.FC = () => {
     };
 
     fetchData();
-  }, [dispatch, groupId, groups.length, targetGroupId]);
+  }, [groupId, firstGroupId, dispatch]);
 
   // 根據 Redux 的 categoryOrder 排序類別（這會在 categoryOrder 變化時自動更新）
   const sortedCategories = useMemo(() => {

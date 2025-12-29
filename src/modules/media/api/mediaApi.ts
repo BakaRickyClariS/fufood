@@ -44,7 +44,10 @@ export const mediaApi = {
 
     try {
       // 注意：aiApi 的 base URL 已經是 /api/v1，所以這裡只需要 /media/upload
-      const response = await aiApi.post<UploadResponse>('/media/upload', formData);
+      const response = await aiApi.post<UploadResponse>(
+        '/media/upload',
+        formData,
+      );
 
       if (response.success && response.data?.url) {
         return response.data.url;
@@ -62,4 +65,3 @@ export const mediaApi = {
     }
   },
 };
-

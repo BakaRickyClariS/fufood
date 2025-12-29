@@ -1,7 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectAllGroups, fetchGroups } from '@/modules/groups/store/groupsSlice';
+import {
+  selectAllGroups,
+  fetchGroups,
+} from '@/modules/groups/store/groupsSlice';
 import CommonItemCard from '@/modules/inventory/components/ui/card/CommonItemCard';
 import { useInventoryExtras } from '@/modules/inventory/hooks';
 import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
@@ -18,15 +21,22 @@ const CommonItemsPanel: React.FC = () => {
   const groups = useSelector(selectAllGroups);
   const targetGroupId = groupId || groups[0]?.id;
 
+  // Effect 1: 確保 groups 已載入
   useEffect(() => {
     if (groups.length === 0) {
-        // @ts-ignore
-        dispatch(fetchGroups());
+      // @ts-ignore
+      dispatch(fetchGroups());
     }
-    if (targetGroupId) {
-        fetchFrequentItems(10, targetGroupId);
+  }, [dispatch, groups.length]);
+
+  // Effect 2: 當有有效 targetGroupId 時才載入資料
+  useEffect(() => {
+    if (!targetGroupId) {
+      // groups 還在載入，不執行任何動作
+      return;
     }
-  }, [fetchFrequentItems, groupId, groups.length, targetGroupId, dispatch]);
+    fetchFrequentItems(10, targetGroupId);
+  }, [fetchFrequentItems, targetGroupId]);
 
   // Group items by category
   const groupedItems = useMemo(() => {
@@ -105,4 +115,3 @@ const CommonItemsPanel: React.FC = () => {
 };
 
 export default CommonItemsPanel;
-

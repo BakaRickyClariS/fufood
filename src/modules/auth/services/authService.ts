@@ -1,55 +1,49 @@
 import { authApi } from '../api';
+import { identity } from '@/shared/utils/identity';
 import type { LoginCredentials, RegisterData, User } from '../types';
 
 /**
  * Auth Service - 處理認證相關業務邏輯
- * 
- * 注意：此 Service 主要用於輔助真實 API 流程。
+ *
+ * 使用統一的 identity 模組管理使用者資料存取。
  * 由於目前使用 HttpOnly Cookie 認證，大部分操作由後端處理。
- * 
+ *
  * Mock 功能已移至 mockAuthService.ts
  */
 export const authService = {
   /**
-   * 儲存使用者資料到 localStorage（作為備份快取）
+   * 儲存使用者資料（使用統一的 identity 模組）
    */
   saveUser: (user: User): void => {
-    localStorage.setItem('user', JSON.stringify(user));
-    // 觸發自訂事件通知同視窗中的其他元件
-    window.dispatchEvent(new CustomEvent('userUpdated'));
+    identity.setUser(user);
   },
 
   /**
    * 取得儲存的使用者資料
    */
   getUser: (): User | null => {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
+    return identity.getUser() as User | null;
   },
 
   /**
    * 清除使用者資料
    */
   clearUser: (): void => {
-    localStorage.removeItem('user');
+    identity.clearUser();
   },
 
   /**
    * 清除所有應用程式快取 (登出時使用)
    */
   clearAllAppData: (): void => {
-    // 使用者資料
-    localStorage.removeItem('user');
-    localStorage.removeItem('authToken');
-    
-    // 冰箱/群組相關
-    localStorage.removeItem('activeRefrigeratorId');
-    
-    // Mock 資料相關 (如果有的話)
+    // 使用統一的 identity 模組清除所有資料
+    identity.clearAll();
+
+    // 清除 Mock 資料相關 (如果有的話)
     localStorage.removeItem('mockInventory');
     localStorage.removeItem('mockRecipes');
     localStorage.removeItem('mockGroups');
-    
+
     // 清除所有以 fufood_ 或 mock_ 開頭的 key
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
@@ -58,11 +52,11 @@ export const authService = {
         keysToRemove.push(key);
       }
     }
-    keysToRemove.forEach(key => localStorage.removeItem(key));
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
 
     // 可選：清除 sessionStorage
     sessionStorage.clear();
-    
+
     console.log('[AuthService] 已清除所有應用程式快取');
   },
 

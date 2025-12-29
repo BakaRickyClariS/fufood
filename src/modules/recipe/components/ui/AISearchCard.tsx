@@ -65,7 +65,7 @@ export const AISearchCard = ({ remainingQueries = 3 }: AISearchCardProps) => {
           )}
 
           {/* Search Input Trigger */}
-          <div 
+          <div
             className="w-full relative group max-w-md mx-auto cursor-pointer"
             onClick={handleOpenModal}
           >
@@ -78,9 +78,7 @@ export const AISearchCard = ({ remainingQueries = 3 }: AISearchCardProps) => {
               placeholder="詢問FuFood.AI"
               className="w-full h-14 pl-12 pr-14 bg-white rounded-full border border-neutral-400 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F58274]/20 transition-all text-base cursor-pointer"
             />
-            <button
-              className="absolute right-2 top-2 bottom-2 aspect-square bg-[#F58274] hover:bg-[#E06A5D] text-neutral-900 rounded-full flex items-center justify-center transition-transform active:scale-95 shadow-sm"
-            >
+            <button className="absolute right-2 top-2 bottom-2 aspect-square bg-[#F58274] hover:bg-[#E06A5D] text-neutral-900 rounded-full flex items-center justify-center transition-transform active:scale-95 shadow-sm">
               <ArrowRight className="w-5 h-5 text-neutral-900" />
             </button>
           </div>

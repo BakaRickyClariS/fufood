@@ -1,4 +1,11 @@
-﻿export type FoodCategory = string;
+﻿export type FoodCategory =
+  | 'fruit'
+  | 'frozen'
+  | 'bake'
+  | 'milk'
+  | 'seafood'
+  | 'meat'
+  | 'others';
 
 export type FoodUnit = string;
 

@@ -28,7 +28,11 @@ export const EditGroupModal: FC<EditGroupModalProps> = ({
   group,
   onBack,
 }) => {
-  const { updateGroup, deleteGroup, isGroupsLoading: isLoading } = useGroupModal();
+  const {
+    updateGroup,
+    deleteGroup,
+    isGroupsLoading: isLoading,
+  } = useGroupModal();
   const [name, setName] = useState('');
   const [isDeleteConfirm, setIsDeleteConfirm] = useState(false);
 
@@ -84,12 +88,14 @@ export const EditGroupModal: FC<EditGroupModalProps> = ({
                   ⚠️
                 </div>
                 <div className="text-center space-y-2">
-                  <h3 className="text-xl font-bold text-stone-900">確定要刪除此群組嗎？</h3>
+                  <h3 className="text-xl font-bold text-stone-900">
+                    確定要刪除此群組嗎？
+                  </h3>
                   <p className="text-stone-500">
                     一旦刪除，所有成員將被移除，且無法復原此動作。
                   </p>
                 </div>
-                
+
                 <div className="w-full mt-auto flex flex-col gap-3">
                   <Button
                     type="button"
@@ -110,7 +116,10 @@ export const EditGroupModal: FC<EditGroupModalProps> = ({
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="flex flex-col gap-6 h-full">
+              <form
+                onSubmit={handleSubmit}
+                className="flex flex-col gap-6 h-full"
+              >
                 <div className="flex flex-col gap-2">
                   <label
                     htmlFor="editGroupName"

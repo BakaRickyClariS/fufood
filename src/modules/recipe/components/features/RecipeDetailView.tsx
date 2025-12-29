@@ -36,11 +36,11 @@ export const RecipeDetailView = () => {
   }
 
   // 載入中骨架屏或處理 (RecipeDetailContent 內部有處理 isLoading)
-  
+
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <RecipeHeader onBack={() => navigate(-1)} />
-      
+
       <div className="flex-1 overflow-y-auto">
         {displayRecipe ? (
           <RecipeDetailContent

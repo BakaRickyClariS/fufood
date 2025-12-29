@@ -72,4 +72,3 @@ export type InventoryApi = {
     refrigeratorId?: string,
   ) => Promise<ApiSuccess<{ id: string; remainingQuantity: number }>>;
 };
-

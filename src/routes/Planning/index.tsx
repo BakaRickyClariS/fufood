@@ -31,7 +31,6 @@ const PlanningRoutes = [
       // 食譜相關
       { path: 'recipes', element: <RecipeList /> },
       { path: 'recipes/favorites', element: <FavoriteRecipes /> },
-
     ],
   },
 ];

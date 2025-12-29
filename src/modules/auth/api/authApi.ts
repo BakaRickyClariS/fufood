@@ -122,11 +122,14 @@ export const authApi = {
    */
   updateProfile: async (data: UpdateProfileRequest): Promise<User> => {
     console.log('[AuthApi] UpdateProfile: Starting...');
-    
+
     // 1. 嘗試呼叫真實 API
     try {
       console.log('[AuthApi] UpdateProfile: Trying Real API...');
-      const result = await backendApi.put<User>('/api/v1/auth/update-profile', data);
+      const result = await backendApi.put<User>(
+        '/api/v1/auth/update-profile',
+        data,
+      );
       console.log('[AuthApi] UpdateProfile: Real API Success');
       return result;
     } catch (error) {
@@ -140,13 +143,13 @@ export const authApi = {
       // 3. Mock 備援邏輯
       console.log('[AuthApi] UpdateProfile: Fallback to Mock data');
       await new Promise((resolve) => setTimeout(resolve, 800));
-      
+
       // 從 localStorage 取得當前用戶資料，避免用預設假資料覆蓋
       const currentUserStr = localStorage.getItem('user');
       const currentUser = currentUserStr
         ? JSON.parse(currentUserStr)
         : MOCK_USERS[0];
-      
+
       const updatedUser = { ...currentUser, ...data, updatedAt: new Date() };
       console.log('[AuthApi] UpdateProfile: Mock update complete', updatedUser);
       return updatedUser;

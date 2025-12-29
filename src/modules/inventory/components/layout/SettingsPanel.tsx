@@ -30,15 +30,16 @@ import {
   setLayout,
   showLayoutAppliedNotification,
 } from '@/modules/inventory/store/inventorySlice';
-import { selectAllGroups, fetchGroups } from '@/modules/groups/store/groupsSlice';
+import {
+  selectAllGroups,
+  fetchGroups,
+} from '@/modules/groups/store/groupsSlice';
 import type { CategoryInfo } from '@/modules/inventory/types';
 import type { LayoutType } from '@/modules/inventory/types/layoutTypes';
 import { LAYOUT_CONFIGS } from '@/modules/inventory/types/layoutTypes';
 import { toast } from 'sonner';
 import { getRefrigeratorId } from '../../utils/getRefrigeratorId';
 import { categories as defaultCategories } from '../../constants/categories';
-
-
 
 // 計數器項目元件
 const CounterItem = ({
@@ -144,16 +145,16 @@ const SettingsPanel: React.FC = () => {
   // Hooks & Refs
   const { groupId } = useParams<{ groupId: string }>();
   const dispatch = useDispatch();
-  
+
   // Get groups to derive default ID if needed
   const groups = useSelector(selectAllGroups);
   // 使用多來源 fallback 機制取得 refrigeratorId
   const targetGroupId = getRefrigeratorId(groupId, groups);
 
   const categoryOrder = useSelector(selectCategoryOrder);
-  
+
   const [savedCategoryOrder, setSavedCategoryOrder] = useState<string[]>([]);
-  
+
   const layoutContainerRef = useRef<HTMLDivElement>(null);
   const triangleRef = useRef<HTMLDivElement>(null);
 
@@ -161,31 +162,39 @@ const SettingsPanel: React.FC = () => {
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
+  // 計算穩定的 refrigeratorId
+  const firstGroupId = groups[0]?.id;
+
+  // Effect 1: 確保 groups 已載入
   useEffect(() => {
-    const fetchData = async () => {
+    if (groups.length === 0) {
+      // @ts-ignore - Dispatch typing
+      dispatch(fetchGroups());
+    }
+  }, [dispatch, groups.length]);
+
+  // Effect 2: 當 groups 已載入或有有效 refrigeratorId 時，載入 settings
+  useEffect(() => {
+    // 計算 refrigeratorId
+    const refId = getRefrigeratorId(groupId, groups);
+
+    // 如果還沒有 refId，不執行
+    if (!refId) {
+      // groups 還在載入中或真的沒有冰箱
+      if (groups.length > 0) {
+        console.error('[Settings] 無法取得 refrigeratorId');
+        toast.error('無法確認冰箱，請重新登入');
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    const fetchSettings = async () => {
       try {
         setIsLoading(true);
-
-        // 嘗試載入 groups（如果還沒有的話）
-        if (groups.length === 0) {
-          // @ts-ignore - Dispatch typing
-          dispatch(fetchGroups());
-          // 給 groups 時間載入，但不 block 整個流程
-          await new Promise(r => setTimeout(r, 1000));
-        }
-
-        // 重新計算 refrigeratorId（可能 groups 已載入）
-        const refId = getRefrigeratorId(groupId, groups);
-        
-        if (!refId) {
-          console.error('[Settings] 無法取得 refrigeratorId');
-          toast.error('無法確認冰箱，請重新登入');
-          setIsLoading(false);
-          return;
-        }
 
         // Fetch settings
         const settingsResponse = await inventoryApi.getSettings(refId);
@@ -203,12 +212,12 @@ const SettingsPanel: React.FC = () => {
 
         // 優先使用 settings 內的 categories，若無則 fallback 到 categories API
         let categoryData: CategoryInfo[] = [];
-        
+
         // 建立預設類別對照表
         const defaultCategoryMap = new Map(
-          defaultCategories.map((c) => [c.id, c])
+          defaultCategories.map((c) => [c.id, c]),
         );
-        
+
         if (settings.categories && settings.categories.length > 0) {
           // 從 settings.categories 轉換為 CategoryInfo 格式
           // 使用預設類別常數補充樣式資訊
@@ -229,7 +238,7 @@ const SettingsPanel: React.FC = () => {
           const categoriesResponse = await inventoryApi.getCategories(refId);
           categoryData = categoriesResponse.data.categories;
         }
-        
+
         setCategories(categoryData);
 
         // 初始化類別順序
@@ -238,28 +247,29 @@ const SettingsPanel: React.FC = () => {
           dispatch(setCategoryOrder(ids));
           setSavedCategoryOrder(ids);
         } else {
-             // If already loaded in redux, assume synced or just take it? 
-             // Ideally we should sync with saved settings for "savedCategoryOrder" comparison
-             const savedIds = settings.categoryOrder || categoryData.map((c) => c.id);
-             setSavedCategoryOrder(savedIds);
+          // If already loaded in redux, assume synced or just take it?
+          // Ideally we should sync with saved settings for "savedCategoryOrder" comparison
+          const savedIds =
+            settings.categoryOrder || categoryData.map((c) => c.id);
+          setSavedCategoryOrder(savedIds);
         }
       } catch (error) {
-        console.error('Failed to fetch data:', error);
+        console.error('Failed to fetch settings:', error);
         toast.error('無法載入設定');
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchData();
-  }, [groupId, groups.length, targetGroupId]); // Add dependencies
+    fetchSettings();
+  }, [groupId, firstGroupId, dispatch, categoryOrder.length]);
 
   const sortedCategories = useMemo(() => {
     if (categories.length === 0) return [];
-    
+
     // Create a map for quick lookup
     const categoryMap = new Map(categories.map((c) => [c.id, c]));
-    
+
     // Sort based on categoryOrder
     const sorted: CategoryInfo[] = [];
     categoryOrder.forEach((id) => {
@@ -283,47 +293,51 @@ const SettingsPanel: React.FC = () => {
     // 比較目前順序和原始順序
     if (JSON.stringify(categoryOrder) !== JSON.stringify(savedCategoryOrder))
       return true;
-      
+
     // TODO: Add check for lowStock/expiring changes if we want "Apply" to cover them,
     // OR we can make them auto-save. For now, let's include them in "Apply" for simplicity as one big form.
     // However, fetching "original" settings to compare is needed for precise "disabled" state.
-    // For now, simpliest is just return true if layout/order changes. 
+    // For now, simpliest is just return true if layout/order changes.
     // Ideally we should track "original thresholds" too.
-    return false; // This logic is incomplete in original code too (only checks layout/order). 
-                  // Let's keep it simple and allow apply if layout/order matches.
-                  // Actually, let's just use a simple dirty flag or improved check:
-    // For now, let's stick to the existing logic for button enable state to minimize risk, 
-    // knowing that changing counters won't enable the button unless layout/order also changes? 
+    return false; // This logic is incomplete in original code too (only checks layout/order).
+    // Let's keep it simple and allow apply if layout/order matches.
+    // Actually, let's just use a simple dirty flag or improved check:
+    // For now, let's stick to the existing logic for button enable state to minimize risk,
+    // knowing that changing counters won't enable the button unless layout/order also changes?
     // That's bad UX. Let's fix hasChanges.
-    
+
     return true; // Force enable for now to allow saving thresholds easily, or implement proper dirty check.
-                 // Given I can't easily see "original" values without another state, allow always apply is safer.
+    // Given I can't easily see "original" values without another state, allow always apply is safer.
   }, [selectedLayoutType, savedLayoutType, categoryOrder, savedCategoryOrder]);
 
   // Triangle Animation
   useEffect(() => {
     if (!layoutContainerRef.current || !triangleRef.current) return;
-    
-    const configIndex = LAYOUT_CONFIGS.findIndex(c => c.id === selectedLayoutType);
+
+    const configIndex = LAYOUT_CONFIGS.findIndex(
+      (c) => c.id === selectedLayoutType,
+    );
     if (configIndex === -1) return;
 
     const container = layoutContainerRef.current;
     // +1 because nth-child is 1-indexed
-    const selectedEl = container.querySelector(`[data-layout-item]:nth-child(${configIndex + 1})`) as HTMLElement;
+    const selectedEl = container.querySelector(
+      `[data-layout-item]:nth-child(${configIndex + 1})`,
+    ) as HTMLElement;
 
     if (selectedEl) {
-        const itemRect = selectedEl.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
-        // Calculate center relative to container
-        const relativeLeft = itemRect.left - containerRect.left;
-        const centerX = relativeLeft + itemRect.width / 2;
-        
-        // 16 is half the width of the triangle (border-left: 16px)
-        gsap.to(triangleRef.current, {
-            x: centerX - 16, 
-            duration: 0.3,
-            ease: 'power2.out'
-        });
+      const itemRect = selectedEl.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      // Calculate center relative to container
+      const relativeLeft = itemRect.left - containerRect.left;
+      const centerX = relativeLeft + itemRect.width / 2;
+
+      // 16 is half the width of the triangle (border-left: 16px)
+      gsap.to(triangleRef.current, {
+        x: centerX - 16,
+        duration: 0.3,
+        ease: 'power2.out',
+      });
     }
   }, [selectedLayoutType]);
 
@@ -334,17 +348,17 @@ const SettingsPanel: React.FC = () => {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-        const oldIndex = categoryOrder.indexOf(active.id as string);
-        const newIndex = categoryOrder.indexOf(over.id as string);
-        const newOrder = arrayMove(categoryOrder, oldIndex, newIndex);
-        dispatch(setCategoryOrder(newOrder));
+      const oldIndex = categoryOrder.indexOf(active.id as string);
+      const newIndex = categoryOrder.indexOf(over.id as string);
+      const newOrder = arrayMove(categoryOrder, oldIndex, newIndex);
+      dispatch(setCategoryOrder(newOrder));
     }
   };
 
   const handleApply = async () => {
     if (!targetGroupId) {
-        toast.error('無法確認群組 ID');
-        return;
+      toast.error('無法確認群組 ID');
+      return;
     }
     try {
       await inventoryApi.updateSettings(
@@ -509,7 +523,7 @@ const SettingsPanel: React.FC = () => {
             value={lowStockThreshold}
             onChange={setLowStockThreshold}
           />
-           {/* 移除過期食材數量設定，因為過期就是過期 (diff < 0)，不需要設定 */}
+          {/* 移除過期食材數量設定，因為過期就是過期 (diff < 0)，不需要設定 */}
         </div>
       </div>
     </div>

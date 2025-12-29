@@ -132,8 +132,8 @@ export const MembersModal: FC<MembersModalProps> = ({
             </div>
 
             {/* Invite Button */}
-             <div className="mt-6 pt-4">
-              <Button 
+            <div className="mt-6 pt-4">
+              <Button
                 className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white h-14 text-lg font-bold rounded-xl shadow-sm"
                 onClick={() => group && openInvite(group)}
               >

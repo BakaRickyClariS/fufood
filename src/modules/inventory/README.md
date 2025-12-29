@@ -110,16 +110,30 @@ export type InventoryStatus =
 
 ### FoodCategory (食材分類)
 
+> [!IMPORTANT]
+> 依據 [前端串接整合指南](../../docs/backend/frontend_integration_guide.md)，API 必須使用英文 Category ID，傳送中文會導致 `500 Foreign Key Error`。
+
 ```typescript
+// 7 大嚴格分類 ID
 export type FoodCategory =
-  | '蔬果類'
-  | '冷凍調理類'
-  | '主食烘焙類'
-  | '乳製品飲料類'
-  | '冷凍海鮮類'
-  | '肉品類'
-  | '其他';
+  | 'fruit'    // 蔬果類
+  | 'frozen'   // 冷凍調理類
+  | 'bake'     // 主食烘焙類
+  | 'milk'     // 乳品飲料類
+  | 'seafood'  // 冷凍海鮮類
+  | 'meat'     // 肉品類
+  | 'others';  // 乾貨醬料類
 ```
+
+| Category ID | 預設中文標題 | 說明                   |
+| :---------- | :----------- | :--------------------- |
+| `fruit`     | 蔬果類       | 葉菜、根莖、水果、菇類 |
+| `frozen`    | 冷凍調理類   | 水餃、雞塊、冰品       |
+| `bake`      | 主食烘焙類   | 米、麵、麵包、堅果     |
+| `milk`      | 乳品飲料類   | 蛋、奶、起司、飲品     |
+| `seafood`   | 冷凍海鮮類   | 魚、蝦、貝類           |
+| `meat`      | 肉品類       | 豬/牛/雞肉、加工肉品   |
+| `others`    | 乾貨醬料類   | 醬料、油品、其他       |
 
 ---
 
@@ -359,6 +373,7 @@ type InventoryState = {
 
 ## 相關文件
 
+- [前端串接整合指南](../../docs/backend/frontend_integration_guide.md) ⭐ **必讀**
 - [完整入庫 API 規格](../../docs/backend/food_intake_api_spec.md)
 - [庫存 API 規格](../../docs/backend/inventory_api_spec.md)
 

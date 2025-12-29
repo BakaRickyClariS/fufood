@@ -22,11 +22,15 @@ import { categories } from '../../constants/categories';
 import { mockRequestHandlers } from '@/utils/debug/mockRequestHandlers';
 
 const createCategoryCounters = (): Record<FoodCategory, number> => {
-  const counters: Record<FoodCategory, number> = {};
-  MOCK_INVENTORY.forEach((item) => {
-    counters[item.category] = 0;
-  });
-  return counters;
+  return {
+    fruit: 0,
+    frozen: 0,
+    bake: 0,
+    milk: 0,
+    seafood: 0,
+    meat: 0,
+    others: 0,
+  };
 };
 
 export const createMockInventoryApi = (): InventoryApi => {
@@ -75,7 +79,7 @@ export const createMockInventoryApi = (): InventoryApi => {
     if (params?.groupId) {
       items = items.filter((item) => item.groupId === params.groupId);
     }
-    if (params?.category && params.category !== 'all') {
+    if (params?.category && (params.category as string) !== 'all') {
       items = items.filter((item) => item.category === params.category);
     }
     if (params?.status) {
@@ -310,7 +314,7 @@ export const createMockInventoryApi = (): InventoryApi => {
     }
 
     // Default Settings based on constants/categories
-    const defaultCategories: CategorySettingItem[] = categories.map(c => ({
+    const defaultCategories: CategorySettingItem[] = categories.map((c) => ({
       id: c.id,
       title: c.title,
       isVisible: true,
@@ -323,7 +327,7 @@ export const createMockInventoryApi = (): InventoryApi => {
       notifyOnExpiry: true,
       notifyOnLowStock: true,
       layoutType: 'layout-a',
-      categoryOrder: defaultCategories.map(c => c.id),
+      categoryOrder: defaultCategories.map((c) => c.id),
       categories: defaultCategories,
     };
 
@@ -376,12 +380,12 @@ export const createMockInventoryApi = (): InventoryApi => {
     // Get settings to check order and customized titles/visibility
     const settingsResponse = await getSettings();
     const { settings } = settingsResponse.data;
-    
+
     // Create base category map
     const categoryMap = new Map<string, CategoryInfo>();
-    
+
     // Add default categories
-    categories.forEach(c => {
+    categories.forEach((c) => {
       categoryMap.set(c.id, {
         id: c.id,
         title: c.title,
@@ -395,7 +399,7 @@ export const createMockInventoryApi = (): InventoryApi => {
 
     // Apply settings override (titles)
     if (settings.categories) {
-      settings.categories.forEach(c => {
+      settings.categories.forEach((c) => {
         const existing = categoryMap.get(c.id);
         if (existing) {
           // If title changed in settings, use it
@@ -407,7 +411,7 @@ export const createMockInventoryApi = (): InventoryApi => {
     // Sort by settings.categoryOrder
     const result: CategoryInfo[] = [];
     if (settings.categoryOrder) {
-      settings.categoryOrder.forEach(id => {
+      settings.categoryOrder.forEach((id) => {
         const cat = categoryMap.get(id);
         if (cat) {
           result.push(cat);
@@ -419,9 +423,9 @@ export const createMockInventoryApi = (): InventoryApi => {
     // specific business rule: should we include hidden categories in "getCategories"?
     // getCategories is mostly used for "Adding Items" -> dropdown should typically show ALL valid categories even if hidden in dashboard?
     // Or maybe we respect visibility? For now, I'll include all but sorted.
-    
+
     // Add remaining categories
-    categoryMap.forEach(cat => result.push(cat));
+    categoryMap.forEach((cat) => result.push(cat));
 
     return {
       status: true,
@@ -474,4 +478,3 @@ export const createMockInventoryApi = (): InventoryApi => {
     consumeItem,
   };
 };
-

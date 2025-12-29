@@ -1,7 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectAllGroups, fetchGroups } from '@/modules/groups/store/groupsSlice';
+import {
+  selectAllGroups,
+  fetchGroups,
+} from '@/modules/groups/store/groupsSlice';
 import CommonItemCard from '@/modules/inventory/components/ui/card/CommonItemCard';
 import { useInventoryExtras } from '@/modules/inventory/hooks';
 import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
@@ -56,20 +59,27 @@ const ExpiredRecordsPanel: React.FC = () => {
   const targetGroupId = groupId || groups[0]?.id;
 
   // 使用共用的淡入動畫 hook
-  const { ref: contentRef, resetAnimation } = useFadeInAnimation<HTMLDivElement>({
-    isLoading: isLoading || isContentLoading,
-  });
+  const { ref: contentRef, resetAnimation } =
+    useFadeInAnimation<HTMLDivElement>({
+      isLoading: isLoading || isContentLoading,
+    });
 
-  // 初次載入
+  // Effect 1: 確保 groups 已載入
   useEffect(() => {
     if (groups.length === 0) {
-        // @ts-ignore
-        dispatch(fetchGroups());
+      // @ts-ignore
+      dispatch(fetchGroups());
     }
-    if (targetGroupId) {
-        fetchExpiredItems(filter, 1, 20, targetGroupId);
+  }, [dispatch, groups.length]);
+
+  // Effect 2: 當有有效 targetGroupId 時才載入資料
+  useEffect(() => {
+    if (!targetGroupId) {
+      // groups 還在載入，不執行任何動作
+      return;
     }
-  }, [fetchExpiredItems, filter, groupId, groups.length, targetGroupId, dispatch]);
+    fetchExpiredItems(filter, 1, 20, targetGroupId);
+  }, [fetchExpiredItems, filter, targetGroupId]);
 
   // 切換篩選的處理函數
   const handleFilterChange = useCallback(

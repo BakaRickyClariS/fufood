@@ -7,22 +7,38 @@ import { usePosts } from '@/modules/planning/hooks/usePosts';
 import { mediaApi } from '@/modules/media/api/mediaApi';
 import type { ShoppingItem, SharedListPost } from '@/modules/planning/types';
 
+const UNITS = [
+  '個',
+  '包',
+  '條',
+  '罐',
+  '瓶',
+  '盒',
+  '袋',
+  '台斤',
+  '公克',
+  '公斤',
+  'ml',
+  'L',
+];
 
-
-
-
-const UNITS = ['個', '包', '條', '罐', '瓶', '盒', '袋', '台斤', '公克', '公斤', 'ml', 'L'];
-
-const UnitSelector = ({ value, onChange }: { value?: string; onChange: (val: string) => void }) => {
+const UnitSelector = ({
+  value,
+  onChange,
+}: {
+  value?: string;
+  onChange: (val: string) => void;
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
     if (isOpen && menuRef.current) {
-      gsap.fromTo(menuRef.current,
+      gsap.fromTo(
+        menuRef.current,
         { opacity: 0, y: -10, scaleY: 0.95 },
-        { opacity: 1, y: 0, scaleY: 1, duration: 0.2, ease: 'power2.out' }
+        { opacity: 1, y: 0, scaleY: 1, duration: 0.2, ease: 'power2.out' },
       );
     }
   }, [isOpen]);
@@ -30,7 +46,10 @@ const UnitSelector = ({ value, onChange }: { value?: string; onChange: (val: str
   // Click outside to close
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -44,21 +63,23 @@ const UnitSelector = ({ value, onChange }: { value?: string; onChange: (val: str
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full px-4 py-3 rounded-xl border flex items-center justify-between bg-white transition-all ${
-          isOpen ? 'border-primary-default ring-1 ring-primary-default' : 'border-neutral-200'
+          isOpen
+            ? 'border-primary-default ring-1 ring-primary-default'
+            : 'border-neutral-200'
         }`}
       >
         <span className={value ? 'text-neutral-800' : 'text-neutral-400'}>
           {value || '請選擇單位'}
         </span>
-        <ChevronLeft 
+        <ChevronLeft
           className={`w-5 h-5 text-neutral-400 transition-transform duration-200 ${
             isOpen ? 'rotate-90' : '-rotate-90'
-          }`} 
+          }`}
         />
       </button>
 
       {isOpen && (
-        <div 
+        <div
           ref={menuRef}
           className="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-neutral-100 overflow-hidden z-[100] max-h-60 overflow-y-auto origin-top"
         >
@@ -71,7 +92,9 @@ const UnitSelector = ({ value, onChange }: { value?: string; onChange: (val: str
                 setIsOpen(false);
               }}
               className={`w-full text-left px-4 py-3 hover:bg-neutral-50 transition-colors ${
-                value === unit ? 'text-primary-default font-bold bg-primary-light/10' : 'text-neutral-600'
+                value === unit
+                  ? 'text-primary-default font-bold bg-primary-light/10'
+                  : 'text-neutral-600'
               }`}
             >
               {unit}
@@ -105,14 +128,14 @@ export const PostFormFeature = ({
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
 
-  
   // Track which item is currently uploading an image
   const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
-  
+
   // Store pending files for batch upload execution
-  const [pendingUploads, setPendingUploads] = useState<Record<string, File>>({});
+  const [pendingUploads, setPendingUploads] = useState<Record<string, File>>(
+    {},
+  );
 
   // Initialize data for edit mode or create mode
   useEffect(() => {
@@ -122,12 +145,14 @@ export const PostFormFeature = ({
       setSelectedImages(initialData.images || []);
     } else if (mode === 'create') {
       // Default empty item for create mode
-      setItems([{
-        id: `item_${Date.now()}`,
-        name: '',
-        quantity: 1,
-        unit: '',
-      }]);
+      setItems([
+        {
+          id: `item_${Date.now()}`,
+          name: '',
+          quantity: 1,
+          unit: '',
+        },
+      ]);
       setContent('');
       setSelectedImages([]);
     }
@@ -168,9 +193,15 @@ export const PostFormFeature = ({
     setItems(items.filter((item) => item.id !== id));
   };
 
-  const handleUpdateItem = (id: string, field: keyof ShoppingItem, value: any) => {
+  const handleUpdateItem = (
+    id: string,
+    field: keyof ShoppingItem,
+    value: any,
+  ) => {
     setItems(
-      items.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
+      items.map((item) =>
+        item.id === id ? { ...item, [field]: value } : item,
+      ),
     );
   };
 
@@ -188,25 +219,25 @@ export const PostFormFeature = ({
 
     // 1. Create local preview URL
     const previewUrl = URL.createObjectURL(file);
-    
+
     // 2. Update item with preview URL
     handleUpdateItem(uploadingItemId, 'imageUrl', previewUrl);
-    
+
     // 3. Store file in pendingUploads
-    setPendingUploads(prev => ({
+    setPendingUploads((prev) => ({
       ...prev,
-      [uploadingItemId]: file
+      [uploadingItemId]: file,
     }));
-    
+
     setUploadingItemId(null);
   };
-  
+
   // 元件卸載時清理 blob URL，釋放記憶體資源
   useEffect(() => {
     // 保存當前的 items 參照，用於 cleanup 時存取
     const currentItems = items;
     return () => {
-      currentItems.forEach(item => {
+      currentItems.forEach((item) => {
         if (item.imageUrl && item.imageUrl.startsWith('blob:')) {
           URL.revokeObjectURL(item.imageUrl);
         }
@@ -225,56 +256,61 @@ export const PostFormFeature = ({
         if (item.id !== id) return item;
         const newQuantity = Math.max(1, (item.quantity || 1) + delta);
         return { ...item, quantity: newQuantity };
-      })
+      }),
     );
   };
 
   const handleSubmit = async () => {
     if (!listId) return;
-    
+
     // 驗證: 至少要有一個商品 或 有內文
     // Filter out empty items (no name)
-    const validItems = items.filter(item => item.name.trim() !== '');
+    const validItems = items.filter((item) => item.name.trim() !== '');
 
     if (validItems.length === 0 && content.length === 0) {
-        toast.warning('請至少新增一個商品或填寫說明');
-        return;
+      toast.warning('請至少新增一個商品或填寫說明');
+      return;
     }
 
     setIsSubmitting(true);
     let toastId;
-    
+
     try {
       toastId = toast.loading('正在處理...');
-      
+
       // 1. Process pending uploads
       const processedItems = [...validItems];
       const uploadPromises: Promise<void>[] = [];
-      
+
       for (let i = 0; i < processedItems.length; i++) {
         const item = processedItems[i];
         const pendingFile = pendingUploads[item.id];
-        
+
         if (pendingFile) {
           uploadPromises.push(
             (async () => {
-               try {
-                 const url = await mediaApi.uploadImage(pendingFile);
-                 processedItems[i] = { ...item, imageUrl: url };
-               } catch (error) {
-                 console.error(`Failed to upload image for item ${item.name}`, error);
-                 // If upload fails, keep the error or allow post without image?
-                 // For now, removing the failed image url (which was a blob)
-                 processedItems[i] = { ...item, imageUrl: undefined };
-                 toast.error(`商品 ${item.name} 圖片上傳失敗`);
-               }
-            })()
+              try {
+                const url = await mediaApi.uploadImage(pendingFile);
+                processedItems[i] = { ...item, imageUrl: url };
+              } catch (error) {
+                console.error(
+                  `Failed to upload image for item ${item.name}`,
+                  error,
+                );
+                // If upload fails, keep the error or allow post without image?
+                // For now, removing the failed image url (which was a blob)
+                processedItems[i] = { ...item, imageUrl: undefined };
+                toast.error(`商品 ${item.name} 圖片上傳失敗`);
+              }
+            })(),
           );
         }
       }
-      
+
       if (uploadPromises.length > 0) {
-        toast.loading(`正在上傳 ${uploadPromises.length} 張圖片...`, { id: toastId });
+        toast.loading(`正在上傳 ${uploadPromises.length} 張圖片...`, {
+          id: toastId,
+        });
         await Promise.all(uploadPromises);
       }
 
@@ -320,105 +356,115 @@ export const PostFormFeature = ({
       </header>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-32 space-y-4" ref={contentRef}>
-        
+      <div
+        className="flex-1 overflow-y-auto px-4 pt-4 pb-32 space-y-4"
+        ref={contentRef}
+      >
         {/* Shopping Items List */}
         {items.map((item) => (
           <div key={item.id} className="bg-white rounded-2xl p-5 space-y-4">
-             {/* Title Row */}
+            {/* Title Row */}
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <div className="w-1 h-4 bg-primary-default rounded-full" />
-                    <h3 className="font-bold text-neutral-800">
-                        購物明細
-                    </h3>
-                </div>
-                <button 
-                    onClick={() => handleRemoveItem(item.id)}
-                    className="flex items-center gap-1 text-primary-default text-sm font-medium active:opacity-70"
-                >
-                    <Trash2 className="w-4 h-4" />
-                    刪除
-                </button>
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-4 bg-primary-default rounded-full" />
+                <h3 className="font-bold text-neutral-800">購物明細</h3>
+              </div>
+              <button
+                onClick={() => handleRemoveItem(item.id)}
+                className="flex items-center gap-1 text-primary-default text-sm font-medium active:opacity-70"
+              >
+                <Trash2 className="w-4 h-4" />
+                刪除
+              </button>
             </div>
 
             {/* Product Name */}
-             <div className="space-y-2">
-                <label className="block text-base font-bold text-neutral-800">商品名</label>
-                <input
-                    type="text"
-                    value={item.name}
-                    onChange={(e) => handleUpdateItem(item.id, 'name', e.target.value)}
-                    placeholder="Add value"
-                    className="w-full px-4 py-3 rounded-xl border border-neutral-200 text-neutral-800 placeholder:text-neutral-300 focus:border-primary-default focus:ring-1 focus:ring-primary-default bg-white outline-none"
-                />
+            <div className="space-y-2">
+              <label className="block text-base font-bold text-neutral-800">
+                商品名
+              </label>
+              <input
+                type="text"
+                value={item.name}
+                onChange={(e) =>
+                  handleUpdateItem(item.id, 'name', e.target.value)
+                }
+                placeholder="Add value"
+                className="w-full px-4 py-3 rounded-xl border border-neutral-200 text-neutral-800 placeholder:text-neutral-300 focus:border-primary-default focus:ring-1 focus:ring-primary-default bg-white outline-none"
+              />
             </div>
 
             {/* Quantity */}
             <div className="flex items-center justify-between">
-                <label className="text-base font-bold text-neutral-800">商品數量</label>
-                <div className="flex items-center gap-6">
-                    <button
-                        onClick={() => handleQuantityChange(item.id, -1)}
-                        className="w-8 h-8 rounded-full bg-primary-light text-neutral-800 flex items-center justify-center active:scale-95 transition-transform"
-                    >
-                        <Minus className="w-5 h-5" />
-                    </button>
-                    <span className="text-lg font-mono font-medium min-w-[1ch] text-center">{item.quantity}</span>
-                    <button
-                        onClick={() => handleQuantityChange(item.id, 1)}
-                        className="w-8 h-8 rounded-full bg-primary-light text-neutral-800 flex items-center justify-center active:scale-95 transition-transform"
-                    >
-                         <Plus className="w-5 h-5" />
-                    </button>
-                </div>
+              <label className="text-base font-bold text-neutral-800">
+                商品數量
+              </label>
+              <div className="flex items-center gap-6">
+                <button
+                  onClick={() => handleQuantityChange(item.id, -1)}
+                  className="w-8 h-8 rounded-full bg-primary-light text-neutral-800 flex items-center justify-center active:scale-95 transition-transform"
+                >
+                  <Minus className="w-5 h-5" />
+                </button>
+                <span className="text-lg font-mono font-medium min-w-[1ch] text-center">
+                  {item.quantity}
+                </span>
+                <button
+                  onClick={() => handleQuantityChange(item.id, 1)}
+                  className="w-8 h-8 rounded-full bg-primary-light text-neutral-800 flex items-center justify-center active:scale-95 transition-transform"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Unit */}
             <div className="space-y-2">
-                <label className="block text-base font-bold text-neutral-800">單位</label>
-                <div className="relative">
-                   <UnitSelector 
-                     value={item.unit}
-                     onChange={(val) => handleUpdateItem(item.id, 'unit', val)}
-                   />
-                </div>
+              <label className="block text-base font-bold text-neutral-800">
+                單位
+              </label>
+              <div className="relative">
+                <UnitSelector
+                  value={item.unit}
+                  onChange={(val) => handleUpdateItem(item.id, 'unit', val)}
+                />
+              </div>
             </div>
 
-             {/* Add/Show Photo */}
-             {item.imageUrl ? (
-               <div className="relative w-full h-48 rounded-xl overflow-hidden group bg-neutral-100">
-                 <img 
-                   src={item.imageUrl} 
-                   alt={item.name} 
-                   className="w-full h-full object-cover"
-                 />
-                 <button
-                   onClick={() => handleRemoveImage(item.id)}
-                   className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                 >
-                   <Trash2 className="w-4 h-4" />
-                 </button>
-               </div>
-             ) : (
-               <button 
-                 onClick={() => handleUploadClick(item.id)}
-                 disabled={!!uploadingItemId}
-                 className="w-full py-3 rounded-xl border border-neutral-200 flex items-center justify-center gap-2 text-neutral-800 font-bold bg-white hover:bg-neutral-50 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-               >
-                 <Plus className="w-5 h-5" />
-                 {uploadingItemId === item.id ? '上傳中...' : '新增商品照'}
-               </button>
-             )}
+            {/* Add/Show Photo */}
+            {item.imageUrl ? (
+              <div className="relative w-full h-48 rounded-xl overflow-hidden group bg-neutral-100">
+                <img
+                  src={item.imageUrl}
+                  alt={item.name}
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  onClick={() => handleRemoveImage(item.id)}
+                  className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => handleUploadClick(item.id)}
+                disabled={!!uploadingItemId}
+                className="w-full py-3 rounded-xl border border-neutral-200 flex items-center justify-center gap-2 text-neutral-800 font-bold bg-white hover:bg-neutral-50 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Plus className="w-5 h-5" />
+                {uploadingItemId === item.id ? '上傳中...' : '新增商品照'}
+              </button>
+            )}
           </div>
         ))}
 
         {/* Add Item Button */}
         <button
-            onClick={handleAddItem}
-            className="w-full py-4 rounded-2xl border-2 border-dashed border-neutral-300 text-neutral-400 flex items-center justify-center gap-2 hover:bg-white/50 active:scale-98 transition-all"
+          onClick={handleAddItem}
+          className="w-full py-4 rounded-2xl border-2 border-dashed border-neutral-300 text-neutral-400 flex items-center justify-center gap-2 hover:bg-white/50 active:scale-98 transition-all"
         >
-            <Plus className="w-6 h-6" />
+          <Plus className="w-6 h-6" />
         </button>
       </div>
 
@@ -435,13 +481,18 @@ export const PostFormFeature = ({
       <div className="fixed bottom-0 left-0 right-0 px-4 py-6 bg-white rounded-t-3xl shadow-[0_-4px_10px_rgba(0,0,0,0.1)] z-50">
         <button
           onClick={handleSubmit}
-          disabled={isSubmitting || (items.length === 0 && content.length === 0)}
+          disabled={
+            isSubmitting || (items.length === 0 && content.length === 0)
+          }
           className="w-full py-3.5 bg-primary-default text-white rounded-xl font-bold shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-98 transition-all"
         >
-          {isSubmitting 
-            ? (mode === 'create' ? '發布中...' : '更新中...') 
-            : (mode === 'create' ? '加入清單' : '更新清單')
-          }
+          {isSubmitting
+            ? mode === 'create'
+              ? '發布中...'
+              : '更新中...'
+            : mode === 'create'
+              ? '加入清單'
+              : '更新清單'}
         </button>
       </div>
     </div>

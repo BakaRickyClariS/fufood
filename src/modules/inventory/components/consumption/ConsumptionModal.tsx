@@ -12,6 +12,7 @@ import { ConsumptionSuccessModal } from './ConsumptionSuccessModal';
 import { useConsumeItemMutation } from '@/modules/inventory/api/queries';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { useFlowState } from '@/shared/hooks/useFlowState';
 // The user said "Execute and update ... docs". I should check inventoryApi first?
 // I'll proceed assuming I might need to add it or it exists.
 // Based on file reads, I saw `inventoryApi` but didn't check `consumeItem`.
@@ -83,8 +84,23 @@ export const ConsumptionModal = ({
   // Track previous isOpen to detect open transition
   const wasOpenRef = useRef(false);
 
+  // 流程狀態持久化 Hook
+  const {
+    saveState,
+    clearState,
+    restoreState,
+    skipAnimation,
+    setSkipAnimation,
+  } = useFlowState<{ items: ItemWithReason[]; step: string }>({
+    key: 'consumption',
+    contextId: singleItem?.id,
+  });
+
   // Helper to handle opening edit modal
   const handleOpenEdit = contextSafe(() => {
+    // 儲存當前狀態到 sessionStorage
+    saveState('edit', { items: currentItems, step: 'edit' });
+
     if (modalRef.current && overlayRef.current) {
       const tl = gsap.timeline({
         onComplete: () => {
@@ -118,29 +134,43 @@ export const ConsumptionModal = ({
   // wasOpenRef ensures we only initialize when modal opens.
   useEffect(() => {
     if (isOpen && !wasOpenRef.current) {
-      // Modal just opened
-      if (singleItem) {
-        // If singleItem exists (Recipe flow), default reason is 'recipe_consumption'
-        setCurrentItems([
-          {
-            ingredientName: singleItem.name,
-            originalQuantity: '',
-            consumedQuantity: singleItem.quantity,
-            unit: singleItem.unit,
-            expiryDate: singleItem.expiryDate,
-            reasons: [...defaultReasons], // Use defaultReasons prop
-            customReason: '',
-            id: singleItem.id,
-          } as ItemWithReason,
-        ]);
-      } else if (items.length > 0) {
-        setCurrentItems(
-          items.map((i) => ({
-            ...i,
-            reasons: [...defaultReasons],
-            customReason: '',
-          })),
-        );
+      // Modal just opened - 嘗試恢復狀態
+      const restored = restoreState((step, data) => {
+        if (data.items && data.items.length > 0) {
+          setCurrentItems(data.items);
+          if (step === 'edit') {
+            setShowEditModal(true);
+          } else if (step === 'success') {
+            setShowSuccessModal(true);
+          }
+        }
+      });
+
+      // 如果沒有恢復狀態，則初始化
+      if (!restored) {
+        if (singleItem) {
+          // If singleItem exists (Recipe flow), default reason is 'recipe_consumption'
+          setCurrentItems([
+            {
+              ingredientName: singleItem.name,
+              originalQuantity: '',
+              consumedQuantity: singleItem.quantity,
+              unit: singleItem.unit,
+              expiryDate: singleItem.expiryDate,
+              reasons: [...defaultReasons], // Use defaultReasons prop
+              customReason: '',
+              id: singleItem.id,
+            } as ItemWithReason,
+          ]);
+        } else if (items.length > 0) {
+          setCurrentItems(
+            items.map((i) => ({
+              ...i,
+              reasons: [...defaultReasons],
+              customReason: '',
+            })),
+          );
+        }
       }
     }
     wasOpenRef.current = isOpen;
@@ -159,6 +189,14 @@ export const ConsumptionModal = ({
         modalRef.current &&
         overlayRef.current
       ) {
+        // 如果是恢復狀態，跳過入場動畫
+        if (skipAnimation) {
+          gsap.set(modalRef.current, { scale: 1, opacity: 1 });
+          gsap.set(overlayRef.current, { opacity: 1 });
+          setSkipAnimation(false);
+          return;
+        }
+
         const tl = gsap.timeline();
         tl.fromTo(
           overlayRef.current,
@@ -173,7 +211,7 @@ export const ConsumptionModal = ({
         );
       }
     },
-    { dependencies: [isOpen, showEditModal, showSuccessModal] },
+    { dependencies: [isOpen, showEditModal, showSuccessModal, skipAnimation] },
   );
 
   const handleClose = contextSafe((callback?: () => void) => {
@@ -204,7 +242,7 @@ export const ConsumptionModal = ({
         itemsToConsume.map((item) => {
           if (!item.id) return Promise.resolve();
           const reasons = item.selectedReasons || [];
-          
+
           return consumeItem({
             id: item.id,
             data: {
@@ -232,6 +270,9 @@ export const ConsumptionModal = ({
   const animateOutAndShowSuccess = contextSafe(() => {
     // If provided, signal parent to hide/animate out concurrently
     onHideParent?.();
+
+    // 儲存成功狀態到 sessionStorage
+    saveState('success', { items: currentItems, step: 'success' });
 
     if (modalRef.current && overlayRef.current) {
       const tl = gsap.timeline({
@@ -291,6 +332,8 @@ export const ConsumptionModal = ({
 
   // 點擊返回庫房：先關閉食材詳細頁，再關閉成功頁面，最後導航
   const handleBackToInventory = () => {
+    // 清除 sessionStorage 中的流程狀態
+    clearState();
     onConfirm(true);
 
     if (onCloseAll) {
@@ -408,7 +451,9 @@ export const ConsumptionModal = ({
                     disabled={isSubmitting}
                     className="w-full py-3.5 bg-primary-500 text-white rounded-xl font-bold text-base hover:bg-primary-600 transition-colors active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting && <Loader2 className="w-5 h-5 animate-spin" />}
+                    {isSubmitting && (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    )}
                     {isSubmitting ? '處理中...' : '完成'}
                   </button>
                 )}

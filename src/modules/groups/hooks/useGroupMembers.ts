@@ -10,7 +10,7 @@ type CurrentUserInfo = {
 
 /**
  * 群組成員管理 Hook
- * 
+ *
  * Console 輸出說明：
  * 🔵 開始 API 呼叫
  * 🟢 API 呼叫成功
@@ -63,16 +63,22 @@ export const useGroupMembers = (
           };
           // 將當前使用者加入到列表最前方，且保留原始回傳的成員
           finalMembers = [currentUserMember, ...memberList];
-          console.log(`ℹ️ [useGroupMembers] 當前使用者不在列表中，已自動注入 (${user.name})`);
+          console.log(
+            `ℹ️ [useGroupMembers] 當前使用者不在列表中，已自動注入 (${user.name})`,
+          );
         }
       }
 
       setMembers(finalMembers);
-      console.log(`✅ [useGroupMembers] 成功取得成員列表 (總數: ${finalMembers.length}, API回傳: ${memberList.length})`);
+      console.log(
+        `✅ [useGroupMembers] 成功取得成員列表 (總數: ${finalMembers.length}, API回傳: ${memberList.length})`,
+      );
       console.groupEnd();
     } catch (err) {
       if (err instanceof GroupsApiError) {
-        console.error(`❌ 取得成員失敗: [${err.statusCode || 'N/A'}] ${err.message}`);
+        console.error(
+          `❌ 取得成員失敗: [${err.statusCode || 'N/A'}] ${err.message}`,
+        );
       }
       setError(err as Error);
       console.groupEnd();
@@ -94,7 +100,9 @@ export const useGroupMembers = (
       console.groupEnd();
     } catch (err) {
       if (err instanceof GroupsApiError) {
-        console.error(`❌ 邀請失敗: [${err.statusCode || 'N/A'}] ${err.message}`);
+        console.error(
+          `❌ 邀請失敗: [${err.statusCode || 'N/A'}] ${err.message}`,
+        );
       }
       setError(err as Error);
       console.groupEnd();
@@ -105,7 +113,9 @@ export const useGroupMembers = (
   };
 
   const removeMember = async (memberId: string) => {
-    console.group(`📋 [useGroupMembers] 移除成員 (groupId: ${groupId}, memberId: ${memberId})`);
+    console.group(
+      `📋 [useGroupMembers] 移除成員 (groupId: ${groupId}, memberId: ${memberId})`,
+    );
     setIsLoading(true);
     setError(null);
 
@@ -116,7 +126,9 @@ export const useGroupMembers = (
       console.groupEnd();
     } catch (err) {
       if (err instanceof GroupsApiError) {
-        console.error(`❌ 移除失敗: [${err.statusCode || 'N/A'}] ${err.message}`);
+        console.error(
+          `❌ 移除失敗: [${err.statusCode || 'N/A'}] ${err.message}`,
+        );
       }
       setError(err as Error);
       console.groupEnd();
@@ -130,7 +142,9 @@ export const useGroupMembers = (
     memberId: string,
     role: GroupMember['role'],
   ) => {
-    console.group(`📋 [useGroupMembers] 更新成員權限 (memberId: ${memberId}, role: ${role})`);
+    console.group(
+      `📋 [useGroupMembers] 更新成員權限 (memberId: ${memberId}, role: ${role})`,
+    );
     setIsLoading(true);
     setError(null);
 
@@ -143,7 +157,9 @@ export const useGroupMembers = (
       console.groupEnd();
     } catch (err) {
       if (err instanceof GroupsApiError) {
-        console.error(`❌ 權限更新失敗: [${err.statusCode || 'N/A'}] ${err.message}`);
+        console.error(
+          `❌ 權限更新失敗: [${err.statusCode || 'N/A'}] ${err.message}`,
+        );
       }
       setError(err as Error);
       console.groupEnd();
