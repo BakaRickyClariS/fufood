@@ -71,7 +71,7 @@ export const authApi = {
 
     // 使用 backendApi 呼叫 logout 端點
     try {
-      await backendApi.post<void>('/api/v1/auth/logout');
+      await backendApi.delete<void>('/api/v1/session');
     } catch (error) {
       // 204 或 200 都視為成功，其他錯誤僅警告
       console.warn('Logout API 回應非預期:', error);

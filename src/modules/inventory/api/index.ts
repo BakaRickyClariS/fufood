@@ -9,5 +9,5 @@ export const inventoryApi: InventoryApi = USE_MOCK
   : createInventoryApi();
 
 export * from './inventoryApi';
-export * from './foodsApi';
 export * from './queries';
+

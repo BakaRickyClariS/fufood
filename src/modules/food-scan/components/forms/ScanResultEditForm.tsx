@@ -116,23 +116,18 @@ const ScanResultEditForm: React.FC<ScanResultEditFormProps> = ({
         />
       </div>
 
-      {/* Attributes */}
+      {/* Attributes - 根據分類顯示子分類選項 */}
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-slate-500 mb-1">
           <Box size={18} />
           <span className="text-sm font-medium">產品屬性</span>
         </div>
-        <FormSelect
+        <FormInput
           label=""
           name="attributes"
           register={register}
           error={errors.attributes?.message}
-          options={[
-            { value: '常溫', label: '常溫' },
-            { value: '冷藏', label: '冷藏' },
-            { value: '冷凍', label: '冷凍' },
-          ]}
-          rules={{ required: '請選擇屬性' }}
+          placeholder="輸入產品屬性（如：葉菜類、豬肉、鮮奶等）"
         />
       </div>
 

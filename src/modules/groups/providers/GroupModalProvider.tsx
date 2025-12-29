@@ -44,7 +44,10 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
   const { groups, createGroup, updateGroup, deleteGroup, isLoading } =
     useGroups();
 
-  const [activeGroupId, setActiveGroupId] = useState<string>('1'); 
+  const [activeGroupId, setActiveGroupId] = useState<string>(() => {
+    // 優先從 localStorage 讀取
+    return localStorage.getItem('activeRefrigeratorId') || '1';
+  });
 
   const activeGroup = Array.isArray(groups)
     ? groups.find((g) => g.id === activeGroupId) || groups[0]
@@ -62,6 +65,7 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
   // Actions
   const switchGroup = (groupId: string) => {
     setActiveGroupId(groupId);
+    localStorage.setItem('activeRefrigeratorId', groupId);
   };
 
   const openHome = () => setIsHomeModalOpen(true);

@@ -171,8 +171,27 @@ export const createRealFoodScanApi = (): FoodScanApi => {
   const submitFoodItem = async (
     data: FoodItemInput,
   ): Promise<FoodItemResponse> => {
-    // 庫存 API 已遷移至主後端
-    return backendApi.post<FoodItemResponse>('/api/v1/inventory', data);
+    // 庫存 API 在 AI 後端上 (/refrigerators/{id}/inventory)
+    // 庫存 API 在 AI 後端上 (/refrigerators/{id}/inventory)
+    if (data.groupId) {
+      const { groupId, ...payload } = data;
+      return aiApi.post<FoodItemResponse>(
+        `/refrigerators/${groupId}/inventory`,
+        payload,
+      );
+    }
+
+    // 如果沒有 groupId，嘗試從 localStorage 取得
+    const cachedId = localStorage.getItem('activeRefrigeratorId');
+    if (cachedId) {
+      return aiApi.post<FoodItemResponse>(
+        `/refrigerators/${cachedId}/inventory`,
+        data,
+      );
+    }
+
+    // 最後 fallback：拋出錯誤提示使用者需要選擇冰箱
+    throw new Error('無法入庫：請先選擇一個冰箱群組');
   };
 
   const updateFoodItem = async (
