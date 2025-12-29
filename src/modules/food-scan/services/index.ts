@@ -17,7 +17,8 @@ const createHybridFoodScanApi = (): FoodScanApi => {
   const mockApi = createMockFoodScanApi();
 
   return {
-    ...mockApi, // 預設使用 Mock 的其他方法 (如 delete/update/get)，也可以視需求改為 realApi
+    ...mockApi, // 預設使用 Mock 的其他方法 (如 delete/update/get)
+
     // 對於掃描功能，優先嘗試真實 API
     recognizeImage: async (imageUrl: string) => {
       try {
@@ -33,6 +34,7 @@ const createHybridFoodScanApi = (): FoodScanApi => {
         return mockApi.recognizeImage(imageUrl);
       }
     },
+
     recognizeMultipleImages: async (
       file: File,
       options?: { cropImages?: boolean; maxIngredients?: number },
@@ -48,6 +50,19 @@ const createHybridFoodScanApi = (): FoodScanApi => {
           error,
         );
         return mockApi.recognizeMultipleImages(file, options);
+      }
+    },
+
+    // 入庫功能也優先使用真實 API
+    submitFoodItem: async (data) => {
+      try {
+        console.log('[FoodScan] 嘗試入庫到後端 API...', data.productName);
+        const result = await realApi.submitFoodItem(data);
+        console.log('[FoodScan] 入庫成功', result);
+        return result;
+      } catch (error) {
+        console.warn('[FoodScan] 後端入庫失敗，切換至 Mock 資料模式', error);
+        return mockApi.submitFoodItem(data);
       }
     },
   };
