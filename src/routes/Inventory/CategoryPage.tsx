@@ -1,5 +1,6 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
 import { ChevronLeft, Search, ListFilter } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 
@@ -10,15 +11,34 @@ import FilterModal from '@/modules/inventory/components/ui/modal/FilterModal';
 import CategoryStatsBar from '@/modules/inventory/components/ui/other/CategoryStatsBar';
 import { categories } from '@/modules/inventory/constants/categories';
 import { useInventory, useInventoryFilter } from '@/modules/inventory/hooks';
-import type {
-  FoodItem,
-  FoodCategory,
-  InventoryStatus,
-} from '@/modules/inventory/types';
+import {
+  selectAllGroups,
+  fetchGroups,
+} from '@/modules/groups/store/groupsSlice';
+import { getRefrigeratorId } from '@/modules/inventory/utils/getRefrigeratorId';
+import type { FoodItem, InventoryStatus } from '@/modules/inventory/types';
 
 const CategoryPage: React.FC = () => {
-  const { categoryId } = useParams();
-  const { items: allItems, isLoading, refetch } = useInventory();
+  const { categoryId, groupId: urlGroupId } = useParams();
+  const dispatch = useDispatch();
+
+  // 取得 groups 並計算 refrigeratorId
+  const groups = useSelector(selectAllGroups);
+  const refrigeratorId = getRefrigeratorId(urlGroupId, groups);
+
+  // 確保 groups 載入
+  useEffect(() => {
+    if (groups.length === 0) {
+      // @ts-ignore
+      dispatch(fetchGroups());
+    }
+  }, [dispatch, groups.length]);
+
+  const {
+    items: allItems,
+    isLoading,
+    refetch,
+  } = useInventory(refrigeratorId || undefined);
 
   const category = useMemo(
     () => categories.find((c) => c.id === categoryId),
@@ -28,10 +48,9 @@ const CategoryPage: React.FC = () => {
   // Filter items by category first
   const categoryItems = useMemo(() => {
     if (!category) return [];
-    // Extract category name from title (e.g., "蔬果類 (92)" -> "蔬果類")
-    const categoryName = category.title.split(' ')[0] as FoodCategory;
-    return allItems.filter((item) => item.category === categoryName);
-  }, [allItems, category]);
+    // 後端回傳的 category 是英文 ID (如 fruit, meat)，使用 categoryId 過濾
+    return allItems.filter((item) => item.category === categoryId);
+  }, [allItems, category, categoryId]);
 
   const {
     filteredItems: hookFilteredItems,
