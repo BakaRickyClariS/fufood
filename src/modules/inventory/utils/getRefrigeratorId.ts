@@ -27,15 +27,23 @@ export const getRefrigeratorId = (
     return urlGroupId;
   }
 
-  // 2. Redux store
+  // 取得快取
+  const cached = getCachedRefrigeratorId();
+
+  // 2. Redux store 驗證與 Fallback
   if (storeGroups && storeGroups.length > 0) {
+    // 如果有快取且快取 ID 在列表中，優先使用快取
+    if (cached && storeGroups.some((g) => g.id === cached)) {
+      return cached;
+    }
+    
+    // 否則使用列表第一個（並更新快取）
     const id = storeGroups[0].id;
     saveRefrigeratorId(id);
     return id;
   }
 
-  // 3. localStorage 快取
-  const cached = getCachedRefrigeratorId();
+  // 3. 若無 store 資料但有快取，暫時信任快取
   if (cached) return cached;
 
   // 4. userId fallback
