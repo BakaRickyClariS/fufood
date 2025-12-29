@@ -366,11 +366,14 @@ export const groupsApi = {
 
   /**
    * 加入群組（冰箱）
-   * POST /api/v1/refrigerators/{groupId}/members
+   * POST /api/v1/refrigerator_memberships
    */
-  join: async (groupId: string, data: JoinGroupForm): Promise<void> => {
-    const endpoint = `${API_BASE}/${groupId}/members`;
-    console.log('� [Groups API] 加入群組:', { groupId, data });
+  join: async (_groupId: string, data: JoinGroupForm): Promise<void> => {
+    // Note: groupId is not used in the new endpoint but kept for compatibility with call signature if needed,
+    // though the caller should probably just pass the token.
+    // For now we assume existing callers might pass groupId but we ignore it for the endpoint.
+    const endpoint = `/api/v1/refrigerator_memberships`;
+    console.log(' [Groups API] 加入群組:', { data });
 
     return tryRealApiWithMockFallback(
       'POST',

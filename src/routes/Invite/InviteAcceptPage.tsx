@@ -84,7 +84,7 @@ const InviteAcceptPage = () => {
 
     try {
       await groupsApi.join(invitation.refrigeratorId, {
-        inviteCode: token,
+        invitationToken: token,
       });
       setStatus('success');
 
@@ -136,11 +136,11 @@ const InviteAcceptPage = () => {
 
               <div className="text-center space-y-1">
                 <p className="text-lg font-semibold text-stone-800">
-                  {invitation.refrigerator?.name || '我的冰箱'}
+                  {invitation.refrigeratorName || '我的冰箱'}
                 </p>
-                {invitation.creator && (
+                {invitation.inviterName && (
                   <p className="text-sm text-stone-500">
-                    由 {invitation.creator.name} 邀請
+                    由 {invitation.inviterName} 邀請
                   </p>
                 )}
               </div>

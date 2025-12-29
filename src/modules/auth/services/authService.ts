@@ -35,6 +35,38 @@ export const authService = {
   },
 
   /**
+   * 清除所有應用程式快取 (登出時使用)
+   */
+  clearAllAppData: (): void => {
+    // 使用者資料
+    localStorage.removeItem('user');
+    localStorage.removeItem('authToken');
+    
+    // 冰箱/群組相關
+    localStorage.removeItem('activeRefrigeratorId');
+    
+    // Mock 資料相關 (如果有的話)
+    localStorage.removeItem('mockInventory');
+    localStorage.removeItem('mockRecipes');
+    localStorage.removeItem('mockGroups');
+    
+    // 清除所有以 fufood_ 或 mock_ 開頭的 key
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('fufood_') || key.startsWith('mock_'))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+    // 可選：清除 sessionStorage
+    sessionStorage.clear();
+    
+    console.log('[AuthService] 已清除所有應用程式快取');
+  },
+
+  /**
    * 執行登入流程（帳密登入）
    */
   login: async (credentials: LoginCredentials) => {
@@ -57,6 +89,6 @@ export const authService = {
    */
   logout: async () => {
     await authApi.logout();
-    authService.clearUser();
+    authService.clearAllAppData();
   },
 };

@@ -26,6 +26,7 @@ export type FoodItemInput = {
   lowStockThreshold: number;
   notes: string;
   imageUrl?: string;
+  groupId?: string;
 };
 
 export type FoodItem = FoodItemInput & {

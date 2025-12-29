@@ -68,9 +68,9 @@ export const CreateGroupModal: FC<CreateGroupModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-none w-full h-full p-0 rounded-none border-0 sm:rounded-none !fixed !left-0 !top-0 !translate-x-0 !translate-y-0 !duration-300 data-[state=open]:!slide-in-from-left-full data-[state=closed]:!slide-out-to-left-full data-[state=closed]:!zoom-out-100 data-[state=open]:!zoom-in-100 data-[state=closed]:!slide-out-to-top-0 data-[state=open]:!slide-in-from-top-0">
+      <DialogContent className="max-w-none w-full h-full p-0 rounded-none border-0 sm:rounded-none fixed! left-0! top-0! translate-x-0! translate-y-0! duration-300! data-[state=open]:slide-in-from-left-full! data-[state=closed]:slide-out-to-left-full! data-[state=closed]:zoom-out-100! data-[state=open]:zoom-in-100! data-[state=closed]:slide-out-to-top-0! data-[state=open]:slide-in-from-top-0!">
         <div className="flex flex-col h-full bg-stone-50">
-          <DialogHeader className="flex-shrink-0 px-4 py-3 bg-white border-b border-stone-100 flex flex-row items-center justify-center relative">
+          <DialogHeader className="shrink-0 px-4 py-3 bg-white border-b border-stone-100 flex flex-row items-center justify-center relative">
             {onBack && (
               <button
                 onClick={onBack}

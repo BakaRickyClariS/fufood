@@ -45,7 +45,7 @@ export type InviteMemberForm = {
 };
 
 export type JoinGroupForm = {
-  inviteCode: string;
+  invitationToken: string;
 };
 
 export type Friend = {
@@ -71,21 +71,15 @@ export type InvitationCreator = {
  */
 export type InvitationResponse = {
   id: string;
-  token: string | null;
-  viewCount: number;
+  token: string;
   refrigeratorId: string;
-  refrigerator?: {
-    id: string;
-    name: string;
-    colour?: string | null;
-    ownerId?: string;
-    isDefault?: boolean;
-  };
-  creatorId: string;
-  creator?: InvitationCreator;
+  refrigeratorName?: string;
+  invitedById: string;
+  inviterName?: string;
   expiresAt: string;
-  createdAt: string;
-  updatedAt: string;
+  // 保留舊欄位以防萬一，但標記為可選
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 /**

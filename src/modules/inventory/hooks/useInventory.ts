@@ -85,6 +85,24 @@ export const useInventory = (groupId?: string) => {
     }
   };
 
+  const consumeItem = async (
+    id: string,
+    data: { quantity: number; reasons: string[]; customReason?: string },
+  ) => {
+    setIsLoading(true);
+    try {
+      await inventoryApi.consumeItem(id, data, groupId);
+      await fetchItems(); // Refresh list
+    } catch (err) {
+      setError(
+        err instanceof Error ? err : new Error('Failed to consume item'),
+      );
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
@@ -97,6 +115,7 @@ export const useInventory = (groupId?: string) => {
     updateItem,
     deleteItem,
     batchDelete,
+    consumeItem,
     refetch: fetchItems,
   };
 };
