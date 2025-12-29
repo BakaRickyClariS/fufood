@@ -214,8 +214,10 @@ export const aiRecipeApi = {
       throw new Error('User ID not found. Please login first.');
     }
 
-    const SAVED_RECIPES_API = import.meta.env.VITE_AI_API_URL || 'https://gemini-ai-recipe-gen-mvp.vercel.app';
-    
+    const SAVED_RECIPES_API =
+      import.meta.env.VITE_AI_API_URL ||
+      'https://gemini-ai-recipe-gen-mvp.vercel.app';
+
     const response = await fetch(`${SAVED_RECIPES_API}/api/v1/recipes`, {
       method: 'POST',
       headers: {
@@ -227,7 +229,9 @@ export const aiRecipeApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Failed to save recipe: ${response.statusText}`);
+      throw new Error(
+        errorData.error || `Failed to save recipe: ${response.statusText}`,
+      );
     }
 
     const result = await response.json();
@@ -244,9 +248,13 @@ export const aiRecipeApi = {
       return [];
     }
 
-    const SAVED_RECIPES_API = import.meta.env.VITE_AI_API_URL || 'https://gemini-ai-recipe-gen-mvp.vercel.app';
-    
-    const response = await fetch(`${SAVED_RECIPES_API}/api/v1/recipes?userId=${userId}&limit=50`);
+    const SAVED_RECIPES_API =
+      import.meta.env.VITE_AI_API_URL ||
+      'https://gemini-ai-recipe-gen-mvp.vercel.app';
+
+    const response = await fetch(
+      `${SAVED_RECIPES_API}/api/v1/recipes?userId=${userId}&limit=50`,
+    );
 
     if (!response.ok) {
       if (response.status === 404) return [];
@@ -261,8 +269,10 @@ export const aiRecipeApi = {
    * 取得單一已儲存食譜詳情
    */
   getSavedRecipeById: async (id: string): Promise<SavedRecipe> => {
-    const SAVED_RECIPES_API = import.meta.env.VITE_AI_API_URL || 'https://gemini-ai-recipe-gen-mvp.vercel.app';
-    
+    const SAVED_RECIPES_API =
+      import.meta.env.VITE_AI_API_URL ||
+      'https://gemini-ai-recipe-gen-mvp.vercel.app';
+
     const response = await fetch(`${SAVED_RECIPES_API}/api/v1/recipes/${id}`);
 
     if (!response.ok) {
@@ -276,14 +286,19 @@ export const aiRecipeApi = {
   /**
    * 更新已儲存的食譜 (例如更新收藏狀態)
    */
-  updateSavedRecipe: async (id: string, data: Partial<SavedRecipe>): Promise<SavedRecipe> => {
+  updateSavedRecipe: async (
+    id: string,
+    data: Partial<SavedRecipe>,
+  ): Promise<SavedRecipe> => {
     const userId = aiRecipeApi.getUserId();
     if (!userId) {
       throw new Error('User ID not found. Please login first.');
     }
 
-    const SAVED_RECIPES_API = import.meta.env.VITE_AI_API_URL || 'https://gemini-ai-recipe-gen-mvp.vercel.app';
-    
+    const SAVED_RECIPES_API =
+      import.meta.env.VITE_AI_API_URL ||
+      'https://gemini-ai-recipe-gen-mvp.vercel.app';
+
     const response = await fetch(`${SAVED_RECIPES_API}/api/v1/recipes/${id}`, {
       method: 'PUT',
       headers: {
@@ -354,4 +369,3 @@ export type SavedRecipeListItem = {
   isFavorite: boolean;
   createdAt: string;
 };
-

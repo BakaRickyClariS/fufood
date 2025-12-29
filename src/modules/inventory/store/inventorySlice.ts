@@ -160,8 +160,8 @@ export const selectCategoryOrder = (state: { inventory: InventoryState }) =>
   state.inventory.categoryOrder;
 export const selectSettings = (state: { inventory: InventoryState }) =>
   state.inventory.settings;
-export const selectLayoutAppliedNotification = (
-  state: { inventory: InventoryState }
-) => state.inventory.layoutAppliedNotification;
+export const selectLayoutAppliedNotification = (state: {
+  inventory: InventoryState;
+}) => state.inventory.layoutAppliedNotification;
 
 export default inventorySlice.reducer;

@@ -19,7 +19,10 @@ const Dashboard: React.FC = () => {
               <h1 className="text-xl/7 font-bold text-primary-800">
                 Good Morning,
               </h1>
-              <h1 className="text-xl font-bold text-primary-800 mb-4 truncate" title={displayName}>
+              <h1
+                className="text-xl font-bold text-primary-800 mb-4 truncate"
+                title={displayName}
+              >
                 {displayName}.
               </h1>
               <p className="text-sm text-neutral-600 py-1 px-3 bg-[#FEF3F2] rounded-b-xl rounded-tl-xl">
@@ -27,20 +30,20 @@ const Dashboard: React.FC = () => {
               </p>
             </div>
 
-          <img
-            className="max-w-[300px] w-full h-auto object-cover"
-            src={heroBanner}
-            alt="Illustration of a person looking into a fridge"
-          />
+            <img
+              className="max-w-[300px] w-full h-auto object-cover"
+              src={heroBanner}
+              alt="Illustration of a person looking into a fridge"
+            />
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    {/* 庫存卡片區塊 */}
-    <InventorySection />
-    {/* 推薦食譜區塊 */}
-    <RecipeSection />
-  </>
+      {/* 庫存卡片區塊 */}
+      <InventorySection />
+      {/* 推薦食譜區塊 */}
+      <RecipeSection />
+    </>
   );
 };
 

@@ -14,7 +14,10 @@ import {
   selectCurrentLayout,
   selectCategoryOrder,
 } from '@/modules/inventory/store/inventorySlice';
-import { selectAllGroups, fetchGroups } from '@/modules/groups/store/groupsSlice';
+import {
+  selectAllGroups,
+  fetchGroups,
+} from '@/modules/groups/store/groupsSlice';
 import useFadeInAnimation from '@/shared/hooks/useFadeInAnimation';
 import type { CategoryInfo } from '@/modules/inventory/types';
 import { categories as defaultCategories } from '@/modules/inventory/constants/categories';
@@ -40,7 +43,7 @@ const OverviewPanel: React.FC = () => {
   const categoryOrder = useSelector(selectCategoryOrder);
   const dispatch = useDispatch();
   const { groupId } = useParams<{ groupId: string }>();
-  
+
   // Get groups to derive default ID
   const groups = useSelector(selectAllGroups);
   const firstGroupId = groups[0]?.id;
@@ -57,7 +60,7 @@ const OverviewPanel: React.FC = () => {
   useEffect(() => {
     // 計算 refrigeratorId
     const refId = getRefrigeratorId(groupId, groups);
-    
+
     // 如果還沒有 refId，不執行
     if (!refId) {
       if (groups.length > 0) {
@@ -85,12 +88,12 @@ const OverviewPanel: React.FC = () => {
 
         // 建立預設類別對照表
         const defaultCategoryMap = new Map(
-          defaultCategories.map((c) => [c.id, c])
+          defaultCategories.map((c) => [c.id, c]),
         );
 
         // 優先使用 settings 內的 categories，若無則 fallback 到 categories API
         let categoryData: CategoryInfo[] = [];
-        
+
         if (settings.categories && settings.categories.length > 0) {
           // 從 settings.categories 轉換為 CategoryInfo 格式
           // 使用預設類別常數補充樣式資訊

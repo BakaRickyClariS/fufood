@@ -1,7 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectAllGroups, fetchGroups } from '@/modules/groups/store/groupsSlice';
+import {
+  selectAllGroups,
+  fetchGroups,
+} from '@/modules/groups/store/groupsSlice';
 import CommonItemCard from '@/modules/inventory/components/ui/card/CommonItemCard';
 import { useInventoryExtras } from '@/modules/inventory/hooks';
 import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
@@ -56,9 +59,10 @@ const ExpiredRecordsPanel: React.FC = () => {
   const targetGroupId = groupId || groups[0]?.id;
 
   // 使用共用的淡入動畫 hook
-  const { ref: contentRef, resetAnimation } = useFadeInAnimation<HTMLDivElement>({
-    isLoading: isLoading || isContentLoading,
-  });
+  const { ref: contentRef, resetAnimation } =
+    useFadeInAnimation<HTMLDivElement>({
+      isLoading: isLoading || isContentLoading,
+    });
 
   // Effect 1: 確保 groups 已載入
   useEffect(() => {
@@ -75,7 +79,6 @@ const ExpiredRecordsPanel: React.FC = () => {
       return;
     }
     fetchExpiredItems(filter, 1, 20, targetGroupId);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchExpiredItems, filter, targetGroupId]);
 
   // 切換篩選的處理函數

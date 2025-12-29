@@ -7,8 +7,6 @@ import { AIQueryModal } from '@/modules/ai/components/AIQueryModal';
 const AiRecommendCard = () => {
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
-
-
   return (
     <>
       <Card className="mt-5 px-5 py-6 rounded-2xl bg-linear-to-br from-[#FFD3CC] to-[#FFC4B8] shadow-[0_6px_14px_-2px_rgba(0,0,0,0.12)] border-none max-w-layout-container mx-auto relative overflow-hidden">

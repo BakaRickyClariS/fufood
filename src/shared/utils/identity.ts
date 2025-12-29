@@ -1,23 +1,23 @@
 /**
  * 身份識別工具模組
- * 
+ *
  * 統一管理使用者身份相關資訊的存取，包含：
  * - User ID：使用者唯一識別碼
  * - Auth Token：認證令牌（若有）
  * - Refrigerator ID：當前冰箱/群組 ID
- * 
+ *
  * 此模組作為單一來源 (Single Source of Truth)，
  * 取代分散在各處的 localStorage 存取邏輯。
- * 
+ *
  * @example
  * import { identity } from '@/shared/utils/identity';
- * 
+ *
  * // 取得使用者 ID
  * const userId = identity.getUserId();
- * 
+ *
  * // 取得當前冰箱 ID
  * const refId = identity.getRefrigeratorId();
- * 
+ *
  * // 儲存使用者資料
  * identity.setUser(userData);
  */
@@ -75,12 +75,14 @@ export const identity = {
           return user.id;
         }
       }
-      
+
       // 方法 2: 使用 activeRefrigeratorId 作為臨時 fallback
       // 這是因為某些情況下登入流程可能沒有正確存儲 user 資料
       const refId = localStorage.getItem(STORAGE_KEYS.REFRIGERATOR_ID);
       if (refId) {
-        console.warn('[Identity] 使用 activeRefrigeratorId 作為臨時 userId fallback');
+        console.warn(
+          '[Identity] 使用 activeRefrigeratorId 作為臨時 userId fallback',
+        );
         return refId;
       }
     } catch (e) {
@@ -207,7 +209,7 @@ export const identity = {
       if (cached && storeGroups.some((g) => g.id === cached)) {
         return cached;
       }
-      
+
       // 否則使用列表第一個（並更新快取）
       const id = storeGroups[0].id;
       identity.setRefrigeratorId(id);
@@ -272,11 +274,11 @@ export const identity = {
     identity.clearUser();
     identity.clearAuthToken();
     identity.clearRefrigeratorId();
-    
+
     // 清除舊版可能遺留的 key
     localStorage.removeItem('cachedUserId');
     localStorage.removeItem('authToken');
-    
+
     console.log('[Identity] All identity data cleared');
   },
 

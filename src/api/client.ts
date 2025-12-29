@@ -67,10 +67,12 @@ class ApiClient {
     // 使用統一的 identity 模組取得認證資訊
     const token = identity.getAuthToken();
     const userId = identity.getUserId();
-    
+
     // Debug: 僅在 AI API 且缺少必要資訊時警告
     if (this.apiType === 'ai' && !userId) {
-      console.warn('[AI API] No user ID found, AI backend may reject this request');
+      console.warn(
+        '[AI API] No user ID found, AI backend may reject this request',
+      );
     }
 
     const config: RequestInit = {
@@ -119,7 +121,10 @@ class ApiClient {
 
       return await response.json();
     } catch (error) {
-      console.error(`[${this.apiType.toUpperCase()} API] Request Failed:`, error);
+      console.error(
+        `[${this.apiType.toUpperCase()} API] Request Failed:`,
+        error,
+      );
       throw error;
     }
   }

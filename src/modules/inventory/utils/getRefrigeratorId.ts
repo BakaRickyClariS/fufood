@@ -2,9 +2,9 @@
  * refrigeratorId 取得工具
  *
  * 此模組為向後相容保留，內部委派給統一的 identity 模組。
- * 
+ *
  * @deprecated 建議直接使用 '@/shared/utils/identity' 模組
- * 
+ *
  * @example
  * import { identity } from '@/shared/utils/identity';
  * const refId = identity.getRefrigeratorId(urlGroupId, storeGroups);
@@ -50,4 +50,3 @@ export const getCachedRefrigeratorId = (): string | null => {
 export const clearRefrigeratorIdCache = (): void => {
   identity.clearRefrigeratorId();
 };
-

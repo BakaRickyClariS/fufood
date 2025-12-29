@@ -1,9 +1,9 @@
 /**
  * Auth 工具函式
- * 
+ *
  * 為保持向後相容，此模組保留原有的函式簽名，
  * 但內部使用統一的 identity 模組實作。
- * 
+ *
  * @deprecated 建議直接使用 '@/shared/utils/identity' 模組
  */
 
@@ -34,4 +34,3 @@ export const setAuthToken = (token: string): void => {
 export const removeAuthToken = (): void => {
   identity.clearAuthToken();
 };
-

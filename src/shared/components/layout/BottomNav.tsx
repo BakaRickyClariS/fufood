@@ -68,7 +68,9 @@ const MobileBottomNav = ({
 
     // 3. 如果是已知的其他路由 (如 settings)，返回空字串 (無選中狀態)
     const knownOtherPaths = ['/settings', '/recipe', '/auth'];
-    const isOtherPath = knownOtherPaths.some(p => location.pathname.startsWith(p));
+    const isOtherPath = knownOtherPaths.some((p) =>
+      location.pathname.startsWith(p),
+    );
     if (isOtherPath) return '';
 
     // 4. 默認回傳第一個 (通常是首頁)

@@ -9,7 +9,9 @@ const RecipeSection = () => {
   const { data, isLoading, isError } = useRecipesQuery();
   const recipes = data?.slice(0, 6) ?? []; // 首頁最多顯示 6 筆
 
-  const [selectedRecipe, setSelectedRecipe] = useState<RecipeListItem | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<RecipeListItem | null>(
+    null,
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleRecipeClick = (id: string) => {

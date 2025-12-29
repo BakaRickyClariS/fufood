@@ -4,10 +4,10 @@ import type { LoginCredentials, RegisterData, User } from '../types';
 
 /**
  * Auth Service - 處理認證相關業務邏輯
- * 
+ *
  * 使用統一的 identity 模組管理使用者資料存取。
  * 由於目前使用 HttpOnly Cookie 認證，大部分操作由後端處理。
- * 
+ *
  * Mock 功能已移至 mockAuthService.ts
  */
 export const authService = {
@@ -38,12 +38,12 @@ export const authService = {
   clearAllAppData: (): void => {
     // 使用統一的 identity 模組清除所有資料
     identity.clearAll();
-    
+
     // 清除 Mock 資料相關 (如果有的話)
     localStorage.removeItem('mockInventory');
     localStorage.removeItem('mockRecipes');
     localStorage.removeItem('mockGroups');
-    
+
     // 清除所有以 fufood_ 或 mock_ 開頭的 key
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
@@ -52,11 +52,11 @@ export const authService = {
         keysToRemove.push(key);
       }
     }
-    keysToRemove.forEach(key => localStorage.removeItem(key));
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
 
     // 可選：清除 sessionStorage
     sessionStorage.clear();
-    
+
     console.log('[AuthService] 已清除所有應用程式快取');
   },
 
@@ -86,4 +86,3 @@ export const authService = {
     authService.clearAllAppData();
   },
 };
-
