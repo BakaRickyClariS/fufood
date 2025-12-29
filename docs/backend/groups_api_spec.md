@@ -1,201 +1,429 @@
-# Groups Module API Specification
+# 群組（冰箱）API 規格文件
 
-**版本**: v1.1  
-**文件用途**: 後端協作規格（群組 CRUD、成員管理、邀請/加入/離開）
-
----
-
-## 1. 基本規範
-
-- Base URL: `/api/v1`
-- 需要 Access Token（`Authorization: Bearer <token>`）
-
-> [!NOTE]
-> 串接方式可參考 Auth 模組。
-
-標準錯誤格式同 `auth_api_spec.md`。
+**版本**: v1.2  
+**最後更新**: 2025-12-29  
+**前端模組**: `src/modules/groups`  
+**目的**: 給後端對照前端預期的 API 格式
 
 ---
 
-## 2. 資料模型
+## 目錄
 
-### 2.1 Group
+- [API 概覽](#api-概覽)
+- [認證機制](#認證機制)
+- [資料型別定義](#資料型別定義)
+- [已實作 API 端點](#已實作-api-端點)
+- [待實作 API 端點](#待實作-api-端點)
+- [錯誤回應格式](#錯誤回應格式)
+
+---
+
+## API 概覽
+
+### ✅ 已實作
+
+| #   | 方法     | 路徑                                              | 功能             | 狀態 |
+| --- | -------- | ------------------------------------------------- | ---------------- | ---- |
+| 1   | `GET`    | `/api/v1/refrigerators`                           | 取得所有群組     | ✅   |
+| 2   | `GET`    | `/api/v1/refrigerators/{id}`                      | 取得單一群組     | ✅   |
+| 3   | `POST`   | `/api/v1/refrigerators`                           | 建立群組         | ✅   |
+| 4   | `PUT`    | `/api/v1/refrigerators/{id}`                      | 更新群組         | ✅   |
+| 5   | `DELETE` | `/api/v1/refrigerators/{id}`                      | 刪除群組         | ✅   |
+| 6   | `GET`    | `/api/v1/refrigerators/{id}/members`              | 取得群組成員     | ✅   |
+| 7   | `POST`   | `/api/v1/refrigerators/{id}/invitations`          | 產生邀請連結     | ✅   |
+| 8   | `GET`    | `/api/v1/invitations/{token}`                     | 取得邀請資訊     | ✅   |
+| 9   | `POST`   | `/api/v1/refrigerator_memberships`                | 加入群組 (Token) | ✅   |
+
+### ⏳ 待實作（前端已有 UI，等後端 API）
+
+| #   | 方法     | 路徑                                              | 功能             | 狀態 |
+| --- | -------- | ------------------------------------------------- | ---------------- | ---- |
+| 10  | `POST`   | `/api/v1/refrigerators/{id}/members`              | 邀請成員 (Email) | ⏳   |
+| 11  | `DELETE` | `/api/v1/refrigerators/{id}/members/{memberId}`   | 移除成員         | ⏳   |
+| 12  | `PATCH`  | `/api/v1/refrigerators/{id}/members/{memberId}`   | 更新成員權限     | ⏳   |
+| 13  | `GET`    | `/api/v1/users/friends?q={query}`                 | 搜尋好友         | ⏳   |
+
+---
+
+## 認證機制
+
+- **方式**: HttpOnly Cookie
+- **前端設定**: `credentials: 'include'`
+
+---
+
+## 資料型別定義
+
+### Group（群組）
 
 ```typescript
 type Group = {
-  id: string;
-  name: string;
-  admin?: string; // 建立者 ID 或名稱
-  members?: GroupMember[];
-  imageUrl?: string; // 群組自定義圖片 URL
-  plan?: 'free' | 'premium';
-  createdAt?: string;
-  updatedAt?: string;
+  id: string;              // UUID
+  name: string;            // 群組名稱
+  admin?: string;          // 管理者 ID
+  members?: GroupMember[]; // 成員列表
+  imageUrl?: string;       // 群組圖片 URL
+  plan?: 'free' | 'premium'; // 方案類型
+  createdAt?: Date;        // 建立時間
+  updatedAt?: Date;        // 更新時間
 };
 ```
 
-### 2.2 GroupMember
+### GroupMember（群組成員）
 
 ```typescript
 type GroupMember = {
-  id: string;
-  name: string;
-  avatar: string;
-  role: 'owner' | 'member';
+  id: string;           // 成員 ID
+  name: string;         // 成員名稱
+  avatar: string;       // 頭像 URL
+  role: 'owner' | 'member'; // 權限角色
 };
 ```
 
-### 2.3 Forms
+### CreateGroupForm（建立群組請求）
 
 ```typescript
-type InviteMemberForm = {
-  email: string;
-  role?: GroupMember['role']; // default member
+type CreateGroupForm = {
+  name: string;      // 必填，群組名稱
+  colour?: string;   // 選填，冰箱顏色
 };
+```
 
+### UpdateGroupForm（更新群組請求）
+
+```typescript
+type UpdateGroupForm = {
+  name?: string;     // 選填，新的群組名稱
+};
+```
+
+### JoinGroupForm（加入群組請求）
+
+```typescript
 type JoinGroupForm = {
-  inviteCode: string;
+  invitationToken: string;  // 邀請 Token
+};
+```
+
+### InvitationResponse（邀請資訊回應）
+
+```typescript
+type InvitationResponse = {
+  id: string;              // 邀請 ID
+  token: string;           // 邀請 Token
+  refrigeratorId: string;  // 冰箱/群組 ID
+  refrigeratorName?: string; // 冰箱/群組名稱
+  invitedById: string;     // 邀請者 ID
+  inviterName?: string;    // 邀請者名稱
+  expiresAt: string;       // 過期時間 (ISO 8601)
+};
+```
+
+### Friend（好友）
+
+```typescript
+type Friend = {
+  id: string;        // 好友 ID
+  name: string;      // 好友名稱
+  avatar: string;    // 頭像 URL
+  lineId?: string;   // LINE ID
 };
 ```
 
 ---
 
-## 3. Groups API
+## 已實作 API 端點
 
-> [!IMPORTANT]
-> 後端實際使用 `/refrigerators` 作為群組的路由前綴，前端 API 已對應調整。
+### 1. 取得所有群組
 
-### 3.1 取得群組列表
+```
+GET /api/v1/refrigerators
+```
 
-- **GET** `/api/v1/refrigerators`
-- 200 → `Group[]`
-
-### 3.2 建立群組
-
-- **POST** `/api/v1/refrigerators`
-- Body: `{ name, color?, characterColor? }`
-- 201 → `Group` (需包含完整 DTO 與 ID)
-
-### 3.3 取得群組詳情
-
-- **GET** `/api/v1/refrigerators/{id}`
-- 200 → `Group`
-
-### 3.4 更新群組
-
-- **PUT** `/api/v1/refrigerators/{id}`
-- Body: `{ name?, color?, characterColor? }`
-- 200 → `Group`
-
-### 3.5 刪除群組
-
-- **DELETE** `/api/v1/refrigerators/{id}`
-- 204 或 `{ success: true }`
-
-### 3.6 取得群組成員列表
-
-- **GET** `/api/v1/refrigerators/{id}/members`
-- 200 → `GroupMember[]`
-
-### 3.7 邀請/加入成員（合併路由）
-
-- **POST** `/api/v1/refrigerators/{id}/members`
-- Body: `InviteMemberForm & { mode?: 'invite' | 'join'; inviteCode?: string }`
-- 204 或 `{ success: true }`
-
-### 3.8 離開/移除成員
-
-- **DELETE** `/api/v1/refrigerators/{id}/members/{memberId}`
-- 204 或 `{ success: true }`（memberId 為自己代表離開）
-
-### 3.9 更新成員權限
-
-- **PATCH** `/api/v1/refrigerators/{id}/members/{memberId}`
-- Body: `{ role: 'owner' | 'member' }`
-- 204 或 `{ success: true }`
+**成功回應 (200)**:
+```json
+{
+  "data": [
+    {
+      "id": "uuid-1",
+      "name": "我的冰箱",
+      "admin": "user-uuid",
+      "plan": "free",
+      "createdAt": "2025-12-01T10:00:00Z",
+      "updatedAt": "2025-12-29T15:00:00Z"
+    }
+  ]
+}
+```
 
 ---
 
-## 3.10 邀請好友 API
+### 2. 取得單一群組
 
-### 3.10.1 搜尋好友
+```
+GET /api/v1/refrigerators/{id}
+```
 
-- **GET** `/api/v1/users/friends?q={keyword}`
-- 200 → `User[]` (搜尋結果)
-
-### 3.10.2 產生邀請 Token（QR Code 邀請）
-
-- **POST** `/api/v1/refrigerators/{id}/invitations`
-- 200 →
-
+**成功回應 (200)**:
 ```json
 {
   "data": {
-    "id": "string",
-    "token": "string",
-    "viewCount": 0,
-    "refrigeratorId": "string",
-    "refrigerator": { ... },
-    "creatorId": "string",
-    "creator": { ... },
-    "expiresAt": "ISO8601",
-    "createdAt": "ISO8601",
-    "updatedAt": "ISO8601"
+    "id": "uuid-1",
+    "name": "我的冰箱",
+    "admin": "user-uuid",
+    "members": [
+      {
+        "id": "member-1",
+        "name": "John",
+        "avatar": "https://...",
+        "role": "owner"
+      }
+    ]
   }
 }
 ```
 
-> [!NOTE]
-> 邀請為**單次使用**，使用後即作廢。前端使用 token 組合邀請連結：`/invite/{token}`
-
-### 3.10.3 驗證邀請 Token
-
-- **GET** `/api/v1/invitations/{token}`
-- 200 → 邀請詳情與群組資訊（GET 時自動標記為已使用）
-- 回應格式同 3.10.2，但 `token` 欄位為 `null`
-
 ---
 
-## 4. 角色權限建議
+### 3. 建立群組
 
-| 操作          | owner | member |
-| ------------- | ----- | ------ |
-| 編輯/刪除群組 | ✓     | ✗      |
-| 邀請/移除成員 | ✓     | ✗      |
-| 更新成員角色  | ✓     | ✗      |
-| 離開群組      | ✗     | ✓      |
-
----
-
-## 5. 會員等級 API 需求（前端 UI 整合）
-
-### 5.1 前端需求說明
-
-TopNav 組件右側大頭貼需顯示會員等級徽章，需要從 User 資料取得會員等級資訊。
-
-### 5.2 建議 User 型別擴充
-
-在 `/api/v1/auth/me` 回傳的 User 資料中新增 `membershipTier` 欄位：
-
-```typescript
-type MembershipTier = 'free' | 'premium' | 'vip';
-
-type User = {
-  id: string;
-  email?: string;
-  name?: string;
-  avatar: string;
-  // ... 其他現有欄位
-  membershipTier?: MembershipTier; // 新增：會員等級
-};
+```
+POST /api/v1/refrigerators
 ```
 
-### 5.3 UI 顯示邏輯
+**請求 Body**:
+```json
+{
+  "name": "家庭冰箱",
+  "colour": "green"
+}
+```
 
-| 會員等級  | 顯示徽章 | 說明                                         |
-| --------- | -------- | -------------------------------------------- |
-| `free`    | 無       | 免費會員不顯示徽章                           |
-| `premium` | ✓        | 顯示 Premium-membership-card.png             |
-| `vip`     | ✓        | 顯示 Premium-membership-card.png（暫用同圖） |
+| 欄位     | 類型   | 必填 | 說明     |
+| -------- | ------ | :--: | -------- |
+| `name`   | string | ✅   | 群組名稱 |
+| `colour` | string | ❌   | 顏色     |
 
-> **備註**：目前前端僅有 `Premium-membership-card.png` 圖示，若需要區分不同等級的圖示，請提供對應的圖片資源。
+**成功回應 (201)**:
+```json
+{
+  "data": {
+    "id": "new-uuid",
+    "name": "家庭冰箱",
+    "createdAt": "2025-12-29T21:00:00Z"
+  }
+}
+```
+
+---
+
+### 4. 更新群組
+
+```
+PUT /api/v1/refrigerators/{id}
+```
+
+**請求 Body**:
+```json
+{
+  "name": "新名稱"
+}
+```
+
+---
+
+### 5. 刪除群組
+
+```
+DELETE /api/v1/refrigerators/{id}
+```
+
+**成功回應**: `204 No Content` 或 `200`
+
+---
+
+### 6. 取得群組成員
+
+```
+GET /api/v1/refrigerators/{id}/members
+```
+
+**成功回應 (200)**:
+```json
+{
+  "data": [
+    {
+      "id": "member-1",
+      "name": "John",
+      "avatar": "https://example.com/avatar.jpg",
+      "role": "owner"
+    }
+  ]
+}
+```
+
+---
+
+### 7. 產生邀請連結
+
+```
+POST /api/v1/refrigerators/{id}/invitations
+```
+
+**請求 Body**: `{}`
+
+**成功回應 (200)**:
+```json
+{
+  "data": {
+    "token": "abc123def456",
+    "expiresAt": "2025-12-30T21:00:00Z"
+  }
+}
+```
+
+---
+
+### 8. 取得邀請資訊
+
+```
+GET /api/v1/invitations/{token}
+```
+
+**成功回應 (200)**:
+```json
+{
+  "data": {
+    "id": "invitation-uuid",
+    "token": "abc123def456",
+    "refrigeratorId": "group-uuid",
+    "refrigeratorName": "家庭冰箱",
+    "invitedById": "user-uuid",
+    "inviterName": "John",
+    "expiresAt": "2025-12-30T21:00:00Z"
+  }
+}
+```
+
+---
+
+### 9. 加入群組 (Token)
+
+```
+POST /api/v1/refrigerator_memberships
+```
+
+**請求 Body**:
+```json
+{
+  "invitationToken": "abc123def456"
+}
+```
+
+**成功回應 (200)**:
+```json
+{
+  "message": "Joined successfully"
+}
+```
+
+---
+
+## 待實作 API 端點
+
+> 以下是前端已有 UI 或 API 呼叫代碼，但後端可能尚未完成的 API
+
+### 10. 邀請成員 (Email 方式)
+
+```
+POST /api/v1/refrigerators/{id}/members
+```
+
+**請求 Body**:
+```json
+{
+  "email": "friend@example.com",
+  "role": "member"
+}
+```
+
+| 欄位    | 類型   | 必填 | 說明                      |
+| ------- | ------ | :--: | ------------------------- |
+| `email` | string | ✅   | 被邀請者 Email            |
+| `role`  | string | ❌   | 角色 (`owner` / `member`) |
+
+---
+
+### 11. 移除成員
+
+```
+DELETE /api/v1/refrigerators/{id}/members/{memberId}
+```
+
+---
+
+### 12. 更新成員權限
+
+```
+PATCH /api/v1/refrigerators/{id}/members/{memberId}
+```
+
+**請求 Body**:
+```json
+{
+  "role": "owner"
+}
+```
+
+---
+
+### 13. 搜尋好友
+
+```
+GET /api/v1/users/friends?q={query}
+```
+
+**成功回應 (200)**:
+```json
+{
+  "data": [
+    {
+      "id": "friend-1",
+      "name": "Alice",
+      "avatar": "https://example.com/alice.jpg",
+      "lineId": "alice_123"
+    }
+  ]
+}
+```
+
+---
+
+## 錯誤回應格式
+
+```json
+{
+  "status": false,
+  "message": "錯誤描述訊息"
+}
+```
+
+### 常見錯誤
+
+| 狀態碼 | 說明             |
+| ------ | ---------------- |
+| 400    | 請求參數錯誤     |
+| 401    | 未授權（需登入） |
+| 403    | 無權限操作       |
+| 404    | 資源不存在       |
+| 500    | 伺服器內部錯誤   |
+
+---
+
+## 變更歷史
+
+| 版本 | 日期       | 說明                                 |
+| ---- | ---------- | ------------------------------------ |
+| v1.2 | 2025-12-29 | 以前端實作為主，區分已實作/待實作   |
+| v1.1 | 2025-12-29 | 對齊官方 API Guide                   |
+| v1.0 | 2025-12-29 | 初版                                 |
