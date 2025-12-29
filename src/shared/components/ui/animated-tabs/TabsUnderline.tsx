@@ -51,7 +51,7 @@ const TabsUnderline = <TId extends string = string>({
   return (
     <div
       className={cn(
-        'flex justify-center items-center bg-white shadow-[0_6px_5px_-2px_rgba(0,0,0,0.06)] relative',
+        'flex justify-center items-center bg-white shadow-[0_6px_5px_-2px_rgba(0,0,0,0.06)] sticky top-[64px] z-30 transition-all duration-300',
         "in-[[class*='no-header-shadow']]:shadow-none",
         className,
       )}
