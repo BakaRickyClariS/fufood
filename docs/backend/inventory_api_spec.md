@@ -1,6 +1,9 @@
-**版本**: v2.3（參考 `src/modules/API_REFERENCE_V2.md`）  
-**最後更新**: 2025-12-13  
+**版本**: v2.4  
+**最後更新**: 2025-12-29  
 **涵蓋範圍**: Inventory（庫存管理）＋Foods（食材主檔）模組
+
+> [!TIP]
+> 完整的欄位對照與分類 ID 請參考 [前端串接整合指南](./frontend_integration_guide.md)。
 
 ---
 
@@ -168,13 +171,18 @@ type Food = {
 
 ### 2.7 FoodCategory（食材分類）
 
-- 蔬菜類
-- 調味料類
-- 主食類
-- 乳製品飲料
-- 水果
-- 肉類海鮮
-- 其他
+> [!IMPORTANT]
+> API 必須使用英文 Category ID，傳送中文會導致 `500 Foreign Key Error`。
+
+| Category ID | 預設中文標題 | 說明                   |
+| :---------- | :----------- | :--------------------- |
+| `fruit`     | 蔬果類       | 葉菜、根莖、水果、菇類 |
+| `frozen`    | 冷凍調理類   | 水餃、雞塊、冰品       |
+| `bake`      | 主食烘焙類   | 米、麵、麵包、堅果     |
+| `milk`      | 乳品飲料類   | 蛋、奶、起司、飲品     |
+| `seafood`   | 冷凍海鮮類   | 魚、蝦、貝類           |
+| `meat`      | 肉品類       | 豬/牛/雞肉、加工肉品   |
+| `others`    | 乾貨醬料類   | 醬料、油品、其他       |
 
 > `InventoryStatus` 支援：`normal` / `low-stock` / `expired` / `expiring-soon` / `frequent`。
 
@@ -546,3 +554,11 @@ type Food = {
   ```json
   { "status": true, "message": "Deleted successfully" }
   ```
+
+---
+
+## 5. 相關文件
+
+- [前端串接整合指南](./frontend_integration_guide.md) ⭐ **必讀**
+- [庫存設定 API 規格](./inventory_settings_api_spec.md)
+- [完整入庫 API 規格](./food_intake_api_spec.md)

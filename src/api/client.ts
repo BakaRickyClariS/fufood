@@ -15,7 +15,7 @@
  * const user = await backendApi.get('/api/v1/profile');
  */
 
-import { getAuthToken } from '../modules/auth/utils/authUtils';
+import { identity } from '@/shared/utils/identity';
 
 // API 類型定義
 type ApiType = 'ai' | 'backend';
@@ -48,23 +48,6 @@ class ApiClient {
     this.baseUrl = API_BASES[apiType];
   }
 
-  /**
-   * 取得使用者 ID（用於 AI 後端請求）
-   * AI 後端沒有獨立認證機制，需要透過 X-User-Id header 識別使用者
-   */
-  private getUserId(): string | null {
-    try {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        return user.id || null;
-      }
-    } catch (e) {
-      console.warn('[API Client] Failed to get user id from localStorage', e);
-    }
-    return null;
-  }
-
   private async request<T>(
     endpoint: string,
     options: RequestOptions = {},
@@ -81,17 +64,11 @@ class ApiClient {
       });
     }
 
-    // Get token (if available)
-    const token = getAuthToken();
+    // 使用統一的 identity 模組取得認證資訊
+    const token = identity.getAuthToken();
+    const userId = identity.getUserId();
     
-    // Debug: 追蹤 Authorization header
-    // 注意：Backend API 使用 HttpOnly Cookie，所以 localStorage 沒有 token 是正常的
-    if (!token && this.apiType === 'ai') {
-      console.warn(`[${this.apiType.toUpperCase()} API] No auth token found in localStorage`);
-    }
-
-    // 嘗試取得 User ID (AI API 必要，Backend API 可能選用)
-    const userId = this.getUserId();
+    // Debug: 僅在 AI API 且缺少必要資訊時警告
     if (this.apiType === 'ai' && !userId) {
       console.warn('[AI API] No user ID found, AI backend may reject this request');
     }

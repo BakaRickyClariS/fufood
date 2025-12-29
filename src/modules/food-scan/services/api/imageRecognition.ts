@@ -171,13 +171,26 @@ export const createRealFoodScanApi = (): FoodScanApi => {
   const submitFoodItem = async (
     data: FoodItemInput,
   ): Promise<FoodItemResponse> => {
-    // 庫存 API 在 AI 後端上 (/refrigerators/{id}/inventory)
+    // 將前端 FoodItemInput 格式轉換為 API 預期的 FoodItem 格式
+    const apiPayload = {
+      name: data.productName, // productName → name
+      category: data.category,
+      quantity: data.purchaseQuantity, // purchaseQuantity → quantity
+      unit: data.unit,
+      purchaseDate: data.purchaseDate,
+      expiryDate: data.expiryDate,
+      lowStockAlert: data.lowStockAlert,
+      lowStockThreshold: data.lowStockThreshold,
+      notes: data.notes,
+      imageUrl: data.imageUrl,
+      attributes: data.attributes ? [data.attributes] : undefined,
+    };
+
     // 庫存 API 在 AI 後端上 (/refrigerators/{id}/inventory)
     if (data.groupId) {
-      const { groupId, ...payload } = data;
       return aiApi.post<FoodItemResponse>(
-        `/refrigerators/${groupId}/inventory`,
-        payload,
+        `/refrigerators/${data.groupId}/inventory`,
+        apiPayload,
       );
     }
 
@@ -186,7 +199,7 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     if (cachedId) {
       return aiApi.post<FoodItemResponse>(
         `/refrigerators/${cachedId}/inventory`,
-        data,
+        apiPayload,
       );
     }
 

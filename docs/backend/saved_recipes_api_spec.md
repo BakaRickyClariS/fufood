@@ -382,3 +382,11 @@ const handleSaveRecipe = async (aiRecipe: RecipeListItem) => {
 完整的 API 文件可透過 Swagger UI 查看：
 - Production: https://gemini-ai-recipe-gen-mvp.vercel.app/docs-cdn
 - Development: http://localhost:3000/docs
+
+---
+
+## 相關文件
+
+- [前端串接整合指南](./frontend_integration_guide.md) ⭐ **必讀**
+- [AI 食譜生成 API 規格](./ai_recipe_api_spec.md)
+

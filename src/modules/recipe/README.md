@@ -15,14 +15,19 @@
 ---
 
 ## 概要
+
 管理食譜瀏覽、詳情、收藏、烹煮狀態與餐期計畫。依精簡後 API：烹煮改用 `PATCH /recipes/{id}`，收藏列表用查詢參數，移除獨立 `/recipes/favorites`。餐期計畫保留 `POST/GET/DELETE /recipes/plan`。
 
+> [!TIP]
+> AI 食譜生成相關規格請參考 [前端串接整合指南](../../docs/backend/frontend_integration_guide.md) 第 2.3 節。
+
 ### 核心功能
+
 1. 食譜列表/詳情
 2. 收藏/取消收藏
 3. 烹煮完成（更新狀態）
 4. 餐期計畫 CRUD
-5.（可選）AI 產生食譜入口
+5. AI 產生食譜（`POST /api/v1/ai/recipe`）
 
 ---
 
@@ -97,17 +102,63 @@ export type Recipe = {
 
 ## API 規格
 
-### 路由（對應 API_REFERENCE_V2 #33-#40）
-- `GET /api/v1/recipes`：列表，支援 `category`、`favorite=true`
-- `GET /api/v1/recipes/{id}`：詳情
-- `POST /api/v1/recipes/{id}/favorite`：加入最愛
-- `DELETE /api/v1/recipes/{id}/favorite`：取消最愛
-- `PATCH /api/v1/recipes/{id}`：更新狀態 `{ status: 'cooked' }` 等（取代 POST /cook）
-- `POST /api/v1/recipes/plan`：新增餐期計畫
-- `GET /api/v1/recipes/plan`：取得餐期計畫
-- `DELETE /api/v1/recipes/plan/{planId}`：移除餐期計畫
+### 食譜儲存 API（Saved Recipes）
+
+| 方法     | 端點                                | 說明       |
+| :------- | :---------------------------------- | :--------- |
+| `GET`    | `/api/v1/recipes`                   | 取得列表   |
+| `POST`   | `/api/v1/recipes`                   | 新增食譜   |
+| `GET`    | `/api/v1/recipes/{id}`              | 取得單筆   |
+| `PUT`    | `/api/v1/recipes/{id}`              | 更新食譜   |
+| `DELETE` | `/api/v1/recipes/{id}`              | 刪除食譜   |
+| `POST`   | `/api/v1/recipes/{id}/favorite`     | 加入最愛   |
+| `DELETE` | `/api/v1/recipes/{id}/favorite`     | 取消最愛   |
+| `PATCH`  | `/api/v1/recipes/{id}`              | 更新狀態   |
+
+### AI 食譜生成 API
+
+> 依據 [前端串接整合指南](../../docs/backend/frontend_integration_guide.md) 第 2.3 節
+
+**Endpoint**: `POST /api/v1/ai/recipe`
+
+**Request**:
+```typescript
+{
+  prompt: string;                 // "清冰箱料理"
+  selectedIngredients?: string[]; // ["雞胸肉", "高麗菜"]
+  excludeIngredients?: string[];
+  recipeCount?: number;           // 2
+  servings?: number;              // 2
+  difficulty?: "簡單" | "中等" | "困難";
+  category?: string;              // "日式"
+}
+```
+
+**Response**:
+```typescript
+{
+  status: true,
+  data: {
+    greeting: string;
+    recipes: {
+      id: string;
+      name: string;
+      category: string;           // 料理類型 (日式, 台式...)
+      servings: number;
+      cookTime: number;
+      difficulty: string;
+      imageUrl: string;           // AI 生成圖
+      ingredients: { name, amount, unit }[]; // 核心食材
+      seasonings: { name, amount, unit }[];  // 調味料
+      steps: { step, description }[];
+    }[];
+    remainingQueries: number;
+  }
+}
+```
 
 ### RecipeApi 介面
+
 ```typescript
 export interface RecipeApi {
   getRecipes: (params?: { category?: RecipeCategory; favorite?: boolean }) => Promise<RecipeListItem[]>;
@@ -201,9 +252,18 @@ const useMealPlan = () => ({
 
 ---
 
+## 相關文件
+
+- [前端串接整合指南](../../docs/backend/frontend_integration_guide.md) ⭐ **必讀**
+- [AI 食譜 API 規格](../../docs/backend/ai_recipe_api_spec.md)
+- [儲存食譜 API 規格](../../docs/backend/saved_recipes_api_spec.md)
+
+---
+
 ## Mock 資料
+
 - `services/mock/mockData.ts`：含食譜、收藏、餐期計畫等測試資料。
 
---- 
+---
 
 **備註**：烹煮動作統一使用 `PATCH /recipes/{id}`（例如 `{ status: 'cooked' }`），收藏列表改由 `GET /recipes?favorite=true`。
