@@ -171,20 +171,27 @@ export const createRealFoodScanApi = (): FoodScanApi => {
   const submitFoodItem = async (
     data: FoodItemInput,
   ): Promise<FoodItemResponse> => {
-    // 優先使用新版冰箱 API (如果資料中有 groupId)
+    // 庫存 API 在 AI 後端上 (/refrigerators/{id}/inventory)
+    // 庫存 API 在 AI 後端上 (/refrigerators/{id}/inventory)
     if (data.groupId) {
-      // 注意：這裡使用 aiApi 因為它是我們主要的 Axios instance wrapper，
-      // 但實際上這個端點是後端的。我們確認 aiApi 或 backendApi 的設定。
-      // 根據 client.ts，backendApi 指向後端，aiApi 指向 AI 服務。
-      // 庫存 /refrigerators 是主後端的邏輯。
-      return backendApi.post<FoodItemResponse>(
-        `/refrigerators/${data.groupId}/inventory`,
+      const { groupId, ...payload } = data;
+      return aiApi.post<FoodItemResponse>(
+        `/refrigerators/${groupId}/inventory`,
+        payload,
+      );
+    }
+
+    // 如果沒有 groupId，嘗試從 localStorage 取得
+    const cachedId = localStorage.getItem('activeRefrigeratorId');
+    if (cachedId) {
+      return aiApi.post<FoodItemResponse>(
+        `/refrigerators/${cachedId}/inventory`,
         data,
       );
     }
 
-    // 舊版 fallback (如果沒有 groupId)
-    return backendApi.post<FoodItemResponse>('/api/v1/inventory', data);
+    // 最後 fallback：拋出錯誤提示使用者需要選擇冰箱
+    throw new Error('無法入庫：請先選擇一個冰箱群組');
   };
 
   const updateFoodItem = async (
