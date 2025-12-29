@@ -16,6 +16,7 @@ import FormTagInput from './FormTagInput';
 import FormDatePicker from './FormDatePicker';
 import FormToggle from './FormToggle';
 import FormTextarea from './FormTextarea';
+import { categories } from '@/modules/inventory/constants/categories';
 
 type ScanResultEditFormProps = {
   imageUrl: string;
@@ -102,17 +103,10 @@ const ScanResultEditForm: React.FC<ScanResultEditFormProps> = ({
           name="category"
           register={register}
           error={errors.category?.message}
-          options={[
-            { value: '蔬菜', label: '蔬菜' },
-            { value: '水果', label: '水果' },
-            { value: '肉類', label: '肉類' },
-            { value: '海鮮', label: '海鮮' },
-            { value: '乳製品', label: '乳製品' },
-            { value: '飲品', label: '飲品' },
-            { value: '零食', label: '零食' },
-            { value: '調味料', label: '調味料' },
-            { value: '其他', label: '其他' },
-          ]}
+          options={categories.map((c) => ({
+            value: c.id,
+            label: c.title,
+          }))}
           rules={{ required: '請選擇分類' }}
         />
       </div>

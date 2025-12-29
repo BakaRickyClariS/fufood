@@ -4,6 +4,7 @@ import type { FoodItemInput } from '../../types';
 import { calculateShelfLife } from '../../utils/dateHelpers';
 import resultDecoration from '@/assets/images/food-scan/result.png';
 import { InfoTooltip } from '@/shared/components/feedback/InfoTooltip';
+import { categories } from '@/modules/inventory/constants/categories';
 
 type ScanResultPreviewProps = {
   result: FoodItemInput;
@@ -98,8 +99,21 @@ export const ScanResultPreview: React.FC<ScanResultPreviewProps> = ({
           </div>
 
           <div className="space-y-1">
-            <DetailRow label="產品分類" value={result.category} />
-            <DetailRow label="產品屬性" value={result.attributes} />
+            <DetailRow
+              label="產品分類"
+              value={
+                categories.find((c) => c.id === result.category)?.title ||
+                result.category
+              }
+            />
+            <DetailRow
+              label="產品屬性"
+              value={
+                Array.isArray(result.attributes)
+                  ? result.attributes.join('、')
+                  : result.attributes
+              }
+            />
             <DetailRow
               label="單位數量"
               value={`${result.purchaseQuantity} / ${result.unit}`}

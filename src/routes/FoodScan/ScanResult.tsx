@@ -80,8 +80,8 @@ const ScanResult: React.FC = () => {
   // Ensure result matches FoodItemInput type or cast it
   const initialData: FoodItemInput = {
     productName: result.productName || '',
-    category: result.category || '其他',
-    attributes: result.attributes || '常溫',
+    category: result.category || 'others',
+    attributes: result.attributes || [],
     purchaseQuantity: result.purchaseQuantity || 1,
     unit: result.unit || '個',
     purchaseDate: result.purchaseDate || new Date().toISOString().split('T')[0],

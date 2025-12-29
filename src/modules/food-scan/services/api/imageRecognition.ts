@@ -111,7 +111,12 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     const mapped: FoodItemInput = {
       productName: payload.productName ?? payload.name ?? '',
       category: finalCategory as FoodItemInput['category'],
-      attributes: finalAttributes as FoodItemInput['attributes'],
+      attributes: finalAttributes
+        ? finalAttributes
+            .split(',')
+            .map((attr) => attr.trim())
+            .filter(Boolean)
+        : [],
       purchaseQuantity: Number(payload.purchaseQuantity ?? 1),
       unit: (payload.unit ?? '份') as FoodItemInput['unit'],
       purchaseDate: payload.purchaseDate ?? today,
@@ -185,12 +190,16 @@ export const createRealFoodScanApi = (): FoodScanApi => {
       quantity: data.purchaseQuantity, // purchaseQuantity → quantity
       unit: data.unit,
       purchaseDate: data.purchaseDate,
-      expiryDate: data.expiryDate,
+      expiryDate: data.expiryDate || undefined,
       lowStockAlert: data.lowStockAlert,
       lowStockThreshold: data.lowStockThreshold,
       notes: data.notes,
       imageUrl: data.imageUrl,
-      attributes: data.attributes ? [data.attributes] : undefined,
+      attributes: Array.isArray(data.attributes)
+        ? data.attributes
+        : typeof data.attributes === 'string'
+          ? [data.attributes]
+          : [],
     };
 
     // 庫存 API 在 AI 後端上 (/refrigerators/{id}/inventory)

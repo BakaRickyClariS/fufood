@@ -91,6 +91,26 @@ const OverviewPanel: React.FC = () => {
           defaultCategories.map((c) => [c.id, c]),
         );
 
+        // 取得實際庫存項目來計算各類別數量
+        let categoryCounts: Record<string, number> = {};
+        try {
+          const inventoryResponse = await inventoryApi.getInventory({
+            groupId: refId,
+          });
+          const items = inventoryResponse.data.items || [];
+
+          // 計算每個類別的數量
+          items.forEach((item) => {
+            const cat = item.category;
+            categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+          });
+        } catch (inventoryError) {
+          console.warn(
+            '[Overview] 無法取得庫存數量，使用預設值 0',
+            inventoryError,
+          );
+        }
+
         // 優先使用 settings 內的 categories，若無則 fallback 到 categories API
         let categoryData: CategoryInfo[] = [];
 
@@ -102,7 +122,7 @@ const OverviewPanel: React.FC = () => {
             return {
               id: cat.id,
               title: cat.title,
-              count: 0, // settings 不含 count，預設為 0
+              count: categoryCounts[cat.id] || 0, // 使用實際數量
               imageUrl: defaults?.img || '',
               bgColor: defaults?.bgColor || '',
               slogan: defaults?.slogan || '',
@@ -112,7 +132,10 @@ const OverviewPanel: React.FC = () => {
         } else {
           // Fallback 到 categories API
           const categoriesResponse = await inventoryApi.getCategories(refId);
-          categoryData = categoriesResponse.data.categories;
+          categoryData = categoriesResponse.data.categories.map((cat) => ({
+            ...cat,
+            count: categoryCounts[cat.id] || cat.count || 0,
+          }));
         }
 
         // 如果設定中有 categoryOrder，更新順序

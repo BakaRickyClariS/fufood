@@ -42,7 +42,7 @@
       ingredients: {
         productName: string;       // "蘋果"
         category: string;          // ★ 回傳 ID: "fruit"
-        attributes: string;        // "冷藏" (注意：AI 回傳 string，前端需包裝成 array)
+        attributes: string;        // "葉菜根莖類" (產品屬性/副分類，前端需包裝成 array)
         purchaseQuantity: number;  // 2 (注意：前端需 mapping 為 "quantity")
         unit: string;              // "顆"
         purchaseDate: string;      // "2025-12-29"
@@ -325,22 +325,3 @@ Base Path: `/api/v1/recipes`
 - [ ] **新增庫存**: 表單送出時 `category` 欄位填入 ID (`fruit`)，非中文。
 - [ ] **欄位 Mapping**: AI 回傳 `purchaseQuantity` → 送到後端時改名為 `quantity`。
 - [ ] **attributes 型別**: AI 回傳 `string`，需轉為 `string[]` 再傳給後端。
-
----
-
-## 7. 相關文件
-
-### AI 相關
-- [AI 食譜生成 API 規格](./ai_recipe_api_spec.md) — 完整 Streaming、圖片生成規格
-- [AI 媒體上傳規格](./ai_media_api_spec.md) — 圖片上傳至 Cloudinary
-
-### 庫存相關
-- [庫存 API 規格](./inventory_api_spec.md) — 完整 CRUD 端點
-- [庫存設定 API 規格](./inventory_settings_api_spec.md) — 版面、分類順序設定
-
-### 食譜相關
-- [儲存食譜 API 規格](./saved_recipes_api_spec.md) — 食譜 CRUD、收藏功能
-
-### 其他
-- [完整入庫 API 規格](./food_intake_api_spec.md) — AI 辨識到入庫的完整流程
-
