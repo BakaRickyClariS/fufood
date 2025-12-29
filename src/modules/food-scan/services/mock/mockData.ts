@@ -3,7 +3,7 @@ import type { FoodItemInput } from '../../types/foodItem';
 export const MOCK_SCAN_RESULT: FoodItemInput = {
   productName: '有機高雷菜',
   category: 'fruit', // fixed
-  attributes: '葉菜類',
+  attributes: ['葉菜類'],
   purchaseQuantity: 1,
   unit: '顆',
   purchaseDate: '2023-11-20',
@@ -17,7 +17,7 @@ export const MOCK_HISTORY: FoodItemInput[] = [
   {
     productName: '全脂鮮乳',
     category: 'milk', // fixed
-    attributes: '乳製品',
+    attributes: ['乳製品'],
     purchaseQuantity: 1,
     unit: '瓶',
     purchaseDate: '2023-11-18',
@@ -29,7 +29,7 @@ export const MOCK_HISTORY: FoodItemInput[] = [
   {
     productName: '冷凍水餃',
     category: 'frozen', // fixed
-    attributes: '主食',
+    attributes: ['主食'],
     purchaseQuantity: 2,
     unit: '包',
     purchaseDate: '2023-11-15',
@@ -41,7 +41,7 @@ export const MOCK_HISTORY: FoodItemInput[] = [
   {
     productName: '牛小排',
     category: 'meat', // fixed
-    attributes: '牛肉類',
+    attributes: ['牛肉類'],
     purchaseQuantity: 600,
     unit: 'g',
     purchaseDate: new Date().toISOString().split('T')[0],
@@ -55,7 +55,7 @@ export const MOCK_HISTORY: FoodItemInput[] = [
   {
     productName: '橄欖油',
     category: 'others', // fixed
-    attributes: '油品與堅果',
+    attributes: ['油品與堅果'],
     purchaseQuantity: 1,
     unit: '瓶',
     purchaseDate: new Date().toISOString().split('T')[0],
