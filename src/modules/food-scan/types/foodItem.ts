@@ -17,7 +17,7 @@ export type FoodUnit =
 export type FoodItemInput = {
   productName: string;
   category: FoodCategory;
-  attributes: FoodAttribute;
+  attributes: FoodAttribute[];
   purchaseQuantity: number;
   unit: FoodUnit;
   purchaseDate: string; // YYYY-MM-DD

@@ -12,6 +12,7 @@ import type { FoodItemInput } from '../../types';
 import FormInput from './FormInput';
 import FormSelect from './FormSelect';
 import FormQuantity from './FormQuantity';
+import FormTagInput from './FormTagInput';
 import FormDatePicker from './FormDatePicker';
 import FormToggle from './FormToggle';
 import FormTextarea from './FormTextarea';
@@ -122,12 +123,12 @@ const ScanResultEditForm: React.FC<ScanResultEditFormProps> = ({
           <Box size={18} />
           <span className="text-sm font-medium">產品屬性</span>
         </div>
-        <FormInput
+        <FormTagInput
           label=""
           name="attributes"
-          register={register}
+          control={control}
           error={errors.attributes?.message}
-          placeholder="輸入產品屬性（如：葉菜類、豬肉、鮮奶等）"
+          placeholder="輸入產品屬性並按 Enter（如：葉菜類、豬肉等）"
         />
       </div>
 
