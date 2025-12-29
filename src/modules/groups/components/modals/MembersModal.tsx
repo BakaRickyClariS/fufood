@@ -9,6 +9,7 @@ import { Button } from '@/shared/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import { MemberList } from '../ui/MemberList';
 import { useGroupMembers } from '../../hooks/useGroupMembers';
+import { useGroupModal } from '../../providers/GroupModalProvider';
 import { useAuth } from '@/modules/auth';
 import { getUserAvatarUrl } from '@/shared/utils/avatarUtils';
 import type { Group } from '../../types/group.types';
@@ -33,6 +34,8 @@ export const MembersModal: FC<MembersModalProps> = ({
   const { user } = useAuth();
   const currentUserName = user?.displayName || user?.name || '';
   const currentUserAvatar = getUserAvatarUrl(user);
+
+  const { openInvite } = useGroupModal();
 
   // Pass current user info to hook so it can inject user into members list
   const { members, isLoading, removeMember } = useGroupMembers(
@@ -130,7 +133,10 @@ export const MembersModal: FC<MembersModalProps> = ({
 
             {/* Invite Button */}
             <div className="mt-6 pt-4">
-              <Button className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white h-14 text-lg font-bold rounded-xl shadow-sm">
+              <Button
+                className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white h-14 text-lg font-bold rounded-xl shadow-sm"
+                onClick={() => group && openInvite(group)}
+              >
                 邀請好友
               </Button>
             </div>

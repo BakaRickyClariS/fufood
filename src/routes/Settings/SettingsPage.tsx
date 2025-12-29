@@ -41,21 +41,20 @@ const SettingsPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
-
       <div className="max-w-layout-container mx-auto px-4 py-6 space-y-4">
         <ProfileSection user={userProfile} />
-        
+
         <DietaryPreferenceTags preference={userProfile.dietaryPreference} />
-        
+
         <QuickActions />
-        
+
         <OtherSettingsList />
-        
+
         {/* Pass user email if available in User object, assuming user.email exists */}
-        <LogoutSection 
-          email={user?.email} 
-          onLogout={handleLogout} 
-          isLoggingOut={isLoggingOut} 
+        <LogoutSection
+          email={user?.email}
+          onLogout={handleLogout}
+          isLoggingOut={isLoggingOut}
         />
 
         {/* 開發測試用：群組 API 測試按鈕 */}

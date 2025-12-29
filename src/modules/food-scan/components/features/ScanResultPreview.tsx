@@ -10,6 +10,8 @@ type ScanResultPreviewProps = {
   imageUrl: string;
   onEdit: () => void;
   onConfirm: () => void;
+  currentIndex?: number;
+  totalCount?: number;
 };
 
 type DetailRowProps = {
@@ -28,13 +30,17 @@ const DetailRow: React.FC<DetailRowProps> = ({ label, value, tooltip }) => (
   </div>
 );
 
-const Divider: React.FC = () => <div className="w-full h-px bg-gray-100 my-2" />;
+const Divider: React.FC = () => (
+  <div className="w-full h-px bg-gray-100 my-2" />
+);
 
 export const ScanResultPreview: React.FC<ScanResultPreviewProps> = ({
   result,
   imageUrl,
   onEdit,
   onConfirm,
+  currentIndex,
+  totalCount,
 }) => {
   // 計算保存期限
   const shelfLifeDays = calculateShelfLife(
@@ -113,11 +119,7 @@ export const ScanResultPreview: React.FC<ScanResultPreviewProps> = ({
             <DetailRow
               label="保存期限"
               value={`約${shelfLifeDays}天`}
-              tooltip={
-                <>
-                  根據入庫日期與過期日期自動計算的預估保存天數。
-                </>
-              }
+              tooltip={<>根據入庫日期與過期日期自動計算的預估保存天數。</>}
             />
             <DetailRow label="過期日期" value={result.expiryDate} />
 
@@ -126,18 +128,21 @@ export const ScanResultPreview: React.FC<ScanResultPreviewProps> = ({
             <DetailRow
               label="備註"
               value={result.notes || '-'}
-              tooltip={
-                <>
-                  可註記該食材的特殊資訊，如保存方式或購買來源等。
-                </>
-              }
+              tooltip={<>可註記該食材的特殊資訊，如保存方式或購買來源等。</>}
             />
           </div>
         </div>
       </div>
 
-      {/* 按鈕區域 - 改為跟隨內容滾動，垂直排列 */}
       <div className="px-4 mt-6 flex flex-col gap-3">
+        {totalCount && totalCount > 1 && (
+          <div className="text-center text-slate-500 font-medium mb-1">
+            <span className="text-slate-800 font-bold text-xl">
+              {currentIndex}
+            </span>
+            <span className="text-lg"> / {totalCount}</span>
+          </div>
+        )}
         <button
           onClick={onEdit}
           className="w-full bg-red-500 hover:bg-red-600 text-white py-3.5 rounded-xl font-bold transition-colors shadow-lg shadow-red-500/20"

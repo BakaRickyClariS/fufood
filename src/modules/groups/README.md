@@ -31,16 +31,28 @@
 ```
 groups/
 ├── api/
-│   ├── groupsApi.ts
+│   ├── groupsApi.ts          # API 呼叫 (使用 /refrigerators 端點)
+│   ├── queries.ts            # React Query hooks
 │   └── index.ts
 ├── mock/
 │   └── groupsMockData.ts
 ├── components/
 │   ├── modals/
+│   │   ├── HomeModal.tsx         # 群組首頁 Modal
+│   │   ├── MembersModal.tsx      # 成員列表 Modal
+│   │   ├── InviteFriendModal.tsx # 邀請好友 Modal
+│   │   ├── CreateGroupModal.tsx  # 建立群組 Modal
+│   │   ├── EditGroupModal.tsx    # 編輯群組 Modal
+│   │   └── SettingsModal.tsx     # 群組設定 Modal
 │   └── ui/
 ├── hooks/
-│   ├── useGroups.ts
-│   └── useGroupMembers.ts
+│   ├── useGroups.ts              # 群組 CRUD hook
+│   ├── useGroupMembers.ts        # 成員管理 hook
+│   └── useGroupModal.ts          # Modal 狀態 hook
+├── providers/
+│   └── GroupModalProvider.tsx    # 集中管理所有 Modal 狀態
+├── store/
+│   └── groupsSlice.ts            # Redux Toolkit slice
 ├── types/
 │   └── group.types.ts
 └── index.ts
@@ -72,6 +84,20 @@ export type Group = {
 export type CreateGroupForm = { name: string };
 export type UpdateGroupForm = { name?: string };
 export type InviteMemberForm = { email: string; role?: GroupMember['role'] };
+export type JoinGroupForm = { inviteCode: string };
+
+export interface Friend {
+  id: string;
+  name: string;
+  avatar: string;
+  lineId?: string;
+}
+
+export interface InviteCodeResponse {
+  code: string;
+  expiry: string;
+  qrUrl?: string;
+}
 ```
 
 ---
@@ -80,14 +106,20 @@ export type InviteMemberForm = { email: string; role?: GroupMember['role'] };
 
 ### 路由（對應 API_REFERENCE_V2 #10-#17）
 
-- `GET /api/v1/groups`：群組列表
-- `POST /api/v1/groups`：建立群組
-- `GET /api/v1/groups/{id}`：群組詳情
-- `PUT /api/v1/groups/{id}`：更新群組
-- `DELETE /api/v1/groups/{id}`：刪除群組
-- `POST /api/v1/groups/{id}/members`：加入/邀請成員（依 body 區分，例如帶邀請碼或 email）
-- `DELETE /api/v1/groups/{id}/members/{memberId}`：離開或移除成員
-- `PATCH /api/v1/groups/{id}/members/{memberId}`：更新成員權限
+> [!IMPORTANT]
+> 後端實際使用 `/refrigerators` 作為群組的路由前綴。
+
+- `GET /api/v1/refrigerators`：群組列表
+- `POST /api/v1/refrigerators`：建立群組
+- `GET /api/v1/refrigerators/{id}`：群組詳情
+- `PUT /api/v1/refrigerators/{id}`：更新群組
+- `DELETE /api/v1/refrigerators/{id}`：刪除群組
+- `GET /api/v1/refrigerators/{id}/members`：取得成員列表
+- `POST /api/v1/refrigerators/{id}/members`：加入/邀請成員（依 body 區分）
+- `DELETE /api/v1/refrigerators/{id}/members/{memberId}`：離開或移除成員
+- `PATCH /api/v1/refrigerators/{id}/members/{memberId}`：更新成員權限
+- `POST /api/v1/refrigerators/{id}/invite-code`：產生邀請碼 (NEW)
+- `POST /api/v1/refrigerators/{id}/invitations`：發送邀請通知 (NEW)
 
 ### GroupsApi 介面
 
@@ -98,9 +130,13 @@ export const groupsApi = {
   create: (data: CreateGroupForm) => Promise<Group>;
   update: (id: string, data: UpdateGroupForm) => Promise<Group>;
   delete: (id: string) => Promise<void>;
-  addOrInviteMember: (groupId: string, data: InviteMemberForm & { mode?: 'invite' | 'join' }) => Promise<void>;
+  join: (groupId: string, data: JoinGroupForm) => Promise<void>;
+  leave: (groupId: string, memberId: string) => Promise<void>;
+  inviteMember: (groupId: string, data: InviteMemberForm) => Promise<void>;
   removeMember: (groupId: string, memberId: string) => Promise<void>;
   updateMemberRole: (groupId: string, memberId: string, role: GroupMember['role']) => Promise<void>;
+  searchFriends: (query: string) => Promise<Friend[]>;
+  getInviteCode: (groupId: string) => Promise<InviteCodeResponse>;
 };
 ```
 

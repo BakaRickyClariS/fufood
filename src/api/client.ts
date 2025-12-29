@@ -15,7 +15,7 @@
  * const user = await backendApi.get('/api/v1/profile');
  */
 
-import { getAuthToken } from '../modules/auth/utils/authUtils';
+import { identity } from '@/shared/utils/identity';
 
 // API 類型定義
 type ApiType = 'ai' | 'backend';
@@ -64,8 +64,16 @@ class ApiClient {
       });
     }
 
-    // Get token (if available)
-    const token = getAuthToken();
+    // 使用統一的 identity 模組取得認證資訊
+    const token = identity.getAuthToken();
+    const userId = identity.getUserId();
+
+    // Debug: 僅在 AI API 且缺少必要資訊時警告
+    if (this.apiType === 'ai' && !userId) {
+      console.warn(
+        '[AI API] No user ID found, AI backend may reject this request',
+      );
+    }
 
     const config: RequestInit = {
       ...customConfig,
@@ -75,6 +83,8 @@ class ApiClient {
           ? {}
           : { 'Content-Type': 'application/json' }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        // 嘗試為所有 API 都帶上 X-User-Id (若有)，以防後端某些 middleware 需要
+        ...(userId ? { 'X-User-Id': userId } : {}),
         // 如果 body 是 FormData，不要合併自訂 headers 中的 Content-Type
         // 讓瀏覽器自動設定正確的 multipart/form-data boundary
         ...(headers && !(body instanceof FormData)
@@ -111,7 +121,10 @@ class ApiClient {
 
       return await response.json();
     } catch (error) {
-      console.error(`[${this.apiType.toUpperCase()} API] Request Failed:`, error);
+      console.error(
+        `[${this.apiType.toUpperCase()} API] Request Failed:`,
+        error,
+      );
       throw error;
     }
   }

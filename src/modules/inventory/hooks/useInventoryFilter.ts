@@ -47,7 +47,8 @@ export const useInventoryFilter = (items: FoodItem[]) => {
               case 'normal':
                 return (
                   expiry > threeDaysLater &&
-                  (!item.lowStockAlert || item.quantity > item.lowStockThreshold)
+                  (!item.lowStockAlert ||
+                    item.quantity > item.lowStockThreshold)
                 );
               default:
                 return true;
@@ -62,7 +63,9 @@ export const useInventoryFilter = (items: FoodItem[]) => {
     if (filters.attributes && filters.attributes.length > 0) {
       result = result.filter((item) => {
         if (!item.attributes) return false;
-        return filters.attributes!.some((attr) => item.attributes!.includes(attr));
+        return filters.attributes!.some((attr) =>
+          item.attributes!.includes(attr),
+        );
       });
     }
 

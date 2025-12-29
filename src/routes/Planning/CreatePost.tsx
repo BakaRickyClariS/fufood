@@ -13,6 +13,6 @@ import { PostFormFeature } from '@/modules/planning/components/features/CreatePo
 export { PostFormFeature as CreatePostFeature };
 
 const CreatePostRoute = () => {
-    return null; // Route is deprecated
+  return null; // Route is deprecated
 };
 export default CreatePostRoute;

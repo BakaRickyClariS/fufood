@@ -1,6 +1,9 @@
-**版本**: v2.3（參考 `src/modules/API_REFERENCE_V2.md`）  
-**最後更新**: 2025-12-13  
+**版本**: v2.4  
+**最後更新**: 2025-12-29  
 **涵蓋範圍**: Inventory（庫存管理）＋Foods（食材主檔）模組
+
+> [!TIP]
+> 完整的欄位對照與分類 ID 請參考 [前端串接整合指南](./frontend_integration_guide.md)。
 
 ---
 
@@ -14,9 +17,14 @@
 
 ### 1.2 Base URL
 
+### 1.2 Base URL
+
 ```
 /api/v1
 ```
+
+> **注意**: Inventory 相關路由主要基於 `/refrigerators/{refrigeratorId}/inventory`。
+
 
 ### 1.3 標準成功／錯誤狀態碼
 
@@ -163,13 +171,18 @@ type Food = {
 
 ### 2.7 FoodCategory（食材分類）
 
-- 蔬菜類
-- 調味料類
-- 主食類
-- 乳製品飲料
-- 水果
-- 肉類海鮮
-- 其他
+> [!IMPORTANT]
+> API 必須使用英文 Category ID，傳送中文會導致 `500 Foreign Key Error`。
+
+| Category ID | 預設中文標題 | 說明                   |
+| :---------- | :----------- | :--------------------- |
+| `fruit`     | 蔬果類       | 葉菜、根莖、水果、菇類 |
+| `frozen`    | 冷凍調理類   | 水餃、雞塊、冰品       |
+| `bake`      | 主食烘焙類   | 米、麵、麵包、堅果     |
+| `milk`      | 乳品飲料類   | 蛋、奶、起司、飲品     |
+| `seafood`   | 冷凍海鮮類   | 魚、蝦、貝類           |
+| `meat`      | 肉品類       | 豬/牛/雞肉、加工肉品   |
+| `others`    | 乾貨醬料類   | 醬料、油品、其他       |
 
 > `InventoryStatus` 支援：`normal` / `low-stock` / `expired` / `expiring-soon` / `frequent`。
 
@@ -180,7 +193,8 @@ type Food = {
 ### 3.1 取得庫存列表
 
 - **Method**: `GET`
-- **Path**: `/api/v1/inventory`
+- **Path**: `/api/v1/refrigerators/{refrigeratorId}/inventory`
+
 - **Query Params**: `groupId?`, `category?`, `status? (expired | expiring-soon | low-stock | frequent | normal)`, `include? (summary,stats)`, `page?`, `limit?`
 - **Success Response**:
   ```json
@@ -204,7 +218,8 @@ type Food = {
 ### 3.2 取得單筆食材
 
 - **Method**: `GET`
-- **Path**: `/api/v1/inventory/{id}`
+- **Path**: `/api/v1/refrigerators/{refrigeratorId}/inventory/{id}`
+
 - **Success Response**:
   ```json
   {
@@ -220,7 +235,8 @@ type Food = {
 ### 3.3 新增食材
 
 - **Method**: `POST`
-- **Path**: `/api/v1/inventory`
+- **Path**: `/api/v1/refrigerators/{refrigeratorId}/inventory`
+
 - **Request Body**: `AddFoodItemRequest` (`Omit<FoodItem, 'id' | 'createdAt' | 'updatedAt'>`)
 - **Success Response**:
   ```json
@@ -234,7 +250,8 @@ type Food = {
 ### 3.4 更新食材
 
 - **Method**: `PUT`
-- **Path**: `/api/v1/inventory/{id}`
+- **Path**: `/api/v1/refrigerators/{refrigeratorId}/inventory/{id}`
+
 - **Request Body**: `UpdateFoodItemRequest` (`Partial<Omit<FoodItem, 'id' | 'createdAt' | 'updatedAt'>>`)
 - **Success Response**:
   ```json
@@ -248,7 +265,8 @@ type Food = {
 ### 3.5 刪除食材
 
 - **Method**: `DELETE`
-- **Path**: `/api/v1/inventory/{id}`
+- **Path**: `/api/v1/refrigerators/{refrigeratorId}/inventory/{id}`
+
 - **Success Response**:
   ```json
   { "status": true, "message": "Deleted successfully" }
@@ -270,14 +288,16 @@ type Food = {
 
 - **Batch Delete**（可選）
   - **Method**: `DELETE`
-  - **Path**: `/api/v1/inventory/batch`
+  - **Path**: `/api/v1/refrigerators/{refrigeratorId}/inventory/batch`
+
   - **Request Body**: `BatchDeleteInventoryRequest` (`{ "ids": ["id1", "id2"] }`)
   - **Success Response**: `{ "status": true, "message": "Deleted successfully" }`
 
 ### 3.7 取得庫存統計（含 include=stats）
 
 - **Method**: `GET`
-- **Path**: `/api/v1/inventory`
+- **Path**: `/api/v1/refrigerators/{refrigeratorId}/inventory`
+
 - **Query Params**: `groupId?`, `include=stats`, `limit?`（可設小值避免大量資料）
 - **Success Response**:
   ```json
@@ -298,7 +318,8 @@ type Food = {
 ### 3.8 取得分類列表
 
 - **Method**: `GET`
-- **Path**: `/api/v1/inventory/categories`
+- **Path**: `/api/v1/refrigerators/{refrigeratorId}/inventory/categories`
+
 - **Success Response**:
   ```json
   {
@@ -314,7 +335,8 @@ type Food = {
 ### 3.9 取得庫存摘要
 
 - **Method**: `GET`
-- **Path**: `/api/v1/inventory/summary`（或 `include=summary` 隨列表取得）
+- **Path**: `/api/v1/refrigerators/{refrigeratorId}/inventory/summary`（或 `include=summary` 隨列表取得）
+
 - **Success Response**:
   ```json
   {
@@ -330,7 +352,8 @@ type Food = {
 ### 3.10 過期/常用清單（以 status 篩選）
 
 - **Method**: `GET`
-- **Path**: `/api/v1/inventory`
+- **Path**: `/api/v1/refrigerators/{refrigeratorId}/inventory`
+
 - **Query Params**:
   - 過期：`status=expired`，`page?`, `limit?`
   - 常用：`status=frequent`，`limit?`
@@ -350,7 +373,7 @@ type Food = {
 
 - ### 3.11 庫存設定
 
-- **GET** `/api/v1/inventory/settings`: 取得設定
+- **GET** `/api/v1/refrigerators/{refrigeratorId}/inventory/settings`: 取得設定
   - **Success Response**:
     ```json
     {
@@ -362,7 +385,8 @@ type Food = {
       }
     }
     ```
-- **PUT** `/api/v1/inventory/settings`: 更新設定
+- **PUT** `/api/v1/refrigerators/{refrigeratorId}/inventory/settings`: 更新設定
+
   - **Request Body**: `UpdateInventorySettingsRequest`
     ```typescript
     type UpdateInventorySettingsRequest = Partial<InventorySettings> & {
@@ -389,7 +413,8 @@ type Food = {
 消耗指定庫存食材，扣減數量並記錄消耗原因。
 
 - **Method**: `POST`
-- **Path**: `/api/v1/inventory/{id}/consume`
+- **Path**: `/api/v1/refrigerators/{refrigeratorId}/inventory/{id}/consume`
+
 - **Request Body**:
   ```json
   {
@@ -529,3 +554,11 @@ type Food = {
   ```json
   { "status": true, "message": "Deleted successfully" }
   ```
+
+---
+
+## 5. 相關文件
+
+- [前端串接整合指南](./frontend_integration_guide.md) ⭐ **必讀**
+- [庫存設定 API 規格](./inventory_settings_api_spec.md)
+- [完整入庫 API 規格](./food_intake_api_spec.md)

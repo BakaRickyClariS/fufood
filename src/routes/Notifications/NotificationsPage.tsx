@@ -294,16 +294,18 @@ const NotificationsPage = () => {
       */}
       {openRecipeId && recipeData && (
         <RecipeDetailModal
-          recipe={{
-            id: recipeData.id,
-            name: recipeData.name,
-            imageUrl: recipeData.imageUrl,
-            category: recipeData.category,
-            cookTime: recipeData.cookTime,
-            servings: recipeData.servings,
-            difficulty: recipeData.difficulty, // Ensure Recipe['difficulty'] and RecipeListItem['difficulty'] are compatible
-            isFavorite: recipeData.isFavorite,
-          } as RecipeListItem}
+          recipe={
+            {
+              id: recipeData.id,
+              name: recipeData.name,
+              imageUrl: recipeData.imageUrl,
+              category: recipeData.category,
+              cookTime: recipeData.cookTime,
+              servings: recipeData.servings,
+              difficulty: recipeData.difficulty, // Ensure Recipe['difficulty'] and RecipeListItem['difficulty'] are compatible
+              isFavorite: recipeData.isFavorite,
+            } as RecipeListItem
+          }
           isOpen={true}
           onClose={() => setOpenRecipeId(null)}
         />

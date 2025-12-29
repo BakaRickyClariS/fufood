@@ -1,4 +1,4 @@
-import { backendApi } from '@/api/client';
+import { aiApi } from '@/api/client';
 import type {
   FoodItem,
   GetInventoryRequest,
@@ -22,24 +22,52 @@ export const createInventoryApi = (): InventoryApi => {
     /**
      * 取得庫存列表
      */
+    /**
+     * 取得庫存列表
+     */
     getInventory: async (
       params?: GetInventoryRequest,
     ): Promise<GetInventoryResponse> => {
-      return backendApi.get<GetInventoryResponse>('/inventory', params);
+      const refrigeratorId = params?.groupId;
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for getInventory');
+      }
+      return aiApi.get<GetInventoryResponse>(
+        `/refrigerators/${refrigeratorId}/inventory`,
+        params,
+      );
     },
 
     /**
      * 取得單一食材
      */
-    getItem: async (id: string): Promise<ApiSuccess<{ item: FoodItem }>> => {
-      return backendApi.get<ApiSuccess<{ item: FoodItem }>>(`/inventory/${id}`);
+    getItem: async (
+      id: string,
+      refrigeratorId?: string,
+    ): Promise<ApiSuccess<{ item: FoodItem }>> => {
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for getItem');
+      }
+      return aiApi.get<ApiSuccess<{ item: FoodItem }>>(
+        `/refrigerators/${refrigeratorId}/inventory/${id}`,
+      );
     },
 
     /**
      * 新增食材
      */
-    addItem: async (data: AddFoodItemRequest): Promise<AddFoodItemResponse> => {
-      return backendApi.post<AddFoodItemResponse>('/inventory', data);
+    addItem: async (
+      data: AddFoodItemRequest,
+      refrigeratorId?: string,
+    ): Promise<AddFoodItemResponse> => {
+      const targetId = refrigeratorId || data.groupId;
+      if (!targetId) {
+        throw new Error('Refrigerator ID is required for addItem');
+      }
+      return aiApi.post<AddFoodItemResponse>(
+        `/refrigerators/${targetId}/inventory`,
+        data,
+      );
     },
 
     /**
@@ -48,15 +76,30 @@ export const createInventoryApi = (): InventoryApi => {
     updateItem: async (
       id: string,
       data: UpdateFoodItemRequest,
+      refrigeratorId?: string,
     ): Promise<UpdateFoodItemResponse> => {
-      return backendApi.put<UpdateFoodItemResponse>(`/inventory/${id}`, data);
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for updateItem');
+      }
+      return aiApi.put<UpdateFoodItemResponse>(
+        `/refrigerators/${refrigeratorId}/inventory/${id}`,
+        data,
+      );
     },
 
     /**
      * 刪除食材
      */
-    deleteItem: async (id: string): Promise<DeleteFoodItemResponse> => {
-      return backendApi.delete<DeleteFoodItemResponse>(`/inventory/${id}`);
+    deleteItem: async (
+      id: string,
+      refrigeratorId?: string,
+    ): Promise<DeleteFoodItemResponse> => {
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for deleteItem');
+      }
+      return aiApi.delete<DeleteFoodItemResponse>(
+        `/refrigerators/${refrigeratorId}/inventory/${id}`,
+      );
     },
 
     /**
@@ -64,9 +107,13 @@ export const createInventoryApi = (): InventoryApi => {
      */
     batchDelete: async (
       data: BatchDeleteInventoryRequest,
+      refrigeratorId?: string,
     ): Promise<ApiSuccess<Record<string, never>>> => {
-      return backendApi.delete<ApiSuccess<Record<string, never>>>(
-        '/inventory/batch',
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for batchDelete');
+      }
+      return aiApi.delete<ApiSuccess<Record<string, never>>>(
+        `/refrigerators/${refrigeratorId}/inventory/batch`,
         {
           body: data,
         },
@@ -76,24 +123,45 @@ export const createInventoryApi = (): InventoryApi => {
     /**
      * 庫存概要（可選）
      */
-    getSummary: async (): Promise<InventorySummaryResponse> => {
-      return backendApi.get<InventorySummaryResponse>('/inventory/summary');
+    getSummary: async (
+      refrigeratorId?: string,
+    ): Promise<InventorySummaryResponse> => {
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for getSummary');
+      }
+      return aiApi.get<InventorySummaryResponse>(
+        `/refrigerators/${refrigeratorId}/inventory/summary`,
+      );
     },
 
     /**
      * 類別列表
      */
-    getCategories: async (): Promise<InventoryCategoriesResponse> => {
-      return backendApi.get<InventoryCategoriesResponse>(
-        '/inventory/categories',
+    getCategories: async (
+      refrigeratorId?: string,
+    ): Promise<InventoryCategoriesResponse> => {
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for getCategories');
+      }
+      return aiApi.get<InventoryCategoriesResponse>(
+        `/refrigerators/${refrigeratorId}/inventory/categories`,
       );
     },
 
     /**
      * 庫存設定
      */
-    getSettings: async (): Promise<InventorySettingsResponse> => {
-      return backendApi.get<InventorySettingsResponse>('/inventory/settings');
+    getSettings: async (
+      refrigeratorId?: string,
+    ): Promise<InventorySettingsResponse> => {
+      if (!refrigeratorId) {
+        // Fallback or Error? Doc says path is required.
+        // But SettingsPanel loads it from params.
+        throw new Error('Refrigerator ID is required for getSettings');
+      }
+      return aiApi.get<InventorySettingsResponse>(
+        `/refrigerators/${refrigeratorId}/inventory/settings`,
+      );
     },
 
     /**
@@ -101,9 +169,13 @@ export const createInventoryApi = (): InventoryApi => {
      */
     updateSettings: async (
       data: UpdateInventorySettingsRequest,
+      refrigeratorId?: string,
     ): Promise<InventorySettingsResponse> => {
-      return backendApi.put<InventorySettingsResponse>(
-        '/inventory/settings',
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for updateSettings');
+      }
+      return aiApi.put<InventorySettingsResponse>(
+        `/refrigerators/${refrigeratorId}/inventory/settings`,
         data,
       );
     },
@@ -114,10 +186,15 @@ export const createInventoryApi = (): InventoryApi => {
     consumeItem: async (
       id: string,
       data: { quantity: number; reasons: string[]; customReason?: string },
+      refrigeratorId?: string,
     ): Promise<ApiSuccess<{ id: string; remainingQuantity: number }>> => {
-      return backendApi.post<
-        ApiSuccess<{ id: string; remainingQuantity: number }>
-      >(`/inventory/${id}/consume`, data);
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for consumeItem');
+      }
+      return aiApi.post<ApiSuccess<{ id: string; remainingQuantity: number }>>(
+        `/refrigerators/${refrigeratorId}/inventory/${id}/consume`,
+        data,
+      );
     },
   };
 };

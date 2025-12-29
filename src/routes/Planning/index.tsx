@@ -3,7 +3,7 @@ import PlanningHome from './PlanningHome';
 import CreateSharedList from './CreateSharedList';
 import SharedListDetail from './SharedListDetail';
 import CreatePost from './CreatePost';
-import AIQueryPage from './AIQueryPage';
+
 import { RecipeList } from '@/modules/recipe/components/features/RecipeList';
 import { FavoriteRecipes } from '@/modules/recipe/components/features/FavoriteRecipes';
 
@@ -31,7 +31,6 @@ const PlanningRoutes = [
       // 食譜相關
       { path: 'recipes', element: <RecipeList /> },
       { path: 'recipes/favorites', element: <FavoriteRecipes /> },
-      { path: 'recipes/ai-query', element: <AIQueryPage /> },
     ],
   },
 ];

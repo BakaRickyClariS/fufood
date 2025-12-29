@@ -1,4 +1,4 @@
-import type { ScanResult } from '../../types/scanResult';
+import type { ScanResult, MultipleScanResult } from '../../types/scanResult';
 import type {
   FoodItemInput,
   FoodItemResponse,
@@ -11,6 +11,14 @@ export type FoodScanApi = {
    * 辨識圖片中的食材
    */
   recognizeImage: (imageUrl: string) => Promise<ScanResult>;
+
+  /**
+   * 辨識圖片中的多個食材
+   */
+  recognizeMultipleImages: (
+    file: File,
+    options?: { cropImages?: boolean; maxIngredients?: number },
+  ) => Promise<MultipleScanResult>;
 
   /**
    * 提交食材項目到倉庫

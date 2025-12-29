@@ -43,21 +43,47 @@ LINE OAuth: /oauth/line
 
 ### 2.1 User
 
+### 2.1 User & Preferences
+
 ```typescript
 type MembershipTier = 'free' | 'premium' | 'vip';
+type CookingFrequency = '1-2' | '3-4' | '5-7' | 'daily';
+type PrepTime = 'under15' | '15-30' | 'over30';
+type SeasoningLevel = 'light' | 'moderate' | 'spicy' | 'rich';
+
+type DietaryRestriction = 
+  | 'none'
+  | 'vegan'
+  | 'vegetarian'
+  | 'omnivore'
+  | 'seafood-allergy'
+  | 'gluten-allergy'
+  | 'dairy-egg-allergy'
+  | 'nut-allergy';
+
+type DietaryPreference = {
+  cookingFrequency: CookingFrequency;
+  prepTime: PrepTime;
+  seasoningLevel: SeasoningLevel;
+  restrictions: DietaryRestriction[];
+};
 
 type User = {
   id: string;
-  email?: string;           // LINE 登入可能無 email
+  email?: string;
   name?: string;
   avatar: string;
+  phone?: string;
+  gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
   createdAt: Date;
-  // LINE 專屬欄位
+  updatedAt: Date;
+  // LINE 專屬
   lineId?: string;
   displayName?: string;
-  pictureUrl?: string;      // LINE 頭貼 URL
-  // 會員等級
+  pictureUrl?: string;
+  // 會員資料
   membershipTier?: MembershipTier;
+  dietaryPreference?: DietaryPreference;
 };
 ```
 
@@ -79,6 +105,11 @@ type ProfileData = {
   lineId: string;
   name: string;
   profilePictureUrl: string;
+  phone?: string;
+  gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
+  dietaryPreference?: DietaryPreference;
+  createdAt: string;
+  updatedAt: string;
 };
 
 type ProfileResponse = {

@@ -78,16 +78,17 @@ export type InventorySettings = {
   notifyOnLowStock: boolean;
   layoutType?: 'layout-a' | 'layout-b' | 'layout-c';
   categoryOrder?: string[]; // 儲存類別 ID 的順序陣列
+  categories?: CategorySettingItem[]; // 類別詳細設定
 };
 
-export type UpdateInventorySettingsRequest = Partial<InventorySettings> & {
-  categories?: EditableCategoryInfo[]; // 可更新類別名稱與順序
-};
+export type UpdateInventorySettingsRequest = Partial<InventorySettings>;
 
-// 可編輯的類別資訊
-export type EditableCategoryInfo = {
+// 類別設定項目
+export type CategorySettingItem = {
   id: string;
   title: string;
+  isVisible: boolean;
+  subCategories?: string[];
 };
 
 export type InventorySummary = {

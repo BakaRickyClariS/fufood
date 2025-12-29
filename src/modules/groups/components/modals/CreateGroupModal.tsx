@@ -11,7 +11,6 @@ import { Input } from '@/shared/components/ui/input';
 import { ChevronLeft, Check } from 'lucide-react';
 import { useGroupModal } from '../../hooks/useGroupModal';
 
-
 // Check available images in source
 import joImg from '@/assets/images/group/jo.png';
 import koImg from '@/assets/images/group/ko.png';
@@ -37,9 +36,11 @@ export const CreateGroupModal: FC<CreateGroupModalProps> = ({
   onClose,
   onBack,
 }) => {
-  const { createGroup, isGroupsLoading: isLoading } = useGroupModal();
-
-
+  const {
+    createGroup,
+    switchGroup,
+    isGroupsLoading: isLoading,
+  } = useGroupModal();
 
   const [name, setName] = useState('');
   const [selectedImage, setSelectedImage] = useState(
@@ -50,21 +51,46 @@ export const CreateGroupModal: FC<CreateGroupModalProps> = ({
     e.preventDefault();
     if (!name.trim()) return;
 
-    await createGroup({
-      name,
-    });
+    try {
+      const newGroup = await createGroup({
+        name,
+        colour: 'blue', // 預設顏色
+      });
 
-    // Reset form
-    setName('');
-    setSelectedImage(AVAILABLE_GROUP_IMAGES[0].src);
-    onClose();
+      console.log('✅ 群組建立結果:', newGroup);
+
+      if (newGroup && newGroup.id) {
+        // 切換到新群組
+        switchGroup(newGroup.id);
+        // 重置表單
+        setName('');
+        setSelectedImage(AVAILABLE_GROUP_IMAGES[0].src);
+        // 返回群組設定頁（使用 onBack 而非 onClose）
+        if (onBack) {
+          onBack();
+        } else {
+          onClose();
+        }
+        return;
+      }
+      // 如果 API 成功但沒有回傳 id，也返回設定頁
+      console.warn('⚠️ 群組建立成功但未取得 id');
+      if (onBack) {
+        onBack();
+      } else {
+        onClose();
+      }
+    } catch (error) {
+      console.error('❌ 群組建立失敗:', error);
+      // API 失敗時不關閉 Modal，保留使用者輸入
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-none w-full h-full p-0 rounded-none border-0 sm:rounded-none !fixed !left-0 !top-0 !translate-x-0 !translate-y-0 !duration-300 data-[state=open]:!slide-in-from-left-full data-[state=closed]:!slide-out-to-left-full data-[state=closed]:!zoom-out-100 data-[state=open]:!zoom-in-100 data-[state=closed]:!slide-out-to-top-0 data-[state=open]:!slide-in-from-top-0">
+      <DialogContent className="max-w-none w-full h-full p-0 rounded-none border-0 sm:rounded-none fixed! left-0! top-0! translate-x-0! translate-y-0! duration-300! data-[state=open]:slide-in-from-left-full! data-[state=closed]:slide-out-to-left-full! data-[state=closed]:zoom-out-100! data-[state=open]:zoom-in-100! data-[state=closed]:slide-out-to-top-0! data-[state=open]:slide-in-from-top-0!">
         <div className="flex flex-col h-full bg-stone-50">
-          <DialogHeader className="flex-shrink-0 px-4 py-3 bg-white border-b border-stone-100 flex flex-row items-center justify-center relative">
+          <DialogHeader className="shrink-0 px-4 py-3 bg-white border-b border-stone-100 flex flex-row items-center justify-center relative">
             {onBack && (
               <button
                 onClick={onBack}

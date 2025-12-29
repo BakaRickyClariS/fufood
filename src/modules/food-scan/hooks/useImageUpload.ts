@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { foodScanApi } from '../services';
-import { mediaApi } from '@/modules/media/api/mediaApi';
-import type { ScanResult } from '../types';
+import type { ScanResult, MultipleScanResult } from '../types';
 
 type UseImageUploadProps = {
   onUploadSuccess?: (blob: Blob) => Promise<void>;
@@ -10,56 +9,73 @@ type UseImageUploadProps = {
 
 export const useImageUpload = (props?: UseImageUploadProps) => {
   const { onUploadSuccess } = props || {};
-  
-  // 保留細粒度的狀態追蹤，但主要邏輯交給 React Query
-  const [stage, setStage] = useState<'idle' | 'uploading' | 'analyzing'>('idle');
 
-  const mutation = useMutation<ScanResult, Error, string>({
+  // 保留細粒度的狀態追蹤，但主要邏輯交給 React Query
+  const [stage, setStage] = useState<'idle' | 'uploading' | 'analyzing'>(
+    'idle',
+  );
+
+  const mutation = useMutation<ScanResult | MultipleScanResult, Error, string>({
     mutationFn: async (img: string) => {
       if (!img) throw new Error('No image provided');
 
       try {
         setStage('uploading');
-        
+
         // 1. 轉換圖片
         const response = await fetch(img);
         const blob = await response.blob();
 
-        // 2. 上傳至後端
-        const optimizedUrl = await mediaApi.uploadImage(blob);
+        // 將 Blob 轉換為 File 物件，以便傳遞給多重辨識 API
+        const file = new File([blob], 'captured_image.jpg', {
+          type: 'image/jpeg',
+        });
+
+        // 2. 上傳至後端 (用於單一辨識，如果是多重辨識，API 會自己處理上傳?)
+        // 根據 API 設計：
+        // 單一辨識: uploadImage(blob) -> url -> recognizeImage(url)
+        // 多重辨識: recognizeMultipleImages(file) -> 內部上傳並辨識
+
+        // 為了相容性與正確流程，我們這裡做一個判斷
+        // 但為了簡化遷移，我們可以讓 useImageUpload 支援參數來決定模式
+        // 目前我們先保留舊流程，但如果使用 recognizeMultipleImages，則直接傳 file
+
+        // 暫時採用: 總是使用多重辨識 API (因為它也支援單一結果且功能更強)
+        // 但要注意 backward compatibility.
+        // 為了保險，我們先用新的 API
+
+        setStage('analyzing');
+        // New Workflow: Use recognizeMultipleImages directly with File
+        const result = await foodScanApi.recognizeMultipleImages(file);
 
         if (onUploadSuccess) {
           await onUploadSuccess(blob);
         }
 
-        // 3. AI 分析
-        setStage('analyzing');
-        const result = await foodScanApi.recognizeImage(optimizedUrl);
-        
         return result;
       } catch (error) {
-        // 確保錯誤時重置狀態 (雖 useMutation 會處理 isError，但 local stage 需重置)
-        setStage('idle'); 
+        // 確保錯誤時重置狀態
+        setStage('idle');
         throw error;
       }
     },
     onSettled: () => {
-       // 完成後 (成功或失敗) 重置 stage，或者保留在 success 狀態視需求而定
-       // 這裡若設為 idle，會導致 UI 在拿到資料後立刻不再顯示 loading
-       // 由於 mutation.isPending 會變 false，外部會以此為主
-       setStage('idle');
-    }
+      setStage('idle');
+    },
   });
 
   return {
-    // 相容舊介面
     isUploading: mutation.isPending && stage === 'uploading',
     isAnalyzing: mutation.isPending && stage === 'analyzing',
-    // 也可以直接暴露 isPending 讓外部決定
     isLoading: mutation.isPending,
-    
+
     uploadImage: mutation.mutateAsync,
-    error: mutation.error ? (mutation.error instanceof Error ? mutation.error.message : '發生未知錯誤') : null,
+    error: mutation.error
+      ? mutation.error instanceof Error
+        ? mutation.error.message
+        : '發生未知錯誤'
+      : null,
     reset: mutation.reset,
+    data: mutation.data, // Expose data
   };
 };

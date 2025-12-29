@@ -285,7 +285,8 @@ export const MOCK_RECIPES: Recipe[] = [
     id: 'recipe-006',
     name: '番茄炒蛋',
     category: '中式料理',
-    imageUrl: 'https://images.unsplash.com/photo-1482049016530-d79f5b5a7f8b?w=400&h=400&fit=crop',
+    imageUrl:
+      'https://images.unsplash.com/photo-1482049016530-d79f5b5a7f8b?w=400&h=400&fit=crop',
     servings: 2,
     cookTime: 10,
     difficulty: '簡單',
@@ -299,8 +300,16 @@ export const MOCK_RECIPES: Recipe[] = [
     ],
     steps: [
       { stepNumber: 1, description: '番茄切塊，蔥切段，雞蛋打散備用。' },
-      { stepNumber: 2, description: '熱鍋下油，倒入蛋液炒至半熟撈起。', time: '1分鐘' },
-      { stepNumber: 3, description: '同鍋爆香蔥白，加入番茄翻炒至軟。', time: '3分鐘' },
+      {
+        stepNumber: 2,
+        description: '熱鍋下油，倒入蛋液炒至半熟撈起。',
+        time: '1分鐘',
+      },
+      {
+        stepNumber: 3,
+        description: '同鍋爆香蔥白，加入番茄翻炒至軟。',
+        time: '3分鐘',
+      },
       { stepNumber: 4, description: '加入炒好的蛋，調味後拌勻即可。' },
     ],
     isFavorite: false,
@@ -310,7 +319,8 @@ export const MOCK_RECIPES: Recipe[] = [
     id: 'recipe-007',
     name: '蔥爆豬肉片',
     category: '中式料理',
-    imageUrl: 'https://images.unsplash.com/photo-1432139509613-5c4255815697?w=400&h=400&fit=crop',
+    imageUrl:
+      'https://images.unsplash.com/photo-1432139509613-5c4255815697?w=400&h=400&fit=crop',
     servings: 3,
     cookTime: 15,
     difficulty: '簡單',
@@ -324,10 +334,18 @@ export const MOCK_RECIPES: Recipe[] = [
       { name: '太白粉', quantity: '1茶匙', category: '調味料' },
     ],
     steps: [
-      { stepNumber: 1, description: '豬肉片加醬油、米酒、太白粉醃製10分鐘。', time: '10分鐘' },
+      {
+        stepNumber: 1,
+        description: '豬肉片加醬油、米酒、太白粉醃製10分鐘。',
+        time: '10分鐘',
+      },
       { stepNumber: 2, description: '蔥切段（蔥白蔥綠分開），蒜頭切片。' },
       { stepNumber: 3, description: '熱鍋下油，爆香蒜片和蔥白。' },
-      { stepNumber: 4, description: '加入肉片快炒至變色，加入蔥綠翻炒即可。', time: '3分鐘' },
+      {
+        stepNumber: 4,
+        description: '加入肉片快炒至變色，加入蔥綠翻炒即可。',
+        time: '3分鐘',
+      },
     ],
     isFavorite: false,
     createdAt: '2025-01-07T00:00:00Z',
@@ -336,7 +354,8 @@ export const MOCK_RECIPES: Recipe[] = [
     id: 'recipe-008',
     name: '三杯雞',
     category: '中式料理',
-    imageUrl: 'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400&h=400&fit=crop',
+    imageUrl:
+      'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400&h=400&fit=crop',
     servings: 4,
     cookTime: 30,
     difficulty: '中等',
@@ -353,9 +372,21 @@ export const MOCK_RECIPES: Recipe[] = [
     ],
     steps: [
       { stepNumber: 1, description: '雞腿肉切塊，薑切片，蒜頭拍扁。' },
-      { stepNumber: 2, description: '冷鍋倒入麻油，小火爆香薑片至邊緣微捲。', time: '3分鐘' },
-      { stepNumber: 3, description: '加入雞肉煎至表面金黃，加入蒜頭、辣椒。', time: '5分鐘' },
-      { stepNumber: 4, description: '加入醬油、米酒、冰糖，蓋鍋燜煮。', time: '15分鐘' },
+      {
+        stepNumber: 2,
+        description: '冷鍋倒入麻油，小火爆香薑片至邊緣微捲。',
+        time: '3分鐘',
+      },
+      {
+        stepNumber: 3,
+        description: '加入雞肉煎至表面金黃，加入蒜頭、辣椒。',
+        time: '5分鐘',
+      },
+      {
+        stepNumber: 4,
+        description: '加入醬油、米酒、冰糖，蓋鍋燜煮。',
+        time: '15分鐘',
+      },
       { stepNumber: 5, description: '收汁後加入九層塔拌勻即可。' },
     ],
     isFavorite: true,
@@ -365,7 +396,8 @@ export const MOCK_RECIPES: Recipe[] = [
     id: 'recipe-009',
     name: '紅燒牛腩',
     category: '中式料理',
-    imageUrl: 'https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=400&h=400&fit=crop',
+    imageUrl:
+      'https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=400&h=400&fit=crop',
     servings: 4,
     cookTime: 90,
     difficulty: '困難',
@@ -381,11 +413,27 @@ export const MOCK_RECIPES: Recipe[] = [
       { name: '冰糖', quantity: '2大匙', category: '調味料' },
     ],
     steps: [
-      { stepNumber: 1, description: '牛腩切塊，汆燙去血水後撈起。', time: '5分鐘' },
-      { stepNumber: 2, description: '熱鍋爆香薑片、蔥段，加入牛腩煎至表面微焦。', time: '5分鐘' },
+      {
+        stepNumber: 1,
+        description: '牛腩切塊，汆燙去血水後撈起。',
+        time: '5分鐘',
+      },
+      {
+        stepNumber: 2,
+        description: '熱鍋爆香薑片、蔥段，加入牛腩煎至表面微焦。',
+        time: '5分鐘',
+      },
       { stepNumber: 3, description: '加入醬油、米酒、冰糖、八角炒勻。' },
-      { stepNumber: 4, description: '加水蓋過食材，大火煮滾後轉小火燉煮1小時。', time: '60分鐘' },
-      { stepNumber: 5, description: '加入紅蘿蔔、洋蔥續煮20分鐘即可。', time: '20分鐘' },
+      {
+        stepNumber: 4,
+        description: '加水蓋過食材，大火煮滾後轉小火燉煮1小時。',
+        time: '60分鐘',
+      },
+      {
+        stepNumber: 5,
+        description: '加入紅蘿蔔、洋蔥續煮20分鐘即可。',
+        time: '20分鐘',
+      },
     ],
     isFavorite: false,
     createdAt: '2025-01-09T00:00:00Z',
@@ -394,7 +442,8 @@ export const MOCK_RECIPES: Recipe[] = [
     id: 'recipe-010',
     name: '蒜蓉蝦',
     category: '中式料理',
-    imageUrl: 'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=400&h=400&fit=crop',
+    imageUrl:
+      'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=400&h=400&fit=crop',
     servings: 2,
     cookTime: 15,
     difficulty: '簡單',
@@ -409,8 +458,16 @@ export const MOCK_RECIPES: Recipe[] = [
     ],
     steps: [
       { stepNumber: 1, description: '鮮蝦去腸泥，蒜頭切末，蔥切花。' },
-      { stepNumber: 2, description: '熱鍋下油，放入蒜末小火爆香至金黃。', time: '2分鐘' },
-      { stepNumber: 3, description: '加入鮮蝦翻炒至變色，淋上米酒。', time: '3分鐘' },
+      {
+        stepNumber: 2,
+        description: '熱鍋下油，放入蒜末小火爆香至金黃。',
+        time: '2分鐘',
+      },
+      {
+        stepNumber: 3,
+        description: '加入鮮蝦翻炒至變色，淋上米酒。',
+        time: '3分鐘',
+      },
       { stepNumber: 4, description: '調味後撒上蔥花即可。' },
     ],
     isFavorite: false,
@@ -421,7 +478,8 @@ export const MOCK_RECIPES: Recipe[] = [
     id: 'recipe-011',
     name: '蒜炒青江菜',
     category: '中式料理',
-    imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=400&fit=crop',
+    imageUrl:
+      'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=400&fit=crop',
     servings: 2,
     cookTime: 8,
     difficulty: '簡單',
@@ -434,8 +492,16 @@ export const MOCK_RECIPES: Recipe[] = [
     ],
     steps: [
       { stepNumber: 1, description: '青江菜洗淨切段，蒜頭切片，辣椒切圈。' },
-      { stepNumber: 2, description: '熱鍋下油，爆香蒜片和辣椒。', time: '1分鐘' },
-      { stepNumber: 3, description: '加入青江菜大火快炒，加鹽調味即可。', time: '2分鐘' },
+      {
+        stepNumber: 2,
+        description: '熱鍋下油，爆香蒜片和辣椒。',
+        time: '1分鐘',
+      },
+      {
+        stepNumber: 3,
+        description: '加入青江菜大火快炒，加鹽調味即可。',
+        time: '2分鐘',
+      },
     ],
     isFavorite: false,
     createdAt: '2025-01-11T00:00:00Z',
@@ -444,7 +510,8 @@ export const MOCK_RECIPES: Recipe[] = [
     id: 'recipe-012',
     name: '青江菜肉絲',
     category: '中式料理',
-    imageUrl: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&h=400&fit=crop',
+    imageUrl:
+      'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&h=400&fit=crop',
     servings: 3,
     cookTime: 15,
     difficulty: '簡單',
@@ -459,10 +526,22 @@ export const MOCK_RECIPES: Recipe[] = [
       { name: '鹽', quantity: '適量', category: '調味料' },
     ],
     steps: [
-      { stepNumber: 1, description: '豬肉絲加醬油、米酒、太白粉醃製10分鐘。', time: '10分鐘' },
+      {
+        stepNumber: 1,
+        description: '豬肉絲加醬油、米酒、太白粉醃製10分鐘。',
+        time: '10分鐘',
+      },
       { stepNumber: 2, description: '青江菜洗淨切段，蒜頭切片，薑切絲。' },
-      { stepNumber: 3, description: '熱鍋下油，爆香薑蒜，加入肉絲炒至變色。', time: '2分鐘' },
-      { stepNumber: 4, description: '加入青江菜快炒，調味後即可上桌。', time: '2分鐘' },
+      {
+        stepNumber: 3,
+        description: '熱鍋下油，爆香薑蒜，加入肉絲炒至變色。',
+        time: '2分鐘',
+      },
+      {
+        stepNumber: 4,
+        description: '加入青江菜快炒，調味後即可上桌。',
+        time: '2分鐘',
+      },
     ],
     isFavorite: false,
     createdAt: '2025-01-12T00:00:00Z',
@@ -471,7 +550,8 @@ export const MOCK_RECIPES: Recipe[] = [
     id: 'recipe-013',
     name: '香菇青江菜',
     category: '中式料理',
-    imageUrl: 'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?w=400&h=400&fit=crop',
+    imageUrl:
+      'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?w=400&h=400&fit=crop',
     servings: 2,
     cookTime: 12,
     difficulty: '簡單',
@@ -484,9 +564,20 @@ export const MOCK_RECIPES: Recipe[] = [
       { name: '油', quantity: '2大匙', category: '調味料' },
     ],
     steps: [
-      { stepNumber: 1, description: '香菇泡軟切片，青江菜洗淨對切，蒜頭切末。' },
-      { stepNumber: 2, description: '熱鍋下油，爆香蒜末，加入香菇炒香。', time: '2分鐘' },
-      { stepNumber: 3, description: '加入青江菜翻炒，淋上蠔油調味即可。', time: '3分鐘' },
+      {
+        stepNumber: 1,
+        description: '香菇泡軟切片，青江菜洗淨對切，蒜頭切末。',
+      },
+      {
+        stepNumber: 2,
+        description: '熱鍋下油，爆香蒜末，加入香菇炒香。',
+        time: '2分鐘',
+      },
+      {
+        stepNumber: 3,
+        description: '加入青江菜翻炒，淋上蠔油調味即可。',
+        time: '3分鐘',
+      },
     ],
     isFavorite: true,
     createdAt: '2025-01-13T00:00:00Z',
