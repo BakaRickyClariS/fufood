@@ -99,7 +99,14 @@ export const ScanResultPreview: React.FC<ScanResultPreviewProps> = ({
 
           <div className="space-y-1">
             <DetailRow label="產品分類" value={result.category} />
-            <DetailRow label="產品屬性" value={result.attributes} />
+            <DetailRow
+              label="產品屬性"
+              value={
+                Array.isArray(result.attributes)
+                  ? result.attributes.join('、')
+                  : result.attributes
+              }
+            />
             <DetailRow
               label="單位數量"
               value={`${result.purchaseQuantity} / ${result.unit}`}
