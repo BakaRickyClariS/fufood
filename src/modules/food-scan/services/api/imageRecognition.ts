@@ -190,7 +190,7 @@ export const createRealFoodScanApi = (): FoodScanApi => {
       quantity: data.purchaseQuantity, // purchaseQuantity → quantity
       unit: data.unit,
       purchaseDate: data.purchaseDate,
-      expiryDate: data.expiryDate,
+      expiryDate: data.expiryDate || undefined,
       lowStockAlert: data.lowStockAlert,
       lowStockThreshold: data.lowStockThreshold,
       notes: data.notes,
