@@ -2,19 +2,41 @@ import type {
   SharedList,
   SharedListItem,
   CreateSharedListInput,
+  CreateSharedListItemInput,
 } from '@/modules/planning/types/sharedList';
 import type {
   SharedListPost,
   CreatePostInput,
 } from '@/modules/planning/types/post';
-import { MockSharedListApi } from '../mock/mockSharedListApi';
 import { backendApi } from '@/api/client';
 
 export type SharedListApi = {
-  getSharedLists(year?: number, month?: number): Promise<SharedListItem[]>;
+  // Lists
+  getSharedLists(refrigeratorId: string): Promise<SharedList[]>;
   getSharedListById(id: string): Promise<SharedList>;
-  createSharedList(input: CreateSharedListInput): Promise<SharedList>;
+  createSharedList(
+    refrigeratorId: string,
+    input: CreateSharedListInput,
+  ): Promise<SharedList>;
+  updateSharedList(
+    id: string,
+    input: Partial<CreateSharedListInput>,
+  ): Promise<SharedList>;
   deleteSharedList(id: string): Promise<void>;
+
+  // Items
+  getSharedListItems(listId: string): Promise<SharedListItem[]>;
+  createSharedListItem(
+    listId: string,
+    input: CreateSharedListItemInput,
+  ): Promise<SharedListItem>;
+  updateSharedListItem(
+    itemId: string,
+    input: Partial<CreateSharedListItemInput>,
+  ): Promise<void>;
+  deleteSharedListItem(itemId: string): Promise<void>;
+
+  // Posts (Legacy/Existing)
   getPosts(listId: string): Promise<SharedListPost[]>;
   createPost(input: CreatePostInput): Promise<SharedListPost>;
   deletePost(postId: string, listId: string): Promise<void>;
@@ -27,38 +49,81 @@ export type SharedListApi = {
 
 // 真實 API 實作
 export class RealSharedListApi implements SharedListApi {
-  async getSharedLists(
-    year?: number,
-    month?: number,
-  ): Promise<SharedListItem[]> {
-    const params = new URLSearchParams();
-    if (year) params.append('year', year.toString());
-    if (month) params.append('month', month.toString());
-
-    // 如果有參數，附加到 URL
-    const queryString = params.toString() ? `?${params.toString()}` : '';
-    return backendApi.get<SharedListItem[]>(
-      `/api/v1/shopping-lists${queryString}`,
+  // List Operations
+  async getSharedLists(refrigeratorId: string): Promise<SharedList[]> {
+    const response = await backendApi.get<{ data: SharedList[] }>(
+      `/api/v1/refrigerators/${refrigeratorId}/shopping_lists`,
     );
+    return response.data || [];
   }
 
   async getSharedListById(id: string): Promise<SharedList> {
-    return backendApi.get<SharedList>(
-      `/api/v1/shopping-lists/${id}`,
+    const response = await backendApi.get<{ data: SharedList }>(
+      `/api/v1/shopping_lists/${id}`,
     );
+    return response.data;
   }
 
-  async createSharedList(input: CreateSharedListInput): Promise<SharedList> {
-    return backendApi.post<SharedList>(
-      '/api/v1/shopping-lists',
+  async createSharedList(
+    refrigeratorId: string,
+    input: CreateSharedListInput,
+  ): Promise<SharedList> {
+    const response = await backendApi.post<{ data: SharedList }>(
+      `/api/v1/refrigerators/${refrigeratorId}/shopping_lists`,
+      input,
+    );
+    return response.data;
+  }
+
+  async updateSharedList(
+    id: string,
+    input: Partial<CreateSharedListInput>,
+  ): Promise<SharedList> {
+    const response = await backendApi.put<{ data: SharedList }>(
+      `/api/v1/shopping_lists/${id}`,
+      input,
+    );
+    return response.data;
+  }
+
+  async deleteSharedList(id: string): Promise<void> {
+    return backendApi.delete<void>(`/api/v1/shopping_lists/${id}`);
+  }
+
+  // Item Operations
+  async getSharedListItems(listId: string): Promise<SharedListItem[]> {
+    const response = await backendApi.get<{ data: SharedListItem[] }>(
+      `/api/v1/shopping_lists/${listId}/items`,
+    );
+    return response.data || [];
+  }
+
+  async createSharedListItem(
+    listId: string,
+    input: CreateSharedListItemInput,
+  ): Promise<SharedListItem> {
+    const response = await backendApi.post<{ data: SharedListItem }>(
+      `/api/v1/shopping_lists/${listId}/items`,
+      input,
+    );
+    return response.data;
+  }
+
+  async updateSharedListItem(
+    itemId: string,
+    input: Partial<CreateSharedListItemInput>,
+  ): Promise<void> {
+    return backendApi.put<void>(
+      `/api/v1/shopping_list_items/${itemId}/`,
       input,
     );
   }
 
-  async deleteSharedList(id: string): Promise<void> {
-    return backendApi.delete<void>(`/api/v1/shopping-lists/${id}`);
+  async deleteSharedListItem(itemId: string): Promise<void> {
+    return backendApi.delete<void>(`/api/v1/shopping_list_items/${itemId}/`);
   }
 
+  // Post Operations
   async getPosts(listId: string): Promise<SharedListPost[]> {
     return backendApi.get<SharedListPost[]>(
       `/api/v1/shopping-lists/${listId}/posts`,
@@ -90,9 +155,7 @@ export class RealSharedListApi implements SharedListApi {
   }
 }
 
-// 根據環境變數決定使用 Mock 或 Real API
-const useMock = import.meta.env.VITE_USE_MOCK_API === 'true';
+// 暫時強制使用 Real API，或根據需要保留 Mock
+// const useMock = import.meta.env.VITE_USE_MOCK_API === 'true';
 
-export const sharedListApi: SharedListApi = useMock
-  ? new MockSharedListApi()
-  : new RealSharedListApi();
+export const sharedListApi: SharedListApi = new RealSharedListApi();

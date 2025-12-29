@@ -82,7 +82,9 @@ export const useToggleFavoriteMutation = () => {
     }) => recipeApi.toggleFavorite(id, shouldFavorite),
     onSuccess: (_, variables) => {
       // 使食譜詳情和收藏列表失效
-      queryClient.invalidateQueries({ queryKey: recipeKeys.detail(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: recipeKeys.detail(variables.id),
+      });
       queryClient.invalidateQueries({ queryKey: recipeKeys.favorites() });
       queryClient.invalidateQueries({ queryKey: recipeKeys.lists() });
     },
@@ -98,7 +100,9 @@ export const useCookRecipeMutation = () => {
   return useMutation({
     mutationFn: recipeApi.confirmCook,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: recipeKeys.detail(variables.recipeId) });
+      queryClient.invalidateQueries({
+        queryKey: recipeKeys.detail(variables.recipeId),
+      });
     },
   });
 };

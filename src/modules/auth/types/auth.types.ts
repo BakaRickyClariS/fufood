@@ -9,7 +9,7 @@ export type PrepTime = 'under15' | '15-30' | 'over30';
 
 export type SeasoningLevel = 'light' | 'moderate' | 'spicy' | 'rich';
 
-export type DietaryRestriction = 
+export type DietaryRestriction =
   | 'none'
   | 'vegan'
   | 'vegetarian'

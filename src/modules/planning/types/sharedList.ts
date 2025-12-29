@@ -1,30 +1,46 @@
 /** 清單狀態 */
-export type SharedListStatus = 'in-progress' | 'pending-purchase' | 'completed';
+export type SharedListStatus = 'in-progress' | 'completed';
 
 /** 共享清單 */
 export type SharedList = {
   id: string;
-  name: string;
-  coverImageUrl: string;
-  scheduledDate: string; // 預計採買日期 ISO String
-  status: SharedListStatus;
-  notifyEnabled: boolean;
+  title: string;
+  coverPhotoPath: string | null;
+  startsAt: string; // ISO String
+  refrigeratorId: string;
+  enableNotifications: boolean;
+  items?: SharedListItem[]; // 取得單一清單時才會有
   createdAt: string;
   updatedAt?: string;
-  groupId: string; // 所屬群組
+  // 前端計算欄位
+  status?: SharedListStatus;
 };
 
-/** 共享清單列表項目 */
-export type SharedListItem = Pick<
-  SharedList,
-  'id' | 'name' | 'coverImageUrl' | 'scheduledDate' | 'status'
->;
+/** 共享清單項目 (API) */
+export type SharedListItem = {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  photoPath: string | null;
+  creatorId: string;
+  shoppingListId: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
 /** 建立清單輸入 */
 export type CreateSharedListInput = {
+  title: string;
+  coverPhotoPath?: string;
+  startsAt: string;
+  enableNotifications?: boolean;
+};
+
+/** 建立/更新清單項目輸入 */
+export type CreateSharedListItemInput = {
   name: string;
-  coverImageUrl: string;
-  scheduledDate: string;
-  notifyEnabled: boolean;
-  groupId: string;
+  quantity?: number;
+  unit?: string;
+  photoPath?: string;
 };

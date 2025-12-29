@@ -43,7 +43,7 @@ const PLANS = [
 const Subscription = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   // Mock current tier if not present, assume 'free' for now as default
   const currentTier = user?.membershipTier || 'free';
 
@@ -52,10 +52,9 @@ const Subscription = () => {
       <ComponentHeader title="會員方案" onBack={() => navigate(-1)} />
 
       <div className="max-w-layout-container mx-auto px-4 py-6 space-y-4">
-        
         {PLANS.map((plan) => {
           const isCurrent = currentTier === plan.id;
-          
+
           return (
             <div
               key={plan.id}
@@ -72,12 +71,14 @@ const Subscription = () => {
               <div className="flex items-start gap-4">
                 {/* Left: Icon & Price */}
                 <div className="flex flex-col items-center justify-center w-28 shrink-0 mt-4">
-                  <img 
-                    src={plan.image} 
-                    alt={plan.name} 
+                  <img
+                    src={plan.image}
+                    alt={plan.name}
                     className="w-20 h-auto object-contain mb-3 drop-shadow-sm"
                   />
-                  <h3 className={`text-base font-bold ${plan.titleColor} text-center leading-tight mb-1`}>
+                  <h3
+                    className={`text-base font-bold ${plan.titleColor} text-center leading-tight mb-1`}
+                  >
                     {plan.name}
                   </h3>
                   <div className="text-lg font-medium text-neutral-700">
@@ -89,8 +90,13 @@ const Subscription = () => {
                 <div className="flex-1 py-1">
                   <ul className="space-y-1.5">
                     {plan.features.map((feature, idx) => (
-                      <li key={idx} className="text-sm text-neutral-600 flex items-start">
-                        <span className="mr-1.5 font-bold text-neutral-400">•</span>
+                      <li
+                        key={idx}
+                        className="text-sm text-neutral-600 flex items-start"
+                      >
+                        <span className="mr-1.5 font-bold text-neutral-400">
+                          •
+                        </span>
                         {feature}
                       </li>
                     ))}
@@ -102,13 +108,10 @@ const Subscription = () => {
         })}
 
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-sm border-t border-neutral-100 max-w-[430px] mx-auto w-full">
-           <Button 
-            className="w-full bg-[#F68072] hover:bg-[#E57366] text-white h-12 rounded-xl text-lg font-bold shadow-md"
-           >
-             變動方案
-           </Button>
+          <Button className="w-full bg-[#F68072] hover:bg-[#E57366] text-white h-12 rounded-xl text-lg font-bold shadow-md">
+            變動方案
+          </Button>
         </div>
-
       </div>
     </div>
   );

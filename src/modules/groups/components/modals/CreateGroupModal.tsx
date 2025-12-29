@@ -11,7 +11,6 @@ import { Input } from '@/shared/components/ui/input';
 import { ChevronLeft, Check } from 'lucide-react';
 import { useGroupModal } from '../../hooks/useGroupModal';
 
-
 // Check available images in source
 import joImg from '@/assets/images/group/jo.png';
 import koImg from '@/assets/images/group/ko.png';
@@ -37,7 +36,11 @@ export const CreateGroupModal: FC<CreateGroupModalProps> = ({
   onClose,
   onBack,
 }) => {
-  const { createGroup, switchGroup, isGroupsLoading: isLoading } = useGroupModal();
+  const {
+    createGroup,
+    switchGroup,
+    isGroupsLoading: isLoading,
+  } = useGroupModal();
 
   const [name, setName] = useState('');
   const [selectedImage, setSelectedImage] = useState(
@@ -51,7 +54,7 @@ export const CreateGroupModal: FC<CreateGroupModalProps> = ({
     try {
       const newGroup = await createGroup({
         name,
-        colour: 'blue',  // 預設顏色
+        colour: 'blue', // 預設顏色
       });
 
       console.log('✅ 群組建立結果:', newGroup);

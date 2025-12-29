@@ -191,9 +191,10 @@ export const createInventoryApi = (): InventoryApi => {
       if (!refrigeratorId) {
         throw new Error('Refrigerator ID is required for consumeItem');
       }
-      return aiApi.post<
-        ApiSuccess<{ id: string; remainingQuantity: number }>
-      >(`/refrigerators/${refrigeratorId}/inventory/${id}/consume`, data);
+      return aiApi.post<ApiSuccess<{ id: string; remainingQuantity: number }>>(
+        `/refrigerators/${refrigeratorId}/inventory/${id}/consume`,
+        data,
+      );
     },
   };
 };

@@ -1,5 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import type { Group, CreateGroupForm, UpdateGroupForm, Friend, InviteCodeResponse } from '../types/group.types';
+import type {
+  Group,
+  CreateGroupForm,
+  UpdateGroupForm,
+  Friend,
+  InviteCodeResponse,
+} from '../types/group.types';
 import { groupsApi, GroupsApiError } from '../api';
 
 // State definition
@@ -7,7 +13,7 @@ export interface GroupsState {
   items: Group[];
   isLoading: boolean;
   error: string | null;
-  // Optional: keep track of active group in Redux if desired, 
+  // Optional: keep track of active group in Redux if desired,
   // but for now we focus on the data sync issue.
   searchResults: Friend[];
   isSearching: boolean;
@@ -37,9 +43,11 @@ export const fetchGroups = createAsyncThunk(
       if (err instanceof GroupsApiError) {
         return rejectWithValue(err.message);
       }
-      return rejectWithValue((err as Error).message || 'Failed to fetch groups');
+      return rejectWithValue(
+        (err as Error).message || 'Failed to fetch groups',
+      );
     }
-  }
+  },
 );
 
 export const createGroup = createAsyncThunk(
@@ -51,23 +59,30 @@ export const createGroup = createAsyncThunk(
       if (err instanceof GroupsApiError) {
         return rejectWithValue(err.message);
       }
-      return rejectWithValue((err as Error).message || 'Failed to create group');
+      return rejectWithValue(
+        (err as Error).message || 'Failed to create group',
+      );
     }
-  }
+  },
 );
 
 export const updateGroup = createAsyncThunk(
   'groups/update',
-  async ({ id, data }: { id: string; data: UpdateGroupForm }, { rejectWithValue }) => {
+  async (
+    { id, data }: { id: string; data: UpdateGroupForm },
+    { rejectWithValue },
+  ) => {
     try {
       return await groupsApi.update(id, data);
     } catch (err) {
       if (err instanceof GroupsApiError) {
         return rejectWithValue(err.message);
       }
-      return rejectWithValue((err as Error).message || 'Failed to update group');
+      return rejectWithValue(
+        (err as Error).message || 'Failed to update group',
+      );
     }
-  }
+  },
 );
 
 export const deleteGroup = createAsyncThunk(
@@ -80,9 +95,11 @@ export const deleteGroup = createAsyncThunk(
       if (err instanceof GroupsApiError) {
         return rejectWithValue(err.message);
       }
-      return rejectWithValue((err as Error).message || 'Failed to delete group');
+      return rejectWithValue(
+        (err as Error).message || 'Failed to delete group',
+      );
     }
-  }
+  },
 );
 
 export const searchFriends = createAsyncThunk(
@@ -91,10 +108,12 @@ export const searchFriends = createAsyncThunk(
     try {
       return await groupsApi.searchFriends(query);
     } catch (err) {
-       if (err instanceof GroupsApiError) {
+      if (err instanceof GroupsApiError) {
         return rejectWithValue(err.message);
       }
-      return rejectWithValue((err as Error).message || 'Failed to search friends');
+      return rejectWithValue(
+        (err as Error).message || 'Failed to search friends',
+      );
     }
   },
 );
@@ -105,10 +124,12 @@ export const getInviteCode = createAsyncThunk(
     try {
       return await groupsApi.getInviteCode(groupId);
     } catch (err) {
-       if (err instanceof GroupsApiError) {
+      if (err instanceof GroupsApiError) {
         return rejectWithValue(err.message);
       }
-      return rejectWithValue((err as Error).message || 'Failed to get invite code');
+      return rejectWithValue(
+        (err as Error).message || 'Failed to get invite code',
+      );
     }
   },
 );
@@ -157,7 +178,7 @@ const groupsSlice = createSlice({
     });
     builder.addCase(updateGroup.fulfilled, (state, action) => {
       state.isLoading = false;
-      const index = state.items.findIndex(g => g.id === action.payload.id);
+      const index = state.items.findIndex((g) => g.id === action.payload.id);
       if (index !== -1) {
         state.items[index] = action.payload;
       }
@@ -174,7 +195,7 @@ const groupsSlice = createSlice({
     });
     builder.addCase(deleteGroup.fulfilled, (state, action) => {
       state.isLoading = false;
-      state.items = state.items.filter(g => g.id !== action.payload);
+      state.items = state.items.filter((g) => g.id !== action.payload);
     });
     builder.addCase(deleteGroup.rejected, (state, action) => {
       state.isLoading = false;
@@ -214,8 +235,11 @@ const groupsSlice = createSlice({
 export const { clearError } = groupsSlice.actions;
 
 // Selectors
-export const selectAllGroups = (state: { groups: GroupsState }) => state.groups.items;
-export const selectGroupsLoading = (state: { groups: GroupsState }) => state.groups.isLoading;
-export const selectGroupsError = (state: { groups: GroupsState }) => state.groups.error;
+export const selectAllGroups = (state: { groups: GroupsState }) =>
+  state.groups.items;
+export const selectGroupsLoading = (state: { groups: GroupsState }) =>
+  state.groups.isLoading;
+export const selectGroupsError = (state: { groups: GroupsState }) =>
+  state.groups.error;
 
 export default groupsSlice.reducer;

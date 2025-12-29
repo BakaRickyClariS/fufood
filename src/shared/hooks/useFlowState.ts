@@ -30,7 +30,7 @@ type StoredFlowState<T> = {
 };
 
 export const useFlowState = <T extends Record<string, unknown>>(
-  options: FlowStateOptions
+  options: FlowStateOptions,
 ) => {
   const { key, expiryMs = 5 * 60 * 1000, contextId } = options;
   const storageKey = `fufood_flow_${key}`;
@@ -55,7 +55,7 @@ export const useFlowState = <T extends Record<string, unknown>>(
         console.warn('[useFlowState] 儲存狀態失敗:', error);
       }
     },
-    [storageKey, contextId]
+    [storageKey, contextId],
   );
 
   /**
@@ -111,7 +111,7 @@ export const useFlowState = <T extends Record<string, unknown>>(
       }
       return false;
     },
-    [loadState]
+    [loadState],
   );
 
   /**

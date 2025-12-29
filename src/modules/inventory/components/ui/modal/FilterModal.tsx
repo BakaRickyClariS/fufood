@@ -75,20 +75,18 @@ const FilterModal: React.FC<FilterModalProps> = ({
     onApply(selectedStatus, selectedAttribute);
     handleClose();
   };
-  
+
   const toggleStatus = (status: string) => {
-    setSelectedStatus(prev => 
-      prev.includes(status) 
-        ? prev.filter(s => s !== status) 
-        : [...prev, status]
+    setSelectedStatus((prev) =>
+      prev.includes(status)
+        ? prev.filter((s) => s !== status)
+        : [...prev, status],
     );
   };
 
   const toggleAttribute = (attr: string) => {
-    setSelectedAttribute(prev => 
-      prev.includes(attr) 
-        ? prev.filter(a => a !== attr) 
-        : [...prev, attr]
+    setSelectedAttribute((prev) =>
+      prev.includes(attr) ? prev.filter((a) => a !== attr) : [...prev, attr],
     );
   };
 
@@ -128,7 +126,9 @@ const FilterModal: React.FC<FilterModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-8 overflow-y-auto pb-48"> {/* Increased padding to avoid overlap with taller footer */}
+        <div className="p-6 space-y-8 overflow-y-auto pb-48">
+          {' '}
+          {/* Increased padding to avoid overlap with taller footer */}
           {/* Status Filter */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
@@ -137,11 +137,13 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 content={
                   <>
                     <span className="text-primary-500">「即將到期」</span>
-                    系統預設為未來 7 天內到期的食材。您可以在「管理設定」中調整此天數。
+                    系統預設為未來 7
+                    天內到期的食材。您可以在「管理設定」中調整此天數。
                     <br />
                     <br />
                     <span className="text-primary-500">「低庫存」</span>
-                    數量少於您在單品編輯頁面設定的最低數量。未設定者預設為 2 份/個。
+                    數量少於您在單品編輯頁面設定的最低數量。未設定者預設為 2
+                    份/個。
                   </>
                 }
               />
@@ -169,7 +171,6 @@ const FilterModal: React.FC<FilterModalProps> = ({
               })}
             </div>
           </div>
-
           {/* Attribute Filter */}
           <div className="space-y-3">
             <h3 className="text-lg font-bold text-neutral-900">屬性篩選</h3>

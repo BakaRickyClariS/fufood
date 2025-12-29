@@ -28,7 +28,9 @@ export const GroupApiTest = () => {
 
       // 2. 建立新群組
       addLog('2. POST /api/v1/refrigerators (Create)');
-      const newGroup = await groupsApi.create({ name: '測試冰箱-' + Date.now() });
+      const newGroup = await groupsApi.create({
+        name: '測試冰箱-' + Date.now(),
+      });
       addLog(`✅ 建立群組成功: ID=${newGroup.id}, Name=${newGroup.name}`);
 
       // 3. 取得單一群組
@@ -69,9 +71,9 @@ export const GroupApiTest = () => {
       <div className="mb-4 text-sm text-red-600">
         此區域僅供測試 API 串接，請勿在正式環境使用。
       </div>
-      
-      <Button 
-        onClick={runTest} 
+
+      <Button
+        onClick={runTest}
         disabled={loading}
         className="w-full bg-red-500 hover:bg-red-600 text-white"
       >

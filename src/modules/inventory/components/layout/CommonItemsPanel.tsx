@@ -1,7 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectAllGroups, fetchGroups } from '@/modules/groups/store/groupsSlice';
+import {
+  selectAllGroups,
+  fetchGroups,
+} from '@/modules/groups/store/groupsSlice';
 import CommonItemCard from '@/modules/inventory/components/ui/card/CommonItemCard';
 import { useInventoryExtras } from '@/modules/inventory/hooks';
 import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
@@ -33,7 +36,6 @@ const CommonItemsPanel: React.FC = () => {
       return;
     }
     fetchFrequentItems(10, targetGroupId);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchFrequentItems, targetGroupId]);
 
   // Group items by category
@@ -113,4 +115,3 @@ const CommonItemsPanel: React.FC = () => {
 };
 
 export default CommonItemsPanel;
-

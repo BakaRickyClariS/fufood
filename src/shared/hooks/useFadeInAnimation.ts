@@ -69,4 +69,3 @@ const useFadeInAnimation = <T extends HTMLElement = HTMLDivElement>({
 };
 
 export default useFadeInAnimation;
-

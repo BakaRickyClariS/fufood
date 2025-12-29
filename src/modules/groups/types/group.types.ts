@@ -27,7 +27,7 @@ export type Group = {
  */
 export type CreateGroupForm = {
   name: string;
-  colour?: string;  // 選填，冰箱顏色
+  colour?: string; // 選填，冰箱顏色
 };
 
 /**

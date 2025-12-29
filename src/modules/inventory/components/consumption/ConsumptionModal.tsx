@@ -100,7 +100,7 @@ export const ConsumptionModal = ({
   const handleOpenEdit = contextSafe(() => {
     // 儲存當前狀態到 sessionStorage
     saveState('edit', { items: currentItems, step: 'edit' });
-    
+
     if (modalRef.current && overlayRef.current) {
       const tl = gsap.timeline({
         onComplete: () => {
@@ -196,7 +196,7 @@ export const ConsumptionModal = ({
           setSkipAnimation(false);
           return;
         }
-        
+
         const tl = gsap.timeline();
         tl.fromTo(
           overlayRef.current,
@@ -242,7 +242,7 @@ export const ConsumptionModal = ({
         itemsToConsume.map((item) => {
           if (!item.id) return Promise.resolve();
           const reasons = item.selectedReasons || [];
-          
+
           return consumeItem({
             id: item.id,
             data: {
@@ -270,7 +270,7 @@ export const ConsumptionModal = ({
   const animateOutAndShowSuccess = contextSafe(() => {
     // If provided, signal parent to hide/animate out concurrently
     onHideParent?.();
-    
+
     // 儲存成功狀態到 sessionStorage
     saveState('success', { items: currentItems, step: 'success' });
 
@@ -451,7 +451,9 @@ export const ConsumptionModal = ({
                     disabled={isSubmitting}
                     className="w-full py-3.5 bg-primary-500 text-white rounded-xl font-bold text-base hover:bg-primary-600 transition-colors active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting && <Loader2 className="w-5 h-5 animate-spin" />}
+                    {isSubmitting && (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    )}
                     {isSubmitting ? '處理中...' : '完成'}
                   </button>
                 )}

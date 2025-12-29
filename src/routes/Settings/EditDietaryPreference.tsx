@@ -73,14 +73,13 @@ const EditDietaryPreference = () => {
       <SimpleHeader title="編輯飲食喜好" onBack={() => navigate(-1)} />
 
       <div className="max-w-layout-container mx-auto px-4 py-6 space-y-8">
-        
         {/* 烹飪基礎 */}
         <div className="space-y-4">
           <h2 className="text-lg font-bold text-neutral-800 flex items-center gap-2">
             <div className="w-1 h-4 bg-primary-500 rounded-full" />
             烹飪基礎
           </h2>
-          
+
           <div className="space-y-3">
             <label className="text-sm font-medium text-neutral-600">
               1-1 烹飪頻率
@@ -88,7 +87,9 @@ const EditDietaryPreference = () => {
             <ChipGroup
               options={COOKING_FREQUENCY_OPTIONS}
               value={preferences.cookingFrequency}
-              onChange={(val) => handleChange('cookingFrequency', val as CookingFrequency)}
+              onChange={(val) =>
+                handleChange('cookingFrequency', val as CookingFrequency)
+              }
             />
           </div>
 
@@ -110,7 +111,7 @@ const EditDietaryPreference = () => {
             <div className="w-1 h-4 bg-primary-500 rounded-full" />
             調味習慣
           </h2>
-          
+
           <div className="space-y-3">
             <label className="text-sm font-medium text-neutral-600">
               2-1 調味強度
@@ -118,7 +119,9 @@ const EditDietaryPreference = () => {
             <ChipGroup
               options={SEASONING_LEVEL_OPTIONS}
               value={preferences.seasoningLevel}
-              onChange={(val) => handleChange('seasoningLevel', val as SeasoningLevel)}
+              onChange={(val) =>
+                handleChange('seasoningLevel', val as SeasoningLevel)
+              }
             />
           </div>
 
@@ -130,7 +133,9 @@ const EditDietaryPreference = () => {
               multiple
               options={DIETARY_RESTRICTION_OPTIONS}
               value={preferences.restrictions}
-              onChange={(val) => handleChange('restrictions', val as DietaryRestriction[])}
+              onChange={(val) =>
+                handleChange('restrictions', val as DietaryRestriction[])
+              }
             />
           </div>
         </div>

@@ -5,7 +5,7 @@ import { useSharedListsContext } from '@/modules/planning/contexts/SharedListsCo
 import { MonthTimelinePicker } from '@/modules/planning/components/ui/MonthTimelinePicker';
 
 type MainTabId = 'planning' | 'recipes';
-type SubTabId = 'in-progress' | 'pending-purchase' | 'completed';
+type SubTabId = 'in-progress' | 'completed';
 
 type PlanningTabsSectionProps = {
   children: (
@@ -27,8 +27,8 @@ const PlanningTabsSection = ({ children }: PlanningTabsSectionProps) => {
     const countMap = new Map<string, number>();
 
     sharedLists.lists.forEach((list) => {
-      if (list.scheduledDate) {
-        const date = new Date(list.scheduledDate);
+      if (list.startsAt) {
+        const date = new Date(list.startsAt);
         const year = date.getFullYear();
         const month = date.getMonth() + 1;
         const key = `${year}-${month}`;
@@ -75,51 +75,50 @@ const PlanningTabsSection = ({ children }: PlanningTabsSectionProps) => {
 
   const subTabs: Tab<SubTabId>[] = [
     { id: 'in-progress', label: '進行中' },
-    { id: 'pending-purchase', label: '待採買' },
     { id: 'completed', label: '已完成' },
   ];
 
   return (
     <section>
-        <div className="max-w-layout-container mx-auto">
-          {/* 主 Tabs */}
-          {/* 主 Tabs */}
-          <Tabs
-            variant="underline"
-            tabs={mainTabs}
-            activeTab={mainTab}
-            onTabChange={setMainTab}
-            animated
-            className={mainTab === 'planning' ? 'shadow-none' : ''}
-          />
-          <div>
-            {mainTab === 'planning' && (
-              <div className="bg-white pb-4 mb-4 rounded-b-xl">
-                {/* 月份時間軸 */}
-                <div className="p-4">
-                  <MonthTimelinePicker
-                    selectedYear={selectedYear}
-                    selectedMonth={selectedMonth}
-                    onMonthChange={handleMonthChange}
-                    planCountByMonth={planCountByMonth}
-                  />
-                </div>
-
-                <Tabs
-                  variant="pill"
-                  tabs={subTabs}
-                  activeTab={subTab}
-                  onTabChange={setSubTab}
-                  animated
-                  className="mx-4"
+      <div className="max-w-layout-container mx-auto">
+        {/* 主 Tabs */}
+        {/* 主 Tabs */}
+        <Tabs
+          variant="underline"
+          tabs={mainTabs}
+          activeTab={mainTab}
+          onTabChange={setMainTab}
+          animated
+          className={mainTab === 'planning' ? 'shadow-none' : ''}
+        />
+        <div>
+          {mainTab === 'planning' && (
+            <div className="bg-white pb-4 mb-4 rounded-b-xl">
+              {/* 月份時間軸 */}
+              <div className="p-4">
+                <MonthTimelinePicker
+                  selectedYear={selectedYear}
+                  selectedMonth={selectedMonth}
+                  onMonthChange={handleMonthChange}
+                  planCountByMonth={planCountByMonth}
                 />
               </div>
-            )}
 
-            {/* 子內容渲染 */}
-            <div>{children(mainTab, subTab, selectedYear, selectedMonth)}</div>
-          </div>
+              <Tabs
+                variant="pill"
+                tabs={subTabs}
+                activeTab={subTab}
+                onTabChange={setSubTab}
+                animated
+                className="mx-4"
+              />
+            </div>
+          )}
+
+          {/* 子內容渲染 */}
+          <div>{children(mainTab, subTab, selectedYear, selectedMonth)}</div>
         </div>
+      </div>
     </section>
   );
 };

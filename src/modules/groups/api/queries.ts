@@ -79,7 +79,9 @@ export const useUpdateGroupMutation = () => {
     mutationFn: ({ id, data }: { id: string; data: UpdateGroupForm }) =>
       groupsApi.update(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.detail(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: groupKeys.detail(variables.id),
+      });
       queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
     },
   });
@@ -106,10 +108,17 @@ export const useInviteMemberMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ groupId, data }: { groupId: string; data: InviteMemberForm }) =>
-      groupsApi.inviteMember(groupId, data),
+    mutationFn: ({
+      groupId,
+      data,
+    }: {
+      groupId: string;
+      data: InviteMemberForm;
+    }) => groupsApi.inviteMember(groupId, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.members(variables.groupId) });
+      queryClient.invalidateQueries({
+        queryKey: groupKeys.members(variables.groupId),
+      });
     },
   });
 };
@@ -136,8 +145,13 @@ export const useLeaveGroupMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ groupId, memberId }: { groupId: string; memberId: string }) =>
-      groupsApi.leave(groupId, memberId),
+    mutationFn: ({
+      groupId,
+      memberId,
+    }: {
+      groupId: string;
+      memberId: string;
+    }) => groupsApi.leave(groupId, memberId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
     },
@@ -151,10 +165,17 @@ export const useRemoveMemberMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ groupId, memberId }: { groupId: string; memberId: string }) =>
-      groupsApi.removeMember(groupId, memberId),
+    mutationFn: ({
+      groupId,
+      memberId,
+    }: {
+      groupId: string;
+      memberId: string;
+    }) => groupsApi.removeMember(groupId, memberId),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.members(variables.groupId) });
+      queryClient.invalidateQueries({
+        queryKey: groupKeys.members(variables.groupId),
+      });
     },
   });
 };
@@ -176,7 +197,9 @@ export const useUpdateMemberRoleMutation = () => {
       role: GroupMember['role'];
     }) => groupsApi.updateMemberRole(groupId, memberId, role),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: groupKeys.members(variables.groupId) });
+      queryClient.invalidateQueries({
+        queryKey: groupKeys.members(variables.groupId),
+      });
     },
   });
 };
