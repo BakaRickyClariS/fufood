@@ -22,11 +22,15 @@ import { categories } from '../../constants/categories';
 import { mockRequestHandlers } from '@/utils/debug/mockRequestHandlers';
 
 const createCategoryCounters = (): Record<FoodCategory, number> => {
-  const counters: Record<FoodCategory, number> = {};
-  MOCK_INVENTORY.forEach((item) => {
-    counters[item.category] = 0;
-  });
-  return counters;
+  return {
+    fruit: 0,
+    frozen: 0,
+    bake: 0,
+    milk: 0,
+    seafood: 0,
+    meat: 0,
+    others: 0,
+  };
 };
 
 export const createMockInventoryApi = (): InventoryApi => {
@@ -75,7 +79,7 @@ export const createMockInventoryApi = (): InventoryApi => {
     if (params?.groupId) {
       items = items.filter((item) => item.groupId === params.groupId);
     }
-    if (params?.category && params.category !== 'all') {
+    if (params?.category && (params.category as string) !== 'all') {
       items = items.filter((item) => item.category === params.category);
     }
     if (params?.status) {
