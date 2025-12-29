@@ -51,19 +51,36 @@ export const CreateGroupModal: FC<CreateGroupModalProps> = ({
     try {
       const newGroup = await createGroup({
         name,
+        colour: 'blue',  // 預設顏色
       });
 
+      console.log('✅ 群組建立結果:', newGroup);
+
       if (newGroup && newGroup.id) {
+        // 切換到新群組
         switchGroup(newGroup.id);
+        // 重置表單
+        setName('');
+        setSelectedImage(AVAILABLE_GROUP_IMAGES[0].src);
+        // 返回群組設定頁（使用 onBack 而非 onClose）
+        if (onBack) {
+          onBack();
+        } else {
+          onClose();
+        }
+        return;
+      }
+      // 如果 API 成功但沒有回傳 id，也返回設定頁
+      console.warn('⚠️ 群組建立成功但未取得 id');
+      if (onBack) {
+        onBack();
+      } else {
+        onClose();
       }
     } catch (error) {
-      console.error('Failed to create group:', error);
+      console.error('❌ 群組建立失敗:', error);
+      // API 失敗時不關閉 Modal，保留使用者輸入
     }
-
-    // Reset form
-    setName('');
-    setSelectedImage(AVAILABLE_GROUP_IMAGES[0].src);
-    onClose();
   };
 
   return (
