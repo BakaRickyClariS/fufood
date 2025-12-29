@@ -49,7 +49,11 @@ const ScanResultCard: React.FC<ScanResultCardProps> = ({
           <Box size={18} />
           <span className="text-sm font-medium">產品屬性</span>
         </div>
-        <span className="font-bold text-slate-800">{result.attributes}</span>
+        <span className="font-bold text-slate-800">
+          {Array.isArray(result.attributes)
+            ? result.attributes.join('、')
+            : result.attributes}
+        </span>
       </div>
 
       <div className="flex justify-between items-center py-2 border-b border-slate-100">

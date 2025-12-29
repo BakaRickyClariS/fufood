@@ -1,7 +1,11 @@
-```typescript
 import { useState, type KeyboardEvent } from 'react';
 import { X } from 'lucide-react';
-import { type Control, Controller, type FieldValues, type Path } from 'react-hook-form';
+import {
+  type Control,
+  Controller,
+  type FieldValues,
+  type Path,
+} from 'react-hook-form';
 
 type FormTagInputProps<T extends FieldValues> = {
   label: string;

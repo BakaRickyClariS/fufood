@@ -111,7 +111,7 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     const mapped: FoodItemInput = {
       productName: payload.productName ?? payload.name ?? '',
       category: finalCategory as FoodItemInput['category'],
-      attributes: finalAttributes as FoodItemInput['attributes'],
+      attributes: finalAttributes ? [finalAttributes] : [],
       purchaseQuantity: Number(payload.purchaseQuantity ?? 1),
       unit: (payload.unit ?? '份') as FoodItemInput['unit'],
       purchaseDate: payload.purchaseDate ?? today,
@@ -190,7 +190,7 @@ export const createRealFoodScanApi = (): FoodScanApi => {
       lowStockThreshold: data.lowStockThreshold,
       notes: data.notes,
       imageUrl: data.imageUrl,
-      attributes: data.attributes ? [data.attributes] : undefined,
+      attributes: data.attributes,
     };
 
     // 庫存 API 在 AI 後端上 (/refrigerators/{id}/inventory)
