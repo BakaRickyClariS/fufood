@@ -2,52 +2,52 @@ import type { ScanResult } from '../../types/scanResult';
 
 export const MOCK_SCAN_RESULTS: ScanResult['data'][] = [
   {
-    productName: '鮮奶',
-    category: '乳製品',
-    attributes: '冷藏',
+    productName: '結球甘藍',
+    category: '蔬果類',
+    attributes: '葉菜根莖類',
     purchaseQuantity: 1,
-    unit: '瓶',
+    unit: '顆',
     purchaseDate: new Date().toISOString().split('T')[0],
     expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       .toISOString()
       .split('T')[0],
     lowStockAlert: true,
     lowStockThreshold: 2,
-    notes: '常備品',
+    notes: '好市多購入，季節限定',
   },
   {
-    productName: '雞蛋',
-    category: '其他',
-    attributes: '冷藏',
-    purchaseQuantity: 10,
-    unit: '顆',
+    productName: '鮮奶',
+    category: '乳品飲料類',
+    attributes: '鮮奶',
+    purchaseQuantity: 2,
+    unit: '瓶',
     purchaseDate: new Date().toISOString().split('T')[0],
-    expiryDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+    expiryDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000)
       .toISOString()
       .split('T')[0],
     lowStockAlert: true,
-    lowStockThreshold: 5,
-    notes: '每週必買',
+    lowStockThreshold: 1,
+    notes: '早餐必備',
   },
   {
-    productName: '花椰菜',
-    category: '蔬菜',
-    attributes: '冷藏',
-    purchaseQuantity: 1,
-    unit: '顆',
+    productName: '冷凍水餃',
+    category: '冷凍調理類',
+    attributes: '冷凍調理包',
+    purchaseQuantity: 3,
+    unit: '包',
     purchaseDate: new Date().toISOString().split('T')[0],
-    expiryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
+    expiryDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
       .toISOString()
       .split('T')[0],
     lowStockAlert: false,
-    lowStockThreshold: 1,
-    notes: '趁新鮮吃完',
+    lowStockThreshold: 2,
+    notes: '宵夜',
   },
   {
-    productName: '豬肉片',
-    category: '肉類',
-    attributes: '冷凍',
-    purchaseQuantity: 500,
+    productName: '牛小排',
+    category: '肉品類',
+    attributes: '牛肉類',
+    purchaseQuantity: 600,
     unit: 'g',
     purchaseDate: new Date().toISOString().split('T')[0],
     expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
@@ -55,20 +55,20 @@ export const MOCK_SCAN_RESULTS: ScanResult['data'][] = [
       .split('T')[0],
     lowStockAlert: true,
     lowStockThreshold: 200,
-    notes: '備用食材',
+    notes: '火鍋用',
   },
   {
-    productName: '番茄醬',
-    category: '調味料',
-    attributes: '常溫',
+    productName: '橄欖油',
+    category: '其他',
+    attributes: '油品與堅果',
     purchaseQuantity: 1,
     unit: '瓶',
     purchaseDate: new Date().toISOString().split('T')[0],
-    expiryDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000)
+    expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
       .toISOString()
       .split('T')[0],
-    lowStockAlert: true,
+    lowStockAlert: false,
     lowStockThreshold: 1,
-    notes: '',
+    notes: '義大利進口',
   },
 ];

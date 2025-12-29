@@ -84,8 +84,7 @@ const wrapApiCall = async <T>(
     return result;
   } catch (error) {
     const statusCode = extractStatusCode(error);
-    const message =
-      error instanceof Error ? error.message : '未知錯誤';
+    const message = error instanceof Error ? error.message : '未知錯誤';
 
     const apiError = new GroupsApiError(
       message,
@@ -117,18 +116,23 @@ const tryRealApiWithMockFallback = async <T>(
 
   // Mock 開啟時：優先嘗試真實 API，失敗才 fallback 到 mock
   console.log(`🔵 [Groups API] ${method} ${endpoint} (優先嘗試真實 API)`);
-  
+
   try {
     const result = await realApiCall();
     console.log(`🟢 [Groups API] ${method} ${endpoint} 真實 API 成功`, result);
     return result;
   } catch (error) {
-    console.warn(`🟠 [Groups API] ${method} ${endpoint} 真實 API 失敗，fallback 到 Mock 資料`);
+    console.warn(
+      `🟠 [Groups API] ${method} ${endpoint} 真實 API 失敗，fallback 到 Mock 資料`,
+    );
     console.warn('失敗原因:', error instanceof Error ? error.message : error);
-    
+
     // Fallback 到 mock 資料
     const mockResult = await mockFallback();
-    console.log(`🟡 [Groups API] ${method} ${endpoint} 使用 Mock 資料`, mockResult);
+    console.log(
+      `🟡 [Groups API] ${method} ${endpoint} 使用 Mock 資料`,
+      mockResult,
+    );
     return mockResult;
   }
 };
@@ -148,8 +152,10 @@ export const groupsApi = {
       API_BASE,
       // 真實 API 呼叫
       async () => {
-        const response = await backendApi.get<Group[] | { data: Group[] }>(API_BASE);
-        
+        const response = await backendApi.get<Group[] | { data: Group[] }>(
+          API_BASE,
+        );
+
         // 處理可能的回應格式：直接陣列 或 { data: [...] }
         if (Array.isArray(response)) {
           return response;
@@ -157,7 +163,7 @@ export const groupsApi = {
         if (response && typeof response === 'object' && 'data' in response) {
           return response.data;
         }
-        
+
         console.warn('⚠️ [Groups API] 非預期的回應格式:', response);
         return [];
       },
@@ -181,8 +187,10 @@ export const groupsApi = {
       endpoint,
       // 真實 API 呼叫
       async () => {
-        const response = await backendApi.get<Group | { data: Group }>(endpoint);
-        
+        const response = await backendApi.get<Group | { data: Group }>(
+          endpoint,
+        );
+
         // 處理可能的回應格式
         if (response && typeof response === 'object' && 'data' in response) {
           return (response as { data: Group }).data;
@@ -211,8 +219,10 @@ export const groupsApi = {
       endpoint,
       // 真實 API 呼叫
       async () => {
-        const response = await backendApi.get<GroupMember[] | { data: GroupMember[] }>(endpoint);
-        
+        const response = await backendApi.get<
+          GroupMember[] | { data: GroupMember[] }
+        >(endpoint);
+
         // 處理可能的回應格式
         if (Array.isArray(response)) {
           return response;
@@ -220,7 +230,7 @@ export const groupsApi = {
         if (response && typeof response === 'object' && 'data' in response) {
           return response.data;
         }
-        
+
         console.warn('⚠️ [Groups API] 非預期的成員回應格式:', response);
         return [];
       },
@@ -237,7 +247,7 @@ export const groupsApi = {
   /**
    * 建立群組（冰箱）
    * POST /api/v1/refrigerators
-   * 
+   *
    * @param data - 群組資料 { name: string }
    */
   create: async (data: CreateGroupForm): Promise<Group> => {
@@ -248,8 +258,11 @@ export const groupsApi = {
       API_BASE,
       // 真實 API 呼叫
       async () => {
-        const response = await backendApi.post<Group | { data: Group }>(API_BASE, data);
-        
+        const response = await backendApi.post<Group | { data: Group }>(
+          API_BASE,
+          data,
+        );
+
         // 處理可能的回應格式
         if (response && typeof response === 'object' && 'data' in response) {
           return (response as { data: Group }).data;
@@ -272,7 +285,7 @@ export const groupsApi = {
   /**
    * 更新群組（冰箱）
    * PUT /api/v1/refrigerators/{id}
-   * 
+   *
    * @param id - 群組 ID
    * @param data - 更新資料 { name?: string }
    */
@@ -285,8 +298,11 @@ export const groupsApi = {
       endpoint,
       // 真實 API 呼叫
       async () => {
-        const response = await backendApi.put<Group | { data: Group }>(endpoint, data);
-        
+        const response = await backendApi.put<Group | { data: Group }>(
+          endpoint,
+          data,
+        );
+
         // 處理可能的回應格式
         if (response && typeof response === 'object' && 'data' in response) {
           return (response as { data: Group }).data;
@@ -350,11 +366,14 @@ export const groupsApi = {
 
   /**
    * 加入群組（冰箱）
-   * POST /api/v1/refrigerators/{groupId}/members
+   * POST /api/v1/refrigerator_memberships
    */
-  join: async (groupId: string, data: JoinGroupForm): Promise<void> => {
-    const endpoint = `${API_BASE}/${groupId}/members`;
-    console.log('� [Groups API] 加入群組:', { groupId, data });
+  join: async (_groupId: string, data: JoinGroupForm): Promise<void> => {
+    // Note: groupId is not used in the new endpoint but kept for compatibility with call signature if needed,
+    // though the caller should probably just pass the token.
+    // For now we assume existing callers might pass groupId but we ignore it for the endpoint.
+    const endpoint = `/api/v1/refrigerator_memberships`;
+    console.log(' [Groups API] 加入群組:', { data });
 
     return tryRealApiWithMockFallback(
       'POST',
@@ -440,7 +459,9 @@ export const groupsApi = {
    * 搜尋好友
    * GET /api/v1/users/friends?q={query}
    */
-  searchFriends: async (query: string): Promise<import('../types/group.types').Friend[]> => {
+  searchFriends: async (
+    query: string,
+  ): Promise<import('../types/group.types').Friend[]> => {
     const endpoint = `/api/v1/users/friends?q=${encodeURIComponent(query)}`;
 
     return tryRealApiWithMockFallback(
@@ -458,41 +479,109 @@ export const groupsApi = {
         // Mock search result
         if (!query) return [];
         const allFriends = [
-          { id: 'f1', name: 'Ricky', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ricky', lineId: 'ricky_123' },
-          { id: 'f2', name: '_ricky.yang', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Yang', lineId: 'yang_456' },
-          { id: 'f3', name: 'Alice', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice', lineId: 'alice_789' },
+          {
+            id: 'f1',
+            name: 'Ricky',
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ricky',
+            lineId: 'ricky_123',
+          },
+          {
+            id: 'f2',
+            name: '_ricky.yang',
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Yang',
+            lineId: 'yang_456',
+          },
+          {
+            id: 'f3',
+            name: 'Alice',
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice',
+            lineId: 'alice_789',
+          },
         ];
-        return allFriends.filter(f => f.name.toLowerCase().includes(query.toLowerCase()) || f.lineId?.toLowerCase().includes(query.toLowerCase()));
+        return allFriends.filter(
+          (f) =>
+            f.name.toLowerCase().includes(query.toLowerCase()) ||
+            f.lineId?.toLowerCase().includes(query.toLowerCase()),
+        );
       },
     );
   },
 
   /**
-   * 取得邀請碼
-   * POST /api/v1/refrigerators/{id}/invite-code
+   * 產生邀請（QR Code 邀請功能）
+   * POST /api/v1/refrigerators/{id}/invitations
+   *
+   * @returns 包含 token 和前端邀請連結的回應
    */
-  getInviteCode: async (groupId: string): Promise<import('../types/group.types').InviteCodeResponse> => {
-    const endpoint = `${API_BASE}/${groupId}/invite-code`;
+  createInvitation: async (
+    groupId: string,
+  ): Promise<import('../types/group.types').InviteCodeResponse> => {
+    const endpoint = `${API_BASE}/${groupId}/invitations`;
 
     return tryRealApiWithMockFallback(
       'POST',
       endpoint,
       // 真實 API 呼叫
       async () => {
-        const response = await backendApi.post<any>(endpoint, {});
-        if (response && response.data) return response.data;
-        return response;
+        const response = await backendApi.post<{
+          data: import('../types/group.types').InvitationResponse;
+        }>(endpoint, {});
+        const data = response?.data || response;
+
+        // 組合前端邀請連結
+        const inviteUrl = data.token
+          ? `${window.location.origin}/invite/${data.token}`
+          : undefined;
+
+        return {
+          token: data.token ?? undefined,
+          inviteUrl,
+          expiresAt: data.expiresAt,
+        };
       },
       // Mock fallback
       async () => {
         await new Promise((resolve) => setTimeout(resolve, 500));
+        const mockToken = `mock_${Math.random().toString(36).substring(2, 15)}`;
         return {
-          code: `INV-${Math.floor(Math.random() * 10000)}`,
-          expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://fufood.app/join?g=${groupId}`,
+          token: mockToken,
+          inviteUrl: `${window.location.origin}/invite/${mockToken}`,
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         };
       },
     );
+  },
+
+  /**
+   * 取得邀請資訊（驗證邀請 token）
+   * GET /api/v1/invitations/{token}
+   *
+   * @param token - 邀請 token
+   * @returns 邀請詳情，包含群組和邀請者資訊
+   */
+  getInvitation: async (
+    token: string,
+  ): Promise<import('../types/group.types').InvitationResponse> => {
+    const endpoint = `/api/v1/invitations/${token}`;
+
+    return wrapApiCall('GET', endpoint, async () => {
+      const response = await backendApi.get<{
+        data: import('../types/group.types').InvitationResponse;
+      }>(endpoint);
+      const data = response?.data || response;
+      return data as import('../types/group.types').InvitationResponse;
+    });
+  },
+
+  /**
+   * @deprecated 請使用 createInvitation 替代
+   * 取得邀請碼（舊版）
+   */
+  getInviteCode: async (
+    groupId: string,
+  ): Promise<import('../types/group.types').InviteCodeResponse> => {
+    console.warn('⚠️ getInviteCode 已棄用，請使用 createInvitation');
+    return groupsApi.createInvitation(groupId);
   },
 };
 

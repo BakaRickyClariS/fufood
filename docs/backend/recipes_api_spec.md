@@ -19,12 +19,12 @@
 type Recipe = {
   id: string;
   name: string;
-  category: string;
+  category: '中式料理' | '美式料理' | '義式料理' | '日式料理' | ...; // 詳見前端 constants
   series?: string;
   imageUrl: string;
   servings: number;
   cookTime: number; // minutes
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: '簡單' | '中等' | '困難';
   ingredients: RecipeIngredient[];
   steps: CookingStep[];
   isFavorite?: boolean;
@@ -37,18 +37,18 @@ type Recipe = {
 ```typescript
 type RecipeIngredient = {
   name: string;
-  quantity: number | string;
+  quantity: string; // e.g. "3-4" or "100g"
   unit?: string;
-  foodId?: string; // 對應庫存/食材主檔
+  category: '準備材料' | '調味料';
 };
 ```
 
 ### 2.3 CookingStep
 ```typescript
 type CookingStep = {
-  order: number;
+  stepNumber: number;
   description: string;
-  imageUrl?: string;
+  time?: string;
 };
 ```
 

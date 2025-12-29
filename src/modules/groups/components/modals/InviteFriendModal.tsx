@@ -10,6 +10,7 @@ import { Input } from '@/shared/components/ui/input';
 import { Search } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import { QRCodeSVG } from 'qrcode.react';
 import type { Group } from '../../types/group.types';
 import TabsUnderline from '@/shared/components/ui/animated-tabs/TabsUnderline';
 
@@ -29,12 +30,8 @@ export const InviteFriendModal: FC<InviteFriendModalProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
 
   // Redux State
-  const {
-    searchResults,
-    isSearching,
-    inviteCode,
-    isGeneratingCode,
-  } = useSelector((state: RootState) => state.groups);
+  const { searchResults, isSearching, inviteCode, isGeneratingCode } =
+    useSelector((state: RootState) => state.groups);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -102,10 +99,9 @@ export const InviteFriendModal: FC<InviteFriendModalProps> = ({
 
   // Copy Link Logic
   const handleCopyLink = () => {
-    if (inviteCode?.code) {
-      const link = `https://fufood.app/join?code=${inviteCode.code}`;
-      navigator.clipboard.writeText(link).then(() => {
-        alert('邀請連結已複製！'); 
+    if (inviteCode?.inviteUrl) {
+      navigator.clipboard.writeText(inviteCode.inviteUrl).then(() => {
+        alert('邀請連結已複製！');
       });
     }
   };
@@ -113,13 +109,13 @@ export const InviteFriendModal: FC<InviteFriendModalProps> = ({
   // Handle Invitation
   const handleInvite = (friendId: string) => {
     console.log(`Inviting friend ${friendId} to group ${group?.id}`);
-    alert('已發送邀請！'); 
+    alert('已發送邀請！');
   };
 
   if (!open) return null;
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="fixed inset-0 z-[60] flex items-end justify-center pointer-events-auto"
     >
@@ -151,7 +147,7 @@ export const InviteFriendModal: FC<InviteFriendModalProps> = ({
           {activeTab === 'search' ? (
             <div className="space-y-6">
               <h2 className="text-xl font-bold text-stone-900">邀請好友</h2>
-              
+
               {/* ID Input */}
               <div className="space-y-2">
                 <label className="text-sm font-bold text-stone-900">ID</label>
@@ -165,7 +161,9 @@ export const InviteFriendModal: FC<InviteFriendModalProps> = ({
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 text-stone-900" />
                 </div>
                 <p className="text-xs text-stone-500 flex items-center gap-1">
-                  <span className="inline-block w-4 h-4 rounded-full border border-stone-400 text-center leading-3 text-[10px]">i</span>
+                  <span className="inline-block w-4 h-4 rounded-full border border-stone-400 text-center leading-3 text-[10px]">
+                    i
+                  </span>
                   填寫信箱或LINE ID
                 </p>
               </div>
@@ -173,54 +171,74 @@ export const InviteFriendModal: FC<InviteFriendModalProps> = ({
               {/* Search Results */}
               <div className="space-y-4">
                 <p className="text-sm font-bold text-stone-500">搜尋結果</p>
-                
+
                 {isSearching ? (
-                  <div className="text-center py-8 text-stone-400">搜尋中...</div>
+                  <div className="text-center py-8 text-stone-400">
+                    搜尋中...
+                  </div>
                 ) : searchResults.length > 0 ? (
-                    <div className="space-y-0 divide-y divide-stone-200 border-t border-b border-stone-200 bg-white rounded-xl overflow-hidden">
-                      {searchResults.map(friend => (
-                        <div key={friend.id} className="flex items-center justify-between p-4">
-                           <div className="flex items-center gap-3">
-                             <img src={friend.avatar} alt={friend.name} className="w-10 h-10 rounded-full bg-stone-200 object-cover" />
-                             <span className="font-bold text-stone-700">{friend.name}</span>
-                           </div>
+                  <div className="space-y-0 divide-y divide-stone-200 border-t border-b border-stone-200 bg-white rounded-xl overflow-hidden">
+                    {searchResults.map((friend) => (
+                      <div
+                        key={friend.id}
+                        className="flex items-center justify-between p-4"
+                      >
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={friend.avatar}
+                            alt={friend.name}
+                            className="w-10 h-10 rounded-full bg-stone-200 object-cover"
+                          />
+                          <span className="font-bold text-stone-700">
+                            {friend.name}
+                          </span>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
+                  </div>
                 ) : searchQuery ? (
-                  <div className="text-center py-8 text-stone-400">找不到使用者</div>
+                  <div className="text-center py-8 text-stone-400">
+                    找不到使用者
+                  </div>
                 ) : null}
               </div>
 
               {/* Bottom Invite Button */}
-               {searchResults.length > 0 && (
+              {searchResults.length > 0 && (
                 <div className="pt-4">
-                  <Button 
+                  <Button
                     className="w-full h-14 bg-[#EE5D50] hover:bg-[#D94A3D] text-white text-lg font-bold rounded-xl shadow-sm"
                     onClick={() => handleInvite(searchResults[0].id)}
                   >
                     邀請
                   </Button>
                 </div>
-               )}
+              )}
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center space-y-8 pb-10">
-              <h2 className="text-xl font-bold text-stone-900">掃描QRcode 即可加入</h2>
-              
+              <h2 className="text-xl font-bold text-stone-900">
+                掃描QRcode 即可加入
+              </h2>
+
               <div className="bg-white p-4 rounded-3xl shadow-sm w-64 h-64 flex items-center justify-center">
-                 {isGeneratingCode ? (
-                   <span className="text-stone-400">生成中...</span>
-                 ) : inviteCode?.qrUrl ? (
-                   <img src={inviteCode.qrUrl} alt="Invite QR" className="w-full h-full object-contain" />
-                 ) : (
-                   <div className="w-full h-full bg-stone-100 rounded-xl" />
-                 )}
+                {isGeneratingCode ? (
+                  <span className="text-stone-400">生成中...</span>
+                ) : inviteCode?.inviteUrl ? (
+                  <QRCodeSVG
+                    value={inviteCode.inviteUrl}
+                    size={200}
+                    level="M"
+                    includeMargin={true}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-stone-100 rounded-xl" />
+                )}
               </div>
-              
+
               <p className="text-stone-500 font-medium">24小時內有效</p>
-              
-              <Button 
+
+              <Button
                 className="w-full h-14 bg-[#EE5D50] hover:bg-[#D94A3D] text-white text-lg font-bold rounded-xl shadow-sm mt-auto"
                 onClick={handleCopyLink}
               >

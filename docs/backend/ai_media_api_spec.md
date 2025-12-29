@@ -245,6 +245,44 @@ export async function POST(req: Request) {
 }
 ```
 
+### 多品項影像辨識 (Batch Analysis)
+
+#### 端點資訊
+
+| Method | Path                                | 功能                         |
+| :----: | :---------------------------------- | :--------------------------- |
+|  POST  | `/api/v1/ai/analyze-image/multiple` | 上傳並分析包含多個食材的圖片 |
+
+#### 請求格式
+
+`Content-Type: multipart/form-data`
+
+| 欄位             | 類型    | 必填 | 說明                             |
+| ---------------- | ------- | :--: | -------------------------------- |
+| `file`           | File    |  ✅  | 包含多個食材的圖片               |
+| `maxIngredients` | number  |      | 最大辨識數量 (預設 5)            |
+| `cropImages`     | boolean |      | 是否回傳裁切後的圖片 (預設 true) |
+
+#### 回應格式 (200)
+
+```typescript
+type MultipleScanResult = {
+  success: boolean;
+  data: {
+    originalImageUrl: string;
+    totalCount: number;
+    ingredients: Array<
+      FoodItemInput & {
+        imageUrl: string; // 裁切後的單一食材圖
+        boundingBox: { x: number; y: number; width: number; height: number };
+        confidence: number;
+      }
+    >;
+    analyzedAt: string;
+  };
+};
+```
+
 ---
 
 ## 3. AI 食譜生成 API

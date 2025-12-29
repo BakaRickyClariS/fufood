@@ -27,13 +27,13 @@
 ---
 
 ## 目錄結構
-```
 recipe/
+├── api/          (queries.ts - React Query hooks)
 ├── components/
 │   ├── features/ (RecipeList, RecipeDetailView, FavoriteRecipes)
 │   ├── layout/   (RecipeHeader)
 │   └── ui/       (AISearchCard, HeroCard, RecipeSeriesTag, IngredientList, CookingSteps, ConsumptionModal, ConsumptionEditor)
-├── hooks/        (useRecipes, useFavorite, useConsumption, useMealPlan)
+├── hooks/        (useRecipes, useFavorite, useConsumption, useMealPlan, useRecipeDetailLogic)
 ├── services/
 │   ├── api/      (recipeApi.ts)
 │   ├── mock/     (mockRecipeApi.ts, mockData.ts)
@@ -47,6 +47,35 @@ recipe/
 
 ## 型別
 ```typescript
+export type RecipeCategory =
+  | '中式料理'
+  | '美式料理'
+  | '義式料理'
+  | '日式料理'
+  | '泰式料理'
+  | '韓式料理'
+  | '墨西哥料理'
+  | '川菜'
+  | '越南料理'
+  | '健康輕食'
+  | '甜點'
+  | '飲品';
+
+export type RecipeDifficulty = '簡單' | '中等' | '困難';
+
+export type RecipeIngredient = {
+  name: string; // ingredient name
+  quantity: string; // e.g. "3-4" or "100g"
+  unit?: string; // optional unit
+  category: '準備材料' | '調味料';
+};
+
+export type CookingStep = {
+  stepNumber: number;
+  description: string;
+  time?: string; // optional duration like "15-20min"
+};
+
 export type Recipe = {
   id: string;
   name: string;
@@ -59,7 +88,6 @@ export type Recipe = {
   ingredients: RecipeIngredient[];
   steps: CookingStep[];
   isFavorite?: boolean;
-  status?: 'draft' | 'published' | 'cooked';
   createdAt: string;
   updatedAt?: string;
 };
@@ -86,7 +114,10 @@ export interface RecipeApi {
   getRecipeById: (id: string) => Promise<Recipe>;
   addFavorite: (id: string) => Promise<{ isFavorite: boolean }>;
   removeFavorite: (id: string) => Promise<{ isFavorite: boolean }>;
-  updateRecipe: (id: string, data: Partial<Recipe>) => Promise<Recipe>; // 用於狀態 cooked
+  getFavorites: () => Promise<RecipeListItem[]>;
+  toggleFavorite: (id: string, shouldFavorite?: boolean) => Promise<{ isFavorite: boolean }>;
+  getRecommendedRecipes: (ingredientNames: string[]) => Promise<RecipeListItem[]>;
+  confirmCook: (data: ConsumptionConfirmation) => Promise<{ success: boolean; message: string }>;
   addMealPlan: (data: MealPlanInput) => Promise<MealPlan>;
   getMealPlans: () => Promise<MealPlan[]>;
   deleteMealPlan: (planId: string) => Promise<{ success: boolean }>;
@@ -119,7 +150,7 @@ const useFavorite = () => ({
 ### `useConsumption.ts`（對應烹煮/耗用）
 ```typescript
 const useConsumption = () => ({
-  markCooked: (id: string) => Promise<void>, // 呼叫 PATCH /recipes/{id} { status: 'cooked' }
+  confirmConsumption: (data: ConsumptionConfirmation) => Promise<{ success: boolean; message: string }>,
   isSubmitting: boolean,
   error: string | null,
 });

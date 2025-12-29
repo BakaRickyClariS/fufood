@@ -25,14 +25,12 @@
 type Group = {
   id: string;
   name: string;
-  admin: string; // 建立者名稱
-  members: GroupMember[];
-  color: string;
-  characterColor: string;
+  admin?: string; // 建立者 ID 或名稱
+  members?: GroupMember[];
   imageUrl?: string; // 群組自定義圖片 URL
-  plan: 'free' | 'premium';
-  createdAt: string;
-  updatedAt: string;
+  plan?: 'free' | 'premium';
+  createdAt?: string;
+  updatedAt?: string;
 };
 ```
 
@@ -43,16 +41,20 @@ type GroupMember = {
   id: string;
   name: string;
   avatar: string;
-  role: 'owner' | 'organizer' | 'member';
+  role: 'owner' | 'member';
 };
 ```
 
-### 2.3 InviteMemberForm
+### 2.3 Forms
 
 ```typescript
 type InviteMemberForm = {
   email: string;
   role?: GroupMember['role']; // default member
+};
+
+type JoinGroupForm = {
+  inviteCode: string;
 };
 ```
 
@@ -109,39 +111,59 @@ type InviteMemberForm = {
 ### 3.9 更新成員權限
 
 - **PATCH** `/api/v1/refrigerators/{id}/members/{memberId}`
-- Body: `{ role: 'owner' | 'organizer' | 'member' }`
+- Body: `{ role: 'owner' | 'member' }`
 - 204 或 `{ success: true }`
 
 ---
 
-## 3.10 邀請好友 API (NEW - 待後端實作)
+## 3.10 邀請好友 API
 
 ### 3.10.1 搜尋好友
 
 - **GET** `/api/v1/users/friends?q={keyword}`
 - 200 → `User[]` (搜尋結果)
 
-### 3.10.2 產生邀請碼/QR Code
-
-- **POST** `/api/v1/refrigerators/{id}/invite-code`
-- 200 → `{ code: string, expiry: string, qrUrl?: string }`
-
-### 3.10.3 發送邀請通知
+### 3.10.2 產生邀請 Token（QR Code 邀請）
 
 - **POST** `/api/v1/refrigerators/{id}/invitations`
-- Body: `{ targetUserId: string }` 或 `{ email: string }`
-- 200/201 → 成功
+- 200 →
+
+```json
+{
+  "data": {
+    "id": "string",
+    "token": "string",
+    "viewCount": 0,
+    "refrigeratorId": "string",
+    "refrigerator": { ... },
+    "creatorId": "string",
+    "creator": { ... },
+    "expiresAt": "ISO8601",
+    "createdAt": "ISO8601",
+    "updatedAt": "ISO8601"
+  }
+}
+```
+
+> [!NOTE]
+> 邀請為**單次使用**，使用後即作廢。前端使用 token 組合邀請連結：`/invite/{token}`
+
+### 3.10.3 驗證邀請 Token
+
+- **GET** `/api/v1/invitations/{token}`
+- 200 → 邀請詳情與群組資訊（GET 時自動標記為已使用）
+- 回應格式同 3.10.2，但 `token` 欄位為 `null`
 
 ---
 
 ## 4. 角色權限建議
 
-| 操作          | owner | organizer | member |
-| ------------- | ----- | --------- | ------ |
-| 編輯/刪除群組 | ✓     | ✓         | ✗      |
-| 邀請/移除成員 | ✓     | ✓         | ✗      |
-| 更新成員角色  | ✓     | ✗         | ✗      |
-| 離開群組      | ✗     | ✓         | ✓      |
+| 操作          | owner | member |
+| ------------- | ----- | ------ |
+| 編輯/刪除群組 | ✓     | ✗      |
+| 邀請/移除成員 | ✓     | ✗      |
+| 更新成員角色  | ✓     | ✗      |
+| 離開群組      | ✗     | ✓      |
 
 ---
 

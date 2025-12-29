@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectAllGroups, fetchGroups } from '@/modules/groups/store/groupsSlice';
 import CommonItemCard from '@/modules/inventory/components/ui/card/CommonItemCard';
 import { useInventoryExtras } from '@/modules/inventory/hooks';
 import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
@@ -12,10 +14,19 @@ const CommonItemsPanel: React.FC = () => {
   const { ref: contentRef } = useFadeInAnimation<HTMLDivElement>({ isLoading });
 
   const { groupId } = useParams<{ groupId: string }>();
+  const dispatch = useDispatch();
+  const groups = useSelector(selectAllGroups);
+  const targetGroupId = groupId || groups[0]?.id;
 
   useEffect(() => {
-    fetchFrequentItems(10, groupId);
-  }, [fetchFrequentItems, groupId]);
+    if (groups.length === 0) {
+        // @ts-ignore
+        dispatch(fetchGroups());
+    }
+    if (targetGroupId) {
+        fetchFrequentItems(10, targetGroupId);
+    }
+  }, [fetchFrequentItems, groupId, groups.length, targetGroupId, dispatch]);
 
   // Group items by category
   const groupedItems = useMemo(() => {
@@ -84,7 +95,9 @@ const CommonItemsPanel: React.FC = () => {
           item={selectedItem}
           isOpen={!!selectedItem}
           onClose={() => setSelectedItem(null)}
-          onItemUpdate={() => fetchFrequentItems(10, groupId)}
+          onItemUpdate={() => {
+            if (targetGroupId) fetchFrequentItems(10, targetGroupId);
+          }}
         />
       )}
     </>
