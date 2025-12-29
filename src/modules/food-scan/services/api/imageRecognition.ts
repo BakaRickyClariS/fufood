@@ -195,7 +195,11 @@ export const createRealFoodScanApi = (): FoodScanApi => {
       lowStockThreshold: data.lowStockThreshold,
       notes: data.notes,
       imageUrl: data.imageUrl,
-      attributes: data.attributes,
+      attributes: Array.isArray(data.attributes)
+        ? data.attributes
+        : typeof data.attributes === 'string'
+          ? [data.attributes]
+          : [],
     };
 
     // 庫存 API 在 AI 後端上 (/refrigerators/{id}/inventory)
