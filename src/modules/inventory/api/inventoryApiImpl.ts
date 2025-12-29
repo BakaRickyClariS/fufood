@@ -1,4 +1,4 @@
-import { backendApi } from '@/api/client';
+import { aiApi } from '@/api/client';
 import type {
   FoodItem,
   GetInventoryRequest,
@@ -22,14 +22,20 @@ export const createInventoryApi = (): InventoryApi => {
     /**
      * 取得庫存列表
      */
+    /**
+     * 取得庫存列表
+     */
     getInventory: async (
       params?: GetInventoryRequest,
     ): Promise<GetInventoryResponse> => {
       const refrigeratorId = params?.groupId;
-      const baseUrl = refrigeratorId
-        ? `/refrigerators/${refrigeratorId}/inventory`
-        : '/inventory';
-      return backendApi.get<GetInventoryResponse>(baseUrl, params);
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for getInventory');
+      }
+      return aiApi.get<GetInventoryResponse>(
+        `/refrigerators/${refrigeratorId}/inventory`,
+        params,
+      );
     },
 
     /**
@@ -39,10 +45,12 @@ export const createInventoryApi = (): InventoryApi => {
       id: string,
       refrigeratorId?: string,
     ): Promise<ApiSuccess<{ item: FoodItem }>> => {
-      const baseUrl = refrigeratorId
-        ? `/refrigerators/${refrigeratorId}/inventory`
-        : '/inventory';
-      return backendApi.get<ApiSuccess<{ item: FoodItem }>>(`${baseUrl}/${id}`);
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for getItem');
+      }
+      return aiApi.get<ApiSuccess<{ item: FoodItem }>>(
+        `/refrigerators/${refrigeratorId}/inventory/${id}`,
+      );
     },
 
     /**
@@ -53,10 +61,13 @@ export const createInventoryApi = (): InventoryApi => {
       refrigeratorId?: string,
     ): Promise<AddFoodItemResponse> => {
       const targetId = refrigeratorId || data.groupId;
-      const baseUrl = targetId
-        ? `/refrigerators/${targetId}/inventory`
-        : '/inventory';
-      return backendApi.post<AddFoodItemResponse>(baseUrl, data);
+      if (!targetId) {
+        throw new Error('Refrigerator ID is required for addItem');
+      }
+      return aiApi.post<AddFoodItemResponse>(
+        `/refrigerators/${targetId}/inventory`,
+        data,
+      );
     },
 
     /**
@@ -67,10 +78,13 @@ export const createInventoryApi = (): InventoryApi => {
       data: UpdateFoodItemRequest,
       refrigeratorId?: string,
     ): Promise<UpdateFoodItemResponse> => {
-      const baseUrl = refrigeratorId
-        ? `/refrigerators/${refrigeratorId}/inventory`
-        : '/inventory';
-      return backendApi.put<UpdateFoodItemResponse>(`${baseUrl}/${id}`, data);
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for updateItem');
+      }
+      return aiApi.put<UpdateFoodItemResponse>(
+        `/refrigerators/${refrigeratorId}/inventory/${id}`,
+        data,
+      );
     },
 
     /**
@@ -80,10 +94,12 @@ export const createInventoryApi = (): InventoryApi => {
       id: string,
       refrigeratorId?: string,
     ): Promise<DeleteFoodItemResponse> => {
-      const baseUrl = refrigeratorId
-        ? `/refrigerators/${refrigeratorId}/inventory`
-        : '/inventory';
-      return backendApi.delete<DeleteFoodItemResponse>(`${baseUrl}/${id}`);
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for deleteItem');
+      }
+      return aiApi.delete<DeleteFoodItemResponse>(
+        `/refrigerators/${refrigeratorId}/inventory/${id}`,
+      );
     },
 
     /**
@@ -93,11 +109,11 @@ export const createInventoryApi = (): InventoryApi => {
       data: BatchDeleteInventoryRequest,
       refrigeratorId?: string,
     ): Promise<ApiSuccess<Record<string, never>>> => {
-      const baseUrl = refrigeratorId
-        ? `/refrigerators/${refrigeratorId}/inventory`
-        : '/inventory';
-      return backendApi.delete<ApiSuccess<Record<string, never>>>(
-        `${baseUrl}/batch`,
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for batchDelete');
+      }
+      return aiApi.delete<ApiSuccess<Record<string, never>>>(
+        `/refrigerators/${refrigeratorId}/inventory/batch`,
         {
           body: data,
         },
@@ -110,10 +126,12 @@ export const createInventoryApi = (): InventoryApi => {
     getSummary: async (
       refrigeratorId?: string,
     ): Promise<InventorySummaryResponse> => {
-      const baseUrl = refrigeratorId
-        ? `/refrigerators/${refrigeratorId}/inventory`
-        : '/inventory';
-      return backendApi.get<InventorySummaryResponse>(`${baseUrl}/summary`);
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for getSummary');
+      }
+      return aiApi.get<InventorySummaryResponse>(
+        `/refrigerators/${refrigeratorId}/inventory/summary`,
+      );
     },
 
     /**
@@ -122,11 +140,11 @@ export const createInventoryApi = (): InventoryApi => {
     getCategories: async (
       refrigeratorId?: string,
     ): Promise<InventoryCategoriesResponse> => {
-      const baseUrl = refrigeratorId
-        ? `/refrigerators/${refrigeratorId}/inventory`
-        : '/inventory';
-      return backendApi.get<InventoryCategoriesResponse>(
-        `${baseUrl}/categories`,
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for getCategories');
+      }
+      return aiApi.get<InventoryCategoriesResponse>(
+        `/refrigerators/${refrigeratorId}/inventory/categories`,
       );
     },
 
@@ -136,10 +154,14 @@ export const createInventoryApi = (): InventoryApi => {
     getSettings: async (
       refrigeratorId?: string,
     ): Promise<InventorySettingsResponse> => {
-      const baseUrl = refrigeratorId
-        ? `/refrigerators/${refrigeratorId}/inventory`
-        : '/inventory';
-      return backendApi.get<InventorySettingsResponse>(`${baseUrl}/settings`);
+      if (!refrigeratorId) {
+        // Fallback or Error? Doc says path is required.
+        // But SettingsPanel loads it from params.
+        throw new Error('Refrigerator ID is required for getSettings');
+      }
+      return aiApi.get<InventorySettingsResponse>(
+        `/refrigerators/${refrigeratorId}/inventory/settings`,
+      );
     },
 
     /**
@@ -149,11 +171,11 @@ export const createInventoryApi = (): InventoryApi => {
       data: UpdateInventorySettingsRequest,
       refrigeratorId?: string,
     ): Promise<InventorySettingsResponse> => {
-      const baseUrl = refrigeratorId
-        ? `/refrigerators/${refrigeratorId}/inventory`
-        : '/inventory';
-      return backendApi.put<InventorySettingsResponse>(
-        `${baseUrl}/settings`,
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for updateSettings');
+      }
+      return aiApi.put<InventorySettingsResponse>(
+        `/refrigerators/${refrigeratorId}/inventory/settings`,
         data,
       );
     },
@@ -166,12 +188,12 @@ export const createInventoryApi = (): InventoryApi => {
       data: { quantity: number; reasons: string[]; customReason?: string },
       refrigeratorId?: string,
     ): Promise<ApiSuccess<{ id: string; remainingQuantity: number }>> => {
-      const baseUrl = refrigeratorId
-        ? `/refrigerators/${refrigeratorId}/inventory`
-        : '/inventory';
-      return backendApi.post<
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for consumeItem');
+      }
+      return aiApi.post<
         ApiSuccess<{ id: string; remainingQuantity: number }>
-      >(`${baseUrl}/${id}/consume`, data);
+      >(`/refrigerators/${refrigeratorId}/inventory/${id}/consume`, data);
     },
   };
 };
