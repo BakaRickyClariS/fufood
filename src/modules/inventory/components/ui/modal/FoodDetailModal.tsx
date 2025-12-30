@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { ChevronLeft, Bell, BellRing } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { selectConsumptionContextId } from '@/modules/inventory/store/consumptionSlice';
 import gsap from 'gsap';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
@@ -11,6 +13,9 @@ import { aiRecipeApi } from '@/modules/ai/api/aiRecipeApi';
 import { ConsumptionModal } from '@/modules/inventory/components/consumption';
 import { useInventorySettingsQuery } from '@/modules/inventory/api/queries';
 import { categories as defaultCategories } from '@/modules/inventory/constants/categories';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
+import { useDispatch } from 'react-redux';
+import { clearConsumption } from '@/modules/inventory/store/consumptionSlice';
 
 type FoodDetailModalProps = {
   item: FoodItem;
@@ -26,6 +31,8 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
   onItemUpdate,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const dispatch = useDispatch();
 
   // 消耗 Modal 狀態
   const [showConsumptionModal, setShowConsumptionModal] = useState(false);
@@ -41,6 +48,16 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
 
   // 取得設定資料以獲取分類中文名稱
   const { data: settingsData } = useInventorySettingsQuery(item.groupId);
+
+  // 檢查是否有未完成的消耗流程 (Redux)
+  const consumptionContextId = useSelector(selectConsumptionContextId);
+
+  // 如果有未完成的流程且 ID 匹配，自動開啟消耗 Modal
+  useEffect(() => {
+    if (consumptionContextId === item.id) {
+      setShowConsumptionModal(true);
+    }
+  }, [consumptionContextId, item.id]);
 
   // 建立 category ID → 中文名稱的映射
   const categoryNameMap = useMemo(() => {
@@ -88,6 +105,11 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
   }, [isOpen]);
 
   const handleClose = () => {
+    // 如果使用者手動關閉 Modal，且當前有此食材的消耗流程，則清除流程狀態
+    if (consumptionContextId === item.id) {
+      dispatch(clearConsumption());
+    }
+
     const tl = gsap.timeline({
       onComplete: onClose,
     });
@@ -193,7 +215,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
           unit: item.unit || '個',
           expiryDate: item.expiryDate,
         }}
-        refrigeratorId={item.groupId}
+        refrigeratorId={item.groupId || activeRefrigeratorId || ''}
         onConfirm={() => {
           // 消耗完成後只關閉 ConsumptionModal
           // 不自動關閉食材詳細頁面，讓用戶決定是否返回
