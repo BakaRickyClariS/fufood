@@ -1,78 +1,68 @@
-import { useState, useCallback, useEffect } from 'react';
-import { sharedListApi } from '../services/api/sharedListApi';
-import type { SharedListItem, CreateSharedListItemInput } from '../types';
+import { useCallback, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import type { AppDispatch } from '@/store';
+import {
+  fetchListItems,
+  createListItem,
+  createListItems,
+  updateListItem,
+  deleteListItem,
+  selectCurrentListItems,
+  selectShoppingListLoading,
+} from '@/store/slices/shoppingListSlice';
+import type { CreateSharedListItemInput } from '../types';
 
 export const useSharedListItems = (listId: string | undefined) => {
-  const [items, setItems] = useState<SharedListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useDispatch<AppDispatch>();
+  const items = useSelector(selectCurrentListItems);
+  const isLoading = useSelector(selectShoppingListLoading);
 
-  const fetchItems = useCallback(async () => {
-    if (!listId) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await sharedListApi.getSharedListItems(listId);
-      setItems(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch items');
-    } finally {
-      setIsLoading(false);
+  const fetchItems = useCallback(() => {
+    if (listId) {
+      dispatch(fetchListItems(listId));
     }
-  }, [listId]);
+  }, [listId, dispatch]);
 
-  const createItem = async (input: CreateSharedListItemInput) => {
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
+
+  const handleCreateItems = async (inputs: CreateSharedListItemInput[]) => {
     if (!listId) throw new Error('No list ID provided');
-    try {
-      const newItem = await sharedListApi.createSharedListItem(listId, input);
-      setItems((prev) => [...prev, newItem]);
-      return newItem;
-    } catch (err) {
-      throw err instanceof Error ? err : new Error('Failed to create item');
-    }
+    await dispatch(createListItems({ listId, inputs })).unwrap();
   };
 
-  const updateItem = async (
+  const handleCreateItem = async (input: CreateSharedListItemInput) => {
+    if (!listId) throw new Error('No list ID provided');
+    const result = await dispatch(
+      createListItem({ listId, input }),
+    ).unwrap();
+    return result;
+  };
+
+  const handleUpdateItem = async (
     itemId: string,
     input: Partial<CreateSharedListItemInput>,
   ) => {
-    try {
-      await sharedListApi.updateSharedListItem(itemId, input);
-      // Optimistic or Refetch? Let's just refetch for consistency or manual update
-      setItems((prev) =>
-        prev.map((item) =>
-          item.id === itemId
-            ? { ...item, ...input, updatedAt: new Date().toISOString() }
-            : item,
-        ),
-      );
-    } catch (err) {
-      throw err instanceof Error ? err : new Error('Failed to update item');
-    }
+    if (!listId) throw new Error('No list ID provided');
+    await dispatch(
+      updateListItem({ listId, itemId, input }),
+    ).unwrap();
   };
 
-  const deleteItem = async (itemId: string) => {
-    try {
-      await sharedListApi.deleteSharedListItem(itemId);
-      setItems((prev) => prev.filter((item) => item.id !== itemId));
-    } catch (err) {
-      throw err instanceof Error ? err : new Error('Failed to delete item');
-    }
+  const handleDeleteItem = async (itemId: string) => {
+    if (!listId) throw new Error('No list ID provided');
+    await dispatch(deleteListItem({ listId, itemId })).unwrap();
   };
-
-  useEffect(() => {
-    if (listId) {
-      fetchItems();
-    }
-  }, [fetchItems, listId]);
 
   return {
     items,
     isLoading,
-    error,
+    error: null, // Error is handled in slice, could expose if needed
     refetch: fetchItems,
-    createItem,
-    updateItem,
-    deleteItem,
+    createItem: handleCreateItem,
+    createItems: handleCreateItems,
+    updateItem: handleUpdateItem,
+    deleteItem: handleDeleteItem,
   };
 };
