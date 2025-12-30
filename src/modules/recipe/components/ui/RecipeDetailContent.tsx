@@ -88,7 +88,7 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
         <img
           src={
             recipe.imageUrl ||
-            'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&h=600&fit=crop'
+            'https://placehold.co/600x400?text=No+Image'
           }
           alt={recipe.name}
           className="w-full h-full object-cover"
