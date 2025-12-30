@@ -5,6 +5,7 @@ import {
   selectAllGroups,
   fetchGroups,
 } from '@/modules/groups/store/groupsSlice';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import CommonItemCard from '@/modules/inventory/components/ui/card/CommonItemCard';
 import { useInventoryExtras } from '@/modules/inventory/hooks';
 import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
@@ -56,7 +57,8 @@ const ExpiredRecordsPanel: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const dispatch = useDispatch();
   const groups = useSelector(selectAllGroups);
-  const targetGroupId = groupId || groups[0]?.id;
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const targetGroupId = activeRefrigeratorId || groupId || groups[0]?.id;
 
   // 使用共用的淡入動畫 hook
   const { ref: contentRef, resetAnimation } =
