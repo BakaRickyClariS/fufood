@@ -29,12 +29,15 @@ const categoryItems: Category<RecipeCategory>[] = RECIPE_CATEGORIES.map(
 );
 
 import { useSearchParams, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 
 // ... (imports)
 
 export const RecipeList = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
 
   // 優先從 location.state 取得 ID (通知點擊)，其次從 URL searchParams 取得 (分享連結)
   const recipeIdFromState = (location.state as { openRecipeId?: string })
@@ -49,7 +52,7 @@ export const RecipeList = () => {
     null,
   );
 
-  const { recipes, isLoading, error } = useRecipes(selectedCategory);
+  const { recipes, isLoading, error } = useRecipes(selectedCategory, activeRefrigeratorId || undefined);
 
   // Handle recipe selection (from State or URL)
   useEffect(() => {

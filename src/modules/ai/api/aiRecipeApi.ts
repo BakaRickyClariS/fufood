@@ -210,7 +210,7 @@ export const aiRecipeApi = {
   /**
    * 取得使用者已儲存的食譜列表
    */
-  getSavedRecipes: async (): Promise<SavedRecipeListItem[]> => {
+  getSavedRecipes: async (refrigeratorId?: string): Promise<SavedRecipeListItem[]> => {
     const userId = identity.getUserId();
     if (!userId) {
       console.warn('No user ID, returning empty list');
@@ -221,7 +221,7 @@ export const aiRecipeApi = {
       // aiApi.get 第二個參數為 query params
       const response = await aiApi.get<{
         data: { recipes: SavedRecipeListItem[] };
-      }>('/recipes', { userId, limit: 50 });
+      }>('/recipes', { userId, refrigeratorId, limit: 50 });
       return response.data.recipes || [];
     } catch (error) {
       console.warn('Failed to get saved recipes', error);
@@ -267,7 +267,7 @@ export type SaveRecipeInput = {
   name: string;
   category?: string;
   description?: string;
-  imageUrl?: string;
+  imageUrl?: string | null;  // 允許 null，表示圖片生成失敗
   servings?: number;
   cookTime?: number;
   difficulty?: '簡單' | '中等' | '困難';
