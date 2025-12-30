@@ -129,7 +129,7 @@ export const useRecipeStream = () => {
               id: r.id,
               name: r.name,
               category: r.category || '其他',
-              imageUrl: r.imageUrl || '',
+              imageUrl: r.imageUrl ?? null,  // 保留 null，不轉為空字串
               servings: r.servings,
               cookTime: r.cookTime || 0,
               isFavorite: r.isFavorite ?? false,
@@ -154,13 +154,26 @@ export const useRecipeStream = () => {
         break;
       }
 
-      case 'error':
+      case 'error': {
+        // AI 錯誤碼友善訊息映射
+        const errorMessages: Record<string, string> = {
+          AI_001: '請輸入您想要的食譜說明',
+          AI_002: '輸入內容過長，請精簡您的描述',
+          AI_003: '已達每日查詢上限，請明天再試',
+          AI_004: '請先登入以使用 AI 功能',
+          AI_005: 'AI 服務暫時無法使用，請稍後再試',
+          AI_006: 'AI 生成逾時，請重試',
+          AI_007: '輸入內容包含不允許的指令或關鍵字，請重新輸入',
+        };
+        const friendlyMessage =
+          errorMessages[event.data.code] || event.data.message;
         setState((s) => ({
           ...s,
           isStreaming: false,
-          error: event.data.message,
+          error: friendlyMessage,
         }));
         break;
+      }
     }
   }, []);
 

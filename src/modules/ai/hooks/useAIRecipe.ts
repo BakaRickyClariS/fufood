@@ -154,16 +154,25 @@ export const useAIRecipeGenerate = (
   }
 
   // 標準模式
-  return {
-    generate,
-    isLoading: mutation.isPending,
-    text: mutation.data?.data.greeting ?? '',
-    progress: mutation.isSuccess ? 100 : 0,
-    stage: mutation.isPending ? '生成中...' : mutation.isSuccess ? '完成' : '',
-    recipes: mutation.data?.data.recipes ?? null,
-    error: mutation.error?.message ?? null,
-    remainingQueries: mutation.data?.data.remainingQueries ?? null,
-    stop,
-    reset,
-  };
+    // 標準模式下的錯誤處理
+    let errorMsg = mutation.error?.message ?? null;
+    if (mutation.error) {
+       // @ts-ignore - Assuming error object might have code property from backend response
+       if (mutation.error?.code === 'AI_007') {
+         errorMsg = '輸入內容包含不允許的指令或關鍵字，請重新輸入。';
+       }
+    }
+
+    return {
+      generate,
+      isLoading: mutation.isPending,
+      text: mutation.data?.data.greeting ?? '',
+      progress: mutation.isSuccess ? 100 : 0,
+      stage: mutation.isPending ? '生成中...' : mutation.isSuccess ? '完成' : '',
+      recipes: mutation.data?.data.recipes ?? null,
+      error: errorMsg,
+      remainingQueries: mutation.data?.data.remainingQueries ?? null,
+      stop,
+      reset,
+    };
 };

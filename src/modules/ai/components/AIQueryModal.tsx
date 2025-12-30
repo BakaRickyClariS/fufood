@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
-import { X, Sparkles, SlidersHorizontal, Plus, ArrowUp } from 'lucide-react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { X, Sparkles, SlidersHorizontal, Plus, ArrowUp, Package } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { cn } from '@/lib/utils';
 import { useAIRecipeGenerate, useRecipeSuggestions } from '@/modules/ai';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
+import { useInventoryQuery } from '@/modules/inventory/api/queries';
 import { RecipeCard } from '@/shared/components/recipe/RecipeCard';
 import { InventoryFilterModal } from '@/modules/ai/components/InventoryFilterModal';
 import { SelectedIngredientTags } from '@/modules/ai/components/SelectedIngredientTags';
@@ -31,11 +32,12 @@ export const AIQueryModal = ({
   isOpen,
   onClose,
   initialQuery = '',
-  useStreaming = true,
+  useStreaming = false,
 }: AIQueryModalProps) => {
   const [query, setQuery] = useState('');
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [useInventory, setUseInventory] = useState(true); // 預設開啟庫存食材
   const containerRef = useRef<HTMLDivElement>(null);
 
   // 食譜詳細 Modal 狀態
@@ -65,6 +67,21 @@ export const AIQueryModal = ({
   const suggestionTags = Array.isArray(suggestionsData?.data)
     ? suggestionsData.data
     : DEFAULT_SUGGESTION_TAGS;
+
+  // 庫存食材資料
+  const { data: inventoryData } = useInventoryQuery({ limit: 100 });
+  const allInventoryItems = useMemo(() => {
+    return inventoryData?.data?.items?.map((item) => item.name) || [];
+  }, [inventoryData]);
+
+  // 當開啟「使用庫存食材」時，自動載入所有庫存食材
+  useEffect(() => {
+    if (useInventory && allInventoryItems.length > 0) {
+      setSelectedIngredients(allInventoryItems);
+    } else if (!useInventory) {
+      setSelectedIngredients([]);
+    }
+  }, [useInventory, allInventoryItems]);
 
   // 判斷是否有結果
   const hasResult = text || recipes;
@@ -280,7 +297,7 @@ export const AIQueryModal = ({
                           {error}
                         </div>
                       ) : (
-                        <div className="text-gray-900 font-bold text-lg px-1 leading-relaxed">
+                        <div className="text-gray-900 font-bold text-lg px-1 leading-relaxed whitespace-pre-wrap">
                           {text}
                         </div>
                       )}
@@ -340,6 +357,7 @@ export const AIQueryModal = ({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+                  maxLength={4000}
                   placeholder={
                     selectedIngredients.length > 0
                       ? '想做什麼料理？'
@@ -360,6 +378,25 @@ export const AIQueryModal = ({
               </div>
               {/* Selected Tags Area */}
               <div className="flex items-center gap-2 mb-2 overflow-x-auto hide-scrollbar p-1">
+                {/* 使用庫存食材開關 */}
+                <button
+                  onClick={() => setUseInventory(!useInventory)}
+                  className={cn(
+                    'shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all',
+                    useInventory
+                      ? 'bg-[#F58274] text-white'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200',
+                  )}
+                >
+                  <Package className="w-4 h-4" />
+                  {useInventory ? '已載入庫存' : '使用庫存'}
+                  {useInventory && allInventoryItems.length > 0 && (
+                    <span className="bg-white/20 px-1.5 py-0.5 rounded-full text-xs">
+                      {allInventoryItems.length}
+                    </span>
+                  )}
+                </button>
+
                 {/* Filter Trigger Button */}
                 <button
                   onClick={() => setShowFilterModal(true)}
@@ -381,7 +418,7 @@ export const AIQueryModal = ({
                 {/* Tags */}
                 {selectedIngredients.length > 0 ? (
                   <SelectedIngredientTags
-                    items={selectedIngredients}
+                    items={selectedIngredients.slice(0, 5)} // 顯示最多 5 個
                     onRemove={(item) =>
                       setSelectedIngredients((prev) =>
                         prev.filter((i) => i !== item),
