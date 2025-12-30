@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSharedListDetail } from '@/modules/planning/hooks/useSharedLists';
-import { usePosts } from '@/modules/planning/hooks/usePosts';
-import { PostCard } from '../ui/PostCard';
+import { useSharedListItems } from '@/modules/planning/hooks/useSharedListItems';
+// import { PostCard } from '../ui/PostCard'; // Remove PostCard
 import { PostFormFeature } from './CreatePost';
 import { FloatingActionButton } from '@/shared/components/ui/FloatingActionButton';
-import type { SharedListPost } from '@/modules/planning/types';
+import type { SharedListItem } from '@/modules/planning/types';
+import { Pencil, Trash2 } from 'lucide-react';
 
 type SharedListDetailProps = {
   listId?: string;
@@ -16,30 +17,30 @@ type SharedListDetailProps = {
 export const SharedListDetail = ({ listId }: SharedListDetailProps) => {
   const navigate = useNavigate();
   const { list, isLoading: listLoading } = useSharedListDetail(listId);
-  const { posts, isLoading: postsLoading, deletePost } = usePosts(listId);
+  const { items, isLoading: itemsLoading, deleteItem } = useSharedListItems(listId);
 
-  const [showPostForm, setShowPostForm] = useState(false);
-  const [editingPost, setEditingPost] = useState<SharedListPost | null>(null);
+  const [showItemForm, setShowItemForm] = useState(false);
+  const [editingItem, setEditingItem] = useState<SharedListItem | null>(null);
 
   const handleOpenCreate = () => {
-    setEditingPost(null);
-    setShowPostForm(true);
+    setEditingItem(null);
+    setShowItemForm(true);
   };
 
-  const handleEdit = (post: SharedListPost) => {
-    setEditingPost(post);
-    setShowPostForm(true);
+  const handleEdit = (item: SharedListItem) => {
+    setEditingItem(item);
+    setShowItemForm(true);
   };
 
   const handleCloseForm = () => {
-    setShowPostForm(false);
-    setEditingPost(null);
+    setShowItemForm(false);
+    setEditingItem(null);
   };
 
-  const handleDelete = async (postId: string) => {
-    if (confirm('確定要刪除這則貼文嗎？')) {
-      await deletePost(postId);
-      toast.success('貼文已刪除');
+  const handleDelete = async (itemId: string) => {
+    if (confirm('確定要刪除這個項目嗎？')) {
+      await deleteItem(itemId);
+      toast.success('項目已刪除');
     }
   };
 
@@ -125,22 +126,53 @@ export const SharedListDetail = ({ listId }: SharedListDetailProps) => {
         </div>
       </div>
 
-      {/* Posts Feed */}
-      <div className="">
-        {postsLoading ? (
-          <div className="text-center py-8 text-neutral-400">載入貼文中...</div>
-        ) : posts.length === 0 ? (
-          <div className="mx-4 text-center py-12 text-neutral-400 bg-white rounded-xl border border-dashed border-neutral-200">
-            <p>目前還沒有貼文，分享你的第一筆清單吧！</p>
+      {/* Items Feed */}
+      <div className="px-4 space-y-4">
+        {itemsLoading ? (
+          <div className="text-center py-8 text-neutral-400">載入項目中...</div>
+        ) : items.length === 0 ? (
+          <div className="text-center py-12 text-neutral-400 bg-white rounded-xl border border-dashed border-neutral-200">
+            <p>目前還沒有項目，新增你的第一筆採買清單吧！</p>
           </div>
         ) : (
-          posts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
+          items.map((item) => (
+            <div
+              key={item.id}
+              className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm"
+            >
+              <div className="flex items-center gap-4">
+                {item.photoPath && (
+                  <img
+                    src={item.photoPath}
+                    alt={item.name}
+                    className="w-16 h-16 rounded-xl object-cover bg-neutral-100"
+                  />
+                )}
+                <div>
+                  <h3 className="font-bold text-neutral-800 text-lg">
+                    {item.name}
+                  </h3>
+                  <p className="text-neutral-500 font-medium">
+                    {item.quantity} {item.unit}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                 <button
+                   onClick={() => handleEdit(item)}
+                   className="p-2 text-neutral-400 hover:text-primary-default hover:bg-neutral-50 rounded-full transition-colors"
+                 >
+                   <Pencil className="w-5 h-5" />
+                 </button>
+                 <button
+                   onClick={() => handleDelete(item.id)}
+                   className="p-2 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                 >
+                   <Trash2 className="w-5 h-5" />
+                 </button>
+              </div>
+            </div>
           ))
         )}
       </div>
@@ -151,11 +183,11 @@ export const SharedListDetail = ({ listId }: SharedListDetailProps) => {
       />
 
       {/* Post Form Overlay */}
-      {showPostForm && (
+      {showItemForm && (
         <PostFormFeature
           listId={listId}
-          mode={editingPost ? 'edit' : 'create'}
-          initialData={editingPost}
+          mode={editingItem ? 'edit' : 'create'}
+          initialData={editingItem}
           onClose={handleCloseForm}
         />
       )}
