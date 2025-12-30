@@ -1,14 +1,21 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { ChevronLeft, Bell, BellRing } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { selectConsumptionContextId } from '@/modules/inventory/store/consumptionSlice';
 import gsap from 'gsap';
 import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { InfoTooltip } from '@/shared/components/feedback/InfoTooltip';
 import type { FoodItem } from '@/modules/inventory/types';
 import { useExpiryCheck } from '@/modules/inventory/hooks';
 import { inventoryApi } from '@/modules/inventory/api';
-// 引入 AI API
 import { aiRecipeApi } from '@/modules/ai/api/aiRecipeApi';
 import { ConsumptionModal } from '@/modules/inventory/components/consumption';
+import { useInventorySettingsQuery } from '@/modules/inventory/api/queries';
+import { categories as defaultCategories } from '@/modules/inventory/constants/categories';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
+import { useDispatch } from 'react-redux';
+import { clearConsumption } from '@/modules/inventory/store/consumptionSlice';
 
 type FoodDetailModalProps = {
   item: FoodItem;
@@ -17,10 +24,6 @@ type FoodDetailModalProps = {
   onItemUpdate?: () => void;
 };
 
-import { createPortal } from 'react-dom';
-
-// ... (other imports)
-
 const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
   item,
   isOpen,
@@ -28,7 +31,8 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
   onItemUpdate,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
-  // const contentRef = useRef<HTMLDivElement>(null); // No longer needed for scroll listener if we just want static header
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const dispatch = useDispatch();
 
   // 消耗 Modal 狀態
   const [showConsumptionModal, setShowConsumptionModal] = useState(false);
@@ -41,6 +45,46 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
 
   const navigate = useNavigate();
   const { status, daysUntilExpiry } = useExpiryCheck(item);
+
+  // 取得設定資料以獲取分類中文名稱
+  const { data: settingsData } = useInventorySettingsQuery(item.groupId);
+
+  // 檢查是否有未完成的消耗流程 (Redux)
+  const consumptionContextId = useSelector(selectConsumptionContextId);
+
+  // 如果有未完成的流程且 ID 匹配，自動開啟消耗 Modal
+  useEffect(() => {
+    if (consumptionContextId === item.id) {
+      setShowConsumptionModal(true);
+    }
+  }, [consumptionContextId, item.id]);
+
+  // 建立 category ID → 中文名稱的映射
+  const categoryNameMap = useMemo(() => {
+    // 先建立預設對照表
+    const map: Record<string, string> = {};
+    defaultCategories.forEach((c) => {
+      map[c.id] = c.title;
+    });
+
+    // 如果有後端設定，合併更新
+    const categories = settingsData?.data?.settings?.categories || [];
+    categories.forEach((cat) => {
+      map[cat.id] = cat.title;
+    });
+    
+    return map;
+  }, [settingsData]);
+
+  // 日期格式化工具函數
+  const formatDate = (dateString: string): string => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}/${month}/${day}`;
+  };
 
   // 同步 item 狀態
   useEffect(() => {
@@ -61,6 +105,11 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
   }, [isOpen]);
 
   const handleClose = () => {
+    // 如果使用者手動關閉 Modal，且當前有此食材的消耗流程，則清除流程狀態
+    if (consumptionContextId === item.id) {
+      dispatch(clearConsumption());
+    }
+
     const tl = gsap.timeline({
       onComplete: onClose,
     });
@@ -104,7 +153,10 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
       });
 
       if (result.data.recipes && result.data.recipes.length > 0) {
-        navigate(`/planning?tab=recipes&recipeId=${result.data.recipes[0].id}`);
+        // 使用 id 參數並傳遞完整食譜物件，避免前端因資料尚未寫入 DB 而無法透過 API 取得
+        navigate(`/planning?tab=recipes&id=${result.data.recipes[0].id}`, {
+          state: { openRecipe: result.data.recipes[0] },
+        });
       }
 
       handleClose();
@@ -163,7 +215,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
           unit: item.unit || '個',
           expiryDate: item.expiryDate,
         }}
-        refrigeratorId={item.groupId}
+        refrigeratorId={item.groupId || activeRefrigeratorId || ''}
         onConfirm={() => {
           // 消耗完成後只關閉 ConsumptionModal
           // 不自動關閉食材詳細頁面，讓用戶決定是否返回
@@ -198,7 +250,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
         </button>
         {/* Helper layout for centering */}
         <div className="absolute left-1/2 -translate-x-1/2 text-base font-bold text-white drop-shadow-md">
-          {item.category}
+          {categoryNameMap[item.category] || item.category}
         </div>
         <div className="w-6" /> {/* Spacer */}
       </div>
@@ -214,8 +266,6 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-
-            {/* Removed Category Label from Image */}
           </div>
           <div className="relative z-10 -mt-6 bg-white rounded-t-xl p-6 space-y-6 flex-1">
             {/* Title & Alert Row */}
@@ -264,7 +314,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
                   產品分類
                 </span>
                 <span className="text-lg text-neutral-900 font-medium">
-                  {item.category || '未分類'}
+                  {categoryNameMap[item.category] || item.category || '未分類'}
                 </span>
               </div>
 
@@ -297,7 +347,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
                     入庫日期
                   </span>
                   <span className="text-lg text-neutral-900 font-medium">
-                    {item.purchaseDate}
+                    {formatDate(item.purchaseDate)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -315,7 +365,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
                     過期日期
                   </span>
                   <span className="text-lg text-neutral-900 font-medium">
-                    {item.expiryDate}
+                    {formatDate(item.expiryDate)}
                   </span>
                 </div>
               </div>

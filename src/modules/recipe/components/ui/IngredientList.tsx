@@ -14,9 +14,9 @@ export const IngredientList = ({ ingredients }: IngredientListProps) => {
         {title}
       </h4>
       <div className="space-y-3">
-        {items.map((item) => (
+        {items.map((item, index) => (
           <div
-            key={item.name}
+            key={`${item.name}-${index}`}
             className="flex justify-between items-center py-2 border-b border-gray-200 last:border-0"
           >
             <span className="text-gray-900">{item.name}</span>
