@@ -34,6 +34,7 @@ import {
   selectAllGroups,
   fetchGroups,
 } from '@/modules/groups/store/groupsSlice';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import type { CategoryInfo } from '@/modules/inventory/types';
 import type { LayoutType } from '@/modules/inventory/types/layoutTypes';
 import { LAYOUT_CONFIGS } from '@/modules/inventory/types/layoutTypes';
@@ -146,13 +147,6 @@ const SettingsPanel: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const dispatch = useDispatch();
 
-  // Get groups to derive default ID if needed
-  const groups = useSelector(selectAllGroups);
-  // 使用多來源 fallback 機制取得 refrigeratorId
-  const targetGroupId = getRefrigeratorId(groupId, groups);
-
-  const categoryOrder = useSelector(selectCategoryOrder);
-
   const [savedCategoryOrder, setSavedCategoryOrder] = useState<string[]>([]);
 
   const layoutContainerRef = useRef<HTMLDivElement>(null);
@@ -165,8 +159,17 @@ const SettingsPanel: React.FC = () => {
     }),
   );
 
-  // 計算穩定的 refrigeratorId
-  const firstGroupId = groups[0]?.id;
+  // Get groups to derive default ID if needed
+  const groups = useSelector(selectAllGroups);
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  // 使用多來源 fallback 機制取得 refrigeratorId
+  const targetGroupId = activeRefrigeratorId || getRefrigeratorId(groupId, groups);
+
+  const categoryOrder = useSelector(selectCategoryOrder);
+
+
+
+
 
   // Effect 1: 確保 groups 已載入
   useEffect(() => {
@@ -179,7 +182,7 @@ const SettingsPanel: React.FC = () => {
   // Effect 2: 當 groups 已載入或有有效 refrigeratorId 時，載入 settings
   useEffect(() => {
     // 計算 refrigeratorId
-    const refId = getRefrigeratorId(groupId, groups);
+    const refId = targetGroupId;
 
     // 如果還沒有 refId，不執行
     if (!refId) {
@@ -262,7 +265,7 @@ const SettingsPanel: React.FC = () => {
     };
 
     fetchSettings();
-  }, [groupId, firstGroupId, dispatch, categoryOrder.length]);
+  }, [targetGroupId, dispatch, categoryOrder.length, groups.length]);
 
   const sortedCategories = useMemo(() => {
     if (categories.length === 0) return [];

@@ -1,4 +1,6 @@
-import { useState, createContext, useContext, type ReactNode } from 'react';
+import { useState, createContext, useContext, useEffect, type ReactNode } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { setActiveRefrigeratorId, selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import type { Group } from '@/modules/groups/types/group.types';
 import { HomeModal } from '@/modules/groups/components/modals/HomeModal';
 import { GroupSettingsModal } from '@/modules/groups/components/modals/GroupSettingsModal';
@@ -44,10 +46,20 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
   const { groups, createGroup, updateGroup, deleteGroup, isLoading } =
     useGroups();
 
-  const [activeGroupId, setActiveGroupId] = useState<string>(() => {
-    // 優先從 localStorage 讀取
-    return localStorage.getItem('activeRefrigeratorId') || '1';
-  });
+  const dispatch = useDispatch();
+  // 優先使用 Redux 中的 ID，若無則從 localStorage 或預設 '1'
+  const reduxActiveId = useSelector(selectActiveRefrigeratorId);
+  
+  // 這裡我們不再需要本地 activeGroupId state，直接依賴 Redux
+  // 但為了避免重構過多，我們可以用一個衍生變數
+  const activeGroupId = reduxActiveId || localStorage.getItem('activeRefrigeratorId') || '1';
+  
+  // 初始化時同步到 Redux (如果 Redux 是空的)
+  useEffect(() => {
+    if (!reduxActiveId && activeGroupId) {
+       dispatch(setActiveRefrigeratorId(activeGroupId));
+    }
+  }, [reduxActiveId, activeGroupId, dispatch]);
 
   const activeGroup = Array.isArray(groups)
     ? groups.find((g) => g.id === activeGroupId) || groups[0]
@@ -64,8 +76,8 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
 
   // Actions
   const switchGroup = (groupId: string) => {
-    setActiveGroupId(groupId);
-    localStorage.setItem('activeRefrigeratorId', groupId);
+    // Dispatch to Redux (Slice 會自動處理 localStorage)
+    dispatch(setActiveRefrigeratorId(groupId));
   };
 
   const openHome = () => setIsHomeModalOpen(true);

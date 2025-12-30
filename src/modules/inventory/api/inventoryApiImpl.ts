@@ -28,7 +28,10 @@ export const createInventoryApi = (): InventoryApi => {
     getInventory: async (
       params?: GetInventoryRequest,
     ): Promise<GetInventoryResponse> => {
-      const refrigeratorId = params?.groupId;
+      const refrigeratorId = params?.refrigeratorId || params?.groupId;
+      if (!refrigeratorId) {
+        throw new Error('Refrigerator ID is required for getInventory');
+      }
       if (!refrigeratorId) {
         throw new Error('Refrigerator ID is required for getInventory');
       }

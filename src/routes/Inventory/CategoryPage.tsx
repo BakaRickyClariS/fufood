@@ -15,8 +15,10 @@ import {
   selectAllGroups,
   fetchGroups,
 } from '@/modules/groups/store/groupsSlice';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import { getRefrigeratorId } from '@/modules/inventory/utils/getRefrigeratorId';
 import type { FoodItem, InventoryStatus } from '@/modules/inventory/types';
+import { selectConsumptionContextId } from '@/modules/inventory/store/consumptionSlice';
 
 const CategoryPage: React.FC = () => {
   const { categoryId, groupId: urlGroupId } = useParams();
@@ -24,7 +26,8 @@ const CategoryPage: React.FC = () => {
 
   // 取得 groups 並計算 refrigeratorId
   const groups = useSelector(selectAllGroups);
-  const refrigeratorId = getRefrigeratorId(urlGroupId, groups);
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const refrigeratorId = activeRefrigeratorId || getRefrigeratorId(urlGroupId, groups);
 
   // 確保 groups 載入
   useEffect(() => {
@@ -61,6 +64,20 @@ const CategoryPage: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  // 檢查是否有未完成的消耗流程並自動開啟對應的 Modal (Redux)
+  const consumptionContextId = useSelector(selectConsumptionContextId);
+  
+  useEffect(() => {
+    // 當列表資料載入後，檢查是否有暫存的流程狀態
+    if (allItems.length > 0 && !selectedItem && consumptionContextId) {
+      // 嘗試從當前列表中找到對應的 item
+      const targetItem = allItems.find(item => item.id === consumptionContextId);
+      if (targetItem) {
+        setSelectedItem(targetItem);
+      }
+    }
+  }, [allItems, selectedItem, consumptionContextId]);
 
   // Sync local state with hook filters
   const handleSearch = (query: string) => {

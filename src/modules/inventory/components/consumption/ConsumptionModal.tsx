@@ -12,7 +12,15 @@ import { ConsumptionSuccessModal } from './ConsumptionSuccessModal';
 import { useConsumeItemMutation } from '@/modules/inventory/api/queries';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import { useFlowState } from '@/shared/hooks/useFlowState';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  startConsumption,
+  setConsumptionStep,
+  clearConsumption,
+  selectConsumptionItems,
+  selectConsumptionStep,
+  selectConsumptionContextId,
+} from '@/modules/inventory/store/consumptionSlice';
 // The user said "Execute and update ... docs". I should check inventoryApi first?
 // I'll proceed assuming I might need to add it or it exists.
 // Based on file reads, I saw `inventoryApi` but didn't check `consumeItem`.
@@ -84,93 +92,61 @@ export const ConsumptionModal = ({
   // Track previous isOpen to detect open transition
   const wasOpenRef = useRef(false);
 
-  // 流程狀態持久化 Hook
-  const {
-    saveState,
-    clearState,
-    restoreState,
-    skipAnimation,
-    setSkipAnimation,
-  } = useFlowState<{ items: ItemWithReason[]; step: string }>({
-    key: 'consumption',
-    contextId: singleItem?.id,
-  });
+  // Redux state
+  const dispatch = useDispatch();
+  const consumptionItems = useSelector(selectConsumptionItems);
+  const consumptionStep = useSelector(selectConsumptionStep);
+  const consumptionContextId = useSelector(selectConsumptionContextId);
 
-  // Helper to handle opening edit modal
-  const handleOpenEdit = contextSafe(() => {
-    // 儲存當前狀態到 sessionStorage
-    saveState('edit', { items: currentItems, step: 'edit' });
-
-    if (modalRef.current && overlayRef.current) {
-      const tl = gsap.timeline({
-        onComplete: () => {
-          setShowEditModal(true);
-        },
-      });
-      tl.to(modalRef.current, {
-        scale: 0.9,
-        opacity: 0,
-        duration: 0.2,
-        ease: 'power2.in',
-      });
-      tl.to(overlayRef.current, { opacity: 0, duration: 0.2 }, '-=0.2');
-    } else {
-      setShowEditModal(true);
-    }
-  });
-
-  // Helper to handle closing edit modal (returning to consumption modal)
-  const handleCloseEdit = contextSafe(() => {
-    setShowEditModal(false);
-    // The main view will re-mount and `useGSAP` will trigger the entrance animation automatically
-    // because `showEditModal` changing to false renders the elements again.
-    // We added `showEditModal` to the dependency array of the main animation effect to ensure it runs.
-  });
+  // Skip animation flag (local state based on restoration)
+  const [skipAnimation, setSkipAnimation] = useState(false);
 
   // Initialize items ONLY when modal opens (transition from closed -> open)
-  // This avoids the infinite loop caused by singleItem/items object references
-  // Note: We intentionally do NOT include singleItem/items in dependencies
-  // because they are object references that change on every render.
-  // wasOpenRef ensures we only initialize when modal opens.
   useEffect(() => {
     if (isOpen && !wasOpenRef.current) {
-      // Modal just opened - 嘗試恢復狀態
-      const restored = restoreState((step, data) => {
-        if (data.items && data.items.length > 0) {
-          setCurrentItems(data.items);
-          if (step === 'edit') {
-            setShowEditModal(true);
-          } else if (step === 'success') {
-            setShowSuccessModal(true);
-          }
+      // Check if we need to restore state or initialize new state
+      const hasStoredState = consumptionItems.length > 0 && consumptionContextId === singleItem?.id;
+      
+      if (hasStoredState) {
+        setCurrentItems(consumptionItems);
+        // If restoring, skip animation
+        setSkipAnimation(true);
+        if (consumptionStep === 'edit') {
+          setShowEditModal(true);
+        } else if (consumptionStep === 'success') {
+          setShowSuccessModal(true);
         }
-      });
-
-      // 如果沒有恢復狀態，則初始化
-      if (!restored) {
+      } else {
+        // Initialize new flow
+        let initialItems: ItemWithReason[] = [];
+        
         if (singleItem) {
-          // If singleItem exists (Recipe flow), default reason is 'recipe_consumption'
-          setCurrentItems([
+           initialItems = [
             {
               ingredientName: singleItem.name,
               originalQuantity: '',
               consumedQuantity: singleItem.quantity,
               unit: singleItem.unit,
               expiryDate: singleItem.expiryDate,
-              reasons: [...defaultReasons], // Use defaultReasons prop
+              reasons: [...defaultReasons],
               customReason: '',
               id: singleItem.id,
             } as ItemWithReason,
-          ]);
+          ];
         } else if (items.length > 0) {
-          setCurrentItems(
-            items.map((i) => ({
+          initialItems = items.map((i) => ({
               ...i,
               reasons: [...defaultReasons],
               customReason: '',
-            })),
-          );
+            }));
         }
+        
+        setCurrentItems(initialItems);
+        // Start Redux flow
+        dispatch(startConsumption({ 
+          items: initialItems, 
+          contextId: singleItem?.id 
+        }));
       }
     }
     wasOpenRef.current = isOpen;
@@ -214,6 +190,34 @@ export const ConsumptionModal = ({
     { dependencies: [isOpen, showEditModal, showSuccessModal, skipAnimation] },
   );
 
+  // Helper to handle opening edit modal
+  const handleOpenEdit = contextSafe(() => {
+    dispatch(setConsumptionStep('edit'));
+
+    if (modalRef.current && overlayRef.current) {
+      const tl = gsap.timeline({
+        onComplete: () => {
+          setShowEditModal(true);
+        },
+      });
+      tl.to(modalRef.current, {
+        scale: 0.9,
+        opacity: 0,
+        duration: 0.2,
+        ease: 'power2.in',
+      });
+      tl.to(overlayRef.current, { opacity: 0, duration: 0.2 }, '-=0.2');
+    } else {
+      setShowEditModal(true);
+    }
+  });
+
+  // Helper to handle closing edit modal (returning to consumption modal)
+  const handleCloseEdit = contextSafe(() => {
+    dispatch(setConsumptionStep('input'));
+    setShowEditModal(false);
+  });
+
   const handleClose = contextSafe((callback?: () => void) => {
     if (modalRef.current && overlayRef.current) {
       const tl = gsap.timeline({
@@ -241,14 +245,16 @@ export const ConsumptionModal = ({
       await Promise.all(
         itemsToConsume.map((item) => {
           if (!item.id) return Promise.resolve();
-          const reasons = item.selectedReasons || [];
+          const hasReasons = item.selectedReasons && item.selectedReasons.length > 0;
+          const reasons = hasReasons ? item.selectedReasons! : ['custom'];
+          const customReason = hasReasons ? item.customReasonStr : (item.customReasonStr || '一般消耗');
 
           return consumeItem({
             id: item.id,
             data: {
               quantity: item.consumedQuantity,
               reasons: reasons,
-              customReason: item.customReasonStr,
+              customReason: customReason,
             },
             refrigeratorId,
           });
@@ -271,8 +277,8 @@ export const ConsumptionModal = ({
     // If provided, signal parent to hide/animate out concurrently
     onHideParent?.();
 
-    // 儲存成功狀態到 sessionStorage
-    saveState('success', { items: currentItems, step: 'success' });
+    // 儲存成功狀態
+    dispatch(setConsumptionStep('success'));
 
     if (modalRef.current && overlayRef.current) {
       const tl = gsap.timeline({
@@ -332,8 +338,8 @@ export const ConsumptionModal = ({
 
   // 點擊返回庫房：先關閉食材詳細頁，再關閉成功頁面，最後導航
   const handleBackToInventory = () => {
-    // 清除 sessionStorage 中的流程狀態
-    clearState();
+    // 清除流程狀態
+    dispatch(clearConsumption());
     onConfirm(true);
 
     if (onCloseAll) {
@@ -409,7 +415,12 @@ export const ConsumptionModal = ({
                         </div>
                         {item.expiryDate && (
                           <div className="text-primary-400 text-base font-medium">
-                            {item.expiryDate} 過期
+                            {new Date(item.expiryDate).toLocaleDateString('zh-TW', {
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                            })}{' '}
+                            過期
                           </div>
                         )}
                       </div>

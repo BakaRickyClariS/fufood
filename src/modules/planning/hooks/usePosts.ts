@@ -1,35 +1,40 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import type { SharedListPost, CreatePostInput } from '../types';
+import type { SharedListItem, CreateSharedListItemInput } from '../types';
 import { sharedListApi } from '../services/api/sharedListApi';
 
-export const usePosts = (listId: string | undefined) => {
-  const [posts, setPosts] = useState<SharedListPost[]>([]);
+export const useSharedListItems = (listId: string | undefined) => {
+  const [items, setItems] = useState<SharedListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchPosts = useCallback(async () => {
+  const fetchItems = useCallback(async () => {
     if (!listId) return;
     setIsLoading(true);
     setError(null);
     try {
-      const data = await sharedListApi.getPosts(listId);
-      setPosts(data);
+      const data = await sharedListApi.getSharedListItems(listId);
+      setItems(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch posts');
+      setError(err instanceof Error ? err.message : 'Failed to fetch items');
     } finally {
       setIsLoading(false);
     }
   }, [listId]);
 
-  const createPost = async (input: CreatePostInput) => {
+  // 批量建立 (因為 Post 可能包含多個 items)
+  const createItems = async (inputs: CreateSharedListItemInput[]) => {
+    if (!listId) return;
     setIsLoading(true);
     try {
-      const newPost = await sharedListApi.createPost(input);
-      setPosts((prev) => [newPost, ...prev]);
-      return newPost;
+      const promises = inputs.map((input) =>
+        sharedListApi.createSharedListItem(listId, input),
+      );
+      const newItems = await Promise.all(promises);
+      setItems((prev) => [...newItems, ...prev]);
+      return newItems;
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to create post';
+      const msg = err instanceof Error ? err.message : 'Failed to create items';
       setError(msg);
       throw new Error(msg);
     } finally {
@@ -37,44 +42,64 @@ export const usePosts = (listId: string | undefined) => {
     }
   };
 
-  const deletePost = async (postId: string) => {
+  const createItem = async (input: CreateSharedListItemInput) => {
     if (!listId) return;
+    setIsLoading(true);
     try {
-      await sharedListApi.deletePost(postId, listId);
-      setPosts((prev) => prev.filter((post) => post.id !== postId));
+      const newItem = await sharedListApi.createSharedListItem(listId, input);
+      setItems((prev) => [newItem, ...prev]);
+      return newItem;
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to delete post';
+      const msg = err instanceof Error ? err.message : 'Failed to create item';
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteItem = async (itemId: string) => {
+    try {
+      await sharedListApi.deleteSharedListItem(itemId);
+      setItems((prev) => prev.filter((item) => item.id !== itemId));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete item';
       toast.error(msg);
       throw err;
     }
   };
 
-  const updatePost = async (postId: string, input: CreatePostInput) => {
-    if (!listId) return;
+  const updateItem = async (
+    itemId: string,
+    input: Partial<CreateSharedListItemInput>,
+  ) => {
     try {
-      const updatedPost = await sharedListApi.updatePost(postId, listId, input);
-      setPosts((prev) =>
-        prev.map((post) => (post.id === postId ? updatedPost : post)),
+      await sharedListApi.updateSharedListItem(itemId, input);
+      setItems((prev) =>
+        prev.map((item) => (item.id === itemId ? { ...item, ...input } : item)),
       );
-      return updatedPost;
+      // 因為 updateSharedListItem 只回傳 void，這裡樂觀更新或重新 fetch
+      // 若需要完整資料需重新 fetch，但為了效能先這樣
+      fetchItems(); 
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to update post';
+      const msg = err instanceof Error ? err.message : 'Failed to update item';
       toast.error(msg);
       throw err;
     }
   };
 
   useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
+    fetchItems();
+  }, [fetchItems]);
 
   return {
-    posts,
+    items,
     isLoading,
     error,
-    refetch: fetchPosts,
-    createPost,
-    updatePost,
-    deletePost,
+    refetch: fetchItems,
+    createItem,
+    createItems,
+    updateItem,
+    deleteItem,
   };
 };
