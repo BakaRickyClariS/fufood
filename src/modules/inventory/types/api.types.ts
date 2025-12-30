@@ -5,6 +5,8 @@ import type {
   InventoryStats,
   CategoryInfo,
 } from './inventory.types';
+import type { ISODate, ISOTimestamp, UUID } from '@/api/types.ts';
+import type { UnitType } from '@/modules/inventory/types/units.types.ts';
 
 // 通用成功封裝
 export type ApiSuccess<T> = {
@@ -108,3 +110,49 @@ export type InventorySummaryResponse = ApiSuccess<{
 export type InventorySettingsResponse = ApiSuccess<{
   settings: InventorySettings;
 }>;
+
+export interface InventoryTransaction {
+  id: UUID;
+  refrigeratorId: UUID;
+  committedAt: ISOTimestamp | null;
+  items: InventoryTransactionItem[];
+  createdAt: ISOTimestamp;
+  updatedAt: ISOTimestamp;
+}
+
+export interface InventoryTransactionItem {
+  id: UUID;
+  quantity: number;
+  expirationDate: ISODate;
+  inventoryTransactionItemImage: string | null;
+  fullyConsumedAt: ISOTimestamp | null;
+  parentId: UUID | null;
+  inventoryTransactionId: UUID;
+  createdAt: ISOTimestamp;
+  updatedAt: ISOTimestamp;
+}
+
+interface ProductParams {
+  name: string;
+  quantity: number;
+  unit: UnitType;
+}
+
+interface InventoryTransactionItemParamsWithProductId {
+  productId: UUID;
+  productParams?: never;
+}
+
+interface InventoryTransactionItemParamsWithProductParams {
+  productId?: never;
+  productParams: ProductParams;
+}
+
+export type InventoryTransactionItemParams = (
+  | InventoryTransactionItemParamsWithProductId
+  | InventoryTransactionItemParamsWithProductParams
+) & {
+  quantity: number;
+  expirationDate: ISODate;
+  image?: string | null;
+};
