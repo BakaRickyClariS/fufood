@@ -18,6 +18,7 @@ export type ApiSuccess<T> = {
 // 取得庫存請求
 export type GetInventoryRequest = {
   groupId?: string;
+  refrigeratorId?: string;
   category?: FoodCategory;
   status?: InventoryStatus;
   include?: string; // e.g., "summary,stats"

@@ -2,14 +2,15 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { ChevronLeft, Bell, BellRing } from 'lucide-react';
 import gsap from 'gsap';
 import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { InfoTooltip } from '@/shared/components/feedback/InfoTooltip';
 import type { FoodItem } from '@/modules/inventory/types';
 import { useExpiryCheck } from '@/modules/inventory/hooks';
 import { inventoryApi } from '@/modules/inventory/api';
-// 引入 AI API
 import { aiRecipeApi } from '@/modules/ai/api/aiRecipeApi';
 import { ConsumptionModal } from '@/modules/inventory/components/consumption';
 import { useInventorySettingsQuery } from '@/modules/inventory/api/queries';
+import { categories as defaultCategories } from '@/modules/inventory/constants/categories';
 
 type FoodDetailModalProps = {
   item: FoodItem;
@@ -18,10 +19,6 @@ type FoodDetailModalProps = {
   onItemUpdate?: () => void;
 };
 
-import { createPortal } from 'react-dom';
-
-// ... (other imports)
-
 const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
   item,
   isOpen,
@@ -29,7 +26,6 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
   onItemUpdate,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
-  // const contentRef = useRef<HTMLDivElement>(null); // No longer needed for scroll listener if we just want static header
 
   // 消耗 Modal 狀態
   const [showConsumptionModal, setShowConsumptionModal] = useState(false);
@@ -48,14 +44,19 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
 
   // 建立 category ID → 中文名稱的映射
   const categoryNameMap = useMemo(() => {
+    // 先建立預設對照表
+    const map: Record<string, string> = {};
+    defaultCategories.forEach((c) => {
+      map[c.id] = c.title;
+    });
+
+    // 如果有後端設定，合併更新
     const categories = settingsData?.data?.settings?.categories || [];
-    return categories.reduce(
-      (acc, cat) => {
-        acc[cat.id] = cat.title;
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
+    categories.forEach((cat) => {
+      map[cat.id] = cat.title;
+    });
+    
+    return map;
   }, [settingsData]);
 
   // 日期格式化工具函數
@@ -130,7 +131,10 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
       });
 
       if (result.data.recipes && result.data.recipes.length > 0) {
-        navigate(`/planning?tab=recipes&recipeId=${result.data.recipes[0].id}`);
+        // 使用 id 參數並傳遞完整食譜物件，避免前端因資料尚未寫入 DB 而無法透過 API 取得
+        navigate(`/planning?tab=recipes&id=${result.data.recipes[0].id}`, {
+          state: { openRecipe: result.data.recipes[0] },
+        });
       }
 
       handleClose();
@@ -224,7 +228,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
         </button>
         {/* Helper layout for centering */}
         <div className="absolute left-1/2 -translate-x-1/2 text-base font-bold text-white drop-shadow-md">
-          {item.category}
+          {categoryNameMap[item.category] || item.category}
         </div>
         <div className="w-6" /> {/* Spacer */}
       </div>
@@ -240,8 +244,6 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-
-            {/* Removed Category Label from Image */}
           </div>
           <div className="relative z-10 -mt-6 bg-white rounded-t-xl p-6 space-y-6 flex-1">
             {/* Title & Alert Row */}
