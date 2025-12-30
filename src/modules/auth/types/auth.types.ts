@@ -1,3 +1,5 @@
+import type { ISOTimestamp, UUID } from '@/api/types';
+
 /**
  * 會員等級型別
  */
@@ -25,8 +27,6 @@ export type DietaryPreference = {
   seasoningLevel: SeasoningLevel;
   restrictions: DietaryRestriction[];
 };
-export type ISOTimestamp = string;
-export type UUID = string;
 
 export type User = {
   id: UUID;
