@@ -18,6 +18,9 @@ import {
   selectAllGroups,
   fetchGroups,
 } from '@/modules/groups/store/groupsSlice';
+import {
+  selectActiveRefrigeratorId,
+} from '@/store/slices/refrigeratorSlice';
 import useFadeInAnimation from '@/shared/hooks/useFadeInAnimation';
 import type { CategoryInfo } from '@/modules/inventory/types';
 import { categories as defaultCategories } from '@/modules/inventory/constants/categories';
@@ -43,6 +46,9 @@ const OverviewPanel: React.FC = () => {
   const categoryOrder = useSelector(selectCategoryOrder);
   const dispatch = useDispatch();
   const { groupId } = useParams<{ groupId: string }>();
+  
+  // Get active ID from Redux
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
 
   // Get groups to derive default ID
   const groups = useSelector(selectAllGroups);
@@ -58,8 +64,8 @@ const OverviewPanel: React.FC = () => {
 
   // Effect 2: 當 groups 已載入時，載入 settings
   useEffect(() => {
-    // 計算 refrigeratorId
-    const refId = getRefrigeratorId(groupId, groups);
+    // 計算 refrigeratorId: 優先使用 Redux active ID，其次 URL groupId，最後 fallback
+    const refId = activeRefrigeratorId || getRefrigeratorId(groupId, groups);
 
     // 如果還沒有 refId，不執行
     if (!refId) {
@@ -157,7 +163,7 @@ const OverviewPanel: React.FC = () => {
     };
 
     fetchData();
-  }, [groupId, firstGroupId, dispatch]);
+  }, [groupId, firstGroupId, dispatch, activeRefrigeratorId, groups]);
 
   // 根據 Redux 的 categoryOrder 排序類別（這會在 categoryOrder 變化時自動更新）
   const sortedCategories = useMemo(() => {

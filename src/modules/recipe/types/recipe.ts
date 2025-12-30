@@ -32,7 +32,8 @@ export type Recipe = {
   name: string;
   category: RecipeCategory;
   series?: string;
-  imageUrl: string;
+  // 修改：允許 null，表示圖片生成失敗或未完成
+  imageUrl: string | null;
   servings: number;
   cookTime: number;
   difficulty: RecipeDifficulty;
@@ -51,7 +52,7 @@ export type RecipeListItem = {
   id: string;
   name: string;
   category: RecipeCategory;
-  imageUrl: string;
+  imageUrl: string | null;  // 允許 null，表示圖片生成失敗或未完成
   servings: number;
   cookTime: number;
   isFavorite?: boolean;
