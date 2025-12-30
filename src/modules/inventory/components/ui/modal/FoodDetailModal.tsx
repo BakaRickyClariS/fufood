@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { ChevronLeft, Bell, BellRing } from 'lucide-react';
 import gsap from 'gsap';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +9,7 @@ import { inventoryApi } from '@/modules/inventory/api';
 // 引入 AI API
 import { aiRecipeApi } from '@/modules/ai/api/aiRecipeApi';
 import { ConsumptionModal } from '@/modules/inventory/components/consumption';
+import { useInventorySettingsQuery } from '@/modules/inventory/api/queries';
 
 type FoodDetailModalProps = {
   item: FoodItem;
@@ -41,6 +42,31 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
 
   const navigate = useNavigate();
   const { status, daysUntilExpiry } = useExpiryCheck(item);
+
+  // 取得設定資料以獲取分類中文名稱
+  const { data: settingsData } = useInventorySettingsQuery(item.groupId);
+
+  // 建立 category ID → 中文名稱的映射
+  const categoryNameMap = useMemo(() => {
+    const categories = settingsData?.data?.settings?.categories || [];
+    return categories.reduce(
+      (acc, cat) => {
+        acc[cat.id] = cat.title;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+  }, [settingsData]);
+
+  // 日期格式化工具函數
+  const formatDate = (dateString: string): string => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}/${month}/${day}`;
+  };
 
   // 同步 item 狀態
   useEffect(() => {
@@ -264,7 +290,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
                   產品分類
                 </span>
                 <span className="text-lg text-neutral-900 font-medium">
-                  {item.category || '未分類'}
+                  {categoryNameMap[item.category] || item.category || '未分類'}
                 </span>
               </div>
 
@@ -297,7 +323,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
                     入庫日期
                   </span>
                   <span className="text-lg text-neutral-900 font-medium">
-                    {item.purchaseDate}
+                    {formatDate(item.purchaseDate)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -315,7 +341,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
                     過期日期
                   </span>
                   <span className="text-lg text-neutral-900 font-medium">
-                    {item.expiryDate}
+                    {formatDate(item.expiryDate)}
                   </span>
                 </div>
               </div>

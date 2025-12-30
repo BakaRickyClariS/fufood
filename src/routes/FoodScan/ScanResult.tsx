@@ -15,6 +15,7 @@ import {
   selectAllGroups,
   fetchGroups,
 } from '@/modules/groups/store/groupsSlice';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import { getRefrigeratorId } from '@/modules/inventory/utils/getRefrigeratorId';
 import { useEffect } from 'react';
 
@@ -30,8 +31,9 @@ const ScanResult: React.FC = () => {
 
   // Groups and Refrigerator ID logic
   const groups = useSelector(selectAllGroups);
-  // ScanResult doesn't have groupId in URL, so we rely on default/first logic
-  const targetGroupId = getRefrigeratorId(undefined, groups);
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  // ScanResult doesn't have groupId in URL, so we rely on active or default
+  const targetGroupId = activeRefrigeratorId || getRefrigeratorId(undefined, groups);
 
   useEffect(() => {
     // Ensure groups are loaded so we can get the ID

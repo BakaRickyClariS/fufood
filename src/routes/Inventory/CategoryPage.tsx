@@ -15,6 +15,7 @@ import {
   selectAllGroups,
   fetchGroups,
 } from '@/modules/groups/store/groupsSlice';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import { getRefrigeratorId } from '@/modules/inventory/utils/getRefrigeratorId';
 import type { FoodItem, InventoryStatus } from '@/modules/inventory/types';
 
@@ -24,7 +25,8 @@ const CategoryPage: React.FC = () => {
 
   // 取得 groups 並計算 refrigeratorId
   const groups = useSelector(selectAllGroups);
-  const refrigeratorId = getRefrigeratorId(urlGroupId, groups);
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const refrigeratorId = activeRefrigeratorId || getRefrigeratorId(urlGroupId, groups);
 
   // 確保 groups 載入
   useEffect(() => {
