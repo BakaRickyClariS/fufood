@@ -157,7 +157,8 @@ export const useAIRecipeGenerate = (
     // 標準模式下的錯誤處理
     let errorMsg = mutation.error?.message ?? null;
     if (mutation.error) {
-       // @ts-ignore - Assuming error object might have code property from backend response
+       console.error('[AI useAIRecipeGenerate] Mutation error:', mutation.error);
+       // @ts-ignore
        if (mutation.error?.code === 'AI_007') {
          errorMsg = '輸入內容包含不允許的指令或關鍵字，請重新輸入。';
        }

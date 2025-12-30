@@ -1,9 +1,12 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { useInventoryQuery } from '@/modules/inventory/api/queries';
 import type { FoodItem } from '@/modules/inventory/types';
-import { Check, X } from 'lucide-react';
+import { Check, X, Package } from 'lucide-react';
 import gsap from 'gsap';
 import { cn } from '@/lib/utils';
+import { useSelector } from 'react-redux';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
+import { categories as defaultCategories } from '@/modules/inventory/constants/categories';
 
 // Component Props
 type InventoryFilterModalProps = {
@@ -12,6 +15,8 @@ type InventoryFilterModalProps = {
   selectedItems: string[];
   onApply: (selectedItems: string[]) => void;
   maxSelection?: number;
+  useInventory: boolean;
+  onToggleInventory: (use: boolean) => void;
 };
 
 // 主要元件
@@ -21,18 +26,33 @@ export const InventoryFilterModal: React.FC<InventoryFilterModalProps> = ({
   selectedItems,
   onApply,
   maxSelection = 5,
+  useInventory,
+  onToggleInventory,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
 
   // 本地選擇狀態
   const [localSelected, setLocalSelected] =
     React.useState<string[]>(selectedItems);
 
   // 取得庫存資料
-  const { data, isLoading } = useInventoryQuery({ limit: 100 });
+  const { data, isLoading } = useInventoryQuery({ 
+    limit: 100, 
+    refrigeratorId: activeRefrigeratorId || undefined 
+  });
   const items = data?.data?.items || [];
+
+  // 建立類別名稱對照表
+  const categoryNameMap = useMemo(() => {
+    return defaultCategories.reduce((acc, cat) => {
+      acc[cat.id] = cat.title;
+      return acc;
+    }, {} as Record<string, string>);
+  }, []);
 
   // 同步外部 props 到本地 state
   useEffect(() => {
@@ -96,17 +116,29 @@ export const InventoryFilterModal: React.FC<InventoryFilterModalProps> = ({
     const groups: Record<string, { priority: FoodItem[]; normal: FoodItem[] }> =
       {};
 
-    items.forEach((item) => {
+    // 先根據名稱去重，避免多筆同名食材導致重複選擇
+    const uniqueItems: FoodItem[] = [];
+    const seenNames = new Set<string>();
+    
+    // 排序優先順序：將 lowStockAlert 的排在前面，確保去重時保留優先標記
+    const sortedItems = [...items].sort((a, b) => 
+      (b.lowStockAlert ? 1 : 0) - (a.lowStockAlert ? 1 : 0)
+    );
+
+    sortedItems.forEach(item => {
+      if (!seenNames.has(item.name)) {
+        seenNames.add(item.name);
+        uniqueItems.push(item);
+      }
+    });
+
+    uniqueItems.forEach((item) => {
       if (!groups[item.category]) {
         groups[item.category] = { priority: [], normal: [] };
       }
 
       // 判斷是否為優先消耗：過期、低庫存警示、或剩餘天數少
-      // 這裡簡單使用 lowStockAlert，實際可加入 expiryDate 判斷
       const isPriority = item.lowStockAlert;
-      // 若有需要更精確的過期判斷：
-      // const daysLeft = differenceInDays(new Date(item.expiryDate), new Date());
-      // const isPriority = daysLeft <= 3 || item.lowStockAlert;
 
       if (isPriority) {
         groups[item.category].priority.push(item);
@@ -154,10 +186,37 @@ export const InventoryFilterModal: React.FC<InventoryFilterModalProps> = ({
         {/* Scrollable List */}
         <div
           ref={contentRef}
-          className="flex-1 overflow-y-auto p-4 space-y-8 custom-scrollbar"
+          className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar"
         >
+          {/* Toggle Switch Area */}
+          <div className="flex items-center justify-between bg-gray-50 p-3 rounded-xl">
+             <div className="flex items-center gap-2">
+                <div className="p-2 bg-white rounded-full shadow-sm text-[#F58274]">
+                  <Package className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold text-gray-900">使用庫存食材</span>
+                  <span className="text-xs text-gray-500">
+                    {useInventory ? '已啟用自動帶入' : '已停用'}
+                  </span>
+                </div>
+             </div>
+             <button
+               onClick={() => onToggleInventory(!useInventory)}
+               className={cn(
+                 "w-12 h-6 rounded-full transition-colors relative",
+                 useInventory ? "bg-[#F58274]" : "bg-gray-200"
+               )}
+             >
+               <div className={cn(
+                 "absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform",
+                 useInventory ? "translate-x-6" : "translate-x-0"
+               )} />
+             </button>
+          </div>
+
           {/* Active Selection Count */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between">
             <h3 className="text-xl font-bold text-gray-900">庫存食材</h3>
             <span className="text-gray-500 font-medium">
               {localSelected.length}/{maxSelection}
@@ -174,7 +233,7 @@ export const InventoryFilterModal: React.FC<InventoryFilterModalProps> = ({
                 return (
                   <div key={category} className="space-y-3">
                     <h4 className="text-gray-500 font-medium text-sm">
-                      {category}
+                      {categoryNameMap[category] || category}
                     </h4>
 
                     {/* 優先消耗區塊 */}

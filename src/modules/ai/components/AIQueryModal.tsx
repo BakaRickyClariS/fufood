@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { X, Sparkles, SlidersHorizontal, Plus, ArrowUp, Package } from 'lucide-react';
+import { X, Sparkles, SlidersHorizontal, Plus, ArrowUp } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { cn } from '@/lib/utils';
+import { useSelector } from 'react-redux';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import { useAIRecipeGenerate, useRecipeSuggestions } from '@/modules/ai';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useInventoryQuery } from '@/modules/inventory/api/queries';
@@ -27,7 +29,6 @@ type AIQueryModalProps = {
   initialQuery?: string;
   useStreaming?: boolean;
 };
-
 export const AIQueryModal = ({
   isOpen,
   onClose,
@@ -39,6 +40,8 @@ export const AIQueryModal = ({
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [useInventory, setUseInventory] = useState(true); // 預設開啟庫存食材
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
 
   // 食譜詳細 Modal 狀態
   const [selectedRecipe, setSelectedRecipe] = useState<RecipeListItem | null>(
@@ -64,12 +67,19 @@ export const AIQueryModal = ({
 
   // 建議標籤
   const { data: suggestionsData } = useRecipeSuggestions();
-  const suggestionTags = Array.isArray(suggestionsData?.data)
-    ? suggestionsData.data
-    : DEFAULT_SUGGESTION_TAGS;
+  const suggestionTags = useMemo(() => {
+    const tags = Array.isArray(suggestionsData?.data)
+      ? suggestionsData.data
+      : DEFAULT_SUGGESTION_TAGS;
+    // 確保標籤不重複
+    return Array.from(new Set(tags));
+  }, [suggestionsData]);
 
   // 庫存食材資料
-  const { data: inventoryData } = useInventoryQuery({ limit: 100 });
+  const { data: inventoryData } = useInventoryQuery({ 
+    limit: 100,
+    refrigeratorId: activeRefrigeratorId || undefined
+  });
   const allInventoryItems = useMemo(() => {
     return inventoryData?.data?.items?.map((item) => item.name) || [];
   }, [inventoryData]);
@@ -203,9 +213,9 @@ export const AIQueryModal = ({
 
               {/* Suggestion Tags Grid */}
               <div className="flex overflow-x-auto gap-4 pb-2 -mx-1 px-1 custom-scrollbar hide-scrollbar mb-4">
-                {suggestionTags.map((tag) => (
+                {suggestionTags.map((tag, idx) => (
                   <button
-                    key={tag}
+                    key={`${tag}-${idx}`}
                     onClick={() => handleSubmit(tag)}
                     className="shrink-0 max-w-[80px] bg-white border border-neutral-200 rounded-sm px-2 py-2 text-neutral-600 text-sm font-medium hover:border-[#F58274] hover:text-[#F58274] transition-all active:scale-95"
                   >
@@ -235,9 +245,9 @@ export const AIQueryModal = ({
                   <div className="max-w-[80%] bg-white border border-gray-200 rounded-2xl rounded-tr-none px-4 py-3 shadow-sm">
                     {selectedIngredients.length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-2">
-                        {selectedIngredients.map((ing) => (
+                        {selectedIngredients.map((ing, idx) => (
                           <span
-                            key={ing}
+                            key={`${ing}-${idx}`}
                             className="text-xs px-2 py-0.5 bg-[#FDE6E3] text-[#F58274] rounded-full"
                           >
                             {ing}
@@ -344,6 +354,8 @@ export const AIQueryModal = ({
           onClose={() => setShowFilterModal(false)}
           selectedItems={selectedIngredients}
           onApply={setSelectedIngredients}
+          useInventory={useInventory}
+          onToggleInventory={setUseInventory}
         />
 
         {/* Footer Input Area */}
@@ -357,7 +369,7 @@ export const AIQueryModal = ({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                  maxLength={4000}
+                  maxLength={40}
                   placeholder={
                     selectedIngredients.length > 0
                       ? '想做什麼料理？'
@@ -378,25 +390,6 @@ export const AIQueryModal = ({
               </div>
               {/* Selected Tags Area */}
               <div className="flex items-center gap-2 mb-2 overflow-x-auto hide-scrollbar p-1">
-                {/* 使用庫存食材開關 */}
-                <button
-                  onClick={() => setUseInventory(!useInventory)}
-                  className={cn(
-                    'shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all',
-                    useInventory
-                      ? 'bg-[#F58274] text-white'
-                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200',
-                  )}
-                >
-                  <Package className="w-4 h-4" />
-                  {useInventory ? '已載入庫存' : '使用庫存'}
-                  {useInventory && allInventoryItems.length > 0 && (
-                    <span className="bg-white/20 px-1.5 py-0.5 rounded-full text-xs">
-                      {allInventoryItems.length}
-                    </span>
-                  )}
-                </button>
-
                 {/* Filter Trigger Button */}
                 <button
                   onClick={() => setShowFilterModal(true)}

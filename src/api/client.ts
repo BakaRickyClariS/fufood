@@ -119,7 +119,12 @@ class ApiClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `API Error: ${response.status}`);
+        const error = new Error(errorData.message || `API Error: ${response.status}`);
+        // @ts-ignore
+        error.code = errorData.code; // Attach backend error code if available
+        // @ts-ignore
+        error.data = errorData;
+        throw error;
       }
 
       // Handle 204 No Content or empty body
