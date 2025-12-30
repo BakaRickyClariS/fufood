@@ -109,7 +109,8 @@ const UnitSelector = ({
 type PostFormProps = {
   listId?: string;
   mode: 'create' | 'edit';
-  initialData?: SharedListItem | null;
+  initialData?: SharedListItem | null; // Keep for backward compatibility or single item edit
+  initialItems?: SharedListItem[]; // New: support multiple items
   onClose: () => void;
 };
 
@@ -117,9 +118,10 @@ export const PostFormFeature = ({
   listId,
   mode,
   initialData,
+  initialItems,
   onClose,
 }: PostFormProps) => {
-  const { createItems, updateItem } = useSharedListItems(listId);
+  const { createItems, updateItem, deleteItem } = useSharedListItems(listId);
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -127,6 +129,9 @@ export const PostFormFeature = ({
   // Note: content is removed as Item API does not support it
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Track original IDs to detect deletions in edit mode
+  const [originalIds, setOriginalIds] = useState<Set<string>>(new Set());
 
   // Track which item is currently uploading an image
   const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
@@ -138,15 +143,29 @@ export const PostFormFeature = ({
 
   // Initialize data for edit mode or create mode
   useEffect(() => {
-    if (mode === 'edit' && initialData) {
-      // Edit mode: only one item
-      setItems([{
-        id: initialData.id,
-        name: initialData.name,
-        quantity: initialData.quantity,
-        unit: initialData.unit,
-        imageUrl: initialData.photoPath || undefined,
-      } as ShoppingItem]);
+    if (mode === 'edit') {
+      let mappedItems: ShoppingItem[] = [];
+      
+      if (initialItems && initialItems.length > 0) {
+         mappedItems = initialItems.map(item => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          imageUrl: item.photoPath || undefined,
+        }));
+      } else if (initialData) {
+        mappedItems = [{
+          id: initialData.id,
+          name: initialData.name,
+          quantity: initialData.quantity,
+          unit: initialData.unit,
+          imageUrl: initialData.photoPath || undefined,
+        }];
+      }
+
+      setItems(mappedItems);
+      setOriginalIds(new Set(mappedItems.map(i => i.id)));
     } else if (mode === 'create') {
       // Default empty item for create mode
       setItems([
@@ -157,8 +176,9 @@ export const PostFormFeature = ({
           unit: '',
         },
       ]);
+      setOriginalIds(new Set());
     }
-  }, [mode, initialData]);
+  }, [mode, initialData, initialItems]);
 
   // GSAP Animation
   useGSAP(
@@ -313,15 +333,49 @@ export const PostFormFeature = ({
         await Promise.all(uploadPromises);
       }
 
-      if (mode === 'edit' && initialData) {
-        // Edit mode: Update single item
-        const itemToUpdate = processedItems[0];
-        await updateItem(initialData.id, {
-          name: itemToUpdate.name,
-          quantity: itemToUpdate.quantity,
-          unit: itemToUpdate.unit,
-          photoPath: itemToUpdate.imageUrl,
+      if (mode === 'edit') {
+        const currentIds = new Set(processedItems.map(i => i.id));
+        
+        // 1. Identify Deletions (In original but not in current)
+        const itemsToDelete = Array.from(originalIds).filter(id => !currentIds.has(id));
+        
+        // 2. Identify Updates (In original and in current)
+        const itemsToUpdate = processedItems.filter(item => originalIds.has(item.id));
+        
+        // 3. Identify Creations (Not in original)
+        const itemsToCreate = processedItems.filter(item => !originalIds.has(item.id));
+
+        const promises: Promise<any>[] = [];
+
+        // Execute Deletes
+        itemsToDelete.forEach(id => {
+          promises.push(deleteItem(id));
         });
+
+        // Execute Updates
+        itemsToUpdate.forEach(item => {
+           // Only update if needed? For now update all common fields
+           promises.push(updateItem(item.id, {
+             name: item.name,
+             quantity: item.quantity,
+             unit: item.unit,
+             photoPath: item.imageUrl
+           }));
+        });
+
+        // Execute Creates
+        if (itemsToCreate.length > 0) {
+           const createInputs = itemsToCreate.map(item => ({
+              name: item.name,
+              quantity: item.quantity,
+              unit: item.unit,
+              photoPath: item.imageUrl
+           }));
+           promises.push(createItems(createInputs));
+        }
+
+        await Promise.all(promises);
+
         toast.dismiss(toastId);
         toast.success('更新成功');
       } else {
