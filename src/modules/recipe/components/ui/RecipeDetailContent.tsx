@@ -82,10 +82,14 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
         }}
       />
 
+
       {/* 圖片區域 */}
-      <div className="relative w-full h-[40vh]">
+      <div className="relative aspect-square md:aspect-21/9 md:h-auto overflow-hidden bg-neutral-100">
         <img
-          src={recipe.imageUrl}
+          src={
+            recipe.imageUrl ||
+            'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&h=600&fit=crop'
+          }
           alt={recipe.name}
           className="w-full h-full object-cover"
         />
@@ -93,7 +97,7 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
         {/* 我的最愛按鈕 */}
         <button
           onClick={handleToggleFavorite}
-          className="absolute top-18 right-4 z-50 p-2.5 bg-white/30 rounded-full backdrop-blur-[2px] transition-transform active:scale-95"
+          className="absolute top-4 right-4 z-50 p-2.5 bg-white/30 rounded-full backdrop-blur-[2px] transition-transform active:scale-95"
         >
           <Heart
             className={`w-6 h-6 transition-colors ${
