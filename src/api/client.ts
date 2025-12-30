@@ -122,12 +122,26 @@ class ApiClient {
         throw new Error(errorData.message || `API Error: ${response.status}`);
       }
 
-      // Handle 204 No Content
-      if (response.status === 204) {
+      // Handle 204 No Content or empty body
+      if (
+        response.status === 204 ||
+        response.headers.get('content-length') === '0'
+      ) {
         return {} as T;
       }
 
-      return await response.json();
+      // 嘗試解析 JSON，若失敗則回傳空物件
+      const text = await response.text();
+      if (!text || text.trim() === '') {
+        return {} as T;
+      }
+
+      try {
+        return JSON.parse(text);
+      } catch {
+        // JSON 解析失敗，可能是空回應或非 JSON 格式
+        return {} as T;
+      }
     } catch (error) {
       console.error(
         `[${this.apiType.toUpperCase()} API] Request Failed:`,
