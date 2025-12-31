@@ -12,19 +12,28 @@ import type {
 import { categories } from '@/modules/inventory/constants/categories';
 
 // Internal type for raw API response
+// 支援多種可能的欄位命名（camelCase 和 snake_case）
 type RawScanResponsePayload = {
   productName?: string;
+  product_name?: string;  // snake_case 備援
   name?: string;
   category?: string;
   attributes?: string;
   purchaseQuantity?: number | string;
+  purchase_quantity?: number | string;  // snake_case 備援
   unit?: string;
   purchaseDate?: string;
+  purchase_date?: string;  // snake_case 備援
   expiryDate?: string;
+  expiry_date?: string;  // snake_case 備援
+  expected_expiry_date?: string;  // 另一種可能的命名
   lowStockAlert?: boolean;
+  low_stock_alert?: boolean;  // snake_case 備援
   lowStockThreshold?: number | string;
+  low_stock_threshold?: number | string;  // snake_case 備援
   notes?: string;
   imageUrl?: string;
+  image_url?: string;  // snake_case 備援
 };
 
 type RawScanResponse = RawScanResponsePayload & {
@@ -33,11 +42,22 @@ type RawScanResponse = RawScanResponsePayload & {
 
 export const createRealFoodScanApi = (): FoodScanApi => {
   const transformScanResult = (resp: unknown): ScanResult => {
+    // Debug: 記錄原始 API 回應
+    console.log('[FoodScan] Raw API response:', JSON.stringify(resp, null, 2));
+
     // Cast to unknown first then RawScanResponse to be safe
     const payload =
       (resp as { data?: RawScanResponse })?.data ??
       (resp as RawScanResponse) ??
       {};
+
+    // Debug: 記錄提取的 payload 和 expiryDate 相關欄位
+    console.log('[FoodScan] Extracted payload:', {
+      expiryDate: payload.expiryDate,
+      expiry_date: payload.expiry_date,
+      expected_expiry_date: payload.expected_expiry_date,
+      hasExpiryDate: 'expiryDate' in payload,
+    });
 
     // Helper to find the closest matching category from our constant list
     const normalizeCategory = (input?: string): string => {
@@ -107,9 +127,10 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     );
 
     // Best-effort mapping to FoodItemInput; provide sensible defaults
+    // 同時支援 camelCase 和 snake_case 欄位命名
     const today = new Date().toISOString().slice(0, 10);
     const mapped: FoodItemInput = {
-      productName: payload.productName ?? payload.name ?? '',
+      productName: payload.productName ?? payload.product_name ?? payload.name ?? '',
       category: finalCategory as FoodItemInput['category'],
       attributes: finalAttributes
         ? finalAttributes
@@ -117,14 +138,14 @@ export const createRealFoodScanApi = (): FoodScanApi => {
             .map((attr) => attr.trim())
             .filter(Boolean)
         : [],
-      purchaseQuantity: Number(payload.purchaseQuantity ?? 1),
+      purchaseQuantity: Number(payload.purchaseQuantity ?? payload.purchase_quantity ?? 1),
       unit: (payload.unit ?? '份') as FoodItemInput['unit'],
-      purchaseDate: payload.purchaseDate ?? today,
-      expiryDate: payload.expiryDate ?? '',
-      lowStockAlert: payload.lowStockAlert ?? true,
-      lowStockThreshold: Number(payload.lowStockThreshold ?? 2),
+      purchaseDate: payload.purchaseDate ?? payload.purchase_date ?? today,
+      expiryDate: payload.expiryDate ?? payload.expiry_date ?? payload.expected_expiry_date ?? '',
+      lowStockAlert: payload.lowStockAlert ?? payload.low_stock_alert ?? true,
+      lowStockThreshold: Number(payload.lowStockThreshold ?? payload.low_stock_threshold ?? 2),
       notes: payload.notes ?? '',
-      imageUrl: payload.imageUrl ?? '',
+      imageUrl: payload.imageUrl ?? payload.image_url ?? '',
     };
 
     return {
