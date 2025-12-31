@@ -11,8 +11,11 @@ import type { RecipeCategory } from '../types';
 export const recipeKeys = {
   all: ['recipes'] as const,
   lists: () => [...recipeKeys.all, 'list'] as const,
-  list: (params?: { category?: RecipeCategory; favorite?: boolean }) =>
-    [...recipeKeys.lists(), params] as const,
+  list: (params?: {
+    category?: RecipeCategory;
+    favorite?: boolean;
+    refrigeratorId?: string;
+  }) => [...recipeKeys.lists(), params] as const,
   details: () => [...recipeKeys.all, 'detail'] as const,
   detail: (id: string) => [...recipeKeys.details(), id] as const,
   favorites: () => [...recipeKeys.all, 'favorites'] as const,
@@ -25,6 +28,7 @@ export const recipeKeys = {
 export const useRecipesQuery = (params?: {
   category?: RecipeCategory;
   favorite?: boolean;
+  refrigeratorId?: string;
 }) => {
   return useQuery({
     queryKey: recipeKeys.list(params),

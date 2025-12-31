@@ -36,11 +36,30 @@ const batchScanSlice = createSlice({
         state.currentIndex += 1;
       }
     },
+    goToPrev: (state) => {
+      if (state.currentIndex > 0) {
+        state.currentIndex -= 1;
+      }
+    },
     reset: () => initialState,
+    removeItem: (state, action: PayloadAction<number>) => {
+      const indexToRemove = action.payload;
+      state.items.splice(indexToRemove, 1);
+      // Adjust currentIndex if needed
+      if (state.currentIndex >= state.items.length && state.items.length > 0) {
+        state.currentIndex = state.items.length - 1;
+      }
+    },
   },
 });
 
-export const { setItems, markCurrentAsSubmitted, goToNext, reset } =
-  batchScanSlice.actions;
+export const {
+  setItems,
+  markCurrentAsSubmitted,
+  goToNext,
+  goToPrev,
+  reset,
+  removeItem,
+} = batchScanSlice.actions;
 
 export default batchScanSlice.reducer;

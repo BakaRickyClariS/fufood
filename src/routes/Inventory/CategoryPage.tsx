@@ -303,6 +303,7 @@ const CategoryPage: React.FC = () => {
           isOpen={!!selectedItem}
           onClose={() => setSelectedItem(null)}
           onItemUpdate={refetch}
+          isCompleted={selectedItem.quantity <= 0}
         />
       )}
 

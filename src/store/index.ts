@@ -3,6 +3,7 @@ import cameraReducer from '@/modules/food-scan/store/cameraSlice';
 import batchScanReducer from '@/modules/food-scan/store/batchScanSlice';
 import inventoryReducer from '@/modules/inventory/store/inventorySlice';
 import groupsReducer from '@/modules/groups/store/groupsSlice';
+import groupModalReducer from '@/modules/groups/store/groupModalSlice';
 import refrigeratorReducer from './slices/refrigeratorSlice';
 import shoppingListReducer from './slices/shoppingListSlice';
 import consumptionReducer from '@/modules/inventory/store/consumptionSlice';
@@ -13,6 +14,7 @@ export const store = configureStore({
     batchScan: batchScanReducer,
     inventory: inventoryReducer,
     groups: groupsReducer,
+    groupModal: groupModalReducer,
     refrigerator: refrigeratorReducer,
     shoppingList: shoppingListReducer,
     consumption: consumptionReducer,

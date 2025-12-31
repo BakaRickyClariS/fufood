@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import type { GroupMember } from '../../types/group.types';
 
 type HomeModalProps = {
@@ -27,31 +28,36 @@ export const HomeModal = ({
   members,
   onEditMembers,
 }: HomeModalProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      const tl = gsap.timeline();
+  // 使用 useGSAP 管理動畫
+  const { contextSafe } = useGSAP(
+    () => {
+      if (isOpen) {
+        const tl = gsap.timeline();
 
-      // Animate overlay
-      tl.fromTo(
-        overlayRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.3, ease: 'power2.out' },
-      );
+        // Animate overlay
+        tl.fromTo(
+          overlayRef.current,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.3, ease: 'power2.out' },
+        );
 
-      // Animate modal (slide up)
-      tl.fromTo(
-        modalRef.current,
-        { y: '100%', opacity: 0 },
-        { y: '0%', opacity: 1, duration: 0.5, ease: 'back.out(1.2)' },
-        '-=0.2',
-      );
-    }
-  }, [isOpen]);
+        // Animate modal (slide up)
+        tl.fromTo(
+          modalRef.current,
+          { y: '100%', opacity: 0 },
+          { y: '0%', opacity: 1, duration: 0.5, ease: 'back.out(1.2)' },
+          '-=0.2',
+        );
+      }
+    },
+    { scope: containerRef, dependencies: [isOpen] },
+  );
 
-  const handleClose = () => {
+  const handleClose = contextSafe(() => {
     const tl = gsap.timeline({
       onComplete: onClose,
     });
@@ -70,7 +76,7 @@ export const HomeModal = ({
       { opacity: 0, duration: 0.3, ease: 'power2.in' },
       '-=0.3',
     );
-  };
+  });
 
   // 將角色轉換為顯示文字
   const getRoleLabel = (role: string) => {
@@ -87,7 +93,7 @@ export const HomeModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center">
+    <div ref={containerRef} className="fixed inset-0 z-40 flex items-end justify-center">
       {/* Backdrop */}
       <div
         ref={overlayRef}
@@ -116,8 +122,8 @@ export const HomeModal = ({
         {/* Content */}
         <div className="p-6 pt-2 space-y-6 overflow-y-auto pb-28">
           {/* Current User Info */}
-          <div className="flex items-center gap-4 py-2 border-b border-stone-100 pb-6">
-            <div className="w-14 h-14 rounded-full overflow-hidden border border-stone-100 shrink-0">
+          <div className="flex items-center gap-4 py-2 border-b border-neutral-100 pb-6">
+            <div className="w-14 h-14 rounded-full overflow-hidden border border-neutral-100 shrink-0">
               <img
                 src={currentUser.avatar}
                 alt={currentUser.name}
@@ -125,11 +131,11 @@ export const HomeModal = ({
               />
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-bold text-stone-800 flex items-center gap-2">
+              <span className="text-lg font-bold text-neutral-800 flex items-center gap-2">
                 {currentUser.name}{' '}
-                <span className="text-stone-500 text-sm font-normal">(你)</span>
+                <span className="text-neutral-500 text-sm font-normal">(你)</span>
               </span>
-              <span className="text-sm text-stone-400 font-medium">
+              <span className="text-sm text-neutral-400 font-medium">
                 {getRoleLabel(currentUser.role)}
               </span>
             </div>
@@ -142,9 +148,9 @@ export const HomeModal = ({
               .map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center gap-4 py-2 border-b border-stone-100 pb-6 last:border-0 last:pb-2"
+                  className="flex items-center gap-4 py-2 border-b border-neutral-100 pb-6 last:border-0 last:pb-2"
                 >
-                  <div className="w-14 h-14 rounded-full overflow-hidden border border-stone-100 shrink-0">
+                  <div className="w-14 h-14 rounded-full overflow-hidden border border-neutral-100 shrink-0">
                     <img
                       src={member.avatar || ''} // Handle potential undefined avatar
                       alt={member.name}
@@ -152,10 +158,10 @@ export const HomeModal = ({
                     />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-lg font-bold text-stone-800">
+                    <span className="text-lg font-bold text-neutral-800">
                       {member.name}
                     </span>
-                    <span className="text-sm text-stone-400 font-medium">
+                    <span className="text-sm text-neutral-400 font-medium">
                       {getRoleLabel(member.role)}
                     </span>
                   </div>
@@ -166,7 +172,7 @@ export const HomeModal = ({
           {/* Edit Members Button */}
           <div className="pt-4">
             <Button
-              className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white rounded-xl h-14 text-lg font-bold shadow-sm"
+              className="w-full bg-primary-400 hover:bg-primary-500 text-white rounded-xl h-14 text-lg font-bold shadow-sm"
               onClick={onEditMembers}
             >
               編輯成員
