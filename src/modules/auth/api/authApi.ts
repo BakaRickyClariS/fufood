@@ -9,8 +9,9 @@ import type {
   User,
   RefreshTokenRequest,
   RefreshTokenResponse,
-  UpdateProfileRequest,
   ProfileResponse,
+  UpdateProfilePayload,
+  ProfileData,
 } from '../types';
 import { MOCK_USERS, MOCK_TOKEN } from './mock/authMockData';
 
@@ -118,16 +119,19 @@ export const authApi = {
 
   /**
    * 更新個人資料
-   * 策略：優先嘗試真實 API，失敗時若開啟 Mock 則使用 Mock 備援
+   * PUT /api/v1/profile
+   * @see docs/backend/api_profile_guide.md
    */
-  updateProfile: async (data: UpdateProfileRequest): Promise<User> => {
+  updateProfile: async (
+    data: UpdateProfilePayload,
+  ): Promise<ProfileResponse> => {
     console.log('[AuthApi] UpdateProfile: Starting...');
 
     // 1. 嘗試呼叫真實 API
     try {
       console.log('[AuthApi] UpdateProfile: Trying Real API...');
-      const result = await backendApi.put<User>(
-        '/api/v1/auth/update-profile',
+      const result = await backendApi.put<ProfileResponse>(
+        `/api/v1/profile`,
         data,
       );
       console.log('[AuthApi] UpdateProfile: Real API Success');
@@ -150,9 +154,23 @@ export const authApi = {
         ? JSON.parse(currentUserStr)
         : MOCK_USERS[0];
 
-      const updatedUser = { ...currentUser, ...data, updatedAt: new Date() };
-      console.log('[AuthApi] UpdateProfile: Mock update complete', updatedUser);
-      return updatedUser;
+      const mockProfileData: ProfileData = {
+        id: currentUser.id || `mock-user-${Date.now()}`,
+        lineId: currentUser.lineId || '',
+        name: data.name,
+        profilePictureUrl: data.profilePictureUrl || currentUser.profilePictureUrl,
+        email: data.email || currentUser.email,
+        preference: data.preference || [],
+        avatar: data.avatar || currentUser.avatar,
+        gender: data.gender ?? 0,
+        customGender: data.customGender || null,
+        subscriptionTier: 0,
+        createdAt: currentUser.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      console.log('[AuthApi] UpdateProfile: Mock update complete', mockProfileData);
+      return { data: mockProfileData };
     }
   },
 

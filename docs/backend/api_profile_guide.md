@@ -38,6 +38,7 @@ GET /api/v1/profile
     "profilePictureUrl": "https://example.com/avatar.jpg",
     "email": "user@example.com",
     "preference": ["素食", "低熱量"],
+    "avatar": "",
     "gender": 0,
     "customGender": null,
     "subscriptionTier": 0,
@@ -86,6 +87,7 @@ Content-Type: application/json
 {
   "name": "新名稱",
   "profilePictureUrl": "https://example.com/new-avatar.jpg",
+  "avatar": "",
   "email": "newemail@example.com",
   "preference": ["素食", "無麩質"],
   "gender": 1,
@@ -113,6 +115,7 @@ Content-Type: application/json
     "lineId": "U1234567890abcdef",
     "name": "新名稱",
     "profilePictureUrl": "https://example.com/new-avatar.jpg",
+    "avatar": "",
     "email": "newemail@example.com",
     "preference": ["素食", "無麩質"],
     "gender": 1,
