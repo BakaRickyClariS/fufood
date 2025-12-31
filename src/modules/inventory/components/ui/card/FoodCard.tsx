@@ -153,7 +153,11 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
               歸納
             </span>
             <span className="text-white text-sm tracking-wider font-light">
-              {item.purchaseDate}
+              {(() => {
+                if (!item.purchaseDate) return '-';
+                const d = new Date(item.purchaseDate);
+                return isNaN(d.getTime()) ? '-' : d.toLocaleDateString();
+              })()}
             </span>
           </div>
 
@@ -163,7 +167,11 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
               過期
             </span>
             <span className="text-sm tracking-wider font-light">
-              {item.expiryDate}
+               {(() => {
+                if (!item.expiryDate) return '-';
+                const d = new Date(item.expiryDate);
+                return isNaN(d.getTime()) ? '-' : d.toLocaleDateString();
+              })()}
             </span>
           </div>
         </div>

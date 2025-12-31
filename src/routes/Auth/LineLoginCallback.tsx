@@ -62,10 +62,19 @@ const LineLoginCallback = () => {
           lineId: response.data.lineId,
           name: response.data.name,
           displayName: response.data.name,
-          avatar: response.data.profilePictureUrl,
-          pictureUrl: response.data.profilePictureUrl,
+          avatar: response.data.profilePictureUrl ?? '',
+          pictureUrl: response.data.profilePictureUrl ?? undefined,
           createdAt: new Date(),
           updatedAt: new Date(),
+          gender: response.data.gender,
+          customGender: response.data.customGender,
+          email: response.data.email || undefined,
+          dietaryPreference: response.data.preference ? {
+            cookingFrequency: '1-2' as const,
+            prepTime: '15-30' as const,
+            seasoningLevel: 'moderate' as const,
+            restrictions: []
+          } : undefined,
         };
 
         // 儲存到 localStorage（作為備份）

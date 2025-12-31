@@ -42,6 +42,7 @@ const Inventory: React.FC = () => {
           isOpen={true}
           onClose={handleCloseModal}
           onItemUpdate={refetch}
+          isCompleted={itemData.data.item.quantity <= 0}
         />
       )}
     </>

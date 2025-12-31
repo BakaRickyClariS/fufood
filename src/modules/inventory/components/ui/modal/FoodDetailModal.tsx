@@ -22,6 +22,7 @@ type FoodDetailModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onItemUpdate?: () => void;
+  isCompleted?: boolean; // 已完成(已消耗)的項目不可再消耗
 };
 
 const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
@@ -29,6 +30,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
   isOpen,
   onClose,
   onItemUpdate,
+  isCompleted = false,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
@@ -80,6 +82,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
   const formatDate = (dateString: string): string => {
     if (!dateString) return '-';
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -223,19 +226,21 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
           onItemUpdate?.(); // 刷新數據
         }}
         onCloseAll={(onParentClosed) => {
-          // 返回庫房時：先播放食材詳細頁的離場動畫
+          // 返回庫房時：先播放食材詳細頁的離場動畫，然後徹底關閉
           if (modalRef.current) {
             gsap.to(modalRef.current, {
               x: '100%',
               duration: 0.3,
               ease: 'power3.in',
               onComplete: () => {
-                // 動畫完成後呼叫 callback
+                // 動畫完成後呼叫 callback 並關閉 Modal
                 onParentClosed();
+                onClose(); // 確保 FoodDetailModal 被真正關閉
               },
             });
           } else {
             onParentClosed();
+            onClose();
           }
         }}
       />
@@ -355,9 +360,17 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
                     保存期限
                   </span>
                   <span
-                    className={`text-lg font-medium ${daysUntilExpiry < 0 ? 'text-red-500' : 'text-neutral-900'}`}
+                    className={`text-lg font-medium ${
+                      isNaN(daysUntilExpiry) || daysUntilExpiry < 0
+                        ? 'text-neutral-900'
+                        : 'text-neutral-900'
+                    } ${daysUntilExpiry < 0 && !isNaN(daysUntilExpiry) ? 'text-red-500' : ''}`}
                   >
-                    {daysUntilExpiry < 0 ? `已過期` : `約${daysUntilExpiry}天`}
+                    {isNaN(daysUntilExpiry)
+                      ? '-'
+                      : daysUntilExpiry < 0
+                        ? `已過期`
+                        : `約${daysUntilExpiry}天`}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -386,10 +399,15 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
             {/* Bottom Buttons (Not fixed, flow with content) */}
             <div className="flex items-center gap-3">
               <button
-                className="flex-1 py-3 bg-white border border-neutral-300 rounded-lg text-base text-neutral-900 font-bold active:scale-95 transition-transform"
-                onClick={() => setShowConsumptionModal(true)}
+                className={`flex-1 py-3 border rounded-lg text-base font-bold active:scale-95 transition-transform ${
+                  isCompleted
+                    ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed active:scale-100'
+                    : 'bg-white border-neutral-300 text-neutral-900'
+                }`}
+                onClick={() => !isCompleted && setShowConsumptionModal(true)}
+                disabled={isCompleted}
               >
-                消耗食材
+                {isCompleted ? '已消耗完畢' : '消耗食材'}
               </button>
               <button
                 className="flex-1 py-3 bg-primary-400 text-white rounded-lg text-base font-bold active:scale-95 transition-transform shadow-md shadow-orange-100"
