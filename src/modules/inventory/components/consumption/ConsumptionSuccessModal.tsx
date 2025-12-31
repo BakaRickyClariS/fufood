@@ -5,10 +5,12 @@ import { ChevronLeft } from 'lucide-react';
 import type {
   ConsumptionItem,
   ConsumptionReason,
+  RecipeCategory,
 } from '@/modules/recipe/types';
 import type { RecipeListItem } from '@/modules/recipe/types';
 import { RecipeCardCarousel } from '@/shared/components/recipe';
 import { RecipeDetailModal } from '@/modules/recipe/components/ui/RecipeDetailModal';
+import { aiRecipeApi } from '@/modules/ai/api/aiRecipeApi';
 import { recipeApi } from '@/modules/recipe/services';
 import successImage from '@/assets/images/recipe/consumption-success.png';
 
@@ -49,17 +51,138 @@ export const ConsumptionSuccessModal: React.FC<
   >([]);
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(false);
 
-  // 根據被消耗的食材載入推薦食譜
+  // 根據被消耗的食材載入推薦食譜（優先搜尋現有，否則 AI 生成並儲存）
   useEffect(() => {
     const loadRecommendedRecipes = async () => {
-      if (!isOpen || items.length === 0) return;
+      if (!isOpen || items.length === 0 || isLoadingRecipes) return;
+      
+      // 避免重複呼叫 (如果已有結果)
+      if (recommendedRecipes.length > 0) return;
 
       setIsLoadingRecipes(true);
       try {
         // 從消耗項目中提取食材名稱
         const ingredientNames = items.map((item) => item.ingredientName);
-        const recipes = await recipeApi.getRecommendedRecipes(ingredientNames);
-        setRecommendedRecipes(recipes.slice(0, 4)); // 最多顯示 4 個
+        console.log('正在為以下食材尋找食譜:', ingredientNames);
+
+        // 1. 先嘗試從使用者現有的食譜中搜尋
+        // 這裡我們取得所有食譜，前端進行簡單過濾
+        // 注意：這裡不傳 refrigeratorId，這樣能搜尋到使用者所有已儲存的食譜
+        const allSavedRecipes = await recipeApi.getRecipes();
+        
+        const matchedRecipes = allSavedRecipes.filter(recipe => {
+          // 關鍵字比對：食譜名稱包含任何一個消耗的食材
+          return ingredientNames.some(ing => recipe.name.includes(ing));
+        });
+
+        if (matchedRecipes.length > 0) {
+          console.log('找到現有相關食譜:', matchedRecipes);
+          // 根據匹配程度排序可能更好，這裡簡單取前 5 筆
+          setRecommendedRecipes(matchedRecipes.slice(0, 5));
+          setIsLoadingRecipes(false);
+          return;
+        }
+
+        // 2. 如果沒有現有食譜，則呼叫 AI 生成
+        console.log('無相符現有食譜，開始 AI 生成...');
+        const prompt = `請幫我用以下食材製作簡單料理: ${ingredientNames.join('、')}`;
+        
+        const response = await aiRecipeApi.generateRecipe({
+          prompt,
+          selectedIngredients: ingredientNames,
+        });
+        
+        // 轉換為標準格式
+        // 轉換為標準格式 (暫時保留變數宣告，以防後面 fallback 需要，但不立即 setRecommendedRecipes)
+        /*
+        const generatedRecipes: RecipeListItem[] = (response.data.recipes || []).map((recipe) => ({
+          id: recipe.id,
+          name: recipe.name,
+          imageUrl: recipe.imageUrl || null,
+          category: (recipe.category || '中式料理') as RecipeCategory,
+          cookTime: recipe.cookTime || 30,
+          servings: recipe.servings || 2,
+          isFavorite: recipe.isFavorite || false,
+        }));
+        */
+        
+        // 3. 自動儲存 AI 生成的食譜到後端，並取得真實 ID
+        const savedRecipesToDisplay: RecipeListItem[] = [];
+
+        if (response.data.recipes && response.data.recipes.length > 0) {
+          // 使用 Promise.all 等待所有儲存完成
+          await Promise.all(
+            response.data.recipes.map(async (aiRecipe) => {
+              // 確保必要欄位存在
+              if (!aiRecipe.ingredients || !aiRecipe.steps) {
+                console.warn(
+                  `跳過儲存食譜 (${aiRecipe.name})：缺少食材或步驟資訊`,
+                );
+                return;
+              }
+              
+              // 避免重複儲存：檢查是否已存在同名食譜
+              // allSavedRecipes 在步驟 1 已取得
+              const existingRecipe = allSavedRecipes.find(r => r.name === aiRecipe.name);
+              
+              if (existingRecipe) {
+                 console.log(`食譜已存在，跳過儲存並使用現有資料: ${aiRecipe.name}`);
+                 savedRecipesToDisplay.push(existingRecipe);
+                 return;
+              }
+
+              try {
+                const savedRecipe = await aiRecipeApi.saveRecipe({
+                  name: aiRecipe.name,
+                  category: aiRecipe.category,
+                  imageUrl: aiRecipe.imageUrl,
+                  servings: aiRecipe.servings,
+                  cookTime: aiRecipe.cookTime,
+                  difficulty: aiRecipe.difficulty,
+                  ingredients: aiRecipe.ingredients,
+                  seasonings: aiRecipe.seasonings || [],
+                  steps: aiRecipe.steps,
+                  originalPrompt: prompt,
+                  description: `使用食材：${ingredientNames.join('、')} 生成的食譜`,
+                });
+                console.log(`已自動儲存食譜: ${aiRecipe.name}, ID: ${savedRecipe.id}`);
+                
+                // 將儲存後的食譜轉換為顯示格式
+                savedRecipesToDisplay.push({
+                  id: savedRecipe.id, // 使用真實的 DB ID
+                  name: savedRecipe.name,
+                  imageUrl: savedRecipe.imageUrl,
+                  category: (savedRecipe.category || '中式料理') as RecipeCategory,
+                  cookTime: savedRecipe.cookTime || 30,
+                  servings: savedRecipe.servings,
+                  isFavorite: savedRecipe.isFavorite,
+                });
+
+              } catch (err) {
+                console.warn(`自動儲存食譜失敗 (${aiRecipe.name}):`, err);
+              }
+            }),
+          );
+        }
+
+        // 顯示已成功儲存的食譜 (使用真實 ID)
+        // 如果儲存全都失敗(例如網路問題)，則不顯示，避免 404
+        if (savedRecipesToDisplay.length > 0) {
+           setRecommendedRecipes(savedRecipesToDisplay.slice(0, 4));
+        } else {
+           // Fallback: 如果真的都存失敗了，顯示 AI 原始回傳的
+           console.warn("所有食譜儲存失敗或無內容，使用原始暫時數據顯示");
+           const generatedRecipes: RecipeListItem[] = (response.data.recipes || []).map((recipe) => ({
+            id: recipe.id,
+            name: recipe.name,
+            imageUrl: recipe.imageUrl || null,
+            category: (recipe.category || '中式料理') as RecipeCategory,
+            cookTime: recipe.cookTime || 30,
+            servings: recipe.servings || 2,
+            isFavorite: recipe.isFavorite || false,
+          }));
+          setRecommendedRecipes(generatedRecipes.slice(0, 4));
+        }
       } catch (error) {
         console.error('載入推薦食譜失敗', error);
         setRecommendedRecipes([]);
@@ -69,6 +192,7 @@ export const ConsumptionSuccessModal: React.FC<
     };
 
     loadRecommendedRecipes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, items]);
 
   useEffect(() => {
