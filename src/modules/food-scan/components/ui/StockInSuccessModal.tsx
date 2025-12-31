@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import gsap from 'gsap';
-import { ChevronLeft, Package, Camera } from 'lucide-react';
-import successImage from '@/assets/images/food-scan/result.png';
+import { X } from 'lucide-react';
+import successImage from '@/assets/images/food-scan/inventory-success.png';
 
 type StockInSuccessModalProps = {
   isOpen: boolean;
@@ -17,24 +17,52 @@ export const StockInSuccessModal: React.FC<StockInSuccessModalProps> = ({
   onContinueScan,
   itemCount,
 }) => {
+  const overlayRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
+  // 鎖定背景滾動
   useEffect(() => {
-    if (isOpen && modalRef.current) {
+    if (isOpen) {
+      // 儲存原始 overflow 值
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      // 清理函式：恢復滾動
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && modalRef.current && overlayRef.current) {
+      // 背景淡入
+      gsap.fromTo(
+        overlayRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.3, ease: 'power2.out' },
+      );
+      // Modal 彈跳動畫
       gsap.fromTo(
         modalRef.current,
-        { x: '100%' },
-        { x: '0%', duration: 0.4, ease: 'power3.out' },
+        { scale: 0.8, opacity: 0, y: 20 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.4, ease: 'back.out(1.7)' },
       );
     }
   }, [isOpen]);
 
   const handleClose = (callback: () => void) => {
-    if (modalRef.current) {
+    if (modalRef.current && overlayRef.current) {
+      gsap.to(overlayRef.current, {
+        opacity: 0,
+        duration: 0.2,
+        ease: 'power2.in',
+      });
       gsap.to(modalRef.current, {
-        x: '100%',
-        duration: 0.3,
-        ease: 'power3.in',
+        scale: 0.9,
+        opacity: 0,
+        duration: 0.2,
+        ease: 'power2.in',
         onComplete: callback,
       });
     } else {
@@ -45,61 +73,57 @@ export const StockInSuccessModal: React.FC<StockInSuccessModalProps> = ({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-120 flex justify-end pointer-events-none">
+    <div
+      ref={overlayRef}
+      className="fixed inset-0 z-120 flex items-center justify-center bg-black/50 px-6"
+    >
       <div
         ref={modalRef}
-        className="w-full h-full bg-[#f6f6f6] pointer-events-auto overflow-y-auto"
+        className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden"
       >
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-white px-4 py-3 flex items-center justify-between shadow-sm">
-          <button
-            onClick={() => handleClose(onViewInventory)}
-            className="p-1 -ml-1"
-          >
-            <ChevronLeft size={24} className="text-neutral-900" />
-          </button>
-          <h1 className="text-lg font-bold text-neutral-900 absolute left-1/2 -translate-x-1/2">
-            入庫完成
-          </h1>
-          <div className="w-8" />
-        </div>
+        {/* 關閉按鈕 */}
+        <button
+          onClick={() => handleClose(onContinueScan)}
+          className="absolute top-4 left-4 p-1 text-neutral-600 hover:text-neutral-800 transition-colors z-10"
+          aria-label="關閉"
+        >
+          <X size={24} />
+        </button>
 
-        {/* Content */}
-        <div className="px-5 py-6 pb-24">
-          {/* Success Section */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="relative w-48 h-48">
-              <img
-                src={successImage}
-                alt="Success"
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <h2 className="text-2xl font-bold text-neutral-900 mt-4">
-              入庫成功！
-            </h2>
-            <p className="text-neutral-500 mt-2">
-              已成功將{' '}
-              <span className="font-bold text-primary-500">{itemCount}</span>{' '}
-              項食材加入庫存
-            </p>
+        {/* 內容區域 */}
+        <div className="px-8 pt-12 pb-8 flex flex-col items-center">
+          {/* 冰箱插圖 */}
+          <div className="w-48 h-48 my-4">
+            <img
+              src={successImage}
+              alt="入庫成功"
+              className="w-full h-full object-contain scale-125"
+            />
           </div>
 
-          {/* Action Buttons */}
-          <div className="space-y-3">
-            <button
-              onClick={() => handleClose(onViewInventory)}
-              className="w-full bg-red-500 text-white font-bold py-3.5 rounded-xl text-base shadow-lg shadow-red-500/20 flex items-center justify-center gap-2"
-            >
-              <Package size={20} />
-              前往查看庫存
-            </button>
+          {/* 項目計數 */}
+          <p className="text-neutral-500 text-sm mb-6">
+            已將{' '}
+            <span className="font-bold text-primary-500">{itemCount}</span>{' '}
+            項加入庫存
+          </p>
+
+          {/* 按鈕區域 */}
+          <div className="w-full flex gap-2">
+            {/* 繼續入庫 - 白色邊框按鈕 */}
             <button
               onClick={() => handleClose(onContinueScan)}
-              className="w-full bg-white border border-gray-200 text-neutral-800 font-bold py-3.5 rounded-xl text-base flex items-center justify-center gap-2"
+              className="flex-1 py-4 px-4 border-2 border-neutral-300 rounded-2xl text-neutral-700 font-semibold text-base hover:bg-neutral-50 transition-colors"
             >
-              <Camera size={20} />
               繼續入庫
+            </button>
+
+            {/* 查看庫房 - 橘色實心按鈕 */}
+            <button
+              onClick={() => handleClose(onViewInventory)}
+              className="flex-1 py-4 px-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-2xl text-base transition-colors shadow-lg shadow-[#f58274]/30"
+            >
+              查看庫房
             </button>
           </div>
         </div>
@@ -108,3 +132,4 @@ export const StockInSuccessModal: React.FC<StockInSuccessModalProps> = ({
     document.body,
   );
 };
+
