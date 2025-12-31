@@ -11,6 +11,7 @@ import { Input } from '@/shared/components/ui/input';
 import { ChevronLeft } from 'lucide-react';
 import { useGroupModal } from '../../hooks/useGroupModal';
 import type { Group } from '../../types/group.types';
+import { useAuth } from '@/modules/auth';
 
 type EditGroupModalProps = {
   open: boolean;
@@ -28,6 +29,8 @@ export const EditGroupModal: FC<EditGroupModalProps> = ({
   group,
   onBack,
 }) => {
+  const { user } = useAuth();
+  const isOwner = user?.id === group?.ownerId;
   const {
     updateGroup,
     deleteGroup,
@@ -64,19 +67,19 @@ export const EditGroupModal: FC<EditGroupModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-none w-full h-full p-0 rounded-none border-0 sm:rounded-none !fixed !left-0 !top-0 !translate-x-0 !translate-y-0 !duration-300 data-[state=open]:!slide-in-from-left-full data-[state=closed]:!slide-out-to-left-full data-[state=closed]:!zoom-out-100 data-[state=open]:!zoom-in-100 data-[state=closed]:!slide-out-to-top-0 data-[state=open]:!slide-in-from-top-0">
-        <div className="flex flex-col h-full bg-stone-50">
-          <DialogHeader className="flex-shrink-0 px-4 py-3 bg-white border-b border-stone-100 flex flex-row items-center justify-center relative">
+        <div className="flex flex-col h-full bg-neutral-50">
+          <DialogHeader className="flex-shrink-0 px-4 py-3 bg-white border-b border-neutral-100 flex flex-row items-center justify-center relative">
             <button
               onClick={() => {
                 if (isDeleteConfirm) setIsDeleteConfirm(false);
                 else if (onBack) onBack();
                 else onClose();
               }}
-              className="absolute left-4 p-1 -ml-1 text-stone-600"
+              className="absolute left-4 p-1 -ml-1 text-neutral-600"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
-            <DialogTitle className="text-lg font-bold text-stone-900">
+            <DialogTitle className="text-lg font-bold text-neutral-900">
               {isDeleteConfirm ? '刪除群組' : '修改群組內容'}
             </DialogTitle>
           </DialogHeader>
@@ -84,14 +87,14 @@ export const EditGroupModal: FC<EditGroupModalProps> = ({
           <div className="flex-1 overflow-y-auto px-4 py-6">
             {isDeleteConfirm ? (
               <div className="flex flex-col gap-6 items-center justify-center h-full pb-20">
-                <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center text-4xl mb-2">
+                <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center text-4xl mb-2">
                   ⚠️
                 </div>
                 <div className="text-center space-y-2">
-                  <h3 className="text-xl font-bold text-stone-900">
+                  <h3 className="text-xl font-bold text-neutral-900">
                     確定要刪除此群組嗎？
                   </h3>
-                  <p className="text-stone-500">
+                  <p className="text-neutral-500">
                     一旦刪除，所有成員將被移除，且無法復原此動作。
                   </p>
                 </div>
@@ -101,7 +104,7 @@ export const EditGroupModal: FC<EditGroupModalProps> = ({
                     type="button"
                     onClick={handleDelete}
                     disabled={isLoading}
-                    className="w-full bg-red-500 hover:bg-red-600 text-white h-12 text-base rounded-xl shadow-sm"
+                    className="w-full bg-primary-500 hover:bg-primary-600 text-white h-12 text-base rounded-xl shadow-sm"
                   >
                     {isLoading ? '刪除中...' : '確認刪除'}
                   </Button>
@@ -109,7 +112,7 @@ export const EditGroupModal: FC<EditGroupModalProps> = ({
                     type="button"
                     variant="outline"
                     onClick={() => setIsDeleteConfirm(false)}
-                    className="w-full border-stone-200 text-stone-600 hover:bg-stone-50 h-12 text-base rounded-xl"
+                    className="w-full border-neutral-200 text-neutral-600 hover:bg-neutral-50 h-12 text-base rounded-xl"
                   >
                     取消
                   </Button>
@@ -123,7 +126,7 @@ export const EditGroupModal: FC<EditGroupModalProps> = ({
                 <div className="flex flex-col gap-2">
                   <label
                     htmlFor="editGroupName"
-                    className="text-sm font-medium text-stone-700"
+                    className="text-sm font-medium text-neutral-700"
                   >
                     群組名稱
                   </label>
@@ -134,26 +137,35 @@ export const EditGroupModal: FC<EditGroupModalProps> = ({
                     placeholder="輸入群組名稱"
                     className="h-12 rounded-xl"
                     required
+                    readOnly={!isOwner}
                   />
                 </div>
 
                 <div className="mt-auto pt-4 flex flex-col gap-3">
-                  <Button
-                    type="submit"
-                    disabled={isLoading || !name.trim()}
-                    className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white h-12 text-base rounded-xl shadow-sm"
-                  >
-                    {isLoading ? '儲存中...' : '儲存變更'}
-                  </Button>
+                  {isOwner ? (
+                    <>
+                      <Button
+                        type="submit"
+                        disabled={isLoading || !name.trim()}
+                        className="w-full bg-primary-400 hover:bg-primary-500 text-white h-12 text-base rounded-xl shadow-sm"
+                      >
+                        {isLoading ? '儲存中...' : '儲存變更'}
+                      </Button>
 
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsDeleteConfirm(true)}
-                    className="w-full border-red-200 text-red-500 hover:bg-red-50 h-12 text-base rounded-xl"
-                  >
-                    刪除群組
-                  </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsDeleteConfirm(true)}
+                        className="w-full border-primary-200 text-primary-500 hover:bg-primary-50 h-12 text-base rounded-xl"
+                      >
+                        刪除群組
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="text-center text-neutral-500 py-4 bg-neutral-100 rounded-xl">
+                      只有群組擁有者可以修改這些設定
+                    </div>
+                  )}
                 </div>
               </form>
             )}
