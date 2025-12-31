@@ -1,5 +1,4 @@
 import {
-  useState,
   createContext,
   useContext,
   useEffect,
@@ -10,6 +9,12 @@ import {
   setActiveRefrigeratorId,
   selectActiveRefrigeratorId,
 } from '@/store/slices/refrigeratorSlice';
+import {
+  openModal,
+  closeModal,
+  selectModalStep,
+  selectTargetGroupId,
+} from '@/modules/groups/store/groupModalSlice';
 import type { Group } from '@/modules/groups/types/group.types';
 import { HomeModal } from '@/modules/groups/components/modals/HomeModal';
 import { GroupSettingsModal } from '@/modules/groups/components/modals/GroupSettingsModal';
@@ -20,6 +25,7 @@ import { InviteFriendModal } from '@/modules/groups/components/modals/InviteFrie
 import { useAuth } from '@/modules/auth';
 import { getUserAvatarUrl } from '@/shared/utils/avatarUtils';
 import { useGroups } from '@/modules/groups/hooks/useGroups';
+import type { AppDispatch, RootState } from '@/store';
 
 type GroupModalContextType = {
   activeGroup: Group | undefined;
@@ -55,33 +61,31 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
   const { groups, createGroup, updateGroup, deleteGroup, isLoading } =
     useGroups();
 
-  const dispatch = useDispatch();
-  // 優先使用 Redux 中的 ID，若無則從 localStorage 或預設 '1'
+  const dispatch = useDispatch<AppDispatch>();
+  
+  // Redux: 活動群組 ID
   const reduxActiveId = useSelector(selectActiveRefrigeratorId);
-
-  // 這裡我們不再需要本地 activeGroupId state，直接依賴 Redux
-  // 但為了避免重構過多，我們可以用一個衍生變數
   const activeGroupId =
     reduxActiveId || localStorage.getItem('activeRefrigeratorId') || '1';
 
+  // Redux: Modal 狀態
+  const modalStep = useSelector((state: RootState) => selectModalStep(state));
+  const targetGroupId = useSelector((state: RootState) => selectTargetGroupId(state));
+
   // 處理群組載入後的預設選取邏輯
   useEffect(() => {
-    // 只有當群組資料載入完成且有群組時才執行
     if (!isLoading && groups.length > 0) {
       const currentId =
         reduxActiveId || localStorage.getItem('activeRefrigeratorId');
       const isValid = groups.some((g) => g.id === currentId);
 
-      // 如果當前沒有選中 ID，或是選中的 ID 不在群組列表中（例如預設 '1' 或過期 ID）
       if (!currentId || !isValid) {
-        // 自動選取第一個群組
         console.log(
           '🔄 [GroupModalProvider] 自動選取第一個群組:',
           groups[0].id,
         );
         dispatch(setActiveRefrigeratorId(groups[0].id));
       } else if (!reduxActiveId && currentId && isValid) {
-        // 如果 Redux 中沒有，但在 LocalStorage 有且有效，同步到 Redux
         dispatch(setActiveRefrigeratorId(currentId));
       }
     }
@@ -91,69 +95,46 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
     ? groups.find((g) => g.id === activeGroupId) || groups[0]
     : undefined;
 
-  // Modal States
-  const [isHomeModalOpen, setIsHomeModalOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isMembersOpen, setIsMembersOpen] = useState(false);
-  const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  // 根據 targetGroupId 找到選中的群組
+  const selectedGroup = targetGroupId
+    ? groups.find((g) => g.id === targetGroupId) || null
+    : null;
 
   // Actions
   const switchGroup = (groupId: string) => {
-    // Dispatch to Redux (Slice 會自動處理 localStorage)
     dispatch(setActiveRefrigeratorId(groupId));
   };
 
-  const openHome = () => setIsHomeModalOpen(true);
+  const openHome = () => {
+    dispatch(openModal({ step: 'home' }));
+  };
 
   const openSettings = () => {
-    setIsHomeModalOpen(false);
-    setIsSettingsOpen(true);
+    dispatch(openModal({ step: 'settings' }));
   };
 
   const openCreate = () => {
-    setIsSettingsOpen(false);
-    setIsCreateOpen(true);
+    dispatch(openModal({ step: 'create' }));
   };
 
   const openEdit = (group: Group) => {
-    setSelectedGroup(group);
-    setIsSettingsOpen(false);
-    setIsEditOpen(true);
+    dispatch(openModal({ step: 'edit', targetGroupId: group.id }));
   };
 
   const openMembers = (group: Group) => {
-    setSelectedGroup(group);
-    setIsSettingsOpen(false);
-    setIsHomeModalOpen(false);
-    setIsMembersOpen(true);
+    dispatch(openModal({ step: 'members', targetGroupId: group.id }));
   };
 
   const openInvite = (group: Group) => {
-    setSelectedGroup(group);
-    setIsHomeModalOpen(false);
-    setIsSettingsOpen(false);
-    // Keep MembersModal open so it stays in background
-    setIsInviteOpen(true);
+    dispatch(openModal({ step: 'invite', targetGroupId: group.id }));
   };
 
   const closeAll = () => {
-    setIsHomeModalOpen(false);
-    setIsSettingsOpen(false);
-    setIsCreateOpen(false);
-    setIsEditOpen(false);
-    setIsMembersOpen(false);
-    setIsInviteOpen(false);
+    dispatch(closeModal());
   };
 
   const handleBackToSettings = () => {
-    setIsCreateOpen(false);
-    setIsEditOpen(false);
-    setIsMembersOpen(false);
-    setIsInviteOpen(false);
-    setIsSettingsOpen(true);
+    dispatch(openModal({ step: 'settings' }));
   };
 
   return (
@@ -180,8 +161,8 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
       {/* Render Modals */}
       {activeGroup && (
         <HomeModal
-          isOpen={isHomeModalOpen}
-          onClose={() => setIsHomeModalOpen(false)}
+          isOpen={modalStep === 'home'}
+          onClose={closeAll}
           currentUser={{
             name: userName,
             avatar: userAvatar,
@@ -195,36 +176,36 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
       )}
 
       <GroupSettingsModal
-        open={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
+        open={modalStep === 'settings'}
+        onClose={closeAll}
         onOpenCreateModal={openCreate}
         onOpenEditModal={openEdit}
         onOpenMembersModal={openMembers}
       />
 
       <CreateGroupModal
-        open={isCreateOpen}
-        onClose={() => setIsCreateOpen(false)}
+        open={modalStep === 'create'}
+        onClose={closeAll}
         onBack={handleBackToSettings}
       />
 
       <EditGroupModal
-        open={isEditOpen}
-        onClose={() => setIsEditOpen(false)}
+        open={modalStep === 'edit'}
+        onClose={closeAll}
         group={selectedGroup}
         onBack={handleBackToSettings}
       />
 
       <MembersModal
-        open={isMembersOpen}
-        onClose={() => setIsMembersOpen(false)}
+        open={modalStep === 'members'}
+        onClose={closeAll}
         group={selectedGroup}
         onBack={handleBackToSettings}
       />
 
       <InviteFriendModal
-        open={isInviteOpen}
-        onClose={() => setIsInviteOpen(false)}
+        open={modalStep === 'invite'}
+        onClose={closeAll}
         group={selectedGroup}
       />
     </GroupModalContext.Provider>
