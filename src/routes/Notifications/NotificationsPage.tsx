@@ -283,6 +283,7 @@ const NotificationsPage = () => {
           isOpen={true}
           onClose={() => setOpenItemId(null)}
           onItemUpdate={refetchItem}
+          isCompleted={itemData.data.item.quantity <= 0}
         />
       )}
 
