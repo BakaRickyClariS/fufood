@@ -1,6 +1,15 @@
-import { useState, createContext, useContext, useEffect, type ReactNode } from 'react';
+import {
+  useState,
+  createContext,
+  useContext,
+  useEffect,
+  type ReactNode,
+} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setActiveRefrigeratorId, selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
+import {
+  setActiveRefrigeratorId,
+  selectActiveRefrigeratorId,
+} from '@/store/slices/refrigeratorSlice';
 import type { Group } from '@/modules/groups/types/group.types';
 import { HomeModal } from '@/modules/groups/components/modals/HomeModal';
 import { GroupSettingsModal } from '@/modules/groups/components/modals/GroupSettingsModal';
@@ -49,17 +58,34 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
   const dispatch = useDispatch();
   // 優先使用 Redux 中的 ID，若無則從 localStorage 或預設 '1'
   const reduxActiveId = useSelector(selectActiveRefrigeratorId);
-  
+
   // 這裡我們不再需要本地 activeGroupId state，直接依賴 Redux
   // 但為了避免重構過多，我們可以用一個衍生變數
-  const activeGroupId = reduxActiveId || localStorage.getItem('activeRefrigeratorId') || '1';
-  
-  // 初始化時同步到 Redux (如果 Redux 是空的)
+  const activeGroupId =
+    reduxActiveId || localStorage.getItem('activeRefrigeratorId') || '1';
+
+  // 處理群組載入後的預設選取邏輯
   useEffect(() => {
-    if (!reduxActiveId && activeGroupId) {
-       dispatch(setActiveRefrigeratorId(activeGroupId));
+    // 只有當群組資料載入完成且有群組時才執行
+    if (!isLoading && groups.length > 0) {
+      const currentId =
+        reduxActiveId || localStorage.getItem('activeRefrigeratorId');
+      const isValid = groups.some((g) => g.id === currentId);
+
+      // 如果當前沒有選中 ID，或是選中的 ID 不在群組列表中（例如預設 '1' 或過期 ID）
+      if (!currentId || !isValid) {
+        // 自動選取第一個群組
+        console.log(
+          '🔄 [GroupModalProvider] 自動選取第一個群組:',
+          groups[0].id,
+        );
+        dispatch(setActiveRefrigeratorId(groups[0].id));
+      } else if (!reduxActiveId && currentId && isValid) {
+        // 如果 Redux 中沒有，但在 LocalStorage 有且有效，同步到 Redux
+        dispatch(setActiveRefrigeratorId(currentId));
+      }
     }
-  }, [reduxActiveId, activeGroupId, dispatch]);
+  }, [groups, isLoading, reduxActiveId, dispatch]);
 
   const activeGroup = Array.isArray(groups)
     ? groups.find((g) => g.id === activeGroupId) || groups[0]
