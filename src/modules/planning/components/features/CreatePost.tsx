@@ -145,9 +145,9 @@ export const PostFormFeature = ({
   useEffect(() => {
     if (mode === 'edit') {
       let mappedItems: ShoppingItem[] = [];
-      
+
       if (initialItems && initialItems.length > 0) {
-         mappedItems = initialItems.map(item => ({
+        mappedItems = initialItems.map((item) => ({
           id: item.id,
           name: item.name,
           quantity: item.quantity,
@@ -155,17 +155,19 @@ export const PostFormFeature = ({
           imageUrl: item.photoPath || undefined,
         }));
       } else if (initialData) {
-        mappedItems = [{
-          id: initialData.id,
-          name: initialData.name,
-          quantity: initialData.quantity,
-          unit: initialData.unit,
-          imageUrl: initialData.photoPath || undefined,
-        }];
+        mappedItems = [
+          {
+            id: initialData.id,
+            name: initialData.name,
+            quantity: initialData.quantity,
+            unit: initialData.unit,
+            imageUrl: initialData.photoPath || undefined,
+          },
+        ];
       }
 
       setItems(mappedItems);
-      setOriginalIds(new Set(mappedItems.map(i => i.id)));
+      setOriginalIds(new Set(mappedItems.map((i) => i.id)));
     } else if (mode === 'create') {
       // Default empty item for create mode
       setItems([
@@ -334,47 +336,74 @@ export const PostFormFeature = ({
       }
 
       if (mode === 'edit') {
-        const currentIds = new Set(processedItems.map(i => i.id));
-        
+        const currentIds = new Set(processedItems.map((i) => i.id));
+
         // 1. Identify Deletions (In original but not in current)
-        const itemsToDelete = Array.from(originalIds).filter(id => !currentIds.has(id));
-        
+        const itemsToDelete = Array.from(originalIds).filter(
+          (id) => !currentIds.has(id),
+        );
+
         // 2. Identify Updates (In original and in current)
-        const itemsToUpdate = processedItems.filter(item => originalIds.has(item.id));
-        
+        const itemsToUpdate = processedItems.filter((item) =>
+          originalIds.has(item.id),
+        );
+
         // 3. Identify Creations (Not in original)
-        const itemsToCreate = processedItems.filter(item => !originalIds.has(item.id));
+        const itemsToCreate = processedItems.filter(
+          (item) => !originalIds.has(item.id),
+        );
 
         const promises: Promise<any>[] = [];
 
         // Execute Deletes
-        itemsToDelete.forEach(id => {
+        itemsToDelete.forEach((id) => {
           promises.push(deleteItem(id));
         });
 
         // Execute Updates
-        itemsToUpdate.forEach(item => {
-           // Only update if needed? For now update all common fields
-           promises.push(updateItem(item.id, {
-             name: item.name,
-             quantity: item.quantity,
-             unit: item.unit,
-             photoPath: item.imageUrl
-           }));
+        itemsToUpdate.forEach((item) => {
+          // Only update if needed? For now update all common fields
+          promises.push(
+            updateItem(item.id, {
+              name: item.name,
+              quantity: item.quantity,
+              unit: item.unit,
+              photoPath: item.imageUrl,
+            }),
+          );
         });
 
         // Execute Creates
         if (itemsToCreate.length > 0) {
-           const createInputs = itemsToCreate.map(item => ({
-              name: item.name,
-              quantity: item.quantity,
-              unit: item.unit,
-              photoPath: item.imageUrl
-           }));
-           promises.push(createItems(createInputs));
+          const createInputs = itemsToCreate.map((item) => ({
+            name: item.name,
+            quantity: item.quantity,
+            unit: item.unit,
+            photoPath: item.imageUrl,
+          }));
+          promises.push(createItems(createInputs));
         }
 
         await Promise.all(promises);
+
+        // 發送更新通知
+        try {
+          const { notificationsApiImpl } = await import(
+            '@/modules/notifications/api/notificationsApiImpl'
+          );
+          await notificationsApiImpl.sendNotification({
+            groupId: listId, // 這裡清單 ID 可對應群組上下文
+            title: '採買清單更新',
+            body: `清單項目已有變動`,
+            type: 'shopping',
+            action: {
+              type: 'shopping-list',
+              payload: { listId },
+            },
+          });
+        } catch (nErr) {
+          console.warn('通知失敗', nErr);
+        }
 
         toast.dismiss(toastId);
         toast.success('更新成功');
@@ -387,6 +416,32 @@ export const PostFormFeature = ({
           photoPath: item.imageUrl,
         }));
         await createItems(createInputs);
+
+        // 發送新增項目的通知
+        try {
+          const { notificationsApiImpl } = await import(
+            '@/modules/notifications/api/notificationsApiImpl'
+          );
+          const firstItem = processedItems[0].name;
+          const msg =
+            processedItems.length > 1
+              ? `已在清單中新增 ${firstItem} 等多項商品`
+              : `已在清單中新增商品：${firstItem}`;
+
+          await notificationsApiImpl.sendNotification({
+            groupId: listId,
+            title: '採買清單新商品',
+            body: msg,
+            type: 'shopping',
+            action: {
+              type: 'shopping-list',
+              payload: { listId },
+            },
+          });
+        } catch (nErr) {
+          console.warn('通知失敗', nErr);
+        }
+
         toast.dismiss(toastId);
         toast.success('新增成功');
       }
@@ -543,9 +598,7 @@ export const PostFormFeature = ({
       <div className="fixed bottom-0 left-0 right-0 px-4 py-6 bg-white rounded-t-3xl shadow-[0_-4px_10px_rgba(0,0,0,0.1)] z-50">
         <button
           onClick={handleSubmit}
-          disabled={
-            isSubmitting || items.length === 0
-          }
+          disabled={isSubmitting || items.length === 0}
           className="w-full py-3.5 bg-primary-default text-white rounded-xl font-bold shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-98 transition-all"
         >
           {isSubmitting

@@ -18,9 +18,7 @@ import {
   selectAllGroups,
   fetchGroups,
 } from '@/modules/groups/store/groupsSlice';
-import {
-  selectActiveRefrigeratorId,
-} from '@/store/slices/refrigeratorSlice';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import useFadeInAnimation from '@/shared/hooks/useFadeInAnimation';
 import type { CategoryInfo } from '@/modules/inventory/types';
 import { categories as defaultCategories } from '@/modules/inventory/constants/categories';
@@ -46,7 +44,7 @@ const OverviewPanel: React.FC = () => {
   const categoryOrder = useSelector(selectCategoryOrder);
   const dispatch = useDispatch();
   const { groupId } = useParams<{ groupId: string }>();
-  
+
   // Get active ID from Redux
   const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
 
@@ -65,7 +63,15 @@ const OverviewPanel: React.FC = () => {
   // Effect 2: 當 groups 已載入時，載入 settings
   useEffect(() => {
     // 計算 refrigeratorId: 優先使用 Redux active ID，其次 URL groupId，最後 fallback
-    const refId = activeRefrigeratorId || getRefrigeratorId(groupId, groups);
+    let refId = activeRefrigeratorId || getRefrigeratorId(groupId, groups);
+
+    // 如果還沒有 refId 但有 groups，自動設定第一個 group 為 active
+    if (!refId && groups.length > 0) {
+      refId = groups[0].id;
+      // 同步到 localStorage，確保其他元件也能取得
+      localStorage.setItem('activeRefrigeratorId', refId);
+      console.log('[Overview] 自動設定 activeRefrigeratorId:', refId);
+    }
 
     // 如果還沒有 refId，不執行
     if (!refId) {

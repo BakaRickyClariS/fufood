@@ -11,6 +11,7 @@ import {
   ALL_NOTIFICATIONS,
   DEFAULT_NOTIFICATION_SETTINGS,
 } from './notificationsMockData';
+import type { SendNotificationRequest } from '../../types';
 
 // 模擬延遲
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -36,6 +37,37 @@ const getNotificationsByCategory = (category?: NotificationCategory) => {
 };
 
 export const notificationsMockApi: NotificationsApi = {
+  // 發送通知 (Mock) - 模擬寫入資料庫
+  sendNotification: async (data: SendNotificationRequest) => {
+    await delay(300);
+
+    const newNotification = {
+      id: Math.random().toString(36).substring(7), // Simple ID
+      type: data.type,
+      title: data.title,
+      message: data.body,
+      isRead: false,
+      createdAt: new Date().toISOString(),
+      action: data.action,
+      // Map basic type to category for Mock display
+      category: 'stock' as const,
+    };
+
+    // 模擬後端將通知加入資料庫 (加到陣列開頭)
+    notifications = [newNotification, ...notifications];
+
+    console.log('[Mock API] Notification Sent & Saved:', newNotification);
+
+    return {
+      success: true,
+      data: {
+        sent: 1,
+        failed: 0,
+        details: { success: [newNotification.id], failed: [] },
+      },
+    };
+  },
+
   // 取得通知列表
   getNotifications: async (params?: GetNotificationsRequest) => {
     await delay(300);
@@ -54,7 +86,7 @@ export const notificationsMockApi: NotificationsApi = {
     const paginatedItems = items.slice(start, start + limit);
 
     return {
-      status: true,
+      success: true,
       data: {
         items: paginatedItems,
         total: items.length,
@@ -73,7 +105,7 @@ export const notificationsMockApi: NotificationsApi = {
     }
 
     return {
-      status: true,
+      success: true,
       data: { item },
     };
   },
@@ -88,7 +120,7 @@ export const notificationsMockApi: NotificationsApi = {
     }
 
     return {
-      status: true,
+      success: true,
       data: { id },
     };
   },
@@ -100,7 +132,7 @@ export const notificationsMockApi: NotificationsApi = {
     notifications = notifications.filter((n) => n.id !== id);
 
     return {
-      status: true,
+      success: true,
       data: {},
     };
   },
@@ -113,7 +145,7 @@ export const notificationsMockApi: NotificationsApi = {
     notifications = notifications.map((n) => ({ ...n, isRead: true }));
 
     return {
-      status: true,
+      success: true,
       data: { count },
     };
   },
@@ -123,8 +155,8 @@ export const notificationsMockApi: NotificationsApi = {
     await delay(200);
 
     return {
-      status: true,
-      data: { settings },
+      success: true,
+      data: settings, // 直接回傳 NotificationSettings
     };
   },
 
@@ -135,8 +167,8 @@ export const notificationsMockApi: NotificationsApi = {
     settings = { ...settings, ...data };
 
     return {
-      status: true,
-      data: { settings },
+      success: true,
+      data: settings, // 直接回傳 NotificationSettings
     };
   },
 
@@ -149,7 +181,7 @@ export const notificationsMockApi: NotificationsApi = {
     const deletedCount = initialLength - notifications.length;
 
     return {
-      status: true,
+      success: true,
       data: { deletedCount },
     };
   },
@@ -170,7 +202,7 @@ export const notificationsMockApi: NotificationsApi = {
     });
 
     return {
-      status: true,
+      success: true,
       data: { updatedCount },
     };
   },

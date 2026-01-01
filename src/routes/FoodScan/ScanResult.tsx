@@ -19,12 +19,15 @@ import {
 } from '@/modules/groups/store/groupsSlice';
 import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import { getRefrigeratorId } from '@/modules/inventory/utils/getRefrigeratorId';
+import { useAuth } from '@/modules/auth';
+import { groupsApi } from '@/modules/groups/api';
 import { useEffect } from 'react';
 
 const ScanResult: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { user } = useAuth();
 
   // Redux state for batch scan
   const { items, currentIndex } = useSelector(
@@ -130,6 +133,46 @@ const ScanResult: React.FC = () => {
       await foodScanApi.submitFoodItem(dataToSubmit);
       const newSubmittedCount = submittedCount + 1;
       setSubmittedCount(newSubmittedCount);
+
+      // 發送推播通知 (單筆)
+      try {
+        const notifyGroupId = dataToSubmit.groupId || targetGroupId;
+        if (notifyGroupId) {
+          // 2024-01-01 Fix: 依使用者要求，透過 API 取得成員列表發送通知
+          // 不再依賴前端 groups state 判斷是否為共享群組
+          let targetUserIds: string[] = [];
+          try {
+            const members = await groupsApi.getMembers(notifyGroupId);
+            targetUserIds = members.map(m => m.id);
+          } catch (fetchErr) {
+            console.warn(`Failed to fetch members for group ${notifyGroupId}:`, fetchErr);
+            // 若 API 失敗 (如個人冰箱無法取得成員)，降級為發送給自己
+            if (user?.id) targetUserIds = [user.id];
+          }
+
+          if (targetUserIds.length > 0) {
+            import('@/api/services/notification').then(({ notificationService }) => {
+              notificationService.sendNotification({
+                type: 'inventory',
+                title: '食材入庫通知',
+                body: `已新增 ${dataToSubmit.productName}`,
+                userIds: targetUserIds,
+                // groupId 設為 undefined，避免個人冰箱 ID 被後端視為無效群組 ID 而報錯 (400)
+                // 我們已透過 userIds 指定接收者
+                groupId: undefined,
+                action: {
+                  type: 'inventory',
+                  payload: {
+                    refrigeratorId: notifyGroupId
+                  }
+                }
+              }).catch(err => console.error('Failed to send notification:', err));
+            });
+          }
+        }
+      } catch (notifyError) {
+        console.error('Notification error:', notifyError);
+      }
 
       // Show completed state
       setSubmitStatus('completed');
@@ -238,14 +281,56 @@ const ScanResult: React.FC = () => {
     try {
       // Submit all pending items
       let successCount = 0;
+      let firstItemName = '';
+      
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         if (item.status === 'pending') {
           await foodScanApi.submitFoodItem(item.data);
+          if (successCount === 0) firstItemName = item.data.productName;
           successCount++;
         }
       }
       setSubmittedCount(successCount);
+
+      // 發送推播通知 (批次)
+      try {
+        if (successCount > 0 && targetGroupId) {
+          let targetUserIds: string[] = [];
+          try {
+            const members = await groupsApi.getMembers(targetGroupId);
+            targetUserIds = members.map(m => m.id);
+          } catch (fetchErr) {
+            console.warn(`Failed to fetch members for group ${targetGroupId}:`, fetchErr);
+            if (user?.id) targetUserIds = [user.id];
+          }
+
+          if (targetUserIds.length > 0) {
+            const message = successCount === 1 
+              ? `已新增 ${firstItemName}`
+              : `已新增 ${firstItemName} 等 ${successCount} 項食材`;
+              
+            import('@/api/services/notification').then(({ notificationService }) => {
+              notificationService.sendNotification({
+                type: 'inventory',
+                title: '食材入庫通知',
+                body: message,
+                userIds: targetUserIds,
+                groupId: undefined, 
+                action: {
+                  type: 'inventory',
+                  payload: {
+                    refrigeratorId: targetGroupId
+                  }
+                }
+              }).catch(err => console.error('Failed to send notification:', err));
+            });
+          }
+        }
+      } catch (notifyError) {
+        console.error('Notification error:', notifyError);
+      }
+
       setSubmitStatus('completed');
 
       setTimeout(() => {

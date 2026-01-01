@@ -32,12 +32,16 @@ export const createInventoryApi = (): InventoryApi => {
       if (!refrigeratorId) {
         throw new Error('Refrigerator ID is required for getInventory');
       }
-      if (!refrigeratorId) {
-        throw new Error('Refrigerator ID is required for getInventory');
-      }
+
+      // 移除 params 傳遞，避免將 groupId 當作 query param 發送導致後端 500 錯誤
+      // 因為 refrigeratorId 已經在路徑中了
+      const { ...queryParams } = params || {};
+      delete queryParams.refrigeratorId;
+      delete queryParams.groupId;
+
       return aiApi.get<GetInventoryResponse>(
         `/refrigerators/${refrigeratorId}/inventory`,
-        params,
+        queryParams,
       );
     },
 

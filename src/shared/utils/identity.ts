@@ -29,8 +29,7 @@
 const STORAGE_KEYS = {
   /** 使用者資料物件 */
   USER: 'user',
-  /** 認證 token（若使用 localStorage token 模式） */
-  AUTH_TOKEN: 'auth_token',
+  // AUTH_TOKEN: 'auth_token', // Removed: Using HttpOnly Cookie
   /** 當前活躍的冰箱/群組 ID */
   REFRIGERATOR_ID: 'activeRefrigeratorId',
 } as const;
@@ -59,34 +58,23 @@ export const identity = {
   // ----------------------------------------------------------
 
   /**
-   * 取得使用者 ID
-   * 從多個來源嘗試獲取，優先順序：
-   * 1. localStorage 中的 user 物件
-   * 2. localStorage 中的 activeRefrigeratorId（暫時 fallback）
-   * 3. 無法取得時返回 null
+   * 取得使用者 ID (用於 X-User-Id Header)
+   *
+   * 重要：此處的 "User ID" 實際上是 **群組 ID** (activeRefrigeratorId)
+   * 這是因為 AI Backend 使用 X-User-Id 來識別當前操作的冰箱/群組
+   *
+   * @returns activeRefrigeratorId (群組 ID)
    */
   getUserId: (): string | null => {
     try {
-      // 方法 1: 從 user 物件取得
-      const userStr = localStorage.getItem(STORAGE_KEYS.USER);
-      if (userStr) {
-        const user = JSON.parse(userStr) as IdentityUser;
-        if (user.id) {
-          return user.id;
-        }
-      }
-
-      // 方法 2: 使用 activeRefrigeratorId 作為臨時 fallback
-      // 這是因為某些情況下登入流程可能沒有正確存儲 user 資料
+      // 直接使用 activeRefrigeratorId 作為 X-User-Id
+      // 這是原始設計：X-User-Id = 群組 ID
       const refId = localStorage.getItem(STORAGE_KEYS.REFRIGERATOR_ID);
       if (refId) {
-        console.warn(
-          '[Identity] 使用 activeRefrigeratorId 作為臨時 userId fallback',
-        );
         return refId;
       }
     } catch (e) {
-      console.warn('[Identity] Failed to parse user from localStorage', e);
+      console.warn('[Identity] Failed to get activeRefrigeratorId', e);
     }
     return null;
   },
@@ -140,43 +128,10 @@ export const identity = {
   },
 
   // ----------------------------------------------------------
-  // Auth Token 相關
+  // Auth Token 相關 (已移除：改用 HttpOnly Cookie)
   // ----------------------------------------------------------
 
-  /**
-   * 取得認證 token
-   * 注意：目前後端使用 HttpOnly Cookie，此 token 主要作為備用
-   */
-  getAuthToken: (): string | null => {
-    try {
-      return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-    } catch (e) {
-      console.warn('[Identity] Failed to get auth token', e);
-      return null;
-    }
-  },
-
-  /**
-   * 儲存認證 token
-   */
-  setAuthToken: (token: string): void => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
-    } catch (e) {
-      console.error('[Identity] Failed to save auth token', e);
-    }
-  },
-
-  /**
-   * 清除認證 token
-   */
-  clearAuthToken: (): void => {
-    try {
-      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-    } catch (e) {
-      console.error('[Identity] Failed to clear auth token', e);
-    }
-  },
+  // getAuthToken, setAuthToken, clearAuthToken removed
 
   // ----------------------------------------------------------
   // Refrigerator ID 相關
@@ -219,12 +174,12 @@ export const identity = {
     // 4. 若無 store 資料但有快取，暫時信任快取
     if (cached) return cached;
 
-    // 5. userId fallback（個人冰箱模式）
-    const userId = identity.getUserId();
-    if (userId) {
-      console.warn('[Identity] Using userId as refrigeratorId fallback');
-      return userId;
-    }
+    // 5. userId fallback（已移除）
+    // const userId = identity.getUserId();
+    // if (userId) {
+    //   console.warn('[Identity] Using userId as refrigeratorId fallback');
+    //   return userId;
+    // }
 
     return null;
   },
@@ -272,7 +227,7 @@ export const identity = {
    */
   clearAll: (): void => {
     identity.clearUser();
-    identity.clearAuthToken();
+    // identity.clearAuthToken(); // Removed
     identity.clearRefrigeratorId();
 
     // 清除舊版可能遺留的 key
@@ -294,7 +249,7 @@ export const identity = {
     return {
       hasUser: identity.hasUser(),
       userId: identity.getUserId(),
-      hasToken: !!identity.getAuthToken(),
+      hasToken: false, // !!identity.getAuthToken(),
       refrigeratorId: identity.getCachedRefrigeratorId(),
     };
   },

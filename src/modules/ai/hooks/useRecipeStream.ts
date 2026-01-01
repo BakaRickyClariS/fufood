@@ -4,7 +4,7 @@
  * 用於 AI 食譜生成的即時串流顯示
  */
 import { useState, useCallback, useRef } from 'react';
-import { getAuthToken } from '@/modules/auth/utils/authUtils';
+// import { getAuthToken } from '@/modules/auth/utils/authUtils';
 import { aiRecipeApi } from '../api/aiRecipeApi';
 import type { AIRecipeRequest, AIRecipeItem, AIStreamEvent } from '../types';
 
@@ -129,7 +129,7 @@ export const useRecipeStream = () => {
               id: r.id,
               name: r.name,
               category: r.category || '其他',
-              imageUrl: r.imageUrl ?? null,  // 保留 null，不轉為空字串
+              imageUrl: r.imageUrl ?? null, // 保留 null，不轉為空字串
               servings: r.servings,
               cookTime: r.cookTime || 0,
               isFavorite: r.isFavorite ?? false,
@@ -138,6 +138,37 @@ export const useRecipeStream = () => {
               seasonings: r.seasonings,
               steps: r.steps,
             }));
+            // 發送 AI 食譜生成通知
+            try {
+              const { notificationsApiImpl } = await import(
+                '@/modules/notifications/api/notificationsApiImpl'
+              );
+              // 取得當前冰箱 ID (從 localStorage 或 Redux，這裡簡單起見先從常用路徑處理)
+              const refrigeratorId = localStorage.getItem(
+                'activeRefrigeratorId',
+              );
+
+              if (refrigeratorId && finalRecipes.length > 0) {
+                const firstRecipeName = finalRecipes[0].name;
+                const msg =
+                  finalRecipes.length > 1
+                    ? `已為您生成 ${firstRecipeName} 等 ${finalRecipes.length} 道新食譜！`
+                    : `已為您生成新食譜：${firstRecipeName}`;
+
+                await notificationsApiImpl.sendNotification({
+                  groupId: refrigeratorId,
+                  title: 'AI 食譜生成完成',
+                  body: msg,
+                  type: 'recipe',
+                  action: {
+                    type: 'recipe',
+                    payload: { recipeId: finalRecipes[0].id },
+                  },
+                });
+              }
+            } catch (notifyErr) {
+              console.warn('AI 通知發送失敗:', notifyErr);
+            }
           } catch (err) {
             console.error('Auto-save recipes failed:', err);
           }
@@ -201,13 +232,11 @@ export const useRecipeStream = () => {
       });
 
       try {
-        const token = getAuthToken();
         const response = await fetch(aiRecipeApi.getStreamUrl(), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Accept: 'text/event-stream',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify(request),
           credentials: 'include',
