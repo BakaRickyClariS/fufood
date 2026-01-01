@@ -7,15 +7,21 @@
 export type NotificationCategory = 'stock' | 'inspiration' | 'official';
 
 // 通知類型標籤（用於顯示標籤樣式）
-// 後端使用: inventory | group | shopping | system
-export type NotificationType = 'inventory' | 'group' | 'shopping' | 'system';
+// 後端使用: inventory | group | shopping | system | recipe
+export type NotificationType =
+  | 'inventory'
+  | 'group'
+  | 'shopping'
+  | 'system'
+  | 'recipe';
 
 // 點擊動作類型
 export type NotificationActionType =
   | 'inventory' // 跳轉到庫存食材頁面
   | 'shopping-list' // 跳轉到共享清單
   | 'recipe' // 跳轉到食譜
-  | 'detail'; // 跳轉到通知詳情頁
+  | 'detail' // 跳轉到通知詳情頁
+  | 'group'; // 跳轉到群組頁
 
 // 通知動作結構（後端使用合併物件格式）
 export type NotificationAction = {

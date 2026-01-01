@@ -53,6 +53,8 @@ export const NotificationItem = ({
       case 'group':
         return 'bg-blue-100 text-blue-700';
       case 'shopping':
+        return 'bg-orange-100 text-orange-700';
+      case 'recipe':
         return 'bg-green-100 text-green-700';
       case 'system':
       default:
@@ -67,7 +69,9 @@ export const NotificationItem = ({
       case 'group':
         return '群組';
       case 'shopping':
-        return '購物';
+        return '共享';
+      case 'recipe':
+        return '食譜';
       case 'system':
         return '系統';
       default:
