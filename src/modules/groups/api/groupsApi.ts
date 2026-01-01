@@ -156,16 +156,53 @@ export const groupsApi = {
           API_BASE,
         );
 
+        let groups: Group[] = [];
         // 處理可能的回應格式：直接陣列 或 { data: [...] }
         if (Array.isArray(response)) {
-          return response;
-        }
-        if (response && typeof response === 'object' && 'data' in response) {
-          return response.data;
+          groups = response;
+        } else if (
+          response &&
+          typeof response === 'object' &&
+          'data' in response
+        ) {
+          groups = response.data;
+        } else {
+          console.warn('⚠️ [Groups API] 非預期的回應格式:', response);
+          return [];
         }
 
-        console.warn('⚠️ [Groups API] 非預期的回應格式:', response);
-        return [];
+        // 資料轉換：處理每個群組的成員資料
+        // 如果列表 API 沒有回傳成員資料，我們需要對每個群組呼叫 getById 來取得詳細資訊
+        // 這是因為使用者指出只有 getById (現有的冰箱 API) 才有完整資料
+
+        try {
+          const groupsWithDetails = await Promise.all(
+            groups.map(async (basicGroup) => {
+              try {
+                // 並行呼叫 getById 取得詳細資料（包含成員）
+                const detailGroup = await groupsApi.getById(basicGroup.id);
+                return detailGroup;
+              } catch (error) {
+                console.warn(
+                  `取得群組詳細資料失敗 (id: ${basicGroup.id})`,
+                  error,
+                );
+                // 如果失敗，回傳基本資料，並確保 members 為空陣列以免出錯
+                return {
+                  ...basicGroup,
+                  members: basicGroup.members || [],
+                };
+              }
+            }),
+          );
+
+          return groupsWithDetails;
+        } catch (error) {
+          console.error('批次取得群組詳細資料失敗', error);
+          // 如果整個 Promise.all 失敗（理論上 map 裡的 catch 會接住，但以防萬一）
+          // 回傳基本列表
+          return groups.map((g) => ({ ...g, members: g.members || [] }));
+        }
       },
       // Mock fallback
       async () => {
@@ -191,11 +228,26 @@ export const groupsApi = {
           endpoint,
         );
 
+        let groupData: Group;
         // 處理可能的回應格式
         if (response && typeof response === 'object' && 'data' in response) {
-          return (response as { data: Group }).data;
+          groupData = (response as { data: Group }).data;
+        } else {
+          groupData = response as Group;
         }
-        return response as Group;
+
+        // 資料轉換：處理成員資料
+        if (groupData.members && Array.isArray(groupData.members)) {
+          groupData.members = groupData.members.map((member) => ({
+            ...member,
+            avatar: member.profilePictureUrl || member.avatar || '',
+            role:
+              member.role ||
+              (groupData.ownerId === member.id ? 'owner' : 'member'),
+          }));
+        }
+
+        return groupData;
       },
       // Mock fallback
       async () => {
@@ -209,30 +261,24 @@ export const groupsApi = {
 
   /**
    * 取得群組成員
-   * GET /api/v1/refrigerators/{groupId}/members
+   * GET /api/v1/refrigerators/{groupId}/members (實際使用 getById 從群組資訊中取得)
    */
   getMembers: async (groupId: string): Promise<GroupMember[]> => {
-    const endpoint = `${API_BASE}/${groupId}/members`;
+    // 雖然函式名稱是 getMembers，但在新 API 架構下，成員資訊包含在群組資訊中
+    // 因此這裡直接呼叫 getById，然後提取 members 欄位
 
     return tryRealApiWithMockFallback(
       'GET',
-      endpoint,
+      `${API_BASE}/${groupId}`, // 使用 getById 的 endpoint 作為參考
       // 真實 API 呼叫
       async () => {
-        const response = await backendApi.get<
-          GroupMember[] | { data: GroupMember[] }
-        >(endpoint);
-
-        // 處理可能的回應格式
-        if (Array.isArray(response)) {
-          return response;
+        try {
+          const group = await groupsApi.getById(groupId);
+          return group.members || [];
+        } catch (error) {
+          console.error('取得群組成員失敗:', error);
+          throw error;
         }
-        if (response && typeof response === 'object' && 'data' in response) {
-          return response.data;
-        }
-
-        console.warn('⚠️ [Groups API] 非預期的成員回應格式:', response);
-        return [];
       },
       // Mock fallback
       async () => {

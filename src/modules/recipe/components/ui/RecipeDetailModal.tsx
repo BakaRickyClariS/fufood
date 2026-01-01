@@ -22,6 +22,14 @@ export const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   const [isHidden, setIsHidden] = useState(false);
 
+  // 判斷傳入的 recipe 是否包含完整資訊 (由 State 傳遞而來)
+  // 這樣可以避免對剛生成的食譜 (尚未存入 DB) 進行 API 查詢
+  const isFullRecipe = (r: any): r is Recipe => {
+    return r && Array.isArray(r.ingredients) && Array.isArray(r.steps);
+  };
+
+  const initialRecipe = isFullRecipe(recipeListItem) ? (recipeListItem as Recipe) : null;
+
   // 使用共用邏輯
   const {
     recipe: fullRecipe,
@@ -33,6 +41,7 @@ export const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
     handleConfirmConsumption,
   } = useRecipeDetailLogic({
     recipeId: isOpen ? recipeListItem?.id : undefined,
+    initialRecipe, // 傳入初始食譜，若存在則不會觸發 API 載入
     onClose,
   });
 

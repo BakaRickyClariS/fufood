@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Outlet, useMatches } from 'react-router-dom';
 import { GroupModalProvider } from '@/modules/groups/providers/GroupModalProvider';
 import TopNav from './TopNav';
@@ -10,22 +10,30 @@ type RouteHandle = {
   bodyClass?: string;
 };
 
-const MainLayout = () => {
+// Custom Hook to extract route configuration
+const useRouteConfig = () => {
   const matches = useMatches();
 
-  // 取得當前路由的 handle 設定
-  const currentHandle = matches
-    .filter((match) => match.handle)
-    .map((match) => match.handle as RouteHandle)
-    .pop();
+  return useMemo(() => {
+    // Get the last matching route that has a handle
+    const handle = matches
+      .filter((match) => match.handle)
+      .map((match) => match.handle as RouteHandle)
+      .pop();
 
-  // 根據 handle 決定是否顯示 header 和 footer
-  const showHeader =
-    currentHandle?.headerVariant !== 'none' &&
-    currentHandle?.headerVariant !== 'simple';
-  const showFooter = currentHandle?.footer !== false;
-  const bodyClass = currentHandle?.bodyClass || '';
+    return {
+      showHeader:
+        handle?.headerVariant !== 'none' && handle?.headerVariant !== 'simple',
+      showFooter: handle?.footer !== false,
+      bodyClass: handle?.bodyClass || '',
+    };
+  }, [matches]);
+};
 
+const MainLayout = () => {
+  const { showHeader, showFooter, bodyClass } = useRouteConfig();
+
+  // Apply body class
   useEffect(() => {
     if (bodyClass) {
       document.body.classList.add(bodyClass);

@@ -44,3 +44,17 @@ export type CreateSharedListItemInput = {
   unit?: string;
   photoPath?: string;
 };
+
+/** 共享清單貼文 (前端模擬用) */
+export type SharedListPost = {
+  id: string;
+  listId: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar: string;
+  content: string;
+  images: string[];
+  items: (SharedListItem & { imageUrl?: string | null })[]; // Merge photoPath/imageUrl
+  createdAt: string;
+};
+

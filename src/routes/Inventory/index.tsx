@@ -1,16 +1,30 @@
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import TabsSection from '@/modules/inventory/components/layout/TabsSection';
 import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
 import { useInventoryItemQuery } from '@/modules/inventory/api';
+import { useSelector } from 'react-redux';
+import { selectConsumptionContextId } from '@/modules/inventory/store/consumptionSlice';
 
 const Inventory: React.FC = () => {
   const { itemId } = useParams(); // Keep for backward compatibility or direct link if needed, but primary is state
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 優先使用 state 中的 itemId，其次是 URL params
+  const [restoredItemId, setRestoredItemId] = useState<string | null>(null);
+
+  // 檢查是否有未完成的消耗流程 (Redux)
+  const consumptionContextId = useSelector(selectConsumptionContextId);
+
+  useEffect(() => {
+    if (consumptionContextId) {
+      setRestoredItemId(consumptionContextId);
+    }
+  }, [consumptionContextId]);
+
+  // 優先使用 state 中的 itemId，其次是 URL params，最後是恢復的 ID
   const targetItemId =
-    (location.state as { openItemId?: string })?.openItemId || itemId;
+    (location.state as { openItemId?: string })?.openItemId || itemId || restoredItemId;
 
   const { data: itemData, refetch } = useInventoryItemQuery(targetItemId || '');
 
@@ -28,6 +42,7 @@ const Inventory: React.FC = () => {
           isOpen={true}
           onClose={handleCloseModal}
           onItemUpdate={refetch}
+          isCompleted={itemData.data.item.quantity <= 0}
         />
       )}
     </>

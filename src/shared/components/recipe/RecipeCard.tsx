@@ -25,26 +25,26 @@ export const RecipeCard = ({
     await toggleFavorite(recipe.id);
   };
 
-  // Fallback for empty imageUrl
-  const imageUrl =
-    recipe.imageUrl ||
-    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=400&fit=crop';
+  // Fallback image if imageUrl is null or empty
+  const displayImage = recipe.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80';
 
   return (
     <div
+      onClick={() => onClick && onClick(recipe.id)}
       className={cn(
-        'relative rounded-2xl overflow-hidden',
-        'w-[200px] h-[200px] shrink-0',
+        'group relative bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer',
         className,
       )}
-      onClick={() => onClick(recipe.id)}
     >
-      {/* 背景圖片 */}
-      <img
-        src={imageUrl}
-        alt={recipe.name}
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+      {/* Image Container */}
+      <div className="relative aspect-square overflow-hidden bg-neutral-100">
+        <img
+          src={displayImage}
+          alt={recipe.name}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          loading="lazy"
+        />
+      </div>
 
       {/* 熱門標籤 - 左上角 */}
       {showPopularTag && (

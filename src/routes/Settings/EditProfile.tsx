@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '@/modules/auth';
 import { useUpdateProfileMutation } from '@/modules/settings/api/queries';
+import { useGetUserProfileQuery } from '@/modules/auth/api/queries';
 import { getUserAvatarUrl } from '@/shared/utils/avatarUtils';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -15,53 +16,80 @@ import {
 } from '@/shared/components/ui/select';
 import SimpleHeader from '@/modules/settings/components/SimpleHeader';
 import AvatarEditor from '@/modules/settings/components/AvatarEditor';
+import { Gender, type GenderValue } from '@/modules/auth/types';
+import { SuccessModal } from '@/shared/components/ui/SuccessModal';
 // import { toast } from '@/shared/components/ui/use-toast'; // Assuming toast exists
 
+/**
+ * 表單值類型
+ * 對應後端 API 欄位
+ */
 type ProfileFormValues = {
   name: string;
-  phone: string;
-  gender: 'male' | 'female' | 'other' | 'prefer-not-to-say';
+  email: string;
+  gender: string;  // 以字串儲存數值，方便 Select 元件使用
+  customGender: string;
+};
+
+/**
+ * 字串性別值轉換為 API 數值
+ */
+const stringToGenderValue = (str: string): GenderValue => {
+  const num = parseInt(str, 10);
+  if (num >= 0 && num <= 4) return num as GenderValue;
+  return Gender.NotSpecified;
 };
 
 const EditProfile = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  // 主動呼叫 Query 確保最新資料（優先使用 fetch 回來的資料）
+  const { data: latestUserData } = useGetUserProfileQuery();
+  const effectiveUser = latestUserData || user;
+
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const updateProfileMutation = useUpdateProfileMutation();
+
+  // 使用 memo 化的資料作為表單初始值，當使用者資料載入或更新時自動重設表單
+  const initialValues = useMemo(() => {
+    if (!effectiveUser) return undefined;
+    const userGender = effectiveUser.gender ?? Gender.NotSpecified;
+    return {
+      name: effectiveUser.name || '',
+      email: effectiveUser.email || '',
+      gender: String(userGender),
+      customGender: userGender === Gender.Other ? (effectiveUser.customGender || '') : '',
+    };
+  }, [effectiveUser]);
 
   const {
     register,
     handleSubmit,
-    setValue,
+    watch,
+    control,
     formState: { errors, isDirty },
   } = useForm<ProfileFormValues>({
-    defaultValues: {
-      name: '',
-      phone: '',
-      gender: 'prefer-not-to-say',
-    },
+    values: initialValues,
   });
 
-  // Initialize form with user data
-  useEffect(() => {
-    if (user) {
-      setValue('name', user.name || '');
-      setValue('phone', user.phone || '');
-      setValue('gender', user.gender || 'prefer-not-to-say');
-    }
-  }, [user, setValue]);
+  const selectedGender = watch('gender');
 
   const onSubmit = (data: ProfileFormValues) => {
+    const genderValue = stringToGenderValue(data.gender);
+    
     updateProfileMutation.mutate(
       {
-        name: data.name,
-        phone: data.phone,
-        gender: data.gender,
+        data: {
+          name: data.name,
+          email: data.email || undefined,
+          gender: genderValue,
+          customGender: genderValue === Gender.Other ? data.customGender : null,
+        },
       },
-
       {
         onSuccess: () => {
-          // toast({ title: '儲存成功', description: '您的個人資料已更新' });
-          navigate(-1);
+          // 顯示成功彈跳視窗
+          setShowSuccessModal(true);
         },
         onError: (error) => {
           console.error('Update failed', error);
@@ -119,42 +147,60 @@ const EditProfile = () => {
             )}
           </div>
 
-          {/* Phone */}
+          {/* Email */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-neutral-700">
-              電話 <span className="text-red-500">*</span>
+              電子郵件
             </label>
             <Input
-              {...register('phone', { required: '請輸入電話號碼' })}
-              placeholder="請輸入電話號碼"
+              {...register('email')}
+              type="email"
+              placeholder="請輸入電子郵件"
             />
-            {errors.phone && (
-              <p className="text-sm text-red-500">{errors.phone.message}</p>
+            {errors.email && (
+              <p className="text-sm text-red-500">{errors.email.message}</p>
             )}
           </div>
 
           {/* Gender */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-neutral-700">性別</label>
-            <Select
-              onValueChange={(value) =>
-                setValue('gender', value as ProfileFormValues['gender'], {
-                  shouldDirty: true,
-                })
-              }
-              defaultValue="prefer-not-to-say"
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="選擇性別" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="male">男</SelectItem>
-                <SelectItem value="female">女</SelectItem>
-                <SelectItem value="other">其他</SelectItem>
-                <SelectItem value="prefer-not-to-say">不透露</SelectItem>
-              </SelectContent>
-            </Select>
+            <Controller
+              control={control}
+              name="gender"
+              render={({ field }) => (
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="選擇性別" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={String(Gender.NotSpecified)}>不透露</SelectItem>
+                    <SelectItem value={String(Gender.Female)}>女</SelectItem>
+                    <SelectItem value={String(Gender.Male)}>男</SelectItem>
+                    <SelectItem value={String(Gender.NonBinary)}>無性別</SelectItem>
+                    <SelectItem value={String(Gender.Other)}>其他</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
+
+          {/* Custom Gender (顯示於 gender = 4 時) */}
+          {selectedGender === String(Gender.Other) && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-neutral-700">
+                自訂性別
+              </label>
+              <Input
+                {...register('customGender', { maxLength: 10 })}
+                placeholder="請輸入自訂性別文字（最長 10 字元）"
+                maxLength={10}
+              />
+            </div>
+          )}
 
           <Button
             type="submit"
@@ -165,6 +211,17 @@ const EditProfile = () => {
           </Button>
         </form>
       </div>
+
+      {/* 儲存成功彈跳視窗 */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => {
+          setShowSuccessModal(false);
+          navigate(-1);
+        }}
+        title="儲存成功！"
+        autoCloseMs={1500}
+      />
     </div>
   );
 };

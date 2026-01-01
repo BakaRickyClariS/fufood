@@ -29,17 +29,19 @@ const categoryItems: Category<RecipeCategory>[] = RECIPE_CATEGORIES.map(
 );
 
 import { useSearchParams, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 
 // ... (imports)
 
 export const RecipeList = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
 
-  // 優先從 location.state 取得 ID (通知點擊)，其次從 URL searchParams 取得 (分享連結)
-  const recipeIdFromState = (location.state as { openRecipeId?: string })
-    ?.openRecipeId;
-  const recipeIdFromUrl = recipeIdFromState || searchParams.get('id');
+  // 優先從 location.state 取得完整食譜物件 (AI 生成/通知點擊)
+  const openRecipeFromState = (location.state as { openRecipe?: RecipeListItem })?.openRecipe;
+  const recipeIdFromUrl = searchParams.get('id') || searchParams.get('recipeId');
 
   const [selectedCategory, setSelectedCategory] = useState<
     RecipeCategory | undefined
@@ -49,18 +51,32 @@ export const RecipeList = () => {
     null,
   );
 
-  const { recipes, isLoading, error } = useRecipes(selectedCategory);
+  const { recipes, isLoading, error } = useRecipes(selectedCategory, activeRefrigeratorId || undefined);
 
   // Handle recipe selection (from State or URL)
   useEffect(() => {
+    // 1. 如果有 State 中的完整食譜 (例如 AI 生成剛剛產生的)，直接使用，不需查列表
+    if (openRecipeFromState) {
+      setSelectedRecipe(openRecipeFromState);
+      setSelectedRecipeId(openRecipeFromState.id);
+      return;
+    }
+
+    // 2. 如果只有 URL ID，則嘗試從已載入的列表中查找
     if (recipeIdFromUrl && recipes.length > 0) {
       const recipe = recipes.find((r) => r.id === recipeIdFromUrl);
       if (recipe) {
         setSelectedRecipe(recipe);
         setSelectedRecipeId(recipeIdFromUrl);
+      } else {
+        // 若列表中找不到 (可能是直接貼連結來的，且不在當前分頁/分類中)，
+        // 為了讓 Modal 開啟並嘗試自行 fetch，我們先設定 ID
+        // RecipeDetailModal 內部會嘗試 fetch (如果沒有傳入 full recipe)
+        setSelectedRecipeId(recipeIdFromUrl);
+        // selectedRecipe 保持為 null，讓 Modal 處理載入
       }
     }
-  }, [recipeIdFromUrl, recipes]);
+  }, [recipeIdFromUrl, recipes, openRecipeFromState]);
 
   // Handle manual recipe click
   const handleRecipeClick = (id: string) => {

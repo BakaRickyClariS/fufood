@@ -4,6 +4,9 @@ import expireImg from '@/assets/images/dashboard/inventory-expire.png';
 import { useInventorySummaryQuery } from '@/modules/inventory/api/queries';
 import InventoryCard from './InventoryCard';
 
+import { useSelector } from 'react-redux';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
+
 // 格式化相對時間 (ex: 今天 10:00, 昨天 14:30, 12/25 09:00)
 const formatRelativeTime = (dateString?: string) => {
   if (!dateString) return '更新中...';
@@ -33,7 +36,10 @@ const formatRelativeTime = (dateString?: string) => {
 };
 
 const InventorySection = () => {
-  const { data, isLoading } = useInventorySummaryQuery();
+  // 取得當前選擇的冰箱 ID (Redux)
+  const refrigeratorId = useSelector(selectActiveRefrigeratorId) || '';
+
+  const { data, isLoading } = useInventorySummaryQuery(refrigeratorId);
   const summary = data?.data?.summary;
 
   // 使用 API 提供的 lastSyncedAt 或當前時間 (如果有的話)

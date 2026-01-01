@@ -35,6 +35,20 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: ApiBody;
 };
 
+export class ApiError extends Error {
+  public status: number;
+  public code?: string;
+  public data?: any;
+
+  constructor(message: string, status: number, code?: string, data?: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.code = code;
+    this.data = data;
+  }
+}
+
 /**
  * 統一 API 客戶端
  * 支援 AI API 和後端 API 兩種類型
@@ -119,15 +133,34 @@ class ApiClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `API Error: ${response.status}`);
+        throw new ApiError(
+          errorData.message || `API Error: ${response.status}`,
+          response.status,
+          errorData.code,
+          errorData,
+        );
       }
 
-      // Handle 204 No Content
-      if (response.status === 204) {
+      // Handle 204 No Content or empty body
+      if (
+        response.status === 204 ||
+        response.headers.get('content-length') === '0'
+      ) {
         return {} as T;
       }
 
-      return await response.json();
+      // 嘗試解析 JSON，若失敗則回傳空物件
+      const text = await response.text();
+      if (!text || text.trim() === '') {
+        return {} as T;
+      }
+
+      try {
+        return JSON.parse(text);
+      } catch {
+        // JSON 解析失敗，可能是空回應或非 JSON 格式
+        return {} as T;
+      }
     } catch (error) {
       console.error(
         `[${this.apiType.toUpperCase()} API] Request Failed:`,

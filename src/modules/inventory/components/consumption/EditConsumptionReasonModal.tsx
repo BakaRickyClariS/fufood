@@ -129,7 +129,11 @@ export const EditConsumptionReasonModal: React.FC<
                       </span>
                       {item.expiryDate ? (
                         <span className="text-primary-500 text-sm font-medium">
-                          {item.expiryDate} 過期
+                          {new Date(item.expiryDate).toLocaleDateString('zh-TW', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                          })} 過期
                         </span>
                       ) : (
                         <span className="text-neutral-400 text-base">

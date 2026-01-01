@@ -23,6 +23,7 @@ import { CSS } from '@dnd-kit/utilities';
 import gsap from 'gsap';
 import { Button } from '@/shared/components/ui/button';
 import InfoTooltip from '@/shared/components/feedback/InfoTooltip';
+import { useAuth } from '@/modules/auth';
 import { inventoryApi } from '@/modules/inventory/api';
 import {
   selectCategoryOrder,
@@ -34,6 +35,7 @@ import {
   selectAllGroups,
   fetchGroups,
 } from '@/modules/groups/store/groupsSlice';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import type { CategoryInfo } from '@/modules/inventory/types';
 import type { LayoutType } from '@/modules/inventory/types/layoutTypes';
 import { LAYOUT_CONFIGS } from '@/modules/inventory/types/layoutTypes';
@@ -41,23 +43,25 @@ import { toast } from 'sonner';
 import { getRefrigeratorId } from '../../utils/getRefrigeratorId';
 import { categories as defaultCategories } from '../../constants/categories';
 
-// 計數器項目元件
 const CounterItem = ({
   label,
   value,
   onChange,
+  disabled,
 }: {
   label: string;
   value: number;
   onChange: (val: number) => void;
+  disabled?: boolean;
 }) => (
-  <div className="flex items-center justify-between py-4 border-b border-gray-100 last:border-0">
+  <div className={`flex items-center justify-between py-4 border-b border-gray-100 last:border-0 ${disabled ? 'opacity-50' : ''}`}>
     <span className="text-base font-bold text-neutral-900">{label}</span>
     <div className="flex items-center gap-3">
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 rounded-full bg-[#FFF1F0] hover:bg-[#FFE4E1] text-neutral-900"
+        disabled={disabled}
+        className="h-8 w-8 rounded-full bg-[#FFF1F0] hover:bg-[#FFE4E1] text-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
         onClick={() => onChange(Math.max(0, value - 1))}
       >
         <Minus className="w-4 h-4" />
@@ -66,7 +70,8 @@ const CounterItem = ({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 rounded-full bg-[#FFF1F0] hover:bg-[#FFE4E1] text-neutral-900"
+        disabled={disabled}
+        className="h-8 w-8 rounded-full bg-[#FFF1F0] hover:bg-[#FFE4E1] text-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
         onClick={() => onChange(value + 1)}
       >
         <Plus className="w-4 h-4" />
@@ -146,13 +151,6 @@ const SettingsPanel: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const dispatch = useDispatch();
 
-  // Get groups to derive default ID if needed
-  const groups = useSelector(selectAllGroups);
-  // 使用多來源 fallback 機制取得 refrigeratorId
-  const targetGroupId = getRefrigeratorId(groupId, groups);
-
-  const categoryOrder = useSelector(selectCategoryOrder);
-
   const [savedCategoryOrder, setSavedCategoryOrder] = useState<string[]>([]);
 
   const layoutContainerRef = useRef<HTMLDivElement>(null);
@@ -165,8 +163,23 @@ const SettingsPanel: React.FC = () => {
     }),
   );
 
-  // 計算穩定的 refrigeratorId
-  const firstGroupId = groups[0]?.id;
+  // Get groups to derive default ID if needed
+  const groups = useSelector(selectAllGroups);
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  // 使用多來源 fallback 機制取得 refrigeratorId
+  const targetGroupId = activeRefrigeratorId || getRefrigeratorId(groupId, groups);
+  const { user } = useAuth();
+  const isOwner = useMemo(() => {
+    if (!user || !targetGroupId || groups.length === 0) return false;
+    const currentGroup = groups.find((g) => g.id === targetGroupId);
+    return currentGroup?.ownerId === user.id;
+  }, [user, targetGroupId, groups]);
+
+  const categoryOrder = useSelector(selectCategoryOrder);
+
+
+
+
 
   // Effect 1: 確保 groups 已載入
   useEffect(() => {
@@ -179,7 +192,7 @@ const SettingsPanel: React.FC = () => {
   // Effect 2: 當 groups 已載入或有有效 refrigeratorId 時，載入 settings
   useEffect(() => {
     // 計算 refrigeratorId
-    const refId = getRefrigeratorId(groupId, groups);
+    const refId = targetGroupId;
 
     // 如果還沒有 refId，不執行
     if (!refId) {
@@ -262,7 +275,7 @@ const SettingsPanel: React.FC = () => {
     };
 
     fetchSettings();
-  }, [groupId, firstGroupId, dispatch, categoryOrder.length]);
+  }, [targetGroupId, dispatch, categoryOrder.length, groups.length]);
 
   const sortedCategories = useMemo(() => {
     if (categories.length === 0) return [];
@@ -391,7 +404,15 @@ const SettingsPanel: React.FC = () => {
           />
         </div>
 
-        <div className="bg-white rounded-[20px] p-4 space-y-6">
+
+
+        {!isOwner && (
+          <div className="bg-primary-50 text-primary-600 px-4 py-3 rounded-xl text-sm font-medium border border-primary-100">
+            權限限制：只有群組擁有者可以修改庫存設定
+          </div>
+        )}
+
+        <div className={`bg-white rounded-[20px] p-4 space-y-6 ${!isOwner ? 'pointer-events-none opacity-60' : ''}`}>
           <div ref={layoutContainerRef} className="relative z-10">
             <div className="grid grid-cols-3 gap-3">
               {LAYOUT_CONFIGS.map((config) => {
@@ -493,7 +514,7 @@ const SettingsPanel: React.FC = () => {
           <Button
             className="w-full bg-primary-400 hover:bg-primary-500 text-white rounded-xl h-12 text-base font-bold active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleApply}
-            disabled={!hasChanges}
+            disabled={!hasChanges || !isOwner}
           >
             套用版型
           </Button>
@@ -517,11 +538,13 @@ const SettingsPanel: React.FC = () => {
             label="即將過期判定天數"
             value={expiringSoonDays}
             onChange={setExpiringSoonDays}
+            disabled={!isOwner}
           />
           <CounterItem
             label="低庫存警示數量"
             value={lowStockThreshold}
             onChange={setLowStockThreshold}
+            disabled={!isOwner}
           />
           {/* 移除過期食材數量設定，因為過期就是過期 (diff < 0)，不需要設定 */}
         </div>

@@ -5,8 +5,14 @@ import { RecipeDetailModal } from '@/modules/recipe/components/ui/RecipeDetailMo
 import type { RecipeListItem } from '@/modules/recipe/types';
 import AiRecommendCard from './AiRecommendCard';
 
+import { useSelector } from 'react-redux';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
+
 const RecipeSection = () => {
-  const { data, isLoading, isError } = useRecipesQuery();
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const { data, isLoading, isError } = useRecipesQuery({
+    refrigeratorId: activeRefrigeratorId || undefined,
+  });
   const recipes = data?.slice(0, 6) ?? []; // 首頁最多顯示 6 筆
 
   const [selectedRecipe, setSelectedRecipe] = useState<RecipeListItem | null>(

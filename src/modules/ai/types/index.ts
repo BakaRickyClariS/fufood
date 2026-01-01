@@ -65,7 +65,7 @@ export type AIRecipeItem = {
   id: string;
   name: string;
   category: string;
-  imageUrl: string;
+  imageUrl: string | null;  // 允許 null，表示圖片生成失敗或未完成
   servings: number;
   cookTime: number;
   isFavorite: boolean;
@@ -206,6 +206,7 @@ export type AIErrorCode =
   | 'AI_004' // 未授權
   | 'AI_005' // AI 服務暫時無法使用
   | 'AI_006' // AI 生成逾時
+  | 'AI_007' // Prompt Injection 偵測
   | 'MEDIA_001' // 未提供檔案
   | 'MEDIA_002' // 檔案類型不支援
   | 'MEDIA_003'; // 檔案過大

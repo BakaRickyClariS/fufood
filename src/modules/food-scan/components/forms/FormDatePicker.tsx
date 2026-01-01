@@ -30,11 +30,11 @@ const FormDatePicker = <T extends FieldValues>({
             type="date"
             id={name}
             {...field}
-            className={`w-full px-4 py-3 rounded-xl border appearance-none bg-white ${
+            className={`w-full px-4 py-3 pr-12 rounded-xl border appearance-none bg-white ${
               error
                 ? 'border-red-500 focus:ring-red-200'
                 : 'border-slate-200 focus:ring-slate-200'
-            } focus:outline-none focus:ring-2 transition-all text-slate-800 font-medium`}
+            } focus:outline-none focus:ring-2 transition-all text-slate-800 font-medium [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
           />
           <Calendar
             className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"

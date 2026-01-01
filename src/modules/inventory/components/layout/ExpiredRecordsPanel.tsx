@@ -5,10 +5,13 @@ import {
   selectAllGroups,
   fetchGroups,
 } from '@/modules/groups/store/groupsSlice';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import CommonItemCard from '@/modules/inventory/components/ui/card/CommonItemCard';
 import { useInventoryExtras } from '@/modules/inventory/hooks';
 import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
 import useFadeInAnimation from '@/shared/hooks/useFadeInAnimation';
+import { useInventorySettingsQuery } from '@/modules/inventory/api/queries';
+import { categories as defaultCategories } from '@/modules/inventory/constants/categories';
 import type { FoodItem } from '@/modules/inventory/types';
 
 // 篩選按鈕元件
@@ -56,7 +59,24 @@ const ExpiredRecordsPanel: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const dispatch = useDispatch();
   const groups = useSelector(selectAllGroups);
-  const targetGroupId = groupId || groups[0]?.id;
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const targetGroupId = activeRefrigeratorId || groupId || groups[0]?.id;
+
+  // 取得設定資料以獲取分類中文名稱
+  const { data: settingsData } = useInventorySettingsQuery(targetGroupId);
+
+  // 建立 category ID → 中文名稱的映射
+  const categoryNameMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    defaultCategories.forEach((c) => {
+      map[c.id] = c.title;
+    });
+    const categories = settingsData?.data?.settings?.categories || [];
+    categories.forEach((cat) => {
+      map[cat.id] = cat.title;
+    });
+    return map;
+  }, [settingsData]);
 
   // 使用共用的淡入動畫 hook
   const { ref: contentRef, resetAnimation } =
@@ -155,7 +175,7 @@ const ExpiredRecordsPanel: React.FC = () => {
                   <div className="flex items-center gap-2 mb-3 px-1">
                     <div className="w-1 h-4 bg-[#7F9F3F] rounded-full" />
                     <h3 className="text-base font-bold text-neutral-600">
-                      {group.category}
+                      {categoryNameMap[group.category] || group.category}
                     </h3>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -182,6 +202,7 @@ const ExpiredRecordsPanel: React.FC = () => {
           item={selectedItem}
           isOpen={!!selectedItem}
           onClose={() => setSelectedItem(null)}
+          isCompleted={filter === 'completed'}
           onItemUpdate={() => {
             if (targetGroupId) fetchExpiredItems(filter, 1, 20, targetGroupId);
           }}
