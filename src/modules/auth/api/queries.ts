@@ -1,12 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
-import type { User, ProfileResponse, GenderValue, MembershipTier } from '../types';
+import { identity } from '@/shared/utils/identity';
+import type {
+  User,
+  ProfileResponse,
+  GenderValue,
+  MembershipTier,
+} from '../types';
 import { Gender } from '../types';
 import { backendApi } from '@/api/client';
 import { MOCK_USERS } from './mock/authMockData';
-import { identity } from '@/shared/utils/identity';
 
 // Gender 字串轉數值對應表
-const mapBackendGenderToEnum = (genderStr: string | number | undefined | null): GenderValue => {
+const mapBackendGenderToEnum = (
+  genderStr: string | number | undefined | null,
+): GenderValue => {
   if (typeof genderStr === 'number') return genderStr as GenderValue;
   const g = String(genderStr).toLowerCase();
   if (g === 'male') return Gender.Male;
@@ -17,7 +24,9 @@ const mapBackendGenderToEnum = (genderStr: string | number | undefined | null): 
 };
 
 // Membership 轉換 ("Free" -> "free")
-const mapBackendTierToFrontend = (tier: string | number | undefined | null): MembershipTier => {
+const mapBackendTierToFrontend = (
+  tier: string | number | undefined | null,
+): MembershipTier => {
   const t = String(tier).toLowerCase();
   if (t === 'premium') return 'premium';
   if (t === 'vip') return 'vip';
@@ -42,11 +51,11 @@ export async function getUserProfile(): Promise<User | null> {
 
     // 將 API 回傳的 ProfileData (可能含字串 enum) 轉換為 User 格式 (數值 enum)
     const backendData = result.data as any; // 使用 any 繞過 TS 檢查，因為後端回傳型別與文件不符
-    
+
     console.log('[UserProfile] Raw Gender from Backend:', backendData.gender);
     const mappedGender = mapBackendGenderToEnum(backendData.gender);
     console.log('[UserProfile] Mapped Gender:', mappedGender);
-    
+
     const user: User = {
       id: backendData.id,
       lineId: backendData.lineId,
@@ -61,23 +70,20 @@ export async function getUserProfile(): Promise<User | null> {
       createdAt: new Date(backendData.createdAt),
       updatedAt: new Date(backendData.updatedAt),
       // 飲食偏好暫時使用預設值或從 preference 陣列轉換
-      dietaryPreference: backendData.preference ? {
-        cookingFrequency: '1-2' as const,
-        prepTime: '15-30' as const,
-        seasoningLevel: 'moderate' as const,
-        restrictions: []
-      } : undefined,
+      dietaryPreference: backendData.preference
+        ? {
+            cookingFrequency: '1-2' as const,
+            prepTime: '15-30' as const,
+            seasoningLevel: 'moderate' as const,
+            restrictions: [],
+          }
+        : undefined,
     };
 
-    // 同步 User 資料到 identity (localStorage)，確保 API Client 能取得 X-User-Id
-    identity.setUser({
-      id: user.id,
-      name: user.name,
-      displayName: user.displayName,
-      avatar: user.avatar,
-      pictureUrl: user.pictureUrl,
-      lineId: user.lineId,
-    });
+    // 移除同步 Identity 的動作，避免覆蓋登入時取得的正確 ID
+    // UPDATE: 必須同步！因為頁面刷新後 localStorage 會是空的，必須依靠這裡的資料來補回 identity
+    // 這樣 Notifications API 才能拿到 ID
+    identity.setUser(user);
 
     return user;
   } catch (error) {
@@ -122,10 +128,10 @@ export async function getUserProfile(): Promise<User | null> {
 export function useGetUserProfileQuery() {
   /**
    * 判斷是否應該執行 Profile Query
-   * 
+   *
    * 重要修正：使用 HttpOnly Cookie 認證時，應預設嘗試呼叫 API，
    * 讓後端回傳 401 來判斷未登入狀態，而非依賴 localStorage。
-   * 
+   *
    * 只有以下情況不執行 query：
    * 1. 明確標記為已登出 (logged_out = 'true')
    */
