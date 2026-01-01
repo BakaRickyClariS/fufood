@@ -11,6 +11,7 @@ import {
   ALL_NOTIFICATIONS,
   DEFAULT_NOTIFICATION_SETTINGS,
 } from './notificationsMockData';
+import type { SendNotificationRequest } from '../../types';
 
 // 模擬延遲
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -36,6 +37,37 @@ const getNotificationsByCategory = (category?: NotificationCategory) => {
 };
 
 export const notificationsMockApi: NotificationsApi = {
+  // 發送通知 (Mock) - 模擬寫入資料庫
+  sendNotification: async (data: SendNotificationRequest) => {
+    await delay(300);
+
+    const newNotification = {
+      id: Math.random().toString(36).substring(7), // Simple ID
+      type: data.type,
+      title: data.title,
+      message: data.body,
+      isRead: false,
+      createdAt: new Date().toISOString(),
+      action: data.action,
+      // Map basic type to category for Mock display
+      category: 'stock' as const,
+    };
+
+    // 模擬後端將通知加入資料庫 (加到陣列開頭)
+    notifications = [newNotification, ...notifications];
+
+    console.log('[Mock API] Notification Sent & Saved:', newNotification);
+
+    return {
+      success: true,
+      data: {
+        sent: 1,
+        failed: 0,
+        details: { success: [newNotification.id], failed: [] },
+      },
+    };
+  },
+
   // 取得通知列表
   getNotifications: async (params?: GetNotificationsRequest) => {
     await delay(300);

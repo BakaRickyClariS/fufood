@@ -68,3 +68,13 @@ export type BatchDeleteResponse = ApiSuccess<{ deletedCount: number }>;
 // 批次標記已讀請求/回應
 export type BatchMarkAsReadRequest = { ids: string[]; isRead: boolean };
 export type BatchMarkAsReadResponse = ApiSuccess<{ updatedCount: number }>;
+
+// 發送通知回應
+export type SendNotificationResponse = ApiSuccess<{
+  sent: number;
+  failed: number;
+  details: {
+    success: string[];
+    failed: string[];
+  };
+}>;
