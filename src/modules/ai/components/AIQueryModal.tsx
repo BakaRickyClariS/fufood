@@ -1,10 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { X, Sparkles, SlidersHorizontal, Plus, ArrowUp } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { cn } from '@/lib/utils';
+import { useSelector } from 'react-redux';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import { useAIRecipeGenerate, useRecipeSuggestions } from '@/modules/ai';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
+import { useInventoryQuery } from '@/modules/inventory/api/queries';
 import { RecipeCard } from '@/shared/components/recipe/RecipeCard';
 import { InventoryFilterModal } from '@/modules/ai/components/InventoryFilterModal';
 import { SelectedIngredientTags } from '@/modules/ai/components/SelectedIngredientTags';
@@ -26,17 +29,19 @@ type AIQueryModalProps = {
   initialQuery?: string;
   useStreaming?: boolean;
 };
-
 export const AIQueryModal = ({
   isOpen,
   onClose,
   initialQuery = '',
-  useStreaming = true,
+  useStreaming = false,
 }: AIQueryModalProps) => {
   const [query, setQuery] = useState('');
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [useInventory, setUseInventory] = useState(true); // 預設開啟庫存食材
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
 
   // 食譜詳細 Modal 狀態
   const [selectedRecipe, setSelectedRecipe] = useState<RecipeListItem | null>(
@@ -62,9 +67,31 @@ export const AIQueryModal = ({
 
   // 建議標籤
   const { data: suggestionsData } = useRecipeSuggestions();
-  const suggestionTags = Array.isArray(suggestionsData?.data)
-    ? suggestionsData.data
-    : DEFAULT_SUGGESTION_TAGS;
+  const suggestionTags = useMemo(() => {
+    const tags = Array.isArray(suggestionsData?.data)
+      ? suggestionsData.data
+      : DEFAULT_SUGGESTION_TAGS;
+    // 確保標籤不重複
+    return Array.from(new Set(tags));
+  }, [suggestionsData]);
+
+  // 庫存食材資料
+  const { data: inventoryData } = useInventoryQuery({
+    limit: 100,
+    refrigeratorId: activeRefrigeratorId || undefined,
+  });
+  const allInventoryItems = useMemo(() => {
+    return inventoryData?.data?.items?.map((item) => item.name) || [];
+  }, [inventoryData]);
+
+  // 當開啟「使用庫存食材」時，自動載入所有庫存食材
+  useEffect(() => {
+    if (useInventory && allInventoryItems.length > 0) {
+      setSelectedIngredients(allInventoryItems);
+    } else if (!useInventory) {
+      setSelectedIngredients([]);
+    }
+  }, [useInventory, allInventoryItems]);
 
   // 判斷是否有結果
   const hasResult = text || recipes;
@@ -186,9 +213,9 @@ export const AIQueryModal = ({
 
               {/* Suggestion Tags Grid */}
               <div className="flex overflow-x-auto gap-4 pb-2 -mx-1 px-1 custom-scrollbar hide-scrollbar mb-4">
-                {suggestionTags.map((tag) => (
+                {suggestionTags.map((tag, idx) => (
                   <button
-                    key={tag}
+                    key={`${tag}-${idx}`}
                     onClick={() => handleSubmit(tag)}
                     className="shrink-0 max-w-[80px] bg-white border border-neutral-200 rounded-sm px-2 py-2 text-neutral-600 text-sm font-medium hover:border-[#F58274] hover:text-[#F58274] transition-all active:scale-95"
                   >
@@ -218,9 +245,9 @@ export const AIQueryModal = ({
                   <div className="max-w-[80%] bg-white border border-gray-200 rounded-2xl rounded-tr-none px-4 py-3 shadow-sm">
                     {selectedIngredients.length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-2">
-                        {selectedIngredients.map((ing) => (
+                        {selectedIngredients.map((ing, idx) => (
                           <span
-                            key={ing}
+                            key={`${ing}-${idx}`}
                             className="text-xs px-2 py-0.5 bg-[#FDE6E3] text-[#F58274] rounded-full"
                           >
                             {ing}
@@ -280,7 +307,7 @@ export const AIQueryModal = ({
                           {error}
                         </div>
                       ) : (
-                        <div className="text-gray-900 font-bold text-lg px-1 leading-relaxed">
+                        <div className="text-gray-900 font-bold text-lg px-1 leading-relaxed whitespace-pre-wrap">
                           {text}
                         </div>
                       )}
@@ -327,6 +354,8 @@ export const AIQueryModal = ({
           onClose={() => setShowFilterModal(false)}
           selectedItems={selectedIngredients}
           onApply={setSelectedIngredients}
+          useInventory={useInventory}
+          onToggleInventory={setUseInventory}
         />
 
         {/* Footer Input Area */}
@@ -340,6 +369,7 @@ export const AIQueryModal = ({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+                  maxLength={200}
                   placeholder={
                     selectedIngredients.length > 0
                       ? '想做什麼料理？'
@@ -381,7 +411,7 @@ export const AIQueryModal = ({
                 {/* Tags */}
                 {selectedIngredients.length > 0 ? (
                   <SelectedIngredientTags
-                    items={selectedIngredients}
+                    items={selectedIngredients.slice(0, 5)} // 顯示最多 5 個
                     onRemove={(item) =>
                       setSelectedIngredients((prev) =>
                         prev.filter((i) => i !== item),

@@ -1,13 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useFoodItemSubmit } from '../../hooks/useFoodItemSubmit';
 import ScanResultEditForm from '../forms/ScanResultEditForm';
 import { type FoodItemInput } from '../../types';
 
 type ScanResultEditorProps = {
   initialData: FoodItemInput;
   imageUrl?: string;
-  onSuccess: () => void;
+  onSave: (data: FoodItemInput) => void;
   onBack: () => void;
   onRetake?: () => void;
   onPickImage?: () => void;
@@ -18,7 +17,7 @@ type ScanResultEditorProps = {
 export const ScanResultEditor: React.FC<ScanResultEditorProps> = ({
   initialData,
   imageUrl,
-  onSuccess,
+  onSave,
   onBack,
   onRetake,
   onPickImage,
@@ -29,27 +28,36 @@ export const ScanResultEditor: React.FC<ScanResultEditorProps> = ({
     register,
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<FoodItemInput>({
     defaultValues: initialData,
   });
 
-  const { submitFoodItem, isSubmitting, error } = useFoodItemSubmit();
+  // Reset form when initialData changes (important for batch mode)
+  useEffect(() => {
+    console.log(
+      'ScanResultEditor: resetting form with initialData:',
+      initialData,
+    );
+    reset(initialData);
+  }, [initialData, reset]);
 
-  const onSubmit = async (data: FoodItemInput) => {
-    const result = await submitFoodItem(data);
-    if (result && result.success) {
-      onSuccess();
-    }
+  // No submission here - just save edited data and go back to preview
+  const onSubmit = (data: FoodItemInput) => {
+    // Merge form data with initialData to preserve fields like groupId and imageUrl
+    const savedData: FoodItemInput = {
+      ...initialData,
+      ...data,
+      groupId: initialData.groupId,
+      imageUrl: initialData.imageUrl,
+    };
+    onSave(savedData);
   };
 
   const isBatchMode = totalCount && totalCount > 1;
   const isLastItem = isBatchMode && currentIndex === totalCount;
-  const submitButtonText = isSubmitting
-    ? '處理中...'
-    : isBatchMode && !isLastItem
-      ? '確認並繼續'
-      : '確認歸納';
+  const submitButtonText = isBatchMode && !isLastItem ? '確認並繼續' : '確認';
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -85,6 +93,7 @@ export const ScanResultEditor: React.FC<ScanResultEditorProps> = ({
             register={register}
             control={control}
             errors={errors}
+            currentUnit={initialData.unit}
             onRetake={onRetake}
             onPickImage={onPickImage}
           />
@@ -99,18 +108,11 @@ export const ScanResultEditor: React.FC<ScanResultEditorProps> = ({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="flex-1 py-3 px-4 bg-red-500 text-white rounded-xl font-medium shadow-lg shadow-red-500/30 disabled:opacity-50"
+              className="flex-1 py-3 px-4 bg-red-500 text-white rounded-xl font-medium shadow-lg shadow-red-500/30"
             >
               {submitButtonText}
             </button>
           </div>
-
-          {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-              {error}
-            </div>
-          )}
         </form>
       </div>
     </div>

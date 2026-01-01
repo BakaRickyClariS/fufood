@@ -35,13 +35,27 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: ApiBody;
 };
 
+export class ApiError extends Error {
+  public status: number;
+  public code?: string;
+  public data?: any;
+
+  constructor(message: string, status: number, code?: string, data?: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.code = code;
+    this.data = data;
+  }
+}
+
 /**
  * 統一 API 客戶端
  * 支援 AI API 和後端 API 兩種類型
  */
 class ApiClient {
-  private baseUrl: string;
-  private apiType: ApiType;
+  private readonly baseUrl: string;
+  private readonly apiType: ApiType;
 
   constructor(apiType: ApiType) {
     this.apiType = apiType;
@@ -55,48 +69,56 @@ class ApiClient {
     const { params, headers, body, ...customConfig } = options;
 
     // Build URL with query params
-    const url = new URL(`${this.baseUrl}${endpoint}`, window.location.origin);
+    const url = new URL(`${this.baseUrl}${endpoint}`);
+
     if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          url.searchParams.append(key, String(value));
-        }
-      });
+      const filteredParams = Object.fromEntries(
+        Object.entries(params).filter(([, value]) => value !== undefined),
+      ) as Record<string, string>;
+      if (Object.keys(filteredParams).length > 0) {
+        url.search = new URLSearchParams(filteredParams).toString();
+      }
     }
 
-    // 使用統一的 identity 模組取得認證資訊
-    const token = identity.getAuthToken();
-    const userId = identity.getUserId();
+    let token: string | null = '';
+    let userId: string | null = '';
 
-    // Debug: 僅在 AI API 且缺少必要資訊時警告
-    if (this.apiType === 'ai' && !userId) {
-      console.warn(
-        '[AI API] No user ID found, AI backend may reject this request',
+    // Access tokens and user IDs are only used in the AI API. The backend API relies on HTTP-only cookies.
+    if (this.apiType === 'ai') {
+      // 使用統一的 identity 模組取得認證資訊
+      token = identity.getAuthToken();
+      userId = identity.getUserId();
+
+      if (!userId) {
+        // Debug: 僅在 AI API 且缺少必要資訊時警告
+        console.warn(
+          '[AI API] No user ID found, AI backend may reject this request',
+        );
+      }
+    }
+
+    let resolvedHeaders: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      // 嘗試為所有 API 都帶上 X-User-Id (若有)，以防後端某些 middleware 需要
+      ...(userId ? { 'X-User-Id': userId } : {}),
+      ...headers,
+    };
+
+    // 如果 body 是 FormData，不要合併自訂 headers 中的 Content-Type
+    // 讓瀏覽器自動設定正確的 multipart/form-data boundary
+    if (body instanceof FormData) {
+      resolvedHeaders = Object.fromEntries(
+        Object.entries(resolvedHeaders).filter(
+          ([key]) => key.toLowerCase() !== 'content-type',
+        ),
       );
     }
 
     const config: RequestInit = {
       ...customConfig,
       credentials: 'include', // 允許攜帶 HttpOnly Cookie
-      headers: {
-        ...(body instanceof FormData
-          ? {}
-          : { 'Content-Type': 'application/json' }),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        // 嘗試為所有 API 都帶上 X-User-Id (若有)，以防後端某些 middleware 需要
-        ...(userId ? { 'X-User-Id': userId } : {}),
-        // 如果 body 是 FormData，不要合併自訂 headers 中的 Content-Type
-        // 讓瀏覽器自動設定正確的 multipart/form-data boundary
-        ...(headers && !(body instanceof FormData)
-          ? headers
-          : headers && body instanceof FormData
-            ? Object.fromEntries(
-                Object.entries(headers).filter(
-                  ([key]) => key.toLowerCase() !== 'content-type',
-                ),
-              )
-            : {}),
-      },
+      headers: resolvedHeaders,
     };
 
     // Don't stringify FormData
@@ -111,15 +133,34 @@ class ApiClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `API Error: ${response.status}`);
+        throw new ApiError(
+          errorData.message || `API Error: ${response.status}`,
+          response.status,
+          errorData.code,
+          errorData,
+        );
       }
 
-      // Handle 204 No Content
-      if (response.status === 204) {
+      // Handle 204 No Content or empty body
+      if (
+        response.status === 204 ||
+        response.headers.get('content-length') === '0'
+      ) {
         return {} as T;
       }
 
-      return await response.json();
+      // 嘗試解析 JSON，若失敗則回傳空物件
+      const text = await response.text();
+      if (!text || text.trim() === '') {
+        return {} as T;
+      }
+
+      try {
+        return JSON.parse(text);
+      } catch {
+        // JSON 解析失敗，可能是空回應或非 JSON 格式
+        return {} as T;
+      }
     } catch (error) {
       console.error(
         `[${this.apiType.toUpperCase()} API] Request Failed:`,

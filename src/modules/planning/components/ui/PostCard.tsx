@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import type { SharedListPost } from '@/modules/planning/types';
+import { useState, useRef } from 'react';
+import type { SharedListPost, SharedListItem } from '@/modules/planning/types';
 import {
   MoreHorizontal,
   ChevronDown,
@@ -13,11 +13,92 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/shared/components/ui/dropdown-menu';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 
 type PostCardProps = {
   post: SharedListPost;
   onEdit?: (post: SharedListPost) => void;
   onDelete?: (postId: string) => void;
+};
+
+// Sub-component for individual item to handle animation state
+const PostCardItem = ({ 
+  item, 
+  isExpanded, 
+  onToggle 
+}: { 
+  item: SharedListItem & { imageUrl?: string | null };
+  isExpanded: boolean;
+  onToggle: () => void;
+}) => {
+  const hasImage = !!(item.photoPath || item.imageUrl);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (!imageContainerRef.current) return;
+
+    if (isExpanded) {
+      gsap.to(imageContainerRef.current, {
+        height: 'auto',
+        duration: 0.3,
+        ease: 'power2.out',
+        opacity: 1,
+      });
+    } else {
+      gsap.to(imageContainerRef.current, {
+        height: 0,
+        duration: 0.2,
+        ease: 'power2.in',
+        opacity: 0,
+      });
+    }
+  }, [isExpanded]);
+
+  return (
+    <div className="py-3 px-4 border-b border-neutral-100 last:border-0">
+      <div
+        className={`flex justify-between items-center ${
+          hasImage ? 'cursor-pointer select-none' : ''
+        }`}
+        onClick={() => hasImage && onToggle()}
+      >
+        <span className="text-base font-medium">{item.name}</span>
+        <div className="flex items-center gap-3">
+          <span className="font-medium text-base">
+            {item.quantity}
+            {item.unit}
+          </span>
+          {hasImage && (
+            <div className="text-black">
+              {isExpanded ? (
+                <ChevronUp className="w-5 h-5" />
+              ) : (
+                <ChevronDown className="w-5 h-5" />
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Expandable Image Area */}
+      {/* Always render container for animation, control visibility via GSAP */}
+      {hasImage && (
+        <div 
+          ref={imageContainerRef} 
+          className="overflow-hidden h-0 opacity-0"
+        >
+          <div className="mt-3">
+             <img
+              src={item.photoPath || item.imageUrl || undefined}
+              alt={item.name}
+              className="w-full h-[200px] rounded-xl object-cover"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export const PostCard = ({ post, onEdit, onDelete }: PostCardProps) => {
@@ -60,7 +141,7 @@ export const PostCard = ({ post, onEdit, onDelete }: PostCardProps) => {
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="text-neutral-400 p-1 hover:bg-neutral-50 rounded-full transition-colors">
+            <button className="text-black p-1 hover:bg-neutral-50 rounded-full transition-colors">
               <MoreHorizontal className="w-5 h-5" />
             </button>
           </DropdownMenuTrigger>
@@ -87,54 +168,14 @@ export const PostCard = ({ post, onEdit, onDelete }: PostCardProps) => {
       <div className="mb-0">
         {/* Shopping Items */}
         <div className="space-y-0 text-neutral-800">
-          {post.items.map((item) => {
-            const hasImage = !!item.imageUrl;
-            const isExpanded = expandedItems.includes(item.id);
-
-            return (
-              <div
-                key={item.id}
-                className="py-3 px-4 border-b border-neutral-100 last:border-0"
-              >
-                <div
-                  className={`flex justify-between items-center ${
-                    hasImage ? 'cursor-pointer select-none' : ''
-                  }`}
-                  onClick={() => hasImage && toggleItem(item.id)}
-                >
-                  <span className="text-base font-medium">{item.name}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="font-medium text-base">
-                      {item.quantity}
-                      {item.unit}
-                    </span>
-                    {hasImage ? (
-                      <div className="text-neutral-400">
-                        {isExpanded ? (
-                          <ChevronUp className="w-5 h-5" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5" />
-                        )}
-                      </div>
-                    ) : (
-                      <div className="w-5 h-5" /> // Alignment spacer
-                    )}
-                  </div>
-                </div>
-
-                {/* Expandable Image Area */}
-                {hasImage && isExpanded && (
-                  <div className="mt-3">
-                    <img
-                      src={item.imageUrl}
-                      alt={item.name}
-                      className="w-full h-auto rounded-xl object-cover"
-                    />
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          {post.items.map((item) => (
+            <PostCardItem
+              key={item.id}
+              item={item}
+              isExpanded={expandedItems.includes(item.id)}
+              onToggle={() => toggleItem(item.id)}
+            />
+          ))}
         </div>
       </div>
     </div>

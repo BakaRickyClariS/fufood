@@ -1,7 +1,8 @@
-import { useRef, useEffect, type FC } from 'react';
+import { useRef, type FC } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { ChevronDown } from 'lucide-react';
 import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import type { Group } from '../../types/group.types';
 import { useGroupModal } from '../../hooks/useGroupModal';
 import { useAuth } from '@/modules/auth/hooks';
@@ -13,6 +14,12 @@ const MAX_AVATARS_DISPLAY = 4;
 type GroupCardProps = {
   group: Group;
   isActive?: boolean;
+  /** 是否為已選中（但尚未套用）的群組 */
+  isSelected?: boolean;
+  /** 是否展開（顯示操作按鈕） */
+  isExpanded?: boolean;
+  /** 選擇群組回呼（不會立即切換，需點套用） */
+  onSelect?: (groupId: string) => void;
   onEditMembers?: (group: Group) => void;
   onEditGroup?: (group: Group) => void;
 };
@@ -25,74 +32,87 @@ type GroupCardProps = {
 export const GroupCard: FC<GroupCardProps> = ({
   group,
   isActive = false,
+  isSelected = false,
+  isExpanded = false,
+  onSelect,
   onEditMembers,
   onEditGroup,
 }) => {
+  const cardRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const arrowRef = useRef<HTMLButtonElement>(null);
   const { switchGroup } = useGroupModal();
   const { user } = useAuth();
 
-  // 當 isActive 改變時，自動展開或收合
-  useEffect(() => {
-    if (isActive) {
-      // 展開動畫
-      gsap.to(contentRef.current, {
-        height: 'auto',
-        opacity: 1,
-        duration: 0.3,
-        ease: 'power2.out',
-      });
-      // 箭頭旋轉並淡出
-      gsap.to(arrowRef.current, {
-        rotation: 180,
-        opacity: 0,
-        duration: 0.3,
-        ease: 'power2.out',
-      });
-    } else {
-      // 收合動畫
-      gsap.to(contentRef.current, {
-        height: 0,
-        opacity: 0,
-        duration: 0.3,
-        ease: 'power2.in',
-      });
-      // 箭頭還原並淡入
-      gsap.to(arrowRef.current, {
-        rotation: 0,
-        opacity: 1,
-        duration: 0.3,
-        ease: 'power2.in',
-      });
-    }
-  }, [isActive]);
+  // 使用 useGSAP 管理動畫生命週期
+  useGSAP(
+    () => {
+      if (isExpanded) {
+        // 展開動畫
+        gsap.to(contentRef.current, {
+          height: 'auto',
+          opacity: 1,
+          duration: 0.3,
+          ease: 'power2.out',
+        });
+        // 箭頭旋轉並淡出
+        gsap.to(arrowRef.current, {
+          rotation: 180,
+          opacity: 0,
+          duration: 0.3,
+          ease: 'power2.out',
+        });
+      } else {
+        // 收合動畫
+        gsap.to(contentRef.current, {
+          height: 0,
+          opacity: 0,
+          duration: 0.3,
+          ease: 'power2.in',
+        });
+        // 箭頭還原並淡入
+        gsap.to(arrowRef.current, {
+          rotation: 0,
+          opacity: 1,
+          duration: 0.3,
+          ease: 'power2.in',
+        });
+      }
+    },
+    { scope: cardRef, dependencies: [isExpanded] },
+  );
 
   const handleCardClick = () => {
-    if (!isActive) {
+    // 如果有 onSelect 回呼，使用選擇模式（不立即切換）
+    if (onSelect) {
+      onSelect(group.id);
+    } else if (!isActive) {
+      // 向下相容：無 onSelect 時保留原行為
       switchGroup(group.id);
     }
   };
 
   const handleArrowClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // 避免觸發卡片點擊
-    // 如果已經是 active，點擊箭頭可以收合 (但需求說自動下拉，如果想收合呢？暫時允許手動收合？)
-    // 這裡箭頭主要作為指示，實際互動由 isActive 控制
-    // 如果點擊箭頭但我不是 active，則設為 active
-    if (!isActive) {
+    e.stopPropagation();
+    if (onSelect) {
+      onSelect(group.id);
+    } else if (!isActive) {
       switchGroup(group.id);
-    } else {
-      // 如果已展開，點箭頭無效或收合？根據設計稿通常點卡片展開
-      // 為了簡單，箭頭只做為視覺或觸發 active
     }
+  };
+
+  // 決定邊框樣式：已選中（isSelected）或當前活動群組（isActive）
+  const getBorderClass = () => {
+    if (isSelected) return 'card-gradient-border ring-2 ring-primary-300';
+    if (isActive) return 'card-gradient-border';
+    return 'border-2 border-neutral-400';
   };
 
   return (
     <div
+      ref={cardRef}
       onClick={handleCardClick}
-      className={`relative overflow-hidden bg-white rounded-[32px] p-5 transition-all cursor-pointer ${
-        isActive ? 'card-gradient-border' : 'border-2 border-neutral-400'
-      }`}
+      className={`relative overflow-hidden bg-white rounded-[32px] p-5 transition-all cursor-pointer ${getBorderClass()}`}
     >
       <div className="flex justify-between items-start mb-4 relative z-10">
         <div className="flex flex-col gap-1">
@@ -114,7 +134,7 @@ export const GroupCard: FC<GroupCardProps> = ({
 
       {/* 成員區域 */}
       <div className="flex flex-col justify-center gap-2 mb-2 relative z-10">
-        <span className="text-sm text-stone-500 font-medium">
+        <span className="text-sm text-neutral-500 font-medium">
           成員 ({group.members?.length ?? 0})
         </span>
         <div className="flex">
@@ -150,7 +170,7 @@ export const GroupCard: FC<GroupCardProps> = ({
           ref={arrowRef}
           onClick={handleArrowClick}
           className={`w-8 h-8 flex items-center justify-center transition-colors ${
-            isActive ? 'text-[#EE5D50]' : 'text-stone-400'
+            isActive ? 'text-primary-400' : 'text-neutral-400'
           }`}
         >
           <ChevronDown className="w-6 h-6" />
@@ -164,14 +184,14 @@ export const GroupCard: FC<GroupCardProps> = ({
           onClick={(e) => e.stopPropagation()}
         >
           <Button
-            className="w-full bg-[#EE5D50] hover:bg-[#D94A3D] text-white h-12 rounded-xl text-base font-bold shadow-sm"
+            className="w-full bg-primary-400 hover:bg-primary-500 text-white h-12 rounded-xl text-base font-bold shadow-sm"
             onClick={() => onEditMembers?.(group)}
           >
             編輯成員
           </Button>
           <Button
             variant="outline"
-            className="w-full border-stone-200 border-2 text-stone-700 h-12 rounded-xl text-base font-bold bg-white hover:bg-stone-50"
+            className="w-full border-neutral-200 border-2 text-neutral-700 h-12 rounded-xl text-base font-bold bg-white hover:bg-neutral-50"
             onClick={() => onEditGroup?.(group)}
           >
             修改群組內容
