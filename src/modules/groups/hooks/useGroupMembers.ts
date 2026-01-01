@@ -119,9 +119,39 @@ export const useGroupMembers = (
     setIsLoading(true);
     setError(null);
 
+    // 取得成員名稱供通知使用
+    const memberToRemove = members.find((m) => m.id === memberId);
+    const memberName = memberToRemove?.name || '成員';
+
     try {
       await groupsApi.removeMember(groupId, memberId);
       setMembers((prev) => prev.filter((m) => m.id !== memberId));
+      
+      // 發送推播通知
+      try {
+        if (groupId) {
+          import('@/api/services/notification').then(({ notificationService }) => {
+            notificationService.sendNotification({
+              type: 'group',
+              title: '群組成員變動',
+              body: `${memberName} 已離開群組`,
+              // users 若為空，預設發給群組所有人 (除了操作者? 不，所有人)
+              // 由於操作者觸發，操作者也會收到，這通常沒問題，或者後端會過濾自己
+              // userIds: [], 
+              groupId: groupId,
+              action: {
+                type: 'detail', // 或者 'group' if supported?
+                payload: {
+                  refrigeratorId: groupId // Group settings usually linked to group/refrigerator
+                } 
+              }
+            }).catch(err => console.error('Failed to send notification:', err));
+          });
+        }
+      } catch (notifyError) {
+        console.error('Notification error:', notifyError);
+      }
+
       console.log('✅ [useGroupMembers] 成員移除成功');
       console.groupEnd();
     } catch (err) {
@@ -131,7 +161,7 @@ export const useGroupMembers = (
         );
       }
       setError(err as Error);
-      console.groupEnd();
+       console.groupEnd();
       throw err;
     } finally {
       setIsLoading(false);

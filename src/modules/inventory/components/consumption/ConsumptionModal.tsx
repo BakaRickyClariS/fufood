@@ -21,6 +21,8 @@ import {
   selectConsumptionStep,
   selectConsumptionContextId,
 } from '@/modules/inventory/store/consumptionSlice';
+import { useAuth } from '@/modules/auth';
+import { groupsApi } from '@/modules/groups/api';
 // The user said "Execute and update ... docs". I should check inventoryApi first?
 // I'll proceed assuming I might need to add it or it exists.
 // Based on file reads, I saw `inventoryApi` but didn't check `consumeItem`.
@@ -97,6 +99,7 @@ export const ConsumptionModal = ({
   const consumptionItems = useSelector(selectConsumptionItems);
   const consumptionStep = useSelector(selectConsumptionStep);
   const consumptionContextId = useSelector(selectConsumptionContextId);
+  const { user } = useAuth();
 
   // Skip animation flag (local state based on restoration)
   const [skipAnimation, setSkipAnimation] = useState(false);
@@ -260,6 +263,47 @@ export const ConsumptionModal = ({
           });
         }),
       );
+
+      // 發送推播通知
+      try {
+        if (itemsToConsume.length > 0 && refrigeratorId) {
+          let targetUserIds: string[] = [];
+          try {
+            const members = await groupsApi.getMembers(refrigeratorId);
+            targetUserIds = members.map(m => m.id);
+          } catch (fetchErr) {
+            console.warn(`Failed to fetch members for group ${refrigeratorId}:`, fetchErr);
+            if (user?.id) targetUserIds = [user.id];
+          }
+
+          if (targetUserIds.length > 0) {
+            const firstItemName = itemsToConsume[0].ingredientName;
+            const otherCount = itemsToConsume.length - 1;
+            const message = otherCount > 0 
+              ? `已消耗 ${firstItemName} 等 ${itemsToConsume.length} 項食材`
+              : `已消耗 ${firstItemName}`;
+
+            // 非同步呼叫，不阻擋流程
+            import('@/api/services/notification').then(({ notificationService }) => {
+              notificationService.sendNotification({
+                type: 'inventory',
+                title: '食材消耗通知',
+                body: message,
+                userIds: targetUserIds,
+                groupId: undefined,
+                action: {
+                  type: 'inventory',
+                  payload: {
+                    refrigeratorId: refrigeratorId
+                  }
+                }
+              }).catch(err => console.error('Failed to send notification:', err));
+            });
+          }
+        }
+      } catch (notifyError) {
+        console.error('Notification error:', notifyError);
+      }
 
       // Mutate will trigger invalidation automatically
       return true;
