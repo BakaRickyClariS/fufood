@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '@/modules/auth';
@@ -50,39 +50,29 @@ const EditProfile = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const updateProfileMutation = useUpdateProfileMutation();
 
+  // 使用 memo 化的資料作為表單初始值，當使用者資料載入或更新時自動重設表單
+  const initialValues = useMemo(() => {
+    if (!effectiveUser) return undefined;
+    const userGender = effectiveUser.gender ?? Gender.NotSpecified;
+    return {
+      name: effectiveUser.name || '',
+      email: effectiveUser.email || '',
+      gender: String(userGender),
+      customGender: userGender === Gender.Other ? (effectiveUser.customGender || '') : '',
+    };
+  }, [effectiveUser]);
+
   const {
     register,
     handleSubmit,
     watch,
-    reset,
     control,
     formState: { errors, isDirty },
   } = useForm<ProfileFormValues>({
-    defaultValues: {
-      name: '',
-      email: '',
-      gender: String(Gender.NotSpecified),
-      customGender: '',
-    },
+    values: initialValues,
   });
 
   const selectedGender = watch('gender');
-
-  // Initialize form with user data
-  useEffect(() => {
-    if (effectiveUser) {
-      const userGender = effectiveUser.gender ?? Gender.NotSpecified;
-      
-      setTimeout(() => {
-        reset({
-          name: effectiveUser.name || '',
-          email: effectiveUser.email || '',
-          gender: String(userGender),
-          customGender: userGender === Gender.Other ? (effectiveUser.customGender || '') : '',
-        });
-      }, 0);
-    }
-  }, [effectiveUser, reset]);
 
   const onSubmit = (data: ProfileFormValues) => {
     const genderValue = stringToGenderValue(data.gender);
