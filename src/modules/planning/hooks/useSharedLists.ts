@@ -76,6 +76,29 @@ export const useSharedLists = (
         ...newList,
         status: computeStatus(newList.startsAt),
       };
+
+      // 發送通知給群組成員
+      try {
+        const { notificationsApiImpl } = await import(
+          '@/modules/notifications/api/notificationsApiImpl'
+        );
+        await notificationsApiImpl.sendNotification({
+          groupId: refrigeratorId,
+          title: '新增共享清單',
+          body: `已建立新清單：${input.title}`,
+          type: 'shopping',
+          action: {
+            type: 'shopping-list',
+            payload: {
+              refrigeratorId: refrigeratorId,
+              listId: newList.id,
+            },
+          },
+        });
+      } catch (notifyError) {
+        console.warn('通知發送失敗:', notifyError);
+      }
+
       setLists((prev) => [processedList, ...prev]);
       return processedList;
     } catch (err) {
