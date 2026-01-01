@@ -123,6 +123,28 @@ const InviteAcceptPage = () => {
       
       setStatus('success');
 
+      // 發送推播通知 (通知群組其他成員)
+      try {
+        const joinerName = user?.displayName || user?.name || '新成員';
+        import('@/api/services/notification').then(({ notificationService }) => {
+          notificationService.sendNotification({
+            type: 'group',
+            title: '群組成員變動',
+            body: `${joinerName} 已加入群組`,
+            // userIds: [], // 發送給群組所有人 (若未指定 userIds 且有 groupId)
+            groupId: invitation.refrigeratorId,
+            action: {
+              type: 'detail',
+              payload: {
+                refrigeratorId: invitation.refrigeratorId
+              }
+            }
+          }).catch(err => console.error('Failed to send join notification:', err));
+        });
+      } catch (notifyError) {
+        console.error('Notification error:', notifyError);
+      }
+
       // 成功後導向 dashboard
       setTimeout(() => {
         navigate('/dashboard');
