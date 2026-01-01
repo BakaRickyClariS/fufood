@@ -30,6 +30,20 @@ const App: React.FC = () => {
     };
     initPushNotification();
 
+    // Foreground message listener
+    import('@/lib/firebase').then(({ onMessageListener }) => {
+      onMessageListener((payload: any) => {
+        if (payload?.notification) {
+          const { title, body } = payload.notification;
+          import('sonner').then(({ toast }) => {
+            toast.success(title || 'Fufood 通知', {
+              description: body,
+            });
+          });
+        }
+      });
+    });
+
     updateSW.current = registerSW({
       onNeedRefresh() {
         setNeedRefresh(true);

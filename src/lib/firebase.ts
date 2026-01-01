@@ -40,9 +40,13 @@ export async function requestNotificationPermission(): Promise<string | null> {
         console.error('Missing VAPID Key');
         return null;
       }
-      
+
+      // Get the existing service worker registration (created by VitePWA)
+      const registration = await navigator.serviceWorker.getRegistration();
+
       const token = await getToken(messaging, {
         vapidKey: VAPID_KEY,
+        serviceWorkerRegistration: registration,
       });
       return token;
     } else {
@@ -55,13 +59,12 @@ export async function requestNotificationPermission(): Promise<string | null> {
   }
 }
 
-export const onMessageListener = () =>
-  new Promise((resolve) => {
-    if (messaging) {
-      import('firebase/messaging').then(({ onMessage }) => {
-        onMessage(messaging, (payload) => {
-          resolve(payload);
-        });
+export const onMessageListener = (callback: (payload: any) => void) => {
+  if (messaging) {
+    import('firebase/messaging').then(({ onMessage }) => {
+      onMessage(messaging, (payload) => {
+        callback(payload);
       });
-    }
-  });
+    });
+  }
+};
