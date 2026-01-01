@@ -54,7 +54,7 @@ export const notificationsMockApi: NotificationsApi = {
     const paginatedItems = items.slice(start, start + limit);
 
     return {
-      status: true,
+      success: true,
       data: {
         items: paginatedItems,
         total: items.length,
@@ -73,7 +73,7 @@ export const notificationsMockApi: NotificationsApi = {
     }
 
     return {
-      status: true,
+      success: true,
       data: { item },
     };
   },
@@ -88,7 +88,7 @@ export const notificationsMockApi: NotificationsApi = {
     }
 
     return {
-      status: true,
+      success: true,
       data: { id },
     };
   },
@@ -100,7 +100,7 @@ export const notificationsMockApi: NotificationsApi = {
     notifications = notifications.filter((n) => n.id !== id);
 
     return {
-      status: true,
+      success: true,
       data: {},
     };
   },
@@ -113,7 +113,7 @@ export const notificationsMockApi: NotificationsApi = {
     notifications = notifications.map((n) => ({ ...n, isRead: true }));
 
     return {
-      status: true,
+      success: true,
       data: { count },
     };
   },
@@ -123,8 +123,8 @@ export const notificationsMockApi: NotificationsApi = {
     await delay(200);
 
     return {
-      status: true,
-      data: { settings },
+      success: true,
+      data: settings, // 直接回傳 NotificationSettings
     };
   },
 
@@ -135,8 +135,8 @@ export const notificationsMockApi: NotificationsApi = {
     settings = { ...settings, ...data };
 
     return {
-      status: true,
-      data: { settings },
+      success: true,
+      data: settings, // 直接回傳 NotificationSettings
     };
   },
 
@@ -149,7 +149,7 @@ export const notificationsMockApi: NotificationsApi = {
     const deletedCount = initialLength - notifications.length;
 
     return {
-      status: true,
+      success: true,
       data: { deletedCount },
     };
   },
@@ -170,7 +170,7 @@ export const notificationsMockApi: NotificationsApi = {
     });
 
     return {
-      status: true,
+      success: true,
       data: { updatedCount },
     };
   },

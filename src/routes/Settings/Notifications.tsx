@@ -17,17 +17,17 @@ type SettingItem = {
 
 const SETTING_ITEMS: SettingItem[] = [
   {
-    id: 'enablePush',
+    id: 'notifyPush',
     label: '推播通知',
     description: '接收應用程式的即時推播訊息',
   },
   {
-    id: 'enableEmail',
+    id: 'notifyMarketing',
     label: '優惠與活動',
     description: '接收最新優惠與活動資訊',
   },
   {
-    id: 'notifyOnExpiry',
+    id: 'notifyExpiry',
     label: '即將過期提醒',
     description: '當食材即將過期時傳送提醒',
   },
@@ -42,8 +42,10 @@ const Notifications = () => {
 
   // Sync server data to local state
   useEffect(() => {
-    if (response?.data?.settings) {
-      setLocalSettings(response.data.settings);
+    // API 回傳格式: { success: boolean, data: NotificationSettings }
+    const settings = response?.data;
+    if (settings) {
+      setLocalSettings(settings);
     }
   }, [response]);
 
@@ -51,7 +53,7 @@ const Notifications = () => {
     const nextVal = !currentVal;
 
     // 特殊邏輯：當開啟「推播通知」時
-    if (id === 'enablePush' && nextVal === true) {
+    if (id === 'notifyPush' && nextVal === true) {
       if (permission !== 'granted') {
         const success = await enablePush();
         // 若使用者拒絕或失敗，則不更新開關
