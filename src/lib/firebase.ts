@@ -36,10 +36,14 @@ export async function requestNotificationPermission(): Promise<string | null> {
   try {
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
+      if (!VAPID_KEY) {
+        console.error('Missing VAPID Key');
+        return null;
+      }
+      
       const token = await getToken(messaging, {
         vapidKey: VAPID_KEY,
       });
-      console.log('FCM Token:', token);
       return token;
     } else {
       console.log('Notification permission denied.');

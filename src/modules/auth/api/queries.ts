@@ -3,6 +3,7 @@ import type { User, ProfileResponse, GenderValue, MembershipTier } from '../type
 import { Gender } from '../types';
 import { backendApi } from '@/api/client';
 import { MOCK_USERS } from './mock/authMockData';
+import { identity } from '@/shared/utils/identity';
 
 // Gender 字串轉數值對應表
 const mapBackendGenderToEnum = (genderStr: string | number | undefined | null): GenderValue => {
@@ -46,7 +47,7 @@ export async function getUserProfile(): Promise<User | null> {
     const mappedGender = mapBackendGenderToEnum(backendData.gender);
     console.log('[UserProfile] Mapped Gender:', mappedGender);
     
-    return {
+    const user: User = {
       id: backendData.id,
       lineId: backendData.lineId,
       name: backendData.name,
@@ -67,6 +68,18 @@ export async function getUserProfile(): Promise<User | null> {
         restrictions: []
       } : undefined,
     };
+
+    // 同步 User 資料到 identity (localStorage)，確保 API Client 能取得 X-User-Id
+    identity.setUser({
+      id: user.id,
+      name: user.name,
+      displayName: user.displayName,
+      avatar: user.avatar,
+      pictureUrl: user.pictureUrl,
+      lineId: user.lineId,
+    });
+
+    return user;
   } catch (error) {
     const is401 = error instanceof Error && error.message.includes('401');
 

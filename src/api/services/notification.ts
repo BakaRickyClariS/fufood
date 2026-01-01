@@ -1,19 +1,32 @@
-import { backendApi } from '@/api/client';
+import { aiApi } from '@/api/client';
 import type { 
-  NotificationSettings 
+  NotificationSettings,
+  SendNotificationRequest,
 } from '@/modules/notifications/types';
 
-export interface RegisterTokenRequest {
+export type RegisterTokenRequest = {
   fcmToken: string;
   deviceType?: 'web' | 'android' | 'ios';
-}
+};
+
+export type SendNotificationResponse = {
+  success: boolean;
+  data: {
+    sent: number;
+    failed: number;
+    details: {
+      success: string[];
+      failed: string[];
+    };
+  };
+};
 
 export const notificationService = {
   /**
-   * 將 FCM Token 傳送至後端儲存
+   * 將 FCM Token 傳送至 AI 後端儲存
    */
   registerToken: async (token: string) => {
-    return backendApi.post<void>('/api/v1/notifications/token', {
+    return aiApi.post<void>('/notifications/token', {
       fcmToken: token,
       deviceType: 'web',
     });
@@ -23,23 +36,37 @@ export const notificationService = {
    * 更新通知設定
    */
   updateSettings: async (settings: Partial<NotificationSettings>) => {
-    return backendApi.patch('/api/v1/notifications/settings', settings);
+    return aiApi.patch('/notifications/settings', settings);
   },
 
   /**
    * 取得通知設定
    */
   getSettings: async () => {
-    // 假設後端回傳結構符合 GetSettingsResponse.data
-    // 這裡直接回傳 data 部分
-    return backendApi.get<{ settings: NotificationSettings }>('/api/v1/notifications/settings');
+    return aiApi.get<{ success: boolean; data: NotificationSettings }>('/notifications/settings');
   },
 
   /**
    * 取得通知列表
    */
-  getNotifications: async (params?: any) => {
-    return backendApi.get('/api/v1/notifications', { params });
-  }
-};
+  getNotifications: async (params?: { page?: number; limit?: number }) => {
+    return aiApi.get('/notifications', params);
+  },
 
+  /**
+   * 發送推播通知給多個使用者
+   * 用於：入庫、消耗、群組變更、購物清單更新等事件
+   */
+  sendNotification: async (data: SendNotificationRequest) => {
+    console.log('🚀 [Notification Debug] Payload:', JSON.stringify(data, null, 2));
+    try {
+      return await aiApi.post<SendNotificationResponse>('/notifications/send', data);
+    } catch (error: any) {
+      console.error('❌ [Notification Debug] Error:', error);
+      if (error.data) {
+        console.error('❌ [Notification Debug] Error Data:', JSON.stringify(error.data, null, 2));
+      }
+      throw error;
+    }
+  },
+};
