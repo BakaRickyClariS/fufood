@@ -18,9 +18,11 @@ import { useAuth } from '@/modules/auth';
  * 檢查用戶是否已登入，未登入則重定向到登入頁面
  */
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isLoading, isAuthenticated } = useAuth();
+  // 使用 isInitialLoading 取代 isLoading
+  // isInitialLoading 只在首次載入且無快取時為 true，避免背景刷新導致 loading 閃爍
+  const { isInitialLoading, isAuthenticated } = useAuth();
 
-  if (isLoading) return null;
+  if (isInitialLoading) return null;
 
   // 無 token 或 token 已過期
   if (!isAuthenticated) {
