@@ -123,9 +123,11 @@ Headers: { "X-User-Id": "user-uuid" }
 {
   "success": true,
   "data": {
-    "notifyPush": true,      // 總開關
-    "notifyExpiry": true,    // 過期提醒
-    "notifyMarketing": false // 行銷活動
+    "notifyPush": true,       // 總開關
+    "notifyExpiry": true,     // 過期提醒
+    "notifyLowStock": true,   // 低庫存提醒
+    "daysBeforeExpiry": 3,    // 過期提醒天數 (預設 3 天)
+    "notifyMarketing": false  // 行銷活動
   }
 }
 ```
@@ -134,7 +136,11 @@ Headers: { "X-User-Id": "user-uuid" }
 ```typescript
 PATCH /api/v1/notifications/settings
 Headers: { "X-User-Id": "user-uuid" }
-Body: { "notifyExpiry": false }
+Body: { 
+  "notifyExpiry": false,
+  "notifyLowStock": true,
+  "daysBeforeExpiry": 7    // 可設定 1-30 天
+}
 
 // Response: 更新後的完整設定
 ```
@@ -160,7 +166,13 @@ Headers: { "X-User-Id": "user-uuid" }
       "action": { "type": "inventory", "payload": {...} },
       "createdAt": "2026-01-01T08:00:00Z"
     }
-  ]
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 42
+  },
+  "unreadCount": 5
 }
 ```
 
