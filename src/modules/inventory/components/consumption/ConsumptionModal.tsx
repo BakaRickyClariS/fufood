@@ -10,6 +10,7 @@ import type {
 import { EditConsumptionReasonModal } from './EditConsumptionReasonModal';
 import { ConsumptionSuccessModal } from './ConsumptionSuccessModal';
 import { useConsumeItemMutation } from '@/modules/inventory/api/queries';
+import { useSendNotificationMutation } from '@/modules/notifications/api/queries'; // Added
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -21,7 +22,7 @@ import {
   selectConsumptionStep,
   selectConsumptionContextId,
 } from '@/modules/inventory/store/consumptionSlice';
-import { useAuth } from '@/modules/auth';
+// import { useAuth } from '@/modules/auth';
 import { groupsApi } from '@/modules/groups/api';
 // The user said "Execute and update ... docs". I should check inventoryApi first?
 // I'll proceed assuming I might need to add it or it exists.
@@ -99,7 +100,7 @@ export const ConsumptionModal = ({
   const consumptionItems = useSelector(selectConsumptionItems);
   const consumptionStep = useSelector(selectConsumptionStep);
   const consumptionContextId = useSelector(selectConsumptionContextId);
-  const { user } = useAuth();
+  // const { user } = useAuth();
 
   // Skip animation flag (local state based on restoration)
   const [skipAnimation, setSkipAnimation] = useState(false);
@@ -108,8 +109,9 @@ export const ConsumptionModal = ({
   useEffect(() => {
     if (isOpen && !wasOpenRef.current) {
       // Check if we need to restore state or initialize new state
-      const hasStoredState = consumptionItems.length > 0 && consumptionContextId === singleItem?.id;
-      
+      const hasStoredState =
+        consumptionItems.length > 0 && consumptionContextId === singleItem?.id;
+
       if (hasStoredState) {
         setCurrentItems(consumptionItems);
         // If restoring, skip animation
@@ -122,9 +124,9 @@ export const ConsumptionModal = ({
       } else {
         // Initialize new flow
         let initialItems: ItemWithReason[] = [];
-        
+
         if (singleItem) {
-           initialItems = [
+          initialItems = [
             {
               ingredientName: singleItem.name,
               originalQuantity: '',
@@ -138,18 +140,20 @@ export const ConsumptionModal = ({
           ];
         } else if (items.length > 0) {
           initialItems = items.map((i) => ({
-              ...i,
-              reasons: [...defaultReasons],
-              customReason: '',
-            }));
+            ...i,
+            reasons: [...defaultReasons],
+            customReason: '',
+          }));
         }
-        
+
         setCurrentItems(initialItems);
         // Start Redux flow
-        dispatch(startConsumption({ 
-          items: initialItems, 
-          contextId: singleItem?.id 
-        }));
+        dispatch(
+          startConsumption({
+            items: initialItems,
+            contextId: singleItem?.id,
+          }),
+        );
       }
     }
     wasOpenRef.current = isOpen;
@@ -242,15 +246,21 @@ export const ConsumptionModal = ({
     }
   });
 
+  // useSendNotificationMutation added to imports (need to verify imports first)
+  const { mutateAsync: sendNotification } = useSendNotificationMutation();
+
   const submitConsumption = async (itemsToConsume: ItemWithReason[]) => {
     setIsSubmitting(true);
     try {
       await Promise.all(
         itemsToConsume.map((item) => {
           if (!item.id) return Promise.resolve();
-          const hasReasons = item.selectedReasons && item.selectedReasons.length > 0;
+          const hasReasons =
+            item.selectedReasons && item.selectedReasons.length > 0;
           const reasons = hasReasons ? item.selectedReasons! : ['custom'];
-          const customReason = hasReasons ? item.customReasonStr : (item.customReasonStr || '一般消耗');
+          const customReason = hasReasons
+            ? item.customReasonStr
+            : item.customReasonStr || '一般消耗';
 
           return consumeItem({
             id: item.id,
@@ -270,34 +280,44 @@ export const ConsumptionModal = ({
           let targetUserIds: string[] = [];
           try {
             const members = await groupsApi.getMembers(refrigeratorId);
-            targetUserIds = members.map(m => m.id);
+            targetUserIds = members.map((m) => m.id);
           } catch (fetchErr) {
-            console.warn(`Failed to fetch members for group ${refrigeratorId}:`, fetchErr);
-            if (user?.id) targetUserIds = [user.id];
+            console.warn(
+              `Failed to fetch members for group ${refrigeratorId}:`,
+              fetchErr,
+            );
+            // 當無法取得成員列表時，至少發給自己 (如果有的話)
+            // if (user?.id) targetUserIds = [user.id];
           }
 
           if (targetUserIds.length > 0) {
-            const firstItemName = itemsToConsume[0].ingredientName;
-            const otherCount = itemsToConsume.length - 1;
-            const message = otherCount > 0 
-              ? `已消耗 ${firstItemName} 等 ${itemsToConsume.length} 項食材`
-              : `已消耗 ${firstItemName}`;
+            const firstItemName =
+              itemsToConsume[0].ingredientName || '未知食材';
 
-            // 非同步呼叫，不阻擋流程
-            import('@/api/services/notification').then(({ notificationService }) => {
-              notificationService.sendNotification({
+            const otherCount = itemsToConsume.length - 1;
+            const message =
+              otherCount > 0
+                ? `已消耗 ${firstItemName} 等 ${itemsToConsume.length} 項食材`
+                : `已消耗 ${firstItemName}`;
+
+            console.log(
+              `[ConsumptionModal] Sending notification: "${message}" to`,
+              targetUserIds,
+            );
+
+            // 使用 mutation 發送通知，會自動觸發 query invalidation
+            await sendNotification({
+              type: 'inventory',
+              title: '食材消耗通知',
+              body: message,
+              userIds: targetUserIds,
+              groupId: undefined,
+              action: {
                 type: 'inventory',
-                title: '食材消耗通知',
-                body: message,
-                userIds: targetUserIds,
-                groupId: undefined,
-                action: {
-                  type: 'inventory',
-                  payload: {
-                    refrigeratorId: refrigeratorId
-                  }
-                }
-              }).catch(err => console.error('Failed to send notification:', err));
+                payload: {
+                  refrigeratorId: refrigeratorId,
+                },
+              },
             });
           }
         }
@@ -459,11 +479,14 @@ export const ConsumptionModal = ({
                         </div>
                         {item.expiryDate && (
                           <div className="text-primary-400 text-base font-medium">
-                            {new Date(item.expiryDate).toLocaleDateString('zh-TW', {
-                              year: 'numeric',
-                              month: '2-digit',
-                              day: '2-digit',
-                            })}{' '}
+                            {new Date(item.expiryDate).toLocaleDateString(
+                              'zh-TW',
+                              {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                              },
+                            )}{' '}
                             過期
                           </div>
                         )}

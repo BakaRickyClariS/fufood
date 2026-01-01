@@ -31,7 +31,7 @@ export const useGroupMembers = (
 
   const fetchMembers = useCallback(async () => {
     if (!groupId) {
-      console.warn('⚠️ [useGroupMembers] groupId 為空，跳過 API 呼叫');
+      // 這是正常情況（例如 Modal 尚未開啟時），不需要警告
       return;
     }
 
@@ -97,6 +97,30 @@ export const useGroupMembers = (
       await groupsApi.inviteMember(groupId, { email: form.email });
       console.log('✅ [useGroupMembers] 邀請成功，重新取得成員列表');
       await fetchMembers();
+
+      // 發送通知給群組成員（新成員加入）
+      try {
+        const memberIds = members.map((m) => m.id).filter(Boolean) as string[];
+        if (memberIds.length > 0) {
+          const { notificationsApiImpl } = await import(
+            '@/modules/notifications/api/notificationsApiImpl'
+          );
+          await notificationsApiImpl.sendNotification({
+            userIds: memberIds,
+            title: '新成員加入',
+            body: `${form.email} 已被邀請加入群組`,
+            type: 'system',
+            action: {
+              type: 'detail',
+              payload: { refrigeratorId: groupId },
+            },
+          });
+          console.log('📢 [useGroupMembers] 已發送成員加入通知');
+        }
+      } catch (notifyError) {
+        console.warn('通知發送失敗 (不影響主流程):', notifyError);
+      }
+
       console.groupEnd();
     } catch (err) {
       if (err instanceof GroupsApiError) {
@@ -126,30 +150,33 @@ export const useGroupMembers = (
     try {
       await groupsApi.removeMember(groupId, memberId);
       setMembers((prev) => prev.filter((m) => m.id !== memberId));
-      
-      // 發送推播通知
+
+      // 發送推播通知給剩餘成員
       try {
-        if (groupId) {
-          import('@/api/services/notification').then(({ notificationService }) => {
-            notificationService.sendNotification({
-              type: 'group',
-              title: '群組成員變動',
-              body: `${memberName} 已離開群組`,
-              // users 若為空，預設發給群組所有人 (除了操作者? 不，所有人)
-              // 由於操作者觸發，操作者也會收到，這通常沒問題，或者後端會過濾自己
-              // userIds: [], 
-              groupId: groupId,
-              action: {
-                type: 'detail', // 或者 'group' if supported?
-                payload: {
-                  refrigeratorId: groupId // Group settings usually linked to group/refrigerator
-                } 
-              }
-            }).catch(err => console.error('Failed to send notification:', err));
+        // 取得剩餘成員 ID（排除被移除的成員）
+        const remainingMemberIds = members
+          .filter((m) => m.id !== memberId)
+          .map((m) => m.id)
+          .filter(Boolean) as string[];
+
+        if (remainingMemberIds.length > 0) {
+          const { notificationsApiImpl } = await import(
+            '@/modules/notifications/api/notificationsApiImpl'
+          );
+          await notificationsApiImpl.sendNotification({
+            userIds: remainingMemberIds,
+            title: '群組成員變動',
+            body: `${memberName} 已離開群組`,
+            type: 'system',
+            action: {
+              type: 'detail',
+              payload: { refrigeratorId: groupId },
+            },
           });
+          console.log('📢 [useGroupMembers] 已發送成員離開通知');
         }
       } catch (notifyError) {
-        console.error('Notification error:', notifyError);
+        console.warn('通知發送失敗 (不影響主流程):', notifyError);
       }
 
       console.log('✅ [useGroupMembers] 成員移除成功');
@@ -161,7 +188,7 @@ export const useGroupMembers = (
         );
       }
       setError(err as Error);
-       console.groupEnd();
+      console.groupEnd();
       throw err;
     } finally {
       setIsLoading(false);
