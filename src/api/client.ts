@@ -35,6 +35,20 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: ApiBody;
 };
 
+export class ApiError extends Error {
+  public status: number;
+  public code?: string;
+  public data?: any;
+
+  constructor(message: string, status: number, code?: string, data?: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.code = code;
+    this.data = data;
+  }
+}
+
 /**
  * 統一 API 客戶端
  * 支援 AI API 和後端 API 兩種類型
@@ -119,12 +133,12 @@ class ApiClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const error = new Error(errorData.message || `API Error: ${response.status}`);
-        // @ts-ignore
-        error.code = errorData.code; // Attach backend error code if available
-        // @ts-ignore
-        error.data = errorData;
-        throw error;
+        throw new ApiError(
+          errorData.message || `API Error: ${response.status}`,
+          response.status,
+          errorData.code,
+          errorData,
+        );
       }
 
       // Handle 204 No Content or empty body

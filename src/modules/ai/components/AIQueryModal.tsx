@@ -40,7 +40,7 @@ export const AIQueryModal = ({
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [useInventory, setUseInventory] = useState(true); // 預設開啟庫存食材
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
 
   // 食譜詳細 Modal 狀態
@@ -76,9 +76,9 @@ export const AIQueryModal = ({
   }, [suggestionsData]);
 
   // 庫存食材資料
-  const { data: inventoryData } = useInventoryQuery({ 
+  const { data: inventoryData } = useInventoryQuery({
     limit: 100,
-    refrigeratorId: activeRefrigeratorId || undefined
+    refrigeratorId: activeRefrigeratorId || undefined,
   });
   const allInventoryItems = useMemo(() => {
     return inventoryData?.data?.items?.map((item) => item.name) || [];
@@ -369,7 +369,7 @@ export const AIQueryModal = ({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                  maxLength={40}
+                  maxLength={200}
                   placeholder={
                     selectedIngredients.length > 0
                       ? '想做什麼料理？'

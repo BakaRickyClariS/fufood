@@ -32,9 +32,7 @@ export const createInventoryApi = (): InventoryApi => {
       if (!refrigeratorId) {
         throw new Error('Refrigerator ID is required for getInventory');
       }
-      if (!refrigeratorId) {
-        throw new Error('Refrigerator ID is required for getInventory');
-      }
+
       return aiApi.get<GetInventoryResponse>(
         `/refrigerators/${refrigeratorId}/inventory`,
         params,

@@ -65,7 +65,7 @@ const EditDietaryPreference = () => {
     updateProfileMutation.mutate(
       {
         data: {
-          name: '', // 注意：PUT API 要求 name 必填，這裡暫時使用空字串，實際使用時應從 user 取得
+          name: user?.name || '', // 從 user 物件取得當前名稱
           preference: preferenceLabels,
         },
       },
