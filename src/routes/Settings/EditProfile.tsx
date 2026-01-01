@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '@/modules/auth';
 import { useUpdateProfileMutation } from '@/modules/settings/api/queries';
 import { useGetUserProfileQuery } from '@/modules/auth/api/queries';
@@ -50,42 +50,29 @@ const EditProfile = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const updateProfileMutation = useUpdateProfileMutation();
 
+  // 使用 memo 化的資料作為表單初始值，當使用者資料載入或更新時自動重設表單
+  const initialValues = useMemo(() => {
+    if (!effectiveUser) return undefined;
+    const userGender = effectiveUser.gender ?? Gender.NotSpecified;
+    return {
+      name: effectiveUser.name || '',
+      email: effectiveUser.email || '',
+      gender: String(userGender),
+      customGender: userGender === Gender.Other ? (effectiveUser.customGender || '') : '',
+    };
+  }, [effectiveUser]);
+
   const {
     register,
     handleSubmit,
-    setValue,
     watch,
+    control,
     formState: { errors, isDirty },
   } = useForm<ProfileFormValues>({
-    defaultValues: {
-      name: '',
-      email: '',
-      gender: String(Gender.NotSpecified),
-      customGender: '',
-    },
+    values: initialValues,
   });
 
   const selectedGender = watch('gender');
-
-  // Initialize form with user data
-  useEffect(() => {
-    if (effectiveUser) {
-      setValue('name', effectiveUser.name || '');
-      setValue('email', effectiveUser.email || '');
-      
-      // 正確設定性別
-      // 如果 user.gender 是 null/undefined，則預設為 NotSpecified
-      const userGender = effectiveUser.gender ?? Gender.NotSpecified;
-      setValue('gender', String(userGender));
-
-      // 設定自訂性別（如果是 'Other'，則讀取 customGender）
-      if (userGender === Gender.Other) {
-        setValue('customGender', effectiveUser.customGender || '');
-      } else {
-        setValue('customGender', '');
-      }
-    }
-  }, [effectiveUser, setValue]);
 
   const onSubmit = (data: ProfileFormValues) => {
     const genderValue = stringToGenderValue(data.gender);
@@ -178,23 +165,27 @@ const EditProfile = () => {
           {/* Gender */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-neutral-700">性別</label>
-            <Select
-              value={selectedGender}
-              onValueChange={(value) =>
-                setValue('gender', value, { shouldDirty: true })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="選擇性別" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={String(Gender.NotSpecified)}>不透露</SelectItem>
-                <SelectItem value={String(Gender.Female)}>女</SelectItem>
-                <SelectItem value={String(Gender.Male)}>男</SelectItem>
-                <SelectItem value={String(Gender.NonBinary)}>無性別</SelectItem>
-                <SelectItem value={String(Gender.Other)}>其他</SelectItem>
-              </SelectContent>
-            </Select>
+            <Controller
+              control={control}
+              name="gender"
+              render={({ field }) => (
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="選擇性別" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={String(Gender.NotSpecified)}>不透露</SelectItem>
+                    <SelectItem value={String(Gender.Female)}>女</SelectItem>
+                    <SelectItem value={String(Gender.Male)}>男</SelectItem>
+                    <SelectItem value={String(Gender.NonBinary)}>無性別</SelectItem>
+                    <SelectItem value={String(Gender.Other)}>其他</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
 
           {/* Custom Gender (顯示於 gender = 4 時) */}
