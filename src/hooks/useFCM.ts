@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getToken } from 'firebase/messaging';
 import { toast } from 'sonner';
+import { aiApi } from '@/api/client';
 
 // Firebase 相關
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 type UseFCMOptions = {
   /** 當前使用者 ID */
@@ -81,25 +81,10 @@ export const useFCM = ({
       }
 
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/v1/notifications/token`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-User-Id': userId,
-            },
-            body: JSON.stringify({
-              fcmToken,
-              platform: detectPlatform(),
-            }),
-          },
-        );
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || '後端 Token 註冊失敗');
-        }
+        await aiApi.post('/notifications/token', {
+          fcmToken,
+          platform: detectPlatform(),
+        });
 
         console.log('[useFCM] ✅ Token 已註冊到後端');
         setIsRegistered(true);
@@ -300,22 +285,9 @@ export const useFCM = ({
     }
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/notifications/token`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-User-Id': userId,
-          },
-          body: JSON.stringify({ fcmToken: token }),
-        },
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || '後端 Token 刪除失敗');
-      }
+      await aiApi.delete('/notifications/token', {
+        body: { fcmToken: token },
+      });
 
       console.log('[useFCM] ✅ Token 已從後端刪除');
       setIsRegistered(false);
