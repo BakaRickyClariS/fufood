@@ -5,7 +5,7 @@ import {
   useNotificationSettingsQuery,
   useUpdateNotificationSettingsMutation,
 } from '@/modules/notifications/api/queries';
-import { useFCMToken } from '@/hooks/useFCMToken';
+import { useFCMContext } from '@/shared/providers/FCMProvider';
 import type { NotificationSettings } from '@/modules/notifications/types';
 import { useEffect, useState } from 'react';
 
@@ -37,8 +37,11 @@ const Notifications = () => {
   const navigate = useNavigate();
   const { data: response, isLoading } = useNotificationSettingsQuery();
   const updateSettings = useUpdateNotificationSettingsMutation();
-  const { permission, enablePush } = useFCMToken();
-  const [localSettings, setLocalSettings] = useState<Partial<NotificationSettings>>({});
+  // 根據 Code Review 建議，改用 useFCMContext 統一 FCM 來源
+  const { permission, requestPermission } = useFCMContext();
+  const [localSettings, setLocalSettings] = useState<
+    Partial<NotificationSettings>
+  >({});
 
   // Sync server data to local state
   useEffect(() => {
@@ -49,15 +52,19 @@ const Notifications = () => {
     }
   }, [response]);
 
-  const handleToggle = async (id: keyof NotificationSettings, currentVal: boolean) => {
+  const handleToggle = async (
+    id: keyof NotificationSettings,
+    currentVal: boolean,
+  ) => {
     const nextVal = !currentVal;
 
     // 特殊邏輯：當開啟「推播通知」時
     if (id === 'notifyPush' && nextVal === true) {
       if (permission !== 'granted') {
-        const success = await enablePush();
-        // 若使用者拒絕或失敗，則不更新開關
-        if (!success) return;
+        // 改用 requestPermission 並根據回傳值判斷
+        const token = await requestPermission();
+        // 若使用者拒絕或失敗（token 為 null），則不更新開關
+        if (!token) return;
       }
     }
 
@@ -72,7 +79,7 @@ const Notifications = () => {
           // 失敗復原
           setLocalSettings((prev) => ({ ...prev, [id]: currentVal }));
         },
-      }
+      },
     );
   };
 
@@ -85,7 +92,7 @@ const Notifications = () => {
       <div className="max-w-layout-container mx-auto px-4 py-6 space-y-4">
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           {isLoading ? (
-             <div className="p-4 text-center text-gray-400">Loading...</div>
+            <div className="p-4 text-center text-gray-400">Loading...</div>
           ) : (
             SETTING_ITEMS.map((item, index) => (
               <div
@@ -104,7 +111,9 @@ const Notifications = () => {
                 </div>
                 <Switch
                   checked={!!settings?.[item.id]}
-                  onCheckedChange={() => handleToggle(item.id, !!settings?.[item.id])}
+                  onCheckedChange={() =>
+                    handleToggle(item.id, !!settings?.[item.id])
+                  }
                 />
               </div>
             ))
