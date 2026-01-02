@@ -1,6 +1,7 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { useFCM } from '@/hooks/useFCM';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
+import { useNotificationPolling } from '@/modules/notifications/hooks';
 
 type FCMContextValue = {
   /** FCM Token */
@@ -34,6 +35,9 @@ type FCMProviderProps = {
 /**
  * FCM Provider - 提供推播通知功能給整個應用程式
  *
+ * - 所有平台都使用 FCM 推播（包括 iOS，後端已配置 APNs）
+ * - In-App Polling：當 App 在前景時，輪詢檢查新通知並顯示 Toast
+ *
  * @example
  * ```tsx
  * // 在 App.tsx 或 main.tsx 中使用
@@ -49,10 +53,17 @@ export const FCMProvider = ({
 }: FCMProviderProps) => {
   const { user, isAuthenticated } = useAuth();
 
+  // 所有平台都使用 FCM（iOS 後端已配置 APNs）
   const fcm = useFCM({
     userId: isAuthenticated ? (user?.id ?? null) : null,
     autoRequest: autoRequest && isAuthenticated,
     onMessageReceived,
+  });
+
+  // 所有平台都啟用 In-App Polling（當 App 在前景時輪詢並顯示 Toast）
+  useNotificationPolling({
+    enabled: isAuthenticated,
+    interval: 30000, // 30 秒
   });
 
   return <FCMContext.Provider value={fcm}>{children}</FCMContext.Provider>;
