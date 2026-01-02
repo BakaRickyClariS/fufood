@@ -17,6 +17,7 @@ const App: React.FC = () => {
     useRef<(reloadPage?: boolean) => Promise<void> | void>(undefined);
 
   useEffect(() => {
+    // 註冊 Service Worker 更新
     updateSW.current = registerSW({
       onNeedRefresh() {
         setNeedRefresh(true);

@@ -7,9 +7,9 @@ import type {
   NotificationSettings,
 } from './notification.types';
 
-// 標準 API 回應
+// 標準 API 回應（符合後端實際格式）
 export type ApiSuccess<T> = {
-  status: true;
+  success: true;
   message?: string;
   data: T;
 };
@@ -52,18 +52,14 @@ export type ReadAllResponse = ApiSuccess<{
   count: number;
 }>;
 
-// 取得設定回應
-export type GetSettingsResponse = ApiSuccess<{
-  settings: NotificationSettings;
-}>;
+// 取得設定回應（後端回傳 data 直接是 NotificationSettings）
+export type GetSettingsResponse = ApiSuccess<NotificationSettings>;
 
 // 更新設定請求
 export type UpdateSettingsRequest = Partial<NotificationSettings>;
 
 // 更新設定回應
-export type UpdateSettingsResponse = ApiSuccess<{
-  settings: NotificationSettings;
-}>;
+export type UpdateSettingsResponse = ApiSuccess<NotificationSettings>;
 
 // 批次刪除請求/回應
 export type BatchDeleteRequest = { ids: string[] };
@@ -72,3 +68,13 @@ export type BatchDeleteResponse = ApiSuccess<{ deletedCount: number }>;
 // 批次標記已讀請求/回應
 export type BatchMarkAsReadRequest = { ids: string[]; isRead: boolean };
 export type BatchMarkAsReadResponse = ApiSuccess<{ updatedCount: number }>;
+
+// 發送通知回應
+export type SendNotificationResponse = ApiSuccess<{
+  sent: number;
+  failed: number;
+  details: {
+    success: string[];
+    failed: string[];
+  };
+}>;

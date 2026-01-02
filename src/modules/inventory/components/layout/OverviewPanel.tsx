@@ -18,6 +18,7 @@ import {
   selectAllGroups,
   fetchGroups,
 } from '@/modules/groups/store/groupsSlice';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import useFadeInAnimation from '@/shared/hooks/useFadeInAnimation';
 import type { CategoryInfo } from '@/modules/inventory/types';
 import { categories as defaultCategories } from '@/modules/inventory/constants/categories';
@@ -44,6 +45,9 @@ const OverviewPanel: React.FC = () => {
   const dispatch = useDispatch();
   const { groupId } = useParams<{ groupId: string }>();
 
+  // Get active ID from Redux
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+
   // Get groups to derive default ID
   const groups = useSelector(selectAllGroups);
   const firstGroupId = groups[0]?.id;
@@ -58,8 +62,16 @@ const OverviewPanel: React.FC = () => {
 
   // Effect 2: 當 groups 已載入時，載入 settings
   useEffect(() => {
-    // 計算 refrigeratorId
-    const refId = getRefrigeratorId(groupId, groups);
+    // 計算 refrigeratorId: 優先使用 Redux active ID，其次 URL groupId，最後 fallback
+    let refId = activeRefrigeratorId || getRefrigeratorId(groupId, groups);
+
+    // 如果還沒有 refId 但有 groups，自動設定第一個 group 為 active
+    if (!refId && groups.length > 0) {
+      refId = groups[0].id;
+      // 同步到 localStorage，確保其他元件也能取得
+      localStorage.setItem('activeRefrigeratorId', refId);
+      console.log('[Overview] 自動設定 activeRefrigeratorId:', refId);
+    }
 
     // 如果還沒有 refId，不執行
     if (!refId) {
@@ -91,6 +103,26 @@ const OverviewPanel: React.FC = () => {
           defaultCategories.map((c) => [c.id, c]),
         );
 
+        // 取得實際庫存項目來計算各類別數量
+        let categoryCounts: Record<string, number> = {};
+        try {
+          const inventoryResponse = await inventoryApi.getInventory({
+            groupId: refId,
+          });
+          const items = inventoryResponse.data.items || [];
+
+          // 計算每個類別的數量
+          items.forEach((item) => {
+            const cat = item.category;
+            categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+          });
+        } catch (inventoryError) {
+          console.warn(
+            '[Overview] 無法取得庫存數量，使用預設值 0',
+            inventoryError,
+          );
+        }
+
         // 優先使用 settings 內的 categories，若無則 fallback 到 categories API
         let categoryData: CategoryInfo[] = [];
 
@@ -102,7 +134,7 @@ const OverviewPanel: React.FC = () => {
             return {
               id: cat.id,
               title: cat.title,
-              count: 0, // settings 不含 count，預設為 0
+              count: categoryCounts[cat.id] || 0, // 使用實際數量
               imageUrl: defaults?.img || '',
               bgColor: defaults?.bgColor || '',
               slogan: defaults?.slogan || '',
@@ -112,7 +144,10 @@ const OverviewPanel: React.FC = () => {
         } else {
           // Fallback 到 categories API
           const categoriesResponse = await inventoryApi.getCategories(refId);
-          categoryData = categoriesResponse.data.categories;
+          categoryData = categoriesResponse.data.categories.map((cat) => ({
+            ...cat,
+            count: categoryCounts[cat.id] || cat.count || 0,
+          }));
         }
 
         // 如果設定中有 categoryOrder，更新順序
@@ -134,7 +169,7 @@ const OverviewPanel: React.FC = () => {
     };
 
     fetchData();
-  }, [groupId, firstGroupId, dispatch]);
+  }, [groupId, firstGroupId, dispatch, activeRefrigeratorId, groups]);
 
   // 根據 Redux 的 categoryOrder 排序類別（這會在 categoryOrder 變化時自動更新）
   const sortedCategories = useMemo(() => {

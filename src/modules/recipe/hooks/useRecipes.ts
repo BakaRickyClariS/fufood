@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import type { RecipeListItem, RecipeCategory } from '@/modules/recipe/types';
 import { recipeApi } from '@/modules/recipe/services';
 
-export const useRecipes = (category?: RecipeCategory) => {
+export const useRecipes = (category?: RecipeCategory, refrigeratorId?: string) => {
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -11,7 +11,7 @@ export const useRecipes = (category?: RecipeCategory) => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await recipeApi.getRecipes({ category });
+      const data = await recipeApi.getRecipes({ category, refrigeratorId });
       setRecipes(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : '載入食譜失敗');
@@ -22,7 +22,7 @@ export const useRecipes = (category?: RecipeCategory) => {
 
   useEffect(() => {
     fetchRecipes();
-  }, [category]);
+  }, [category, refrigeratorId]);
 
   return { recipes, isLoading, error, refetch: fetchRecipes };
 };

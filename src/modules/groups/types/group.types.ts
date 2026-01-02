@@ -4,8 +4,12 @@
 export type GroupMember = {
   id: string;
   name: string;
-  avatar: string;
+  avatar: string; // 前端顯示用，對應 profilePictureUrl
+  profilePictureUrl?: string; // 後端回傳原始欄位
+  lineId?: string;
   role: 'owner' | 'member';
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 /**
@@ -14,12 +18,13 @@ export type GroupMember = {
 export type Group = {
   id: string;
   name: string;
-  admin?: string;
+  ownerId?: string; // 群組擁有人 ID
+  admin?: string; // 舊欄位，暫時保留相容
   members?: GroupMember[];
   imageUrl?: string;
   plan?: 'free' | 'premium';
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 };
 
 /**

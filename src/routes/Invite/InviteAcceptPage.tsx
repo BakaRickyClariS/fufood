@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { groupsApi } from '@/modules/groups/api';
+import { fetchGroups, selectAllGroups } from '@/modules/groups/store/groupsSlice';
+import { setActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import { useAuth } from '@/modules/auth';
+import { getGroupLimit } from '@/modules/groups/constants/membershipLimits';
 import { Button } from '@/shared/components/ui/button';
 import { Loader2, Users, AlertCircle, CheckCircle } from 'lucide-react';
 import type { InvitationResponse } from '@/modules/groups/types/group.types';
+import type { AppDispatch, RootState } from '@/store';
 
 type InviteStatus =
   | 'checking-auth'
@@ -23,11 +28,22 @@ type InviteStatus =
 const InviteAcceptPage = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const dispatch = useDispatch<AppDispatch>();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  // Get current groups to check limits
+  const currentGroups = useSelector((state: RootState) => selectAllGroups(state));
 
   const [status, setStatus] = useState<InviteStatus>('checking-auth');
   const [invitation, setInvitation] = useState<InvitationResponse | null>(null);
   const [error, setError] = useState<string>('');
+
+  // 步驟 1: 檢查登入狀態
+  useEffect(() => {
+    // 確保已載入群組資料以檢查限制
+    if (isAuthenticated) {
+      dispatch(fetchGroups());
+    }
+  }, [dispatch, isAuthenticated]);
 
   // 步驟 1: 檢查登入狀態
   useEffect(() => {
@@ -80,13 +96,54 @@ const InviteAcceptPage = () => {
   const handleJoin = async () => {
     if (!invitation?.refrigeratorId || !token) return;
 
+    // 檢查群組數量限制
+    const limit = getGroupLimit(user?.membershipTier);
+    if (currentGroups.length >= limit) {
+      // 檢查是否已經是成員（避免重複加入被擋）
+      const isAlreadyMember = currentGroups.some(g => g.id === invitation.refrigeratorId);
+      if (!isAlreadyMember) {
+        setStatus('error');
+        setError(`您的會員方案最多只能加入 ${limit} 個群組。請先升級方案或退出其他群組。`);
+        return;
+      }
+    }
+
     setStatus('joining');
 
     try {
       await groupsApi.join(invitation.refrigeratorId, {
         invitationToken: token,
       });
+      
+      // ✅ 1. 設定活動冰箱為新加入的群組
+      dispatch(setActiveRefrigeratorId(invitation.refrigeratorId));
+      
+      // ✅ 2. 刷新群組列表
+      dispatch(fetchGroups());
+      
       setStatus('success');
+
+      // 發送推播通知 (通知群組其他成員)
+      try {
+        const joinerName = user?.displayName || user?.name || '新成員';
+        import('@/api/services/notification').then(({ notificationService }) => {
+          notificationService.sendNotification({
+            type: 'group',
+            title: '群組成員變動',
+            body: `${joinerName} 已加入群組`,
+            // userIds: [], // 發送給群組所有人 (若未指定 userIds 且有 groupId)
+            groupId: invitation.refrigeratorId,
+            action: {
+              type: 'detail',
+              payload: {
+                refrigeratorId: invitation.refrigeratorId
+              }
+            }
+          }).catch(err => console.error('Failed to send join notification:', err));
+        });
+      } catch (notifyError) {
+        console.error('Notification error:', notifyError);
+      }
 
       // 成功後導向 dashboard
       setTimeout(() => {
@@ -99,26 +156,27 @@ const InviteAcceptPage = () => {
     }
   };
 
+
   // 檢查登入狀態中
   if (status === 'checking-auth' || isAuthLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
         <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="w-8 h-8 animate-spin text-stone-400" />
-          <p className="text-stone-500">檢查登入狀態...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
+          <p className="text-neutral-500">檢查登入狀態...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-stone-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-50 p-4">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6 space-y-6">
         {/* Loading */}
         {status === 'loading' && (
           <div className="flex flex-col items-center space-y-4 py-8">
-            <Loader2 className="w-12 h-12 animate-spin text-[#EE5D50]" />
-            <p className="text-stone-500">驗證邀請中...</p>
+            <Loader2 className="w-12 h-12 animate-spin text-primary-500" />
+            <p className="text-neutral-500">驗證邀請中...</p>
           </div>
         )}
 
@@ -126,20 +184,20 @@ const InviteAcceptPage = () => {
         {status === 'valid' && invitation && (
           <>
             <div className="flex flex-col items-center space-y-4">
-              <div className="w-16 h-16 bg-[#FDE6E3] rounded-full flex items-center justify-center">
-                <Users className="w-8 h-8 text-[#EE5D50]" />
+              <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center">
+                <Users className="w-8 h-8 text-primary-500" />
               </div>
 
-              <h1 className="text-xl font-bold text-stone-900 text-center">
+              <h1 className="text-xl font-bold text-neutral-900 text-center">
                 邀請加入群組
               </h1>
 
               <div className="text-center space-y-1">
-                <p className="text-lg font-semibold text-stone-800">
+                <p className="text-lg font-semibold text-neutral-800">
                   {invitation.refrigeratorName || '我的冰箱'}
                 </p>
                 {invitation.inviterName && (
-                  <p className="text-sm text-stone-500">
+                  <p className="text-sm text-neutral-500">
                     由 {invitation.inviterName} 邀請
                   </p>
                 )}
@@ -148,14 +206,14 @@ const InviteAcceptPage = () => {
 
             <Button
               onClick={handleJoin}
-              className="w-full h-14 bg-[#EE5D50] hover:bg-[#D94A3D] text-white text-lg font-bold rounded-xl"
+              className="w-full h-14 bg-primary-400 hover:bg-primary-500 text-white text-lg font-bold rounded-xl"
             >
               {isAuthenticated ? '確認加入' : '登入並加入'}
             </Button>
 
             <button
               onClick={() => navigate('/')}
-              className="w-full text-center text-stone-500 text-sm hover:text-stone-700"
+              className="w-full text-center text-neutral-500 text-sm hover:text-neutral-700"
             >
               取消
             </button>
@@ -165,8 +223,8 @@ const InviteAcceptPage = () => {
         {/* Joining */}
         {status === 'joining' && (
           <div className="flex flex-col items-center space-y-4 py-8">
-            <Loader2 className="w-12 h-12 animate-spin text-[#EE5D50]" />
-            <p className="text-stone-500">正在加入群組...</p>
+            <Loader2 className="w-12 h-12 animate-spin text-primary-500" />
+            <p className="text-neutral-500">正在加入群組...</p>
           </div>
         )}
 
@@ -176,19 +234,19 @@ const InviteAcceptPage = () => {
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
               <CheckCircle className="w-10 h-10 text-green-500" />
             </div>
-            <h2 className="text-xl font-bold text-stone-900">加入成功！</h2>
-            <p className="text-stone-500">即將跳轉到首頁...</p>
+            <h2 className="text-xl font-bold text-neutral-900">加入成功！</h2>
+            <p className="text-neutral-500">即將跳轉到首頁...</p>
           </div>
         )}
 
         {/* Expired */}
         {status === 'expired' && (
           <div className="flex flex-col items-center space-y-4 py-8">
-            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
-              <AlertCircle className="w-10 h-10 text-amber-500" />
+            <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center">
+              <AlertCircle className="w-10 h-10 text-primary-500" />
             </div>
-            <h2 className="text-xl font-bold text-stone-900">邀請已過期</h2>
-            <p className="text-stone-500 text-center">
+            <h2 className="text-xl font-bold text-neutral-900">邀請已過期</h2>
+            <p className="text-neutral-500 text-center">
               此邀請連結已過期，請聯繫邀請者重新產生邀請
             </p>
             <Button
@@ -204,11 +262,11 @@ const InviteAcceptPage = () => {
         {/* Error */}
         {status === 'error' && (
           <div className="flex flex-col items-center space-y-4 py-8">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-              <AlertCircle className="w-10 h-10 text-red-500" />
+            <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center">
+              <AlertCircle className="w-10 h-10 text-primary-500" />
             </div>
-            <h2 className="text-xl font-bold text-stone-900">邀請無效</h2>
-            <p className="text-stone-500 text-center">{error}</p>
+            <h2 className="text-xl font-bold text-neutral-900">邀請無效</h2>
+            <p className="text-neutral-500 text-center">{error}</p>
             <Button
               onClick={() => navigate('/')}
               variant="outline"

@@ -1,3 +1,5 @@
+import type { ISOTimestamp, UUID } from '@/api/types';
+
 /**
  * 會員等級型別
  */
@@ -25,8 +27,20 @@ export type DietaryPreference = {
   seasoningLevel: SeasoningLevel;
   restrictions: DietaryRestriction[];
 };
-export type ISOTimestamp = string;
-export type UUID = string;
+
+/**
+ * 性別數值列舉（對應後端 API）
+ * @see docs/backend/api_profile_guide.md
+ */
+export const Gender = {
+  NotSpecified: 0,  // 不透露
+  Female: 1,        // 女孩兒
+  Male: 2,          // 男孩紙
+  NonBinary: 3,     // 無性別
+  Other: 4,         // 其他（可自訂）
+} as const;
+
+export type GenderValue = (typeof Gender)[keyof typeof Gender];
 
 export type User = {
   id: UUID;
@@ -34,7 +48,8 @@ export type User = {
   name?: string;
   avatar: string;
   phone?: string;
-  gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
+  gender?: GenderValue; // 0: 不透露, 1: 女, 2: 男, 3: 無性別, 4: 其他
+  customGender?: string | null; // 當 gender 為 4 時的自訂說明
   createdAt: Date;
   updatedAt: Date;
   // LINE 專屬欄位
@@ -78,20 +93,39 @@ export type MockLoginData = {
   displayName: string;
 };
 
-// Profile API 回傳格式
+/**
+ * Profile API 回傳格式
+ * @see docs/backend/api_profile_guide.md
+ */
 export type ProfileData = {
   id: UUID;
   lineId: string;
   name: string;
-  profilePictureUrl: string;
-  // 後端可能也需要回傳這些欄位，假設已支援
-  phone?: string;
-  gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
-  dietaryPreference?: DietaryPreference;
+  profilePictureUrl?: string | null;
+  email?: string | null;
+  preference?: string[] | null;  // 飲食偏好標籤
+  avatar?: string;               // 自訂頭像
+  gender: GenderValue;           // 性別數值（0-4）
+  customGender?: string | null;  // 自訂性別文字（gender=4 時使用）
+  subscriptionTier: number;      // 訂閱等級（0: Free）
   createdAt: ISOTimestamp;
   updatedAt: ISOTimestamp;
 };
 
 export type ProfileResponse = {
   data: ProfileData;
+};
+
+/**
+ * 更新個人資料請求格式（PUT /api/v1/profile/{userId}）
+ * @see docs/backend/api_profile_guide.md
+ */
+export type UpdateProfilePayload = {
+  name: string;                  // 必填，使用者名稱
+  profilePictureUrl?: string;    // 選填，頭像 URL
+  avatar?: string;               // 選填
+  email?: string;                // 選填，電子郵件
+  preference?: string[];         // 選填，飲食偏好標籤陣列
+  gender?: GenderValue;          // 選填，性別數值
+  customGender?: string | null;  // 選填，自訂性別（gender=4 時）
 };

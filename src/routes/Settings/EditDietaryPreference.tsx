@@ -53,9 +53,21 @@ const EditDietaryPreference = () => {
   };
 
   const handleSave = () => {
+    // 將 dietaryPreference 內容轉換成 preference 標籤陣列
+    // 注意：後端 API 的 preference 是字串陣列，需要進行格式轉換
+    const preferenceLabels = [
+      preferences.cookingFrequency,
+      preferences.prepTime,
+      preferences.seasoningLevel,
+      ...preferences.restrictions.filter((r) => r !== 'none'),
+    ];
+
     updateProfileMutation.mutate(
       {
-        dietaryPreference: preferences,
+        data: {
+          name: user?.name || '', // 從 user 物件取得當前名稱
+          preference: preferenceLabels,
+        },
       },
       {
         onSuccess: () => {

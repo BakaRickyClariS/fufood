@@ -3,9 +3,9 @@ import { toast } from 'sonner';
 import { ChevronLeft, Plus, Trash2, Minus } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { usePosts } from '@/modules/planning/hooks/usePosts';
+import { useSharedListItems } from '@/modules/planning/hooks/useSharedListItems';
 import { mediaApi } from '@/modules/media/api/mediaApi';
-import type { ShoppingItem, SharedListPost } from '@/modules/planning/types';
+import type { ShoppingItem, SharedListItem } from '@/modules/planning/types';
 
 const UNITS = [
   '個',
@@ -109,7 +109,8 @@ const UnitSelector = ({
 type PostFormProps = {
   listId?: string;
   mode: 'create' | 'edit';
-  initialData?: SharedListPost | null;
+  initialData?: SharedListItem | null; // Keep for backward compatibility or single item edit
+  initialItems?: SharedListItem[]; // New: support multiple items
   onClose: () => void;
 };
 
@@ -117,17 +118,20 @@ export const PostFormFeature = ({
   listId,
   mode,
   initialData,
+  initialItems,
   onClose,
 }: PostFormProps) => {
-  const { createPost, updatePost } = usePosts(listId);
+  const { createItems, updateItem, deleteItem } = useSharedListItems(listId);
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [content, setContent] = useState('');
+  // Note: content is removed as Item API does not support it
   const [items, setItems] = useState<ShoppingItem[]>([]);
-  const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Track original IDs to detect deletions in edit mode
+  const [originalIds, setOriginalIds] = useState<Set<string>>(new Set());
 
   // Track which item is currently uploading an image
   const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
@@ -139,10 +143,31 @@ export const PostFormFeature = ({
 
   // Initialize data for edit mode or create mode
   useEffect(() => {
-    if (mode === 'edit' && initialData) {
-      setContent(initialData.content || '');
-      setItems(initialData.items || []);
-      setSelectedImages(initialData.images || []);
+    if (mode === 'edit') {
+      let mappedItems: ShoppingItem[] = [];
+
+      if (initialItems && initialItems.length > 0) {
+        mappedItems = initialItems.map((item) => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          imageUrl: item.photoPath || undefined,
+        }));
+      } else if (initialData) {
+        mappedItems = [
+          {
+            id: initialData.id,
+            name: initialData.name,
+            quantity: initialData.quantity,
+            unit: initialData.unit,
+            imageUrl: initialData.photoPath || undefined,
+          },
+        ];
+      }
+
+      setItems(mappedItems);
+      setOriginalIds(new Set(mappedItems.map((i) => i.id)));
     } else if (mode === 'create') {
       // Default empty item for create mode
       setItems([
@@ -153,10 +178,9 @@ export const PostFormFeature = ({
           unit: '',
         },
       ]);
-      setContent('');
-      setSelectedImages([]);
+      setOriginalIds(new Set());
     }
-  }, [mode, initialData]);
+  }, [mode, initialData, initialItems]);
 
   // GSAP Animation
   useGSAP(
@@ -263,12 +287,11 @@ export const PostFormFeature = ({
   const handleSubmit = async () => {
     if (!listId) return;
 
-    // 驗證: 至少要有一個商品 或 有內文
     // Filter out empty items (no name)
     const validItems = items.filter((item) => item.name.trim() !== '');
 
-    if (validItems.length === 0 && content.length === 0) {
-      toast.warning('請至少新增一個商品或填寫說明');
+    if (validItems.length === 0) {
+      toast.warning('請至少新增一個商品');
       return;
     }
 
@@ -297,8 +320,6 @@ export const PostFormFeature = ({
                   `Failed to upload image for item ${item.name}`,
                   error,
                 );
-                // If upload fails, keep the error or allow post without image?
-                // For now, removing the failed image url (which was a blob)
                 processedItems[i] = { ...item, imageUrl: undefined };
                 toast.error(`商品 ${item.name} 圖片上傳失敗`);
               }
@@ -314,21 +335,115 @@ export const PostFormFeature = ({
         await Promise.all(uploadPromises);
       }
 
-      const postData = {
-        listId,
-        content,
-        images: selectedImages,
-        items: processedItems,
-      };
+      if (mode === 'edit') {
+        const currentIds = new Set(processedItems.map((i) => i.id));
 
-      if (mode === 'edit' && initialData) {
-        await updatePost(initialData.id, postData);
+        // 1. Identify Deletions (In original but not in current)
+        const itemsToDelete = Array.from(originalIds).filter(
+          (id) => !currentIds.has(id),
+        );
+
+        // 2. Identify Updates (In original and in current)
+        const itemsToUpdate = processedItems.filter((item) =>
+          originalIds.has(item.id),
+        );
+
+        // 3. Identify Creations (Not in original)
+        const itemsToCreate = processedItems.filter(
+          (item) => !originalIds.has(item.id),
+        );
+
+        const promises: Promise<any>[] = [];
+
+        // Execute Deletes
+        itemsToDelete.forEach((id) => {
+          promises.push(deleteItem(id));
+        });
+
+        // Execute Updates
+        itemsToUpdate.forEach((item) => {
+          // Only update if needed? For now update all common fields
+          promises.push(
+            updateItem(item.id, {
+              name: item.name,
+              quantity: item.quantity,
+              unit: item.unit,
+              photoPath: item.imageUrl,
+            }),
+          );
+        });
+
+        // Execute Creates
+        if (itemsToCreate.length > 0) {
+          const createInputs = itemsToCreate.map((item) => ({
+            name: item.name,
+            quantity: item.quantity,
+            unit: item.unit,
+            photoPath: item.imageUrl,
+          }));
+          promises.push(createItems(createInputs));
+        }
+
+        await Promise.all(promises);
+
+        // 發送更新通知
+        try {
+          const { notificationsApiImpl } = await import(
+            '@/modules/notifications/api/notificationsApiImpl'
+          );
+          await notificationsApiImpl.sendNotification({
+            groupId: listId, // 這裡清單 ID 可對應群組上下文
+            title: '採買清單更新',
+            body: `清單項目已有變動`,
+            type: 'shopping',
+            action: {
+              type: 'shopping-list',
+              payload: { listId },
+            },
+          });
+        } catch (nErr) {
+          console.warn('通知失敗', nErr);
+        }
+
         toast.dismiss(toastId);
         toast.success('更新成功');
       } else {
-        await createPost(postData);
+        // Create mode: Create multiple items
+        const createInputs = processedItems.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          photoPath: item.imageUrl,
+        }));
+        await createItems(createInputs);
+
+        // 發送新增項目的通知
+        try {
+          const { notificationsApiImpl } = await import(
+            '@/modules/notifications/api/notificationsApiImpl'
+          );
+          const firstItem = processedItems[0].name;
+          const msg =
+            processedItems.length > 1
+              ? `已在清單中新增 ${firstItem} 等多項商品`
+              : `已在清單中新增商品：${firstItem}`;
+
+          await notificationsApiImpl.sendNotification({
+            groupId: listId,
+            title: '採買清單新商品',
+            body: msg,
+            type: 'shopping',
+            action: {
+              type: 'shopping-list',
+              payload: { listId },
+            },
+          });
+        } catch (nErr) {
+          console.warn('通知失敗', nErr);
+        }
+
         toast.dismiss(toastId);
-        toast.success('發布成功');
+        toast.success('新增成功');
       }
       handleClose();
     } catch (err) {
@@ -459,13 +574,15 @@ export const PostFormFeature = ({
           </div>
         ))}
 
-        {/* Add Item Button */}
-        <button
-          onClick={handleAddItem}
-          className="w-full py-4 rounded-2xl border-2 border-dashed border-neutral-300 text-neutral-400 flex items-center justify-center gap-2 hover:bg-white/50 active:scale-98 transition-all"
-        >
-          <Plus className="w-6 h-6" />
-        </button>
+        {/* Add Item Button - Only show in CREATE mode */}
+        {mode === 'create' && (
+          <button
+            onClick={handleAddItem}
+            className="w-full py-4 rounded-2xl border-2 border-dashed border-neutral-300 text-neutral-400 flex items-center justify-center gap-2 hover:bg-white/50 active:scale-98 transition-all"
+          >
+            <Plus className="w-6 h-6" />
+          </button>
+        )}
       </div>
 
       {/* Hidden File Input */}
@@ -481,9 +598,7 @@ export const PostFormFeature = ({
       <div className="fixed bottom-0 left-0 right-0 px-4 py-6 bg-white rounded-t-3xl shadow-[0_-4px_10px_rgba(0,0,0,0.1)] z-50">
         <button
           onClick={handleSubmit}
-          disabled={
-            isSubmitting || (items.length === 0 && content.length === 0)
-          }
+          disabled={isSubmitting || items.length === 0}
           className="w-full py-3.5 bg-primary-default text-white rounded-xl font-bold shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-98 transition-all"
         >
           {isSubmitting
@@ -491,8 +606,8 @@ export const PostFormFeature = ({
               ? '發布中...'
               : '更新中...'
             : mode === 'create'
-              ? '加入清單'
-              : '更新清單'}
+              ? '確認新增'
+              : '更新項目'}
         </button>
       </div>
     </div>

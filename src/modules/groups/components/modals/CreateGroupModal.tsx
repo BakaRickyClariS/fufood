@@ -11,6 +11,10 @@ import { Input } from '@/shared/components/ui/input';
 import { ChevronLeft, Check } from 'lucide-react';
 import { useGroupModal } from '../../hooks/useGroupModal';
 
+import { useAuth } from '@/modules/auth';
+import { getGroupLimit } from '@/modules/groups/constants/membershipLimits';
+import { toast } from 'sonner';
+
 // Check available images in source
 import joImg from '@/assets/images/group/jo.png';
 import koImg from '@/assets/images/group/ko.png';
@@ -36,10 +40,12 @@ export const CreateGroupModal: FC<CreateGroupModalProps> = ({
   onClose,
   onBack,
 }) => {
+  const { user } = useAuth();
   const {
     createGroup,
     switchGroup,
     isGroupsLoading: isLoading,
+    groups,
   } = useGroupModal();
 
   const [name, setName] = useState('');
@@ -50,6 +56,13 @@ export const CreateGroupModal: FC<CreateGroupModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
+
+    // 檢查群組數量限制
+    const limit = getGroupLimit(user?.membershipTier);
+    if (groups.length >= limit) {
+      toast.error(`您的會員方案最多只能建立/加入 ${limit} 個群組`);
+      return;
+    }
 
     try {
       const newGroup = await createGroup({

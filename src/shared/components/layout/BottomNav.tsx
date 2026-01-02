@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Home, Grid2x2Plus, Refrigerator, Bell, ScanLine } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/nav-tabs';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useUnreadCount } from '@/modules/notifications/hooks';
 
 export type NavItem = {
   id: string;
@@ -52,7 +53,7 @@ const MobileBottomNav = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  // const cameraControl = useCameraControl(); // Removed Context usage
+  const { unreadCount } = useUnreadCount();
 
   const activeTab = React.useMemo(() => {
     // 1. 嘗試完全匹配
@@ -81,7 +82,7 @@ const MobileBottomNav = ({
     <div className="bottom-nav-wrapper fixed bottom-0 left-0 right-0 z-40">
       {/* 外層容器：陰影 + 圓角只在上方 + 裁切 */}
       <div className="rounded-t-3xl overflow-hidden shadow-[0_-1px_12px_rgba(0,0,0,0.25)]">
-        <div className="bg-white dark:bg-slate-950">
+        <div className="bg-white dark:bg-neutral-900">
           <Tabs
             value={activeTab}
             onValueChange={(value) => {
@@ -91,7 +92,7 @@ const MobileBottomNav = ({
             className="w-full"
           >
             <TabsList
-              className="w-full grid gap-0 rounded-none h-20 bg-white dark:bg-slate-950"
+              className="w-full grid gap-0 rounded-none h-20 bg-white dark:bg-neutral-900"
               style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }}
             >
               {items.map((item) => {
@@ -122,15 +123,21 @@ const MobileBottomNav = ({
                       {/* Icon - Active 時有背景 */}
                       <div
                         className={`
-                          flex items-center justify-center w-full rounded-xl p-2 transition-all duration-200
+                          relative flex items-center justify-center w-full rounded-xl p-2 transition-all duration-200
                           ${
                             isActive
                               ? 'bg-primary-100 dark:bg-primary-900 text-primary-500 dark:text-primary-200'
-                              : 'bg-transparent text-gray-600 dark:text-gray-400'
+                              : 'bg-transparent text-neutral-600 dark:text-neutral-400'
                           }
                         `}
                       >
                         {item.icon}
+                        {/* 通知紅點 Badge */}
+                        {item.id === 'notifications' && unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-primary-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                            {unreadCount > 99 ? '99+' : unreadCount}
+                          </span>
+                        )}
                       </div>
 
                       {/* 文字 - 只改顏色，沒有背景 */}
@@ -141,7 +148,7 @@ const MobileBottomNav = ({
                             ${
                               isActive
                                 ? 'text-primary-500 dark:text-primary-200'
-                                : 'text-gray-600 dark:text-gray-400'
+                                : 'text-neutral-600 dark:text-neutral-400'
                             }
                           `}
                         >

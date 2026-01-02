@@ -7,7 +7,7 @@
  * @deprecated 建議直接使用 '@/shared/utils/identity' 模組
  */
 
-import { identity } from '@/shared/utils/identity';
+// import { identity } from '@/shared/utils/identity';
 
 /**
  * 從 localStorage 取得認證 token
@@ -15,22 +15,13 @@ import { identity } from '@/shared/utils/identity';
  * @deprecated 請使用 identity.getAuthToken()
  */
 export const getAuthToken = (): string | null => {
-  return identity.getAuthToken();
+  return null;
 };
 
-/**
- * 儲存認證 token 到 localStorage
- * @param token - 要儲存的 token 字串
- * @deprecated 請使用 identity.setAuthToken()
- */
-export const setAuthToken = (token: string): void => {
-  identity.setAuthToken(token);
+export const setAuthToken = (): void => {
+  // no-op
 };
 
-/**
- * 從 localStorage 移除認證 token
- * @deprecated 請使用 identity.clearAuthToken()
- */
 export const removeAuthToken = (): void => {
-  identity.clearAuthToken();
+  // no-op
 };

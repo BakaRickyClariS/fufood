@@ -18,11 +18,14 @@ export const useSharedLists = (
 
   // Status 計算邏輯
   const computeStatus = (startsAt: string): SharedListStatus => {
-    const start = new Date(startsAt).getTime();
-    const now = new Date().getTime();
-    // 預定時間已過 => Completed
-    // 預定時間未到 => In-Progress
-    return start < now ? 'completed' : 'in-progress';
+    const startDate = new Date(startsAt);
+    // 設定為當天 23:59:59
+    startDate.setHours(23, 59, 59, 999);
+
+    const now = new Date();
+
+    // 只有當現在時間超過 startsAt 當天結束時（即隔天）才標記為已完成
+    return now.getTime() > startDate.getTime() ? 'completed' : 'in-progress';
   };
 
   const fetchLists = useCallback(async () => {
@@ -73,6 +76,29 @@ export const useSharedLists = (
         ...newList,
         status: computeStatus(newList.startsAt),
       };
+
+      // 發送通知給群組成員
+      try {
+        const { notificationsApiImpl } = await import(
+          '@/modules/notifications/api/notificationsApiImpl'
+        );
+        await notificationsApiImpl.sendNotification({
+          groupId: refrigeratorId,
+          title: '新增共享清單',
+          body: `已建立新清單：${input.title}`,
+          type: 'shopping',
+          action: {
+            type: 'shopping-list',
+            payload: {
+              refrigeratorId: refrigeratorId,
+              listId: newList.id,
+            },
+          },
+        });
+      } catch (notifyError) {
+        console.warn('通知發送失敗:', notifyError);
+      }
+
       setLists((prev) => [processedList, ...prev]);
       return processedList;
     } catch (err) {

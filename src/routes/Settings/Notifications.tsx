@@ -1,47 +1,89 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ComponentHeader from '@/modules/settings/components/SimpleHeader';
-import { Switch } from '@/shared/components/ui/switch'; // Will need to check if Switch component exists
+import { Switch } from '@/shared/components/ui/switch';
+import {
+  useNotificationSettingsQuery,
+  useUpdateNotificationSettingsMutation,
+} from '@/modules/notifications/api/queries';
+import { useFCMContext } from '@/shared/providers/FCMProvider';
+import type { NotificationSettings } from '@/modules/notifications/types';
+import { useEffect, useState } from 'react';
 
-type NotificationSetting = {
-  id: string;
+type SettingItem = {
+  id: keyof NotificationSettings;
   label: string;
   description: string;
-  enabled: boolean;
 };
 
-const MOCK_SETTINGS: NotificationSetting[] = [
+const SETTING_ITEMS: SettingItem[] = [
   {
-    id: 'push',
+    id: 'notifyPush',
     label: '推播通知',
     description: '接收應用程式的即時推播訊息',
-    enabled: true,
   },
   {
-    id: 'marketing',
+    id: 'notifyMarketing',
     label: '優惠與活動',
     description: '接收最新優惠與活動資訊',
-    enabled: false,
   },
   {
-    id: 'expiry',
+    id: 'notifyExpiry',
     label: '即將過期提醒',
     description: '當食材即將過期時傳送提醒',
-    enabled: true,
   },
 ];
 
 const Notifications = () => {
   const navigate = useNavigate();
-  const [settings, setSettings] = useState(MOCK_SETTINGS);
+  const { data: response, isLoading } = useNotificationSettingsQuery();
+  const updateSettings = useUpdateNotificationSettingsMutation();
+  // 根據 Code Review 建議，改用 useFCMContext 統一 FCM 來源
+  const { permission, requestPermission } = useFCMContext();
+  const [localSettings, setLocalSettings] = useState<
+    Partial<NotificationSettings>
+  >({});
 
-  const handleToggle = (id: string) => {
-    setSettings((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, enabled: !item.enabled } : item,
-      ),
+  // Sync server data to local state
+  useEffect(() => {
+    // API 回傳格式: { success: boolean, data: NotificationSettings }
+    const settings = response?.data;
+    if (settings) {
+      setLocalSettings(settings);
+    }
+  }, [response]);
+
+  const handleToggle = async (
+    id: keyof NotificationSettings,
+    currentVal: boolean,
+  ) => {
+    const nextVal = !currentVal;
+
+    // 特殊邏輯：當開啟「推播通知」時
+    if (id === 'notifyPush' && nextVal === true) {
+      if (permission !== 'granted') {
+        // 改用 requestPermission 並根據回傳值判斷
+        const token = await requestPermission();
+        // 若使用者拒絕或失敗（token 為 null），則不更新開關
+        if (!token) return;
+      }
+    }
+
+    // 樂觀更新 UI
+    setLocalSettings((prev) => ({ ...prev, [id]: nextVal }));
+
+    // 更新後端
+    updateSettings.mutate(
+      { [id]: nextVal },
+      {
+        onError: () => {
+          // 失敗復原
+          setLocalSettings((prev) => ({ ...prev, [id]: currentVal }));
+        },
+      },
     );
   };
+
+  const settings = localSettings as NotificationSettings;
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
@@ -49,27 +91,33 @@ const Notifications = () => {
 
       <div className="max-w-layout-container mx-auto px-4 py-6 space-y-4">
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          {settings.map((item, index) => (
-            <div
-              key={item.id}
-              className={`p-4 flex items-center justify-between ${
-                index !== settings.length - 1
-                  ? 'border-b border-neutral-100'
-                  : ''
-              }`}
-            >
-              <div className="flex-1 pr-4">
-                <h3 className="font-bold text-neutral-800">{item.label}</h3>
-                <p className="text-xs text-neutral-500 mt-0.5">
-                  {item.description}
-                </p>
+          {isLoading ? (
+            <div className="p-4 text-center text-gray-400">Loading...</div>
+          ) : (
+            SETTING_ITEMS.map((item, index) => (
+              <div
+                key={item.id}
+                className={`p-4 flex items-center justify-between ${
+                  index !== SETTING_ITEMS.length - 1
+                    ? 'border-b border-neutral-100'
+                    : ''
+                }`}
+              >
+                <div className="flex-1 pr-4">
+                  <h3 className="font-bold text-neutral-800">{item.label}</h3>
+                  <p className="text-xs text-neutral-500 mt-0.5">
+                    {item.description}
+                  </p>
+                </div>
+                <Switch
+                  checked={!!settings?.[item.id]}
+                  onCheckedChange={() =>
+                    handleToggle(item.id, !!settings?.[item.id])
+                  }
+                />
               </div>
-              <Switch
-                checked={item.enabled}
-                onCheckedChange={() => handleToggle(item.id)}
-              />
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         <p className="text-xs text-neutral-400 px-2 leading-relaxed">
