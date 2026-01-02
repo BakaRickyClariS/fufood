@@ -202,12 +202,23 @@ export const useFCM = ({
           // 呼叫自訂回調
           onMessageReceived?.(payload);
 
-          // 顯示 Toast 通知
+          // 顯示通知
           if (payload?.notification) {
             const { title, body } = payload.notification;
+
+            // 1. 顯示 Toast 通知（App 內）
             toast.success(title || 'FuFood 通知', {
               description: body,
             });
+
+            // 2. 同時彈出系統通知（像背景一樣）
+            if (Notification.permission === 'granted') {
+              new Notification(title || 'FuFood 通知', {
+                body: body,
+                icon: '/pwa-192x192.png',
+                data: payload.data,
+              });
+            }
           }
         });
       } catch (err) {
