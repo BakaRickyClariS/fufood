@@ -29,7 +29,6 @@ type NotificationTabId = NotificationCategory;
 
 const NOTIFICATION_TABS: { id: NotificationTabId; label: string }[] = [
   { id: 'stock', label: '食材管家' },
-  { id: 'inspiration', label: '靈感生活' },
   { id: 'official', label: '官方公告' },
 ];
 
