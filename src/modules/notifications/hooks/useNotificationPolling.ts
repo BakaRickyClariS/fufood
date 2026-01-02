@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { notificationKeys } from '../api/queries';
-import { isIOS } from '@/shared/utils/deviceUtils';
+import { toast } from 'sonner';
+import { notificationKeys, useNotificationsQuery } from '../api/queries';
 
 type UseNotificationPollingOptions = {
   /** 輪詢間隔（毫秒），預設 30 秒 */
@@ -11,10 +11,10 @@ type UseNotificationPollingOptions = {
 };
 
 /**
- * iOS In-App 通知輪詢 Hook
+ * In-App 通知輪詢 Hook
  *
- * 在 iOS 上每隔固定時間自動刷新通知列表，
- * 作為不支援 FCM 背景推播的替代方案。
+ * 當 App 在前景時，每隔固定時間檢查新通知，
+ * 並以 Toast 方式顯示新收到的通知。
  *
  * @example
  * ```tsx
@@ -28,19 +28,75 @@ export const useNotificationPolling = ({
 }: UseNotificationPollingOptions = {}) => {
   const queryClient = useQueryClient();
   const intervalRef = useRef<number | null>(null);
+  const lastNotificationIdRef = useRef<string | null>(null);
 
-  const refetchNotifications = useCallback(() => {
-    queryClient.invalidateQueries({
+  // 取得通知列表
+  const { data } = useNotificationsQuery();
+
+  // 記錄最新的通知 ID，用於檢測新通知
+  useEffect(() => {
+    if (data?.data?.items?.[0]?.id && !lastNotificationIdRef.current) {
+      lastNotificationIdRef.current = data.data.items[0].id;
+    }
+  }, [data?.data?.items]);
+
+  const refetchNotifications = useCallback(async () => {
+    // 刷新通知列表
+    await queryClient.invalidateQueries({
       queryKey: notificationKeys.lists(),
     });
   }, [queryClient]);
 
-  useEffect(() => {
-    // 只在 iOS 且 enabled 時啟用輪詢
-    const shouldPoll = isIOS() && enabled;
+  // 檢查是否有新通知並顯示 Toast
+  const checkAndShowNewNotifications = useCallback(() => {
+    const items = data?.data?.items;
+    if (!items || items.length === 0) return;
 
-    if (!shouldPoll) {
-      // 清理既有的 interval
+    const latestId = items[0].id;
+
+    // 如果有新通知（ID 不同且未讀）
+    if (
+      lastNotificationIdRef.current &&
+      latestId !== lastNotificationIdRef.current
+    ) {
+      // 找出所有新的未讀通知
+      const newNotifications = items.filter(
+        (n) =>
+          !n.isRead &&
+          new Date(n.createdAt) >
+            new Date(
+              items.find((i) => i.id === lastNotificationIdRef.current)
+                ?.createdAt || 0,
+            ),
+      );
+
+      // 顯示 Toast（最多顯示 3 個）
+      newNotifications.slice(0, 3).forEach((notification) => {
+        toast.info(notification.title, {
+          description: notification.message,
+          duration: 5000,
+        });
+      });
+
+      console.log(
+        `[NotificationPolling] 🔔 發現 ${newNotifications.length} 個新通知`,
+      );
+    }
+
+    // 更新最後的通知 ID
+    lastNotificationIdRef.current = latestId;
+  }, [data?.data?.items]);
+
+  // 當資料更新時檢查新通知
+  useEffect(() => {
+    if (enabled && data?.data?.items) {
+      checkAndShowNewNotifications();
+    }
+  }, [enabled, data?.data?.items, checkAndShowNewNotifications]);
+
+  // 定時輪詢
+  useEffect(() => {
+    if (!enabled) {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -48,10 +104,7 @@ export const useNotificationPolling = ({
       return;
     }
 
-    console.log('[NotificationPolling] 📱 iOS 偵測，啟用 In-App 輪詢');
-
-    // 立即執行一次
-    refetchNotifications();
+    console.log('[NotificationPolling] 📱 啟用 In-App 輪詢通知');
 
     // 設定定時輪詢
     intervalRef.current = window.setInterval(() => {
