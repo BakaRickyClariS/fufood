@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/modules/auth';
 import type { UserProfile } from '@/modules/settings/types/settings.types';
 import { getUserAvatarUrl } from '@/shared/utils/avatarUtils';
+import { useFCMContext } from '@/shared/providers/FCMProvider';
 
 // Components
 import ProfileSection from '@/modules/settings/components/ProfileSection';
@@ -14,6 +15,7 @@ import { GroupApiTest } from '@/modules/groups/components/debug/GroupApiTest';
 
 const SettingsPage = () => {
   const { user, logout } = useAuth();
+  const { unregisterToken } = useFCMContext();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -30,6 +32,8 @@ const SettingsPage = () => {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
     try {
+      // 登出前先解除 FCM Token 註冊
+      await unregisterToken();
       await logout();
       navigate('/auth/login', { replace: true });
     } catch (error) {
@@ -57,8 +61,30 @@ const SettingsPage = () => {
           isLoggingOut={isLoggingOut}
         />
 
-        {/* 開發測試用：群組 API 測試按鈕 */}
-        {import.meta.env.DEV && <GroupApiTest />}
+        {/* 測試通知按鈕 */}
+        <div className="flex flex-col gap-2">
+          {import.meta.env.DEV && (
+            <button
+              onClick={async () => {
+                if (Notification.permission === 'granted') {
+                  const reg = await navigator.serviceWorker.ready;
+                  reg.showNotification('FuFood 測試通知', {
+                    body: '這是一條測試用的背景通知 🔔',
+                    icon: '/pwa-192x192.png',
+                  });
+                } else {
+                  alert('請先開啟通知權限');
+                }
+              }}
+              className="w-full bg-blue-100 text-blue-600 py-3 rounded-xl font-bold"
+            >
+              測試背景通知 (Service Worker)
+            </button>
+          )}
+
+          {/* 開發測試用：群組 API 測試按鈕 */}
+          {import.meta.env.DEV && <GroupApiTest />}
+        </div>
       </div>
     </div>
   );

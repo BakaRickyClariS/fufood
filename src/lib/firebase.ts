@@ -68,3 +68,5 @@ export const onMessageListener = (callback: (payload: any) => void) => {
     });
   }
 };
+
+export { messaging };
