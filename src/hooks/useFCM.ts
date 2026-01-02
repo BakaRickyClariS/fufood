@@ -60,8 +60,10 @@ export const useFCM = ({
   const [error, setError] = useState<string | null>(null);
   const [isRegistered, setIsRegistered] = useState(false);
 
-  // 避免重複初始化
-  const initRef = useRef(false);
+  // 避免重複請求權限
+  const permissionRequestedRef = useRef(false);
+  // 避免重複自動取得 Token
+  const tokenFetchedRef = useRef(false);
 
   // 檢查瀏覽器支援
   const isSupported =
@@ -226,12 +228,13 @@ export const useFCM = ({
       autoRequest &&
       userId &&
       permission === 'default' &&
-      !initRef.current &&
+      !permissionRequestedRef.current &&
       isSupported
     ) {
-      initRef.current = true;
+      permissionRequestedRef.current = true;
       // 延遲 3 秒避免太突兀
       const timer = setTimeout(() => {
+        console.log('[useFCM] 自動請求通知權限...');
         requestPermission();
       }, 3000);
       return () => clearTimeout(timer);
@@ -249,10 +252,10 @@ export const useFCM = ({
       permission === 'granted' &&
       !token &&
       !isLoading &&
-      !initRef.current &&
+      !tokenFetchedRef.current &&
       isSupported
     ) {
-      initRef.current = true;
+      tokenFetchedRef.current = true;
       console.log('[useFCM] 權限已授權，自動取得 Token...');
       requestPermission();
     }
