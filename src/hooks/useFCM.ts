@@ -234,7 +234,7 @@ export const useFCM = ({
   }, [isSupported, permission, onMessageReceived]);
 
   /**
-   * 自動請求權限（可選）
+   * 自動請求權限（當 permission === 'default' 時）
    */
   useEffect(() => {
     if (
@@ -252,6 +252,34 @@ export const useFCM = ({
       return () => clearTimeout(timer);
     }
   }, [autoRequest, userId, permission, isSupported, requestPermission]);
+
+  /**
+   * 當權限已經是 granted 但還沒有 token 時，自動取得 Token
+   * 這處理了用戶之前已授權但 Token 過期/更新的情況
+   */
+  useEffect(() => {
+    if (
+      autoRequest &&
+      userId &&
+      permission === 'granted' &&
+      !token &&
+      !isLoading &&
+      !initRef.current &&
+      isSupported
+    ) {
+      initRef.current = true;
+      console.log('[useFCM] 權限已授權，自動取得 Token...');
+      requestPermission();
+    }
+  }, [
+    autoRequest,
+    userId,
+    permission,
+    token,
+    isLoading,
+    isSupported,
+    requestPermission,
+  ]);
 
   /**
    * userId 變更時重新註冊 Token
