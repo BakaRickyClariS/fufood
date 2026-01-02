@@ -13,6 +13,77 @@ import OtherSettingsList from '@/modules/settings/components/OtherSettingsList';
 import LogoutSection from '@/modules/settings/components/LogoutSection';
 import { GroupApiTest } from '@/modules/groups/components/debug/GroupApiTest';
 
+/** FCM 狀態檢視按鈕 */
+const FCMStatusButton = () => {
+  const fcm = useFCMContext();
+  const [showStatus, setShowStatus] = useState(false);
+
+  return (
+    <div className="bg-amber-50 rounded-xl p-4">
+      <button
+        onClick={() => setShowStatus(!showStatus)}
+        className="w-full bg-amber-100 text-amber-700 py-3 rounded-xl font-bold"
+      >
+        {showStatus ? '隱藏 FCM 狀態' : '檢視 FCM 狀態'}
+      </button>
+      {showStatus && (
+        <div className="mt-3 text-sm space-y-2 bg-white p-3 rounded-lg">
+          <div className="flex justify-between">
+            <span className="text-gray-500">瀏覽器支援</span>
+            <span
+              className={fcm.isSupported ? 'text-green-600' : 'text-red-600'}
+            >
+              {fcm.isSupported ? '✅ 支援' : '❌ 不支援'}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-500">通知權限</span>
+            <span
+              className={
+                fcm.permission === 'granted'
+                  ? 'text-green-600'
+                  : 'text-amber-600'
+              }
+            >
+              {fcm.permission === 'granted'
+                ? '✅ 已允許'
+                : fcm.permission === 'denied'
+                  ? '❌ 已拒絕'
+                  : '⏳ 尚未請求'}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-500">Token 已註冊後端</span>
+            <span
+              className={fcm.isRegistered ? 'text-green-600' : 'text-amber-600'}
+            >
+              {fcm.isRegistered ? '✅ 已註冊' : '⏳ 尚未註冊'}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-500">FCM Token</span>
+            <span className="text-gray-700 text-xs max-w-[150px] truncate">
+              {fcm.token ? fcm.token.substring(0, 20) + '...' : '無'}
+            </span>
+          </div>
+          {fcm.error && (
+            <div className="text-red-500 text-xs mt-2">錯誤：{fcm.error}</div>
+          )}
+          {!fcm.isRegistered && fcm.permission === 'granted' && (
+            <button
+              onClick={() => fcm.requestPermission()}
+              disabled={fcm.isLoading}
+              className="w-full mt-2 bg-blue-500 text-white py-2 rounded-lg text-sm"
+            >
+              {fcm.isLoading ? '處理中...' : '重新取得 Token'}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const SettingsPage = () => {
   const { user, logout } = useAuth();
   const { unregisterToken } = useFCMContext();
@@ -81,6 +152,9 @@ const SettingsPage = () => {
               測試背景通知 (Service Worker)
             </button>
           )}
+
+          {/* FCM 狀態檢視按鈕 */}
+          {import.meta.env.DEV && <FCMStatusButton />}
 
           {/* 開發測試用：群組 API 測試按鈕 */}
           {import.meta.env.DEV && <GroupApiTest />}
