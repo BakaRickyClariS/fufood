@@ -7,13 +7,13 @@ import type { NotificationsApi } from './notificationsApi';
 import { notificationsMockApi } from './mock/notificationsMockApi';
 
 // TODO: 實作真實 API 時取消註解
-// import { notificationsApiImpl } from './notificationsApiImpl';
+import { notificationsApiImpl } from './notificationsApiImpl';
 
 const useMockApi = import.meta.env.VITE_USE_MOCK_API === 'true';
 
 export const notificationsApi: NotificationsApi = useMockApi
   ? notificationsMockApi
-  : notificationsMockApi; // TODO: 替換為 notificationsApiImpl
+  : notificationsApiImpl;
 
 export * from './notificationsApi';
 export * from './queries';

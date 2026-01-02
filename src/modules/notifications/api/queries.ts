@@ -154,3 +154,18 @@ export const useUpdateNotificationSettingsMutation = () => {
     },
   });
 };
+
+/**
+ * 發送通知 Mutation
+ */
+export const useSendNotificationMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: notificationsApi.sendNotification,
+    onSuccess: () => {
+      // 發送成功後，強制刷新通知列表，讓使用者能看到剛發出的通知 (如果發給自己的話)
+      queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
+    },
+  });
+};

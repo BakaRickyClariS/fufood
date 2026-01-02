@@ -29,7 +29,6 @@ type NotificationTabId = NotificationCategory;
 
 const NOTIFICATION_TABS: { id: NotificationTabId; label: string }[] = [
   { id: 'stock', label: '食材管家' },
-  { id: 'inspiration', label: '靈感生活' },
   { id: 'official', label: '官方公告' },
 ];
 
@@ -113,28 +112,31 @@ const NotificationsPage = () => {
       markAsRead.mutate({ id: notification.id, isRead: true });
     }
 
-    // 根據 actionType 開啟 Modal 或跳轉
-    switch (notification.actionType) {
+    // 根據 action.type 開啟 Modal 或跳轉
+    const actionType = notification.action?.type;
+    const actionPayload = notification.action?.payload;
+
+    switch (actionType) {
       case 'inventory':
-        if (notification.actionPayload?.itemId) {
-          setOpenItemId(notification.actionPayload.itemId);
+        if (actionPayload?.itemId) {
+          setOpenItemId(actionPayload.itemId);
         } else {
           navigate('/inventory');
         }
         break;
 
       case 'recipe':
-        if (notification.actionPayload?.recipeId) {
-          setOpenRecipeId(notification.actionPayload.recipeId);
+        if (actionPayload?.recipeId) {
+          setOpenRecipeId(actionPayload.recipeId);
         } else {
           navigate('/planning?tab=recipes');
         }
         break;
 
       case 'shopping-list':
-        if (notification.actionPayload?.listId) {
+        if (actionPayload?.listId) {
           navigate('/planning?tab=shopping', {
-            state: { openListId: notification.actionPayload.listId },
+            state: { openListId: actionPayload.listId },
           });
         } else {
           navigate('/planning?tab=shopping');
@@ -237,7 +239,7 @@ const NotificationsPage = () => {
                 id={item.id}
                 type={item.type}
                 title={item.title}
-                description={item.description}
+                message={item.message}
                 isRead={item.isRead}
                 onClick={() => handleNotificationClick(item)}
                 category={activeTab}

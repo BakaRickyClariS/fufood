@@ -1,0 +1,28 @@
+name: Frontend Release Announcement
+
+on:
+  push:
+    branches:
+      - main
+      - qa # 新增對 qa 分支的監聽
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Release Notification
+        run: |
+          # 根據推送的分支決定顯示的環境名稱
+          ENVIRONMENT="正式版"
+          if [[ "${{ github.ref }}" == "refs/heads/qa" ]]; then
+            ENVIRONMENT="測試版 (QA)"
+          fi
+
+          curl -X POST "https://gemini-ai-recipe-gen-mvp.vercel.app/api/v1/admin/announcements/release" \
+          -H "Content-Type: application/json" \
+          -H "X-Deploy-Secret: ${{ secrets.DEPLOY_SECRET }}" \
+          -d "{
+            \"version\": \"FE-${{ github.sha }}\",
+            \"releaseNotes\": \"🚀 $ENVIRONMENT 更新：${{ github.event.head_commit.message }}\",
+            \"forceUpdate\": false
+          }"

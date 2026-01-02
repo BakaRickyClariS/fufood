@@ -7,11 +7,11 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import type { NotificationType, NotificationCategory } from '../../types';
 
-export interface NotificationItemProps {
+export type NotificationItemProps = {
   id: string;
   type: NotificationType;
   title: string;
-  description: string;
+  message: string; // 後端使用 message 而非 description
   isRead?: boolean;
   onClick?: () => void;
   // New props
@@ -19,12 +19,12 @@ export interface NotificationItemProps {
   isEditMode?: boolean;
   isSelected?: boolean;
   onToggleSelect?: () => void;
-}
+};
 
 export const NotificationItem = ({
   type,
   title,
-  description,
+  message,
   isRead,
   onClick,
   category,
@@ -48,10 +48,14 @@ export const NotificationItem = ({
 
   const getTagStyle = (type: NotificationType) => {
     switch (type) {
-      case 'stock':
+      case 'inventory':
         return 'bg-red-100 text-red-700';
-      case 'shared':
-        return 'bg-red-100 text-red-700';
+      case 'group':
+        return 'bg-blue-100 text-blue-700';
+      case 'shopping':
+        return 'bg-orange-100 text-orange-700';
+      case 'recipe':
+        return 'bg-green-100 text-green-700';
       case 'system':
       default:
         return 'bg-gray-100 text-gray-700';
@@ -60,10 +64,14 @@ export const NotificationItem = ({
 
   const getTagLabel = (type: NotificationType) => {
     switch (type) {
-      case 'stock':
+      case 'inventory':
         return '庫存';
-      case 'shared':
+      case 'group':
+        return '群組';
+      case 'shopping':
         return '共享';
+      case 'recipe':
+        return '食譜';
       case 'system':
         return '系統';
       default:
@@ -116,7 +124,7 @@ export const NotificationItem = ({
           {title}
         </h3>
         <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
-          {description}
+          {message}
         </p>
       </div>
 

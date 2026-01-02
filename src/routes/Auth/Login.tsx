@@ -120,20 +120,28 @@ const Login = () => {
       (window.navigator as unknown as { standalone?: boolean }).standalone ===
         true;
 
-    // 檢測是否為移動裝置（移動裝置 popup 體驗較差，建議用 redirect）
+    // 檢測是否為 iOS
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    // 檢測是否為移動裝置
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     // 判斷是否使用 redirect 模式
     // 1. 環境變數強制指定 redirect
-    // 2. auto 模式下：PWA standalone 或移動裝置都使用 redirect
+    // 2. auto 模式下：
+    //    - iOS PWA：使用 popup（redirect 在 iOS PWA 會有問題）
+    //    - 其他 PWA standalone 或移動裝置：使用 redirect
+    const isIOSPWA = isIOS && isPWAStandalone;
     const useRedirect =
       loginMode === 'redirect' ||
-      (loginMode === 'auto' && (isPWAStandalone || isMobile));
+      (loginMode === 'auto' && !isIOSPWA && (isPWAStandalone || isMobile));
 
     // 除錯訊息（可在瀏覽器 Console 查看）
     console.log('[LINE Login]', {
       loginMode,
       isPWAStandalone,
+      isIOS,
+      isIOSPWA,
       isMobile,
       useRedirect,
     });

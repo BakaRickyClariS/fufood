@@ -14,9 +14,16 @@ import type {
   UpdateSettingsResponse,
   BatchDeleteResponse,
   BatchMarkAsReadResponse,
+  SendNotificationRequest, // Added
+  SendNotificationResponse, // Added
 } from '../types';
 
 export type NotificationsApi = {
+  // 發送通知 (新增)
+  sendNotification: (
+    data: SendNotificationRequest,
+  ) => Promise<SendNotificationResponse>;
+
   // 取得通知列表
   getNotifications: (
     params?: GetNotificationsRequest,

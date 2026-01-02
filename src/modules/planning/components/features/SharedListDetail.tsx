@@ -23,7 +23,7 @@ export const SharedListDetail = ({ listId }: SharedListDetailProps) => {
     items,
     isLoading: itemsLoading,
     deleteItem,
-  } = useSharedListItems(listId);
+  } = useSharedListItems(listId, list?.refrigeratorId);
   const { members } = useGroupMembers(list?.refrigeratorId || '', currentUser ? {
     name: currentUser.displayName || 'Me', // Fallback to avoid undefined
     avatar: currentUser.avatar || '',
