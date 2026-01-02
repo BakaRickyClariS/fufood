@@ -74,6 +74,8 @@ export const useFCM = ({
 
   /**
    * 註冊 Token 到後端
+   * 注意：這裡需要明確傳入真正的 userId，因為 aiApi 預設會用 identity.getUserId()
+   * 但那個函式回傳的是群組 ID，不是用戶 ID
    */
   const registerTokenToBackend = useCallback(
     async (fcmToken: string): Promise<boolean> => {
@@ -83,12 +85,21 @@ export const useFCM = ({
       }
 
       try {
-        await aiApi.post('/notifications/token', {
-          fcmToken,
-          platform: detectPlatform(),
-        });
+        // 明確傳入 X-User-Id header，覆蓋 aiApi 預設的群組 ID
+        await aiApi.post(
+          '/notifications/token',
+          {
+            fcmToken,
+            platform: detectPlatform(),
+          },
+          {
+            headers: {
+              'X-User-Id': userId, // 使用真正的用戶 ID
+            },
+          },
+        );
 
-        console.log('[useFCM] ✅ Token 已註冊到後端');
+        console.log('[useFCM] ✅ Token 已註冊到後端，userId:', userId);
         setIsRegistered(true);
         return true;
       } catch (err) {
@@ -288,11 +299,15 @@ export const useFCM = ({
     }
 
     try {
+      // 明確傳入 X-User-Id header，使用真正的用戶 ID
       await aiApi.delete('/notifications/token', {
         body: { fcmToken: token },
+        headers: {
+          'X-User-Id': userId,
+        },
       });
 
-      console.log('[useFCM] ✅ Token 已從後端刪除');
+      console.log('[useFCM] ✅ Token 已從後端刪除，userId:', userId);
       setIsRegistered(false);
       return true;
     } catch (err) {
