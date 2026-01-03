@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { recipeApi } from '@/modules/recipe/services';
 
 export const useFavorite = () => {
@@ -8,6 +9,12 @@ export const useFavorite = () => {
     recipeId: string,
     currentFavorite?: boolean,
   ) => {
+    // 檢查是否為 Mock 資料
+    if (recipeId.startsWith('ai-mock-')) {
+      toast.error('範例食譜無法加入收藏，請使用正式生成的食譜');
+      return Boolean(currentFavorite);
+    }
+
     setIsToggling(true);
     try {
       const nextFavorite =

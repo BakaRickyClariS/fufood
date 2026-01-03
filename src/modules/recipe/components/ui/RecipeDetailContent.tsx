@@ -51,6 +51,13 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
 }) => {
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    // 檢查是否為 Mock 資料
+    if (recipe.id.startsWith('ai-mock-')) {
+      toast.error('範例食譜無法加入收藏，請使用正式生成的食譜');
+      return;
+    }
+
     try {
       const { isFavorite } = await recipeApi.toggleFavorite(
         recipe.id,
@@ -82,14 +89,10 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
         }}
       />
 
-
       {/* 圖片區域 */}
       <div className="relative aspect-square md:aspect-21/9 md:h-auto overflow-hidden bg-neutral-100">
         <img
-          src={
-            recipe.imageUrl ||
-            'https://placehold.co/600x400?text=No+Image'
-          }
+          src={recipe.imageUrl || 'https://placehold.co/600x400?text=No+Image'}
           alt={recipe.name}
           className="w-full h-full object-cover"
         />
