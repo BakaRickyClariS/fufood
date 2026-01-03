@@ -43,10 +43,7 @@ export async function getUserProfile(): Promise<User | null> {
     return null;
   }
 
-  // 檢查是否可以發送認證請求（使用共用模組）
-  if (!identity.canMakeAuthenticatedRequest()) {
-    return null;
-  }
+
 
   // 檢查 localStorage 中的 user 資料 (LINE 登入時會存)
   const userStr = localStorage.getItem('user');
@@ -94,10 +91,7 @@ export async function getUserProfile(): Promise<User | null> {
   } catch (error) {
     const is401 = error instanceof Error && error.message.includes('401');
 
-    if (is401) {
-      // [Circuit Breaker] 如果收到 401，標記為已登出，防止 useQuery 無限重試
-      sessionStorage.setItem('logged_out', 'true');
-    } else {
+    if (!is401) {
       console.warn('Profile API 失敗，嘗試 Mock 備援:', error);
     }
   }

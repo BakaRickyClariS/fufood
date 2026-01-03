@@ -67,11 +67,18 @@ export const identity = {
    */
   getUserId: (): string | null => {
     try {
-      // 直接使用 activeRefrigeratorId 作為 X-User-Id
-      // 這是原始設計：X-User-Id = 群組 ID
       const refId = localStorage.getItem(STORAGE_KEYS.REFRIGERATOR_ID);
       if (refId) {
         return refId;
+      }
+
+      // Fallback: 如果沒有 activeRefrigeratorId，嘗試使用 User ID
+      const userStr = localStorage.getItem(STORAGE_KEYS.USER);
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user && user.id) {
+          return user.id;
+        }
       }
     } catch (e) {
       console.warn('[Identity] Failed to get activeRefrigeratorId', e);

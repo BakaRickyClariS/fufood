@@ -3,13 +3,16 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Button } from '@/shared/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { LineLoginUrl, useAuth, authService } from '@/modules/auth';
 import { identity } from '@/shared/utils/identity';
+import { groupsApi } from '@/modules/groups/api/groupsApi';
 import LoginCarousel from './LoginCarousel';
 import { Bot, X } from 'lucide-react';
 
 const Login = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { isLoading, isAuthenticated, refetch, error: authError } = useAuth();
   const popupWindowRef = useRef<Window | null>(null);
@@ -24,46 +27,77 @@ const Login = () => {
 
   // 處理 LineLoginCallback 發送的 postMessage
   const handlePopupMessage = useCallback(
-    (e: MessageEvent) => {
+    async (e: MessageEvent) => {
       // [Debug] Log all messages to debug LINE Login issues
       console.log('[Login] Received message:', {
         type: e.data?.type,
         origin: e.origin,
         currentOrigin: window.location.origin,
-        data: e.data
+        data: e.data,
       });
 
       // 允許的來源列表
       const allowedOrigins = [
         window.location.origin,
         'https://fufood.jocelynh.me', // Production domain
-        'http://localhost:5173',       // Localhost
-        'http://127.0.0.1:5173'
+        'http://localhost:5173', // Localhost
+        'http://127.0.0.1:5173',
       ];
 
       // 檢查來源是否在允許列表中
       if (!allowedOrigins.includes(e.origin)) {
-        console.warn('[Login] Message rejected due to origin mismatch:', e.origin, 'Allowed:', allowedOrigins);
+        console.warn(
+          '[Login] Message rejected due to origin mismatch:',
+          e.origin,
+          'Allowed:',
+          allowedOrigins,
+        );
         return;
       }
 
       // 檢查是否為 LINE 登入成功與錯誤訊息
       if (e.data?.type === 'LINE_LOGIN_ERROR') {
-         setLoginError(e.data.error || '登入失敗');
-         setLineLoginLoading(false);
-         if (checkIntervalRef.current) {
-            clearInterval(checkIntervalRef.current);
-            checkIntervalRef.current = null;
-         }
-         popupWindowRef.current?.close();
-         return;
+        setLoginError(e.data.error || '登入失敗');
+        setLineLoginLoading(false);
+        if (checkIntervalRef.current) {
+          clearInterval(checkIntervalRef.current);
+          checkIntervalRef.current = null;
+        }
+        popupWindowRef.current?.close();
+        return;
       }
 
       if (e.data?.type === 'LINE_LOGIN_SUCCESS') {
-        // [關鍵] 在導航前確保 user 資料已存入 localStorage
+        // [關鍵] 在導航前確保 user 資料已存入 localStorage 及 TanStack Query 快取
         if (e.data.user) {
-          console.log('[Login] Received user data from popup, saving to localStorage');
+          console.log(
+            '[Login] Received user data from popup, saving to localStorage and query cache',
+          );
           authService.saveUser(e.data.user);
+          // 直接設定 TanStack Query 快取，讓 useAuth 立即取得用戶資料
+          queryClient.setQueryData(['GET_USER_PROFILE'], e.data.user);
+
+          // [新增] 初始化 activeRefrigeratorId：
+          // 為了避免 Dashboard 載入時因為沒有群組 ID 而導致 API 失敗，
+          // 我們在登入當下就先抓取群組列表，並設定預設 ID。
+          try {
+            console.log(
+              '[Login] 正在預先抓取群組資料以初始化 activeRefrigeratorId...',
+            );
+            const groups = await groupsApi.getAll();
+            if (groups && groups.length > 0) {
+              const defaultGroupId = groups[0].id;
+              console.log(
+                '[Login] 設定預設 activeRefrigeratorId:',
+                defaultGroupId,
+              );
+              localStorage.setItem('activeRefrigeratorId', defaultGroupId);
+            } else {
+              console.log('[Login] 用戶沒有群組，無法設定預設 ID');
+            }
+          } catch (err) {
+            console.warn('[Login] 預先抓取群組失敗 (非致命錯誤):', err);
+          }
         }
 
         // 清除登出標記，讓 API 正常運作
@@ -78,13 +112,13 @@ const Login = () => {
         // 關閉 popup
         popupWindowRef.current?.close();
 
-        // 直接導航到首頁，讓首頁的 useAuth 重新評估狀態
-        // 不再依賴 refetch()，因為它可能有 stale enabled 狀態
         setLineLoginLoading(false);
-        navigate('/');
+
+        // 強制刷新頁面以確保 Cookie 和狀態完全同步
+        window.location.href = '/';
       }
     },
-    [navigate],
+    [navigate, queryClient],
   );
 
   useEffect(() => {
@@ -253,7 +287,7 @@ const Login = () => {
         <div className="mb-[18px] p-4 bg-warning-50 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
           {/* 左側 Icon */}
           <Bot className="w-6 h-6 text-neutral-600 shrink-0" />
-          
+
           {/* 中間文字 */}
           <p className="flex-1 text-neutral-600 text-sm font-semibold leading-relaxed">
             此產品為學生專題作品，僅學習與展示用，並沒有提供任何服務及商業行為。
