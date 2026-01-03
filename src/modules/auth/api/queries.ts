@@ -43,6 +43,11 @@ export async function getUserProfile(): Promise<User | null> {
     return null;
   }
 
+  // 檢查是否可以發送認證請求（使用共用模組）
+  if (!identity.canMakeAuthenticatedRequest()) {
+    return null;
+  }
+
   // 檢查 localStorage 中的 user 資料 (LINE 登入時會存)
   const userStr = localStorage.getItem('user');
 
@@ -89,7 +94,10 @@ export async function getUserProfile(): Promise<User | null> {
   } catch (error) {
     const is401 = error instanceof Error && error.message.includes('401');
 
-    if (!is401) {
+    if (is401) {
+      // [Circuit Breaker] 如果收到 401，標記為已登出，防止 useQuery 無限重試
+      sessionStorage.setItem('logged_out', 'true');
+    } else {
       console.warn('Profile API 失敗，嘗試 Mock 備援:', error);
     }
   }
@@ -126,23 +134,8 @@ export async function getUserProfile(): Promise<User | null> {
 }
 
 export function useGetUserProfileQuery() {
-  /**
-   * 判斷是否應該執行 Profile Query
-   *
-   * 重要修正：使用 HttpOnly Cookie 認證時，應預設嘗試呼叫 API，
-   * 讓後端回傳 401 來判斷未登入狀態，而非依賴 localStorage。
-   *
-   * 只有以下情況不執行 query：
-   * 1. 明確標記為已登出 (logged_out = 'true')
-   */
-  const shouldQuery = ((): boolean => {
-    const loggedOut = sessionStorage.getItem('logged_out');
-    if (loggedOut === 'true') return false;
-
-    // HttpOnly Cookie 認證模式：預設嘗試呼叫 API
-    // 即使 localStorage 沒有 user 資料，Cookie 可能仍然有效
-    return true;
-  })();
+  // 使用共用模組檢查是否可以發送認證請求
+  const shouldQuery = identity.canMakeAuthenticatedRequest();
 
   return useQuery({
     queryKey: ['GET_USER_PROFILE'],
