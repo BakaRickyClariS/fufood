@@ -6,8 +6,19 @@ import { identity } from '@/shared/utils/identity';
 
 /**
  * 檢測是否在 Popup 視窗中
+ *
+ * 使用 window.name 來識別 popup 視窗，因為 window.opener 在多次跨 origin
+ * 重導向後（LINE → api.fufood → fufood.jocelynh.me）可能被瀏覽器安全策略清除。
+ * window.name 是跨 origin 持久化的，不會受到影響。
+ *
+ * Login.tsx 中 window.open() 的第二個參數就是 window name: 'lineLogin'
  */
 const isPopupWindow = (): boolean => {
+  // 優先使用 window.name 判斷（更可靠）
+  if (window.name === 'lineLogin') {
+    return true;
+  }
+  // 備援：檢查 window.opener（可能在跨 origin 後失效）
   return window.opener !== null && window.opener !== window;
 };
 

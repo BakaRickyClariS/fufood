@@ -193,18 +193,12 @@ const Login = () => {
     const left = window.screenX + (window.innerWidth - width) / 2;
     const top = window.screenY + (window.innerHeight - height) / 2;
 
-    // [Fix] 用戶在 Localhost 開發時，強制指定 Callback URL 回到 Localhost
-    // 這樣 Popup 就會是同源 (Same-Origin)，避免 window.opener 遺失問題
-    // 注意：後端參數名稱為 'ref'，不是 'redirectUrl'
-    let finalLoginUrl = LineLoginUrl;
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      const callbackUrl = `${window.location.origin}/auth/line/callback`;
-      const separator = finalLoginUrl.includes('?') ? '&' : '?';
-      finalLoginUrl = `${finalLoginUrl}${separator}ref=${encodeURIComponent(callbackUrl)}`;
-    }
-
+    // Popup 模式：使用後端預設 callback URL (Production)
+    // Production 的 LineLoginCallback 會透過 postMessage 通知父視窗登入結果
+    // 注意：不要嘗試覆寫 callback URL 到 localhost，因為後端 Cookie domain 設為 fufood.jocelynh.me
+    // localhost 無法接收該 Cookie，會導致 Profile API 401
     const popup = window.open(
-      finalLoginUrl,
+      LineLoginUrl,
       'lineLogin',
       `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`,
     );
