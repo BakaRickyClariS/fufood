@@ -12,12 +12,15 @@ export const useSignOutMutation = () => {
       // 設置登出標記
       sessionStorage.setItem('logged_out', 'true');
 
-      // Mock 模式：清除 localStorage 中的假資料
+      // 清除 localStorage 中的用戶資料（無論是 Mock 還是真實 API 模式）
+      localStorage.removeItem('user');
+      localStorage.removeItem('activeRefrigeratorId');
+
+      // Mock 模式：額外清除假 token 資料
       if (USE_MOCK) {
         localStorage.removeItem('authToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('tokenExpiry');
-        localStorage.removeItem('user');
       }
 
       // 清除用戶 Profile 快取
