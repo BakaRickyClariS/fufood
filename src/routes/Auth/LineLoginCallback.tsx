@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { authApi, authService } from '@/modules/auth';
+import { identity } from '@/shared/utils/identity';
 
 /**
  * 檢測是否在 Popup 視窗中
@@ -51,7 +52,7 @@ const LineLoginCallback = () => {
 
       try {
         // 清除登出標記，確保後續 API 呼叫正常
-        sessionStorage.removeItem('logged_out');
+        identity.onLoginSuccess();
 
         // 呼叫 Profile API 確認 Cookie 已設定
         const response = await authApi.getProfile();
@@ -83,10 +84,16 @@ const LineLoginCallback = () => {
         // 判斷是否在 Popup 視窗中
         if (isPopupWindow()) {
           // 通知父視窗登入成功
-          window.opener?.postMessage(
-            { type: 'LINE_LOGIN_SUCCESS', user: userData },
-            '*',
-          );
+          // 通知父視窗登入成功
+          console.log('[LineLoginCallback] Sending success message to opener. Opener exists:', !!window.opener);
+          if (window.opener) {
+            window.opener.postMessage(
+              { type: 'LINE_LOGIN_SUCCESS', user: userData },
+              '*',
+            );
+          } else {
+             console.error('[LineLoginCallback] window.opener is missing, cannot notify parent!');
+          }
 
           // 關閉 Popup 視窗
           window.close();
@@ -129,9 +136,9 @@ const LineLoginCallback = () => {
     <div className="flex flex-col items-center justify-center h-screen bg-white">
       {error ? (
         <div className="text-center px-6">
-          <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-primary-100 rounded-full flex items-center justify-center">
             <svg
-              className="w-8 h-8 text-red-500"
+              className="w-8 h-8 text-primary-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -144,16 +151,16 @@ const LineLoginCallback = () => {
               />
             </svg>
           </div>
-          <p className="text-red-500 font-medium mb-2">{error}</p>
-          <p className="text-sm text-stone-400">
+          <p className="text-primary-500 font-medium mb-2">{error}</p>
+          <p className="text-sm text-neutral-400">
             {isPopupWindow() ? '視窗即將關閉...' : '正在返回登入頁面...'}
           </p>
         </div>
       ) : loginSuccess ? (
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-success-100 rounded-full flex items-center justify-center">
             <svg
-              className="w-8 h-8 text-green-500"
+              className="w-8 h-8 text-success-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -166,14 +173,14 @@ const LineLoginCallback = () => {
               />
             </svg>
           </div>
-          <p className="text-stone-600 font-medium">登入成功！</p>
-          <p className="text-sm text-stone-400 mt-1">正在導向首頁...</p>
+          <p className="text-success-600 font-medium">登入成功！</p>
+          <p className="text-sm text-neutral-400 mt-1">正在導向首頁...</p>
         </div>
       ) : isProcessing ? (
         <div className="text-center">
-          <div className="animate-spin w-10 h-10 border-4 border-[#f58274] border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-stone-600 font-medium">正在完成登入...</p>
-          <p className="text-sm text-stone-400 mt-1">請稍候</p>
+          <div className="animate-spin w-10 h-10 border-4 border-primary-300 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-success-600 font-medium">正在完成登入...</p>
+          <p className="text-sm text-neutral-400 mt-1">請稍候</p>
         </div>
       ) : null}
     </div>
