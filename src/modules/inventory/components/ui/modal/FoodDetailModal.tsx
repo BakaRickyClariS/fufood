@@ -3,13 +3,15 @@ import { ChevronLeft, Bell, BellRing } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectConsumptionContextId } from '@/modules/inventory/store/consumptionSlice';
 import gsap from 'gsap';
-import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { InfoTooltip } from '@/shared/components/feedback/InfoTooltip';
 import type { FoodItem } from '@/modules/inventory/types';
 import { useExpiryCheck } from '@/modules/inventory/hooks';
+// import { useNavigate } from 'react-router-dom'; // Remove if unused, but let's check if I can just remove the line.
+// Actually, I can just replace the imports block.
 import { inventoryApi } from '@/modules/inventory/api';
-import { aiRecipeApi } from '@/modules/ai/api/aiRecipeApi';
+// import { aiRecipeApi } from '@/modules/ai/api/aiRecipeApi'; // Already removed in previous step, but let's be clean.
+import { AIQueryModal } from '@/modules/ai/components/AIQueryModal';
 import { ConsumptionModal } from '@/modules/inventory/components/consumption';
 import { useInventorySettingsQuery } from '@/modules/inventory/api/queries';
 import { categories as defaultCategories } from '@/modules/inventory/constants/categories';
@@ -44,8 +46,9 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
     item.lowStockAlert ?? false,
   );
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate(); // 已不需要導航，直接在當前頁面開啟 AI Modal
   const { status, daysUntilExpiry } = useExpiryCheck(item);
 
   // 取得設定資料以獲取分類中文名稱
@@ -74,7 +77,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
     categories.forEach((cat) => {
       map[cat.id] = cat.title;
     });
-    
+
     return map;
   }, [settingsData]);
 
@@ -148,24 +151,11 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
   };
 
   // 處理食譜靈感 (AI 生成)
-  const handleRecipeInspiration = async () => {
-    try {
-      const result = await aiRecipeApi.generateRecipe({
-        prompt: `使用 ${item.name} 製作料理`,
-        selectedIngredients: [item.name],
-      });
-
-      if (result.data.recipes && result.data.recipes.length > 0) {
-        // 使用 id 參數並傳遞完整食譜物件，避免前端因資料尚未寫入 DB 而無法透過 API 取得
-        navigate(`/planning?tab=recipes&id=${result.data.recipes[0].id}`, {
-          state: { openRecipe: result.data.recipes[0] },
-        });
-      }
-
-      handleClose();
-    } catch (error) {
-      console.error('Failed to generate recipe', error);
-    }
+  const handleRecipeInspiration = () => {
+    setShowAIModal(true);
+    // 不關閉 FoodDetailModal，讓使用者可以在 AI 視窗和食材詳情間切換 (或是 AI 視窗覆蓋在上面)
+    // 如果希望行為是 "開啟 AI 視窗並關閉食材詳情"，則呼叫 handleClose()
+    // 但通常 UX 是疊加的，且 AIQueryModal 有 Portal 會蓋在最上層
   };
 
   const getStatusBadge = () => {
@@ -203,10 +193,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
   if (!isOpen) return null;
 
   return createPortal(
-    <div
-      ref={modalRef}
-      className="fixed inset-0 z-[100] bg-white flex flex-col"
-    >
+    <div ref={modalRef} className="fixed inset-0 z-100 bg-white flex flex-col">
       {/* Consumpion Modal */}
       <ConsumptionModal
         isOpen={showConsumptionModal}
@@ -419,6 +406,14 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
           </div>
         </div>
       </div>
+      {/* AI Query Modal */}
+      <AIQueryModal
+        isOpen={showAIModal}
+        onClose={() => setShowAIModal(false)}
+        initialQuery={`使用 ${item.name} 製作料理`}
+        initialSelectedIngredients={[item.name]}
+        useStreaming={false}
+      />
     </div>,
     document.body,
   );
