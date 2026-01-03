@@ -113,14 +113,14 @@ const LineLoginCallback = () => {
           setIsProcessing(false);
           setLoginSuccess(true);
 
-          // 使快取失效並重新取得用戶資料
-          await queryClient.invalidateQueries({
-            queryKey: ['GET_USER_PROFILE'],
-          });
+          // 直接設定 TanStack Query 快取，避免 invalidateQueries 觸發 getUserProfile
+          // 因為 getUserProfile 有 canMakeAuthenticatedRequest 檢查可能會失敗
+          queryClient.setQueryData(['GET_USER_PROFILE'], userData);
 
           // 稍微延遲讓用戶看到成功訊息
           setTimeout(() => {
-            navigate('/', { replace: true });
+            // 強制刷新頁面以確保 Cookie 和狀態完全同步
+            window.location.href = '/';
           }, 800);
         }
       } catch (err) {
