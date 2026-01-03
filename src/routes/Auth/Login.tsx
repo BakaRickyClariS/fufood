@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import { Button } from '@/shared/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { LineLoginUrl, useAuth } from '@/modules/auth';
 import LoginCarousel from './LoginCarousel';
+import { Bot, X } from 'lucide-react';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -16,6 +18,7 @@ const Login = () => {
   const [lineLoginLoading, setLineLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showProjectNotice, setShowProjectNotice] = useState(true);
 
   // 處理 LineLoginCallback 發送的 postMessage
   const handlePopupMessage = useCallback(
@@ -59,34 +62,28 @@ const Login = () => {
     navigate('/auth/avatar-selection');
   };
 
-  // 登入成功轉場動畫
-  const playExitAnimation = useCallback(() => {
-    if (!containerRef.current) {
-      navigate('/');
-      return;
-    }
-
-    setIsTransitioning(true);
-
-    // GSAP 轉場動畫：淡出 + 輕微放大
-    gsap.to(containerRef.current, {
-      opacity: 0,
-      scale: 1.02,
-      duration: 0.25,
-      ease: 'power2.out',
-      onComplete: () => {
-        navigate('/');
-      },
-    });
-  }, [navigate]);
-
   // 當已認證時，播放轉場動畫後導向首頁
-  useEffect(() => {
-    if (isAuthenticated && !isTransitioning) {
-      setLineLoginLoading(false);
-      playExitAnimation();
-    }
-  }, [isAuthenticated, isTransitioning, playExitAnimation]);
+  // 使用 useGSAP 自動處理動畫和 cleanup
+  useGSAP(
+    () => {
+      if (isAuthenticated && !isTransitioning) {
+        setLineLoginLoading(false);
+        setIsTransitioning(true);
+
+        // GSAP 轉場動畫：淡出 + 輕微放大
+        gsap.to(containerRef.current, {
+          opacity: 0,
+          scale: 1.02,
+          duration: 0.25,
+          ease: 'power2.out',
+          onComplete: () => {
+            navigate('/');
+          },
+        });
+      }
+    },
+    { scope: containerRef, dependencies: [isAuthenticated, isTransitioning] },
+  );
 
   // 防止重複檢查初始狀態（避免無限循環）
   const hasInitialCheckRef = useRef(false);
@@ -208,7 +205,30 @@ const Login = () => {
   const displayError = loginError || authError;
 
   return (
-    <div ref={containerRef} className="flex flex-col min-h-screen px-5">
+    <div ref={containerRef} className="flex flex-col min-h-screen px-5 my-8">
+      {/* 學生專題作品提示框 */}
+      {showProjectNotice ? (
+        <div className="mb-[18px] p-4 bg-warning-50 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+          {/* 左側 Icon */}
+          <Bot className="w-6 h-6 text-neutral-600 shrink-0" />
+          
+          {/* 中間文字 */}
+          <p className="flex-1 text-neutral-600 text-sm font-semibold leading-relaxed">
+            此產品為學生專題作品，僅學習與展示用，並沒有提供任何服務及商業行為。
+          </p>
+
+          {/* 右側關閉按鈕 */}
+          <button
+            onClick={() => setShowProjectNotice(false)}
+            className="text-neutral-700 hover:text-neutral-900 font-bold transition-colors shrink-0"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ) : (
+        <div className="mt-8" />
+      )}
+
       <LoginCarousel />
 
       {/* 登入按鈕區域 */}
@@ -227,7 +247,7 @@ const Login = () => {
           {lineLoginLoading ? '登入中...' : '使用LINE應用程式登入'}
         </Button>
 
-        <Button
+        {/* <Button
           variant="outline"
           className="w-full border-neutral-200 text-neutral-700 h-12 text-base rounded-lg hover:bg-neutral-50"
           onClick={handleEmailLogin}
@@ -240,7 +260,7 @@ const Login = () => {
           <button className="text-sm text-neutral-500 font-medium hover:text-neutral-800 transition-colors">
             忘記密碼？
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -1,34 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 // 匯入 Hero 圖片
-import authHeroImage from '@/assets/images/auth/authHero.png';
+import authHero1 from '@/assets/images/auth/authHero-1.png';
+import authHero2 from '@/assets/images/auth/authHero-2.png';
+import authHero3 from '@/assets/images/auth/authHero-3.png';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 
-// 輪播配置
-const HERO_SLIDES = [
-  {
-    id: 1,
-    image: authHeroImage,
-    title: '快用 FuFood',
-    subtitle: '來管理冰箱庫存吧！',
-    caption: 'AI 智慧辨識入庫，\n你的隨身食材管家',
-  },
-  {
-    id: 2,
-    image: authHeroImage,
-    title: '智慧食材管理',
-    subtitle: '讓生活更輕鬆！',
-    caption: '輕鬆追蹤過期日，\n減少食物浪費',
-  },
-  {
-    id: 3,
-    image: authHeroImage,
-    title: '共享冰箱',
-    subtitle: '與家人一起管理！',
-    caption: '邀請家人加入群組，\n一起管理家中庫存',
-  },
-];
+// 輪播圖片陣列
+const HERO_IMAGES = [authHero1, authHero2, authHero3];
 
 const LoginCarousel: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -37,19 +17,20 @@ const LoginCarousel: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // GSAP utility for wrapping index
-  const wrap = gsap.utils.wrap(0, HERO_SLIDES.length);
-  // useGSAP for scoped animations
-  const { contextSafe } = useGSAP({ scope: containerRef });
+  const wrap = gsap.utils.wrap(0, HERO_IMAGES.length);
+  
+  // useGSAP for scoped animations and initialization
+  const { contextSafe } = useGSAP(
+    () => {
+      const slides = slidesRef.current.filter(Boolean) as HTMLDivElement[];
+      if (slides.length === 0) return;
 
-  // Initialize slide positions
-  useEffect(() => {
-    const slides = slidesRef.current.filter(Boolean) as HTMLDivElement[];
-    if (slides.length === 0) return;
-
-    // Set initial positions: stack all slides, only first one visible
-    gsap.set(slides, { xPercent: 0, opacity: 0, scale: 0.95 });
-    gsap.set(slides[0], { opacity: 1, scale: 1 });
-  }, []);
+      // Set initial positions: stack all slides, only first one visible
+      gsap.set(slides, { xPercent: 0, opacity: 0, scale: 0.95 });
+      gsap.set(slides[0], { opacity: 1, scale: 1 });
+    },
+    { scope: containerRef, dependencies: [] }
+  );
 
   // Animation function using contextSafe
   const gotoSlide = contextSafe((direction: number) => {
@@ -171,43 +152,35 @@ const LoginCarousel: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col mb-6 pt-8">
+    <div className="flex flex-col mb-6">
       {/* 輪播容器 */}
       <div
         ref={containerRef}
         className="relative w-full rounded-xl overflow-hidden mb-4"
-        style={{ aspectRatio: '4/5' }}
+        style={{ aspectRatio: '1416/2052' }}
       >
         {/* Slides - 使用絕對定位堆疊 */}
-        {HERO_SLIDES.map((slide, index) => (
+        {HERO_IMAGES.map((image, index) => (
           <div
-            key={slide.id}
+            key={index}
             ref={(el) => {
               slidesRef.current[index] = el;
             }}
             className="absolute inset-0 will-change-transform"
           >
             <img
-              src={slide.image}
-              alt={slide.title}
-              className="w-full h-full object-cover"
+              src={image}
+              alt={`Hero Slide ${index + 1}`}
+              className="w-full h-full object-contain"
             />
-            <div className="absolute inset-0 bg-white/30" />
-            <div className="absolute inset-0 bg-linear-to-t from-white/60 via-transparent to-transparent" />
-            <div className="absolute top-5 left-0 right-0 p-6 text-neutral-900 text-center">
-              <h1 className="text-xl font-bold mb-2">{slide.title}</h1>
-              <h2 className="text-xl font-bold mb-3">{slide.subtitle}</h2>
-              <p className="text-lg font-medium opacity-90 whitespace-pre-line leading-relaxed mt-55 ml-30">
-                {slide.caption}
-              </p>
-            </div>
+
           </div>
         ))}
       </div>
 
       {/* 分頁指示器 */}
       <div className="flex justify-center gap-1">
-        {HERO_SLIDES.map((_, index) => (
+        {HERO_IMAGES.map((_, index) => (
           <button
             key={index}
             onClick={() => goToSlide(index)}
