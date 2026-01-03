@@ -4,10 +4,16 @@
  * 提供 AI 食譜生成的 React Query hooks
  * 支援 SSE 開關切換
  */
+import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import { aiRecipeApi } from '../api/aiRecipeApi';
 import { useRecipeStream } from './useRecipeStream';
+import { useSaveAIRecipeMutation } from '../api/queries';
+import { useSendNotificationMutation } from '@/modules/notifications/api/queries';
 import type { AIRecipeRequest, AIRecipeItem } from '../types';
+import { validateRecipes } from '../utils/responseValidator';
 
 // ============================================================
 // Query Keys
@@ -111,13 +117,170 @@ export const useAIRecipeGenerate = (
 
   // 標準模式
   const mutation = useGenerateRecipeMutation();
+  const { mutateAsync: saveRecipe } = useSaveAIRecipeMutation();
+  const { mutateAsync: sendNotification } = useSendNotificationMutation();
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const [manualRecipes, setManualRecipes] = useState<AIRecipeItem[] | null>(
+    null,
+  );
 
   // 統一的生成函式
   const generate = async (request: AIRecipeRequest): Promise<void> => {
+    // 重置之前的結果
+    setManualRecipes(null);
+
     if (shouldUseStreaming) {
       await streamHook.startStream(request);
     } else {
-      await mutation.mutateAsync(request);
+      const response = await mutation.mutateAsync(request);
+
+      // 如果是真實 API 回傳且有食譜，執行自動儲存
+      if (!response.isMock && response.data.recipes.length > 0) {
+        try {
+          // 1. 驗證並清理資料 (確保結構正確且安全)
+          const validatedRecipes = validateRecipes(response.data.recipes);
+
+          const savedResults = await Promise.all(
+            validatedRecipes.map((r) =>
+              saveRecipe({
+                name: r.name,
+                category: r.category,
+                imageUrl: r.imageUrl,
+                servings: r.servings,
+                cookTime: r.cookTime,
+                difficulty: r.difficulty,
+                ingredients: (r.ingredients || []).map((i) => ({
+                  name: i.name,
+                  quantity: String(i.amount), // 已由 validator 處理為字串或 '適量'
+                  unit: i.unit || '',
+                })),
+                seasonings: (r.seasonings || []).map((s) => ({
+                  name: s.name,
+                  quantity: String(s.amount), // 已由 validator 處理為字串或 '適量'
+                  unit: s.unit || '',
+                })),
+                steps: (r.steps || []).map((s) => ({
+                  step: s.step,
+                  description: s.description,
+                })),
+                originalPrompt: request.prompt,
+                refrigeratorId: activeRefrigeratorId || undefined,
+              }),
+            ),
+          );
+
+          // 發送 AI 食譜生成通知
+          if (activeRefrigeratorId && savedResults.length > 0) {
+            const firstRecipeName = savedResults[0].name;
+            const msg =
+              savedResults.length > 1
+                ? `已為您生成 ${firstRecipeName} 等 ${savedResults.length} 道新食譜！`
+                : `已為您生成新食譜：${firstRecipeName}`;
+
+            sendNotification({
+              groupId: activeRefrigeratorId,
+              title: 'AI 食譜生成完成',
+              body: msg,
+              type: 'recipe',
+              action: {
+                type: 'recipe',
+                payload: { recipeId: savedResults[0].id },
+              },
+            }).catch((err) =>
+              console.error('[useAIRecipe] Failed to send notification:', err),
+            );
+          }
+
+          // 更新 ID 並轉換資料結構以供前端顯示 (合併 ingredients)
+          const transformedRecipes = response.data.recipes.map((r, index) => {
+            const transformedIngredients = [
+              ...(r.ingredients || []).map((i) => ({
+                name: i.name,
+                // @ts-ignore
+                quantity: String(i.amount), // Map amount to quantity for frontend
+                amount: i.amount,
+                unit: i.unit,
+                category: '準備材料',
+              })),
+              ...(r.seasonings || []).map((s) => ({
+                name: s.name,
+                // @ts-ignore
+                quantity: String(s.amount), // Map amount to quantity for frontend
+                amount: s.amount,
+                unit: s.unit,
+                category: '調味料',
+              })),
+            ];
+            return {
+              ...r,
+              id: savedResults[index]?.id || r.id,
+              ingredients: transformedIngredients as any, // Cast to any to bypass strict type check for now
+              seasonings: undefined, // 清除 seasonings 以避免混淆
+            };
+          });
+
+          setManualRecipes(transformedRecipes as unknown as AIRecipeItem[]);
+        } catch (err) {
+          console.error('Auto-save failed in normal mode:', err);
+          // 儲存失敗仍顯示原始結果 (也需轉換以正確顯示)
+          const transformedRecipes = response.data.recipes.map((r) => {
+            const transformedIngredients = [
+              ...(r.ingredients || []).map((i) => ({
+                name: i.name,
+                // @ts-ignore
+                quantity: String(i.amount),
+                amount: i.amount,
+                unit: i.unit,
+                category: '準備材料',
+              })),
+              ...(r.seasonings || []).map((s) => ({
+                name: s.name,
+                // @ts-ignore
+                quantity: String(s.amount),
+                amount: s.amount,
+                unit: s.unit,
+                category: '調味料',
+              })),
+            ];
+            return {
+              ...r,
+              ingredients: transformedIngredients as any,
+              seasonings: undefined,
+            };
+          });
+          setManualRecipes(transformedRecipes as unknown as AIRecipeItem[]);
+        }
+      } else {
+        // Mock 資料或無結果，直接顯示 (Mock 資料通常已符合結構或簡單顯示，但為求一致也可轉換)
+        // 這裡維持原樣，因為 Mock 資料定義在 aiRecipeApi 中且可能結構固定
+        // 為了確保 Mock 資料也能顯示材料，我們也進行轉換
+        const transformedRecipes = response.data.recipes.map((r) => {
+          const transformedIngredients = [
+            ...(r.ingredients || []).map((i) => ({
+              name: i.name,
+              // @ts-ignore
+              quantity: String(i.amount),
+              amount: i.amount,
+              unit: i.unit,
+              category: '準備材料',
+            })),
+            ...(r.seasonings || []).map((s) => ({
+              name: s.name,
+              // @ts-ignore
+              quantity: String(s.amount),
+              amount: s.amount,
+              unit: s.unit,
+              category: '調味料',
+            })),
+          ];
+          return {
+            ...r,
+            ingredients: transformedIngredients as any,
+            seasonings: undefined,
+          };
+        });
+        setManualRecipes(transformedRecipes as unknown as AIRecipeItem[]);
+      }
     }
   };
 
@@ -130,6 +293,7 @@ export const useAIRecipeGenerate = (
 
   // 重置函式
   const reset = () => {
+    setManualRecipes(null);
     if (shouldUseStreaming) {
       streamHook.reset();
     } else {
@@ -153,27 +317,26 @@ export const useAIRecipeGenerate = (
     };
   }
 
-  // 標準模式
-    // 標準模式下的錯誤處理
-    let errorMsg = mutation.error?.message ?? null;
-    if (mutation.error) {
-       console.error('[AI useAIRecipeGenerate] Mutation error:', mutation.error);
-       // @ts-ignore
-       if (mutation.error?.code === 'AI_007') {
-         errorMsg = '輸入內容包含不允許的指令或關鍵字，請重新輸入。';
-       }
+  // 標準模式下的錯誤處理
+  let errorMsg = mutation.error?.message ?? null;
+  if (mutation.error) {
+    console.error('[AI useAIRecipeGenerate] Mutation error:', mutation.error);
+    // @ts-ignore
+    if (mutation.error?.code === 'AI_007') {
+      errorMsg = '輸入內容包含不允許的指令或關鍵字，請重新輸入。';
     }
+  }
 
-    return {
-      generate,
-      isLoading: mutation.isPending,
-      text: mutation.data?.data.greeting ?? '',
-      progress: mutation.isSuccess ? 100 : 0,
-      stage: mutation.isPending ? '生成中...' : mutation.isSuccess ? '完成' : '',
-      recipes: mutation.data?.data.recipes ?? null,
-      error: errorMsg,
-      remainingQueries: mutation.data?.data.remainingQueries ?? null,
-      stop,
-      reset,
-    };
+  return {
+    generate,
+    isLoading: mutation.isPending,
+    text: mutation.data?.data.greeting ?? '',
+    progress: mutation.isSuccess ? 100 : 0,
+    stage: mutation.isPending ? '生成中...' : mutation.isSuccess ? '完成' : '',
+    recipes: manualRecipes ?? mutation.data?.data.recipes ?? null,
+    error: errorMsg,
+    remainingQueries: mutation.data?.data.remainingQueries ?? null,
+    stop,
+    reset,
+  };
 };
