@@ -195,12 +195,12 @@ const Login = () => {
 
     // [Fix] 用戶在 Localhost 開發時，強制指定 Callback URL 回到 Localhost
     // 這樣 Popup 就會是同源 (Same-Origin)，避免 window.opener 遺失問題
+    // 注意：後端參數名稱為 'ref'，不是 'redirectUrl'
     let finalLoginUrl = LineLoginUrl;
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       const callbackUrl = `${window.location.origin}/auth/line/callback`;
-      // 嘗試附加常見的 redirect 參數名稱，期望後端能支援其中一個
       const separator = finalLoginUrl.includes('?') ? '&' : '?';
-      finalLoginUrl = `${finalLoginUrl}${separator}redirectUrl=${encodeURIComponent(callbackUrl)}`;
+      finalLoginUrl = `${finalLoginUrl}${separator}ref=${encodeURIComponent(callbackUrl)}`;
     }
 
     const popup = window.open(
