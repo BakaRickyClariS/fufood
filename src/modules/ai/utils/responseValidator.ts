@@ -52,8 +52,10 @@ function isValidIngredient(item: unknown): item is AIIngredientItem {
     typeof i.name === 'string' &&
     i.name.length > 0 &&
     i.name.length <= MAX_INGREDIENT_NAME_LENGTH &&
-    typeof i.amount === 'string' &&
-    typeof i.unit === 'string'
+    (i.amount === undefined ||
+      typeof i.amount === 'string' ||
+      typeof i.amount === 'number') &&
+    (i.unit === undefined || typeof i.unit === 'string')
   );
 }
 
@@ -161,16 +163,22 @@ export function sanitizeRecipe(recipe: AIRecipeItem): AIRecipeItem {
       .slice(0, MAX_INGREDIENTS_COUNT)
       .map((ing) => ({
         name: sanitizeText(ing.name).slice(0, MAX_INGREDIENT_NAME_LENGTH),
-        amount: sanitizeText(ing.amount),
-        unit: sanitizeText(ing.unit),
+        amount:
+          ing.amount !== undefined && ing.amount !== null && ing.amount !== ''
+            ? sanitizeText(String(ing.amount))
+            : '適量',
+        unit: sanitizeText(ing.unit || ''),
       })),
     seasonings: (recipe.seasonings || [])
       .filter(isValidIngredient)
       .slice(0, MAX_INGREDIENTS_COUNT)
       .map((sea) => ({
         name: sanitizeText(sea.name).slice(0, MAX_INGREDIENT_NAME_LENGTH),
-        amount: sanitizeText(sea.amount),
-        unit: sanitizeText(sea.unit),
+        amount:
+          sea.amount !== undefined && sea.amount !== null && sea.amount !== ''
+            ? sanitizeText(String(sea.amount))
+            : '適量',
+        unit: sanitizeText(sea.unit || ''),
       })),
     steps: (recipe.steps || [])
       .filter(isValidStep)

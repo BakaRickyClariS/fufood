@@ -12,11 +12,9 @@
 // ============================================================
 
 /**
- * Prompt Injection 偵測模式
- *
- * 識別常見的 Prompt Injection 嘗試，需定期更新。
+ * Prompt Injection 偵測模式 (安全性威脅)
  */
-const INJECTION_PATTERNS: RegExp[] = [
+const SECURITY_PATTERNS: RegExp[] = [
   // ========== 中文指令繞過 ==========
   /忽略.*指令/i,
   /無視.*規則/i,
@@ -59,6 +57,25 @@ const INJECTION_PATTERNS: RegExp[] = [
   /\{user\}/i,
   /<\|im_start\|>/i,
   /<\|im_end\|>/i,
+];
+
+/**
+ * 非食譜相關主題偵測模式 (離題內容)
+ */
+const TOPIC_PATTERNS: RegExp[] = [
+  // ========== 非食譜相關主題 (Topic Guard) ==========
+  /JS.*計數器/i,
+  /java.*script/i,
+  /python/i,
+  /寫.*程式/i,
+  /code/i,
+  /function/i,
+  /class/i,
+  /計算機/i,
+  /股票/i,
+  /天氣/i,
+  /新聞/i,
+  /翻譯/i,
 ];
 
 /**
@@ -155,12 +172,12 @@ export function validatePrompt(input: string): PromptValidationResult {
     };
   }
 
-  // 4. Injection 模式檢測
-  for (const pattern of INJECTION_PATTERNS) {
+  // 4a. Injection 模式檢測 (Security)
+  for (const pattern of SECURITY_PATTERNS) {
     if (pattern.test(trimmed)) {
       if (import.meta.env.DEV) {
         console.warn(
-          '[AI Security] Injection pattern detected:',
+          '[AI Security] Security pattern detected:',
           pattern.source,
         );
       }
@@ -168,7 +185,27 @@ export function validatePrompt(input: string): PromptValidationResult {
       return {
         isValid: false,
         sanitized: '',
-        reason: '輸入內容包含不允許的關鍵字，請重新輸入',
+        reason: '輸入內容包含不允許的指令或關鍵字，請重新輸入',
+        errorCode: 'INJECTION_DETECTED', // Keep generalized error code
+        shouldLog: true,
+      };
+    }
+  }
+
+  // 4b. Topic 模式檢測 (Relevance)
+  for (const pattern of TOPIC_PATTERNS) {
+    if (pattern.test(trimmed)) {
+      if (import.meta.env.DEV) {
+        console.warn(
+          '[AI Security] Off-topic pattern detected:',
+          pattern.source,
+        );
+      }
+
+      return {
+        isValid: false,
+        sanitized: '',
+        reason: '抱歉，我只能協助您處理食譜相關的問題。', // Backend-aligned message
         errorCode: 'INJECTION_DETECTED',
         shouldLog: true,
       };
