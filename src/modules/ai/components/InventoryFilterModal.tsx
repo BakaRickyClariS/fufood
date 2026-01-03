@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { useInventoryQuery } from '@/modules/inventory/api/queries';
 import type { FoodItem } from '@/modules/inventory/types';
-import { Check, X, Package } from 'lucide-react';
+import { Check, X, BrushCleaning } from 'lucide-react';
 import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import { cn } from '@/lib/utils';
 import { useSelector } from 'react-redux';
 import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
@@ -15,8 +16,6 @@ type InventoryFilterModalProps = {
   selectedItems: string[];
   onApply: (selectedItems: string[]) => void;
   maxSelection?: number;
-  useInventory: boolean;
-  onToggleInventory: (use: boolean) => void;
 };
 
 // 主要元件
@@ -26,8 +25,6 @@ export const InventoryFilterModal: React.FC<InventoryFilterModalProps> = ({
   selectedItems,
   onApply,
   maxSelection = 5,
-  useInventory,
-  onToggleInventory,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -40,18 +37,21 @@ export const InventoryFilterModal: React.FC<InventoryFilterModalProps> = ({
     React.useState<string[]>(selectedItems);
 
   // 取得庫存資料
-  const { data, isLoading } = useInventoryQuery({ 
-    limit: 100, 
-    refrigeratorId: activeRefrigeratorId || undefined 
+  const { data, isLoading } = useInventoryQuery({
+    limit: 100,
+    refrigeratorId: activeRefrigeratorId || undefined,
   });
   const items = data?.data?.items || [];
 
   // 建立類別名稱對照表
   const categoryNameMap = useMemo(() => {
-    return defaultCategories.reduce((acc, cat) => {
-      acc[cat.id] = cat.title;
-      return acc;
-    }, {} as Record<string, string>);
+    return defaultCategories.reduce(
+      (acc, cat) => {
+        acc[cat.id] = cat.title;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
   }, []);
 
   // 同步外部 props 到本地 state
@@ -61,30 +61,35 @@ export const InventoryFilterModal: React.FC<InventoryFilterModalProps> = ({
     }
   }, [isOpen, selectedItems]);
 
-  // 動畫處理
-  useEffect(() => {
-    if (isOpen) {
-      const tl = gsap.timeline();
+  // 動畫處理 (改用 useGSAP)
+  useGSAP(
+    () => {
+      if (isOpen) {
+        const tl = gsap.timeline();
 
-      // Overlay Fade In
-      tl.fromTo(
-        overlayRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.3, ease: 'power2.out' },
-      );
+        // Overlay Fade In
+        tl.fromTo(
+          overlayRef.current,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.3, ease: 'power2.out' },
+        );
 
-      // Modal Slide Up
-      tl.fromTo(
-        modalRef.current,
-        { y: '100%' },
-        { y: '0%', duration: 0.4, ease: 'power3.out' },
-        '-=0.2',
-      );
-    }
-  }, [isOpen]);
+        // Modal Slide Up
+        tl.fromTo(
+          modalRef.current,
+          { y: '100%' },
+          { y: '0%', duration: 0.4, ease: 'power3.out' },
+          '-=0.2',
+        );
+      }
+    },
+    { dependencies: [isOpen] },
+  );
+
+  const { contextSafe } = useGSAP();
 
   // 關閉 Modal 動畫
-  const handleClose = () => {
+  const handleClose = contextSafe(() => {
     const tl = gsap.timeline({
       onComplete: onClose,
     });
@@ -96,7 +101,7 @@ export const InventoryFilterModal: React.FC<InventoryFilterModalProps> = ({
     });
 
     tl.to(overlayRef.current, { opacity: 0, duration: 0.3 }, '-=0.3');
-  };
+  });
 
   // 處理選擇邏輯
   const handleSelect = (itemName: string) => {
@@ -119,13 +124,13 @@ export const InventoryFilterModal: React.FC<InventoryFilterModalProps> = ({
     // 先根據名稱去重，避免多筆同名食材導致重複選擇
     const uniqueItems: FoodItem[] = [];
     const seenNames = new Set<string>();
-    
+
     // 排序優先順序：將 lowStockAlert 的排在前面，確保去重時保留優先標記
-    const sortedItems = [...items].sort((a, b) => 
-      (b.lowStockAlert ? 1 : 0) - (a.lowStockAlert ? 1 : 0)
+    const sortedItems = [...items].sort(
+      (a, b) => (b.lowStockAlert ? 1 : 0) - (a.lowStockAlert ? 1 : 0),
     );
 
-    sortedItems.forEach(item => {
+    sortedItems.forEach((item) => {
       if (!seenNames.has(item.name)) {
         seenNames.add(item.name);
         uniqueItems.push(item);
@@ -167,18 +172,19 @@ export const InventoryFilterModal: React.FC<InventoryFilterModalProps> = ({
         className="relative w-full max-w-md h-[90vh] bg-white rounded-t-3xl sm:rounded-2xl overflow-hidden flex flex-col shadow-2xl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
+        <div className="flex items-center justify-between p-4 border-b border-neutral-100">
           <button
             onClick={handleClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-neutral-100 rounded-full transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-neutral-500" />
           </button>
-          <h2 className="text-lg font-bold text-gray-900">庫房食材</h2>
+          <h2 className="text-lg font-bold text-neutral-900">庫房食材</h2>
           <button
             onClick={() => setLocalSelected([])}
-            className="text-sm font-medium text-red-500 hover:text-red-600 px-2"
+            className="text-sm font-medium text-primary-500 hover:text-primary-600 px-2 flex items-center gap-1"
           >
+            <BrushCleaning className="w-4 h-4" />
             清除篩選
           </button>
         </div>
@@ -188,43 +194,16 @@ export const InventoryFilterModal: React.FC<InventoryFilterModalProps> = ({
           ref={contentRef}
           className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar"
         >
-          {/* Toggle Switch Area */}
-          <div className="flex items-center justify-between bg-gray-50 p-3 rounded-xl">
-             <div className="flex items-center gap-2">
-                <div className="p-2 bg-white rounded-full shadow-sm text-[#F58274]">
-                  <Package className="w-4 h-4" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-bold text-gray-900">使用庫存食材</span>
-                  <span className="text-xs text-gray-500">
-                    {useInventory ? '已啟用自動帶入' : '已停用'}
-                  </span>
-                </div>
-             </div>
-             <button
-               onClick={() => onToggleInventory(!useInventory)}
-               className={cn(
-                 "w-12 h-6 rounded-full transition-colors relative",
-                 useInventory ? "bg-[#F58274]" : "bg-gray-200"
-               )}
-             >
-               <div className={cn(
-                 "absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform",
-                 useInventory ? "translate-x-6" : "translate-x-0"
-               )} />
-             </button>
-          </div>
-
           {/* Active Selection Count */}
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-gray-900">庫存食材</h3>
-            <span className="text-gray-500 font-medium">
+            <h3 className="text-xl font-bold text-neutral-900">庫存食材</h3>
+            <span className="text-neutral-500 font-medium">
               {localSelected.length}/{maxSelection}
             </span>
           </div>
 
           {isLoading ? (
-            <div className="text-center py-10 text-gray-400">載入中...</div>
+            <div className="text-center py-10 text-neutral-400">載入中...</div>
           ) : (
             Object.entries(groupedData).map(
               ([category, { priority, normal }]) => {
@@ -232,14 +211,14 @@ export const InventoryFilterModal: React.FC<InventoryFilterModalProps> = ({
 
                 return (
                   <div key={category} className="space-y-3">
-                    <h4 className="text-gray-500 font-medium text-sm">
+                    <h4 className="text-neutral-500 font-medium text-sm">
                       {categoryNameMap[category] || category}
                     </h4>
 
                     {/* 優先消耗區塊 */}
                     {priority.length > 0 && (
                       <div className="mb-3">
-                        <span className="inline-block px-2 py-1 bg-yellow-400 text-neutral-900 text-xs font-bold rounded-md mb-2">
+                        <span className="inline-block px-2 py-1 bg-warning-400 text-neutral-900 text-xs font-bold rounded-md mb-2">
                           優先消耗
                         </span>
                         <div className="flex flex-wrap gap-2">
@@ -254,8 +233,8 @@ export const InventoryFilterModal: React.FC<InventoryFilterModalProps> = ({
                                 className={cn(
                                   'px-4 py-2 border rounded-full text-sm transition-all flex items-center gap-1.5',
                                   isSelected
-                                    ? 'bg-[#F58274] text-white border-[#F58274]' // 選中樣式
-                                    : 'text-neutral-600 border-neutral-200 hover:bg-gray-50 bg-white', // 預設樣式
+                                    ? 'bg-primary-500 text-white border-primary-500' // 選中樣式
+                                    : 'text-neutral-600 border-neutral-200 hover:bg-neutral-50 bg-white', // 預設樣式
                                 )}
                               >
                                 {isSelected && (
@@ -273,7 +252,7 @@ export const InventoryFilterModal: React.FC<InventoryFilterModalProps> = ({
                     {normal.length > 0 && (
                       <div>
                         {priority.length > 0 && ( // 只有當有優先消耗時才顯示這個標題區隔，或者總是顯示
-                          <span className="inline-block px-2 py-1 bg-green-500 text-white text-xs font-bold rounded-md mb-2">
+                          <span className="inline-block px-2 py-1 bg-success-500 text-white text-xs font-bold rounded-md mb-2">
                             有庫存
                           </span>
                         )}
@@ -290,8 +269,8 @@ export const InventoryFilterModal: React.FC<InventoryFilterModalProps> = ({
                                 className={cn(
                                   'px-4 py-2 border rounded-full text-sm transition-all flex items-center gap-1.5',
                                   isSelected
-                                    ? 'bg-[#F58274] text-white border-[#F58274]'
-                                    : 'text-neutral-600 border-neutral-200 hover:bg-gray-50 bg-white',
+                                    ? 'bg-primary-500 text-white border-primary-500'
+                                    : 'text-neutral-600 border-neutral-200 hover:bg-neutral-50 bg-white',
                                 )}
                               >
                                 {isSelected && (
@@ -312,13 +291,13 @@ export const InventoryFilterModal: React.FC<InventoryFilterModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-gray-100 bg-white pb-safe">
+        <div className="p-4 border-t border-neutral-100 bg-white pb-safe">
           <button
             onClick={() => {
               onApply(localSelected);
               handleClose();
             }}
-            className="w-full py-3 bg-[#F58274] text-white rounded-xl font-bold hover:bg-[#E07063] active:scale-[0.98] transition-all shadow-lg shadow-orange-100"
+            className="w-full py-3 bg-primary-500 text-white rounded-xl font-bold hover:bg-primary-600 active:scale-[0.98] transition-all shadow-lg shadow-primary-100"
           >
             套用
           </button>
