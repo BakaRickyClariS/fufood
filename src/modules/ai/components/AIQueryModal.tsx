@@ -8,10 +8,12 @@ import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import { useAIRecipeGenerate, useRecipeSuggestions } from '@/modules/ai';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useInventoryQuery } from '@/modules/inventory/api/queries';
+import { useToast } from '@/shared/contexts/ToastContext';
 import { RecipeCard } from '@/shared/components/recipe/RecipeCard';
 import { InventoryFilterModal } from '@/modules/ai/components/InventoryFilterModal';
 import { SelectedIngredientTags } from '@/modules/ai/components/SelectedIngredientTags';
 import { RecipeDetailModal } from '@/modules/recipe/components/ui/RecipeDetailModal';
+import { validatePrompt, validateIngredients } from '../utils/promptSecurity';
 import type { RecipeListItem } from '@/modules/recipe/types';
 import aiAvatar from '@/assets/images/recipe/ai-avator.png';
 
@@ -143,14 +145,36 @@ export const AIQueryModal = ({
     });
   });
 
+  const { showToast } = useToast();
+
   const handleSubmit = async (textToSubmit: string = query) => {
-    if (!textToSubmit.trim() && selectedIngredients.length === 0) return;
+    // 1. 驗證 Prompt
+    const validation = validatePrompt(textToSubmit);
+
+    // 2. 如果 Prompt 無效且沒有選擇食材，顯示錯誤
+    if (!validation.isValid && selectedIngredients.length === 0) {
+      if (validation.reason) {
+        showToast(validation.reason, 'error');
+      }
+      return;
+    }
+
+    // 3. 清理食材列表
+    const cleanedIngredients = validateIngredients(selectedIngredients);
+
+    // 4. 防止重複提交
     if (isLoading) return;
 
-    setQuery(textToSubmit);
+    // 5. 更新 UI 顯示
+    const finalPrompt = validation.isValid
+      ? validation.sanitized
+      : '請根據我選擇的食材推薦食譜';
+    setQuery(finalPrompt);
+
+    // 6. 發送請求
     await generate({
-      prompt: textToSubmit || '請根據我選擇的食材推薦食譜',
-      selectedIngredients,
+      prompt: finalPrompt,
+      selectedIngredients: cleanedIngredients,
     });
   };
 
@@ -187,15 +211,17 @@ export const AIQueryModal = ({
         className="fixed inset-0 bg-white z-100 flex flex-col"
       >
         {/* Header */}
-        <header className="bg-white border-b border-gray-100 shrink-0">
+        <header className="bg-white border-b border-neutral-100 shrink-0">
           <div className="flex items-center px-4 h-14 relative justify-center">
             <button
               onClick={handleCloseAnimation}
-              className="absolute left-4 p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="absolute left-4 p-2 -ml-2 hover:bg-neutral-100 rounded-full transition-colors"
             >
-              <X className="w-6 h-6 text-gray-700" />
+              <X className="w-6 h-6 text-neutral-700" />
             </button>
-            <span className="font-bold text-lg text-gray-900">FuFood AI</span>
+            <span className="font-bold text-lg text-neutral-900">
+              FuFood AI
+            </span>
           </div>
         </header>
 
@@ -204,7 +230,7 @@ export const AIQueryModal = ({
           {/* Welcome Section (Only show when no results) */}
           {!hasResult && !isLoading && (
             <div className="flex flex-col min-h-full px-4 pt-8 pb-4 text-center">
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-neutral-900">
                 {userName}，您好！
               </h1>
 
@@ -217,7 +243,7 @@ export const AIQueryModal = ({
                   <button
                     key={`${tag}-${idx}`}
                     onClick={() => handleSubmit(tag)}
-                    className="shrink-0 max-w-[80px] bg-white border border-neutral-200 rounded-sm px-2 py-2 text-neutral-600 text-sm font-medium hover:border-[#F58274] hover:text-[#F58274] transition-all active:scale-95"
+                    className="shrink-0 max-w-[80px] bg-white border border-neutral-200 rounded-sm px-2 py-2 text-neutral-600 text-sm font-medium hover:border-primary-400 hover:text-primary-400 transition-all active:scale-95"
                   >
                     {tag}
                   </button>
@@ -226,11 +252,13 @@ export const AIQueryModal = ({
 
               <div className="space-y-2 mb-4">
                 {remainingQueries !== null && (
-                  <p className="text-orange-500 text-sm font-bold">
+                  <p className="text-primary-500 text-sm font-bold">
                     今天還可以詢問 {remainingQueries} 次
                   </p>
                 )}
-                <p className="text-xs text-gray-400">AI可能會出錯，請查證。</p>
+                <p className="text-xs text-neutral-400">
+                  AI可能會出錯，請查證。
+                </p>
               </div>
             </div>
           )}
@@ -242,20 +270,20 @@ export const AIQueryModal = ({
               <div className="space-y-4">
                 {/* User Query (Right) */}
                 <div className="flex justify-end">
-                  <div className="max-w-[80%] bg-white border border-gray-200 rounded-2xl rounded-tr-none px-4 py-3 shadow-sm">
+                  <div className="max-w-[80%] bg-white border border-neutral-200 rounded-2xl rounded-tr-none px-4 py-3 shadow-sm">
                     {selectedIngredients.length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-2">
                         {selectedIngredients.map((ing, idx) => (
                           <span
                             key={`${ing}-${idx}`}
-                            className="text-xs px-2 py-0.5 bg-[#FDE6E3] text-[#F58274] rounded-full"
+                            className="text-xs px-2 py-0.5 bg-primary-50 text-primary-400 rounded-full"
                           >
                             {ing}
                           </span>
                         ))}
                       </div>
                     )}
-                    <p className="text-gray-800">
+                    <p className="text-neutral-800">
                       {query || '庫存食材食譜推薦'}
                     </p>
                   </div>
@@ -264,14 +292,14 @@ export const AIQueryModal = ({
                 {/* Loader */}
                 {isLoading && !text && (
                   <div className="flex justify-start">
-                    <div className="bg-gray-100 rounded-2xl rounded-tl-none px-4 py-3 shadow-sm flex items-center gap-2">
+                    <div className="bg-neutral-100 rounded-2xl rounded-tl-none px-4 py-3 shadow-sm flex items-center gap-2">
                       <div className="flex gap-1">
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+                        <span className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                        <span className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                        <span className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"></span>
                       </div>
                       {stage && (
-                        <span className="text-xs text-gray-500 ml-2">
+                        <span className="text-xs text-neutral-500 ml-2">
                           {stage}...
                         </span>
                       )}
@@ -284,7 +312,7 @@ export const AIQueryModal = ({
                   <div className="space-y-4">
                     {/* Avatar Row */}
                     <div className="flex justify-start">
-                      <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-gray-100">
+                      <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-neutral-100">
                         <img
                           src={aiAvatar}
                           alt="AI"
@@ -294,7 +322,7 @@ export const AIQueryModal = ({
                           }}
                         />
                         <Sparkles
-                          className="w-6 h-6 text-yellow-500 absolute"
+                          className="w-6 h-6 text-warning-500 absolute"
                           style={{ display: 'none' }}
                         />
                       </div>
@@ -303,11 +331,11 @@ export const AIQueryModal = ({
                     {/* Content Column */}
                     <div className="space-y-4">
                       {error ? (
-                        <div className="bg-red-50 text-red-600 rounded-2xl px-4 py-3 border border-red-100">
+                        <div className="bg-primary-50 text-primary-600 rounded-2xl px-4 py-3 border border-primary-100">
                           {error}
                         </div>
                       ) : (
-                        <div className="text-gray-900 font-bold text-lg px-1 leading-relaxed whitespace-pre-wrap">
+                        <div className="text-neutral-900 font-bold text-lg px-1 leading-relaxed whitespace-pre-wrap">
                           {text}
                         </div>
                       )}
@@ -359,7 +387,7 @@ export const AIQueryModal = ({
         />
 
         {/* Footer Input Area */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-101">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-100 p-4 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-101">
           <div className="max-w-layout-container mx-auto space-y-3">
             <div className="relative">
               {/* Input Field */}
@@ -375,7 +403,7 @@ export const AIQueryModal = ({
                       ? '想做什麼料理？'
                       : '輸入食材或料理名稱...'
                   }
-                  className="w-full pl-4 pr-12 pb-3 bg-white focus:outline-none focus:border-gray-400 transition-all text-gray-800 placeholder-gray-400"
+                  className="w-full pl-4 pr-12 pb-3 bg-white focus:outline-none focus:border-neutral-400 transition-all text-neutral-800 placeholder-neutral-400"
                 />
                 <button
                   onClick={() => handleSubmit()}
@@ -383,7 +411,7 @@ export const AIQueryModal = ({
                     (!query.trim() && selectedIngredients.length === 0) ||
                     isLoading
                   }
-                  className="absolute right-2 top-1.5 w-8 h-8 bg-neutral-900 disabled:bg-gray-200 text-white rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-sm"
+                  className="absolute right-2 top-1.5 w-8 h-8 bg-neutral-900 disabled:bg-neutral-200 text-white rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-sm"
                 >
                   <ArrowUp className="w-5 h-5" />
                 </button>
@@ -396,13 +424,13 @@ export const AIQueryModal = ({
                   className={cn(
                     'shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-colors relative',
                     selectedIngredients.length > 0
-                      ? 'bg-gray-100 text-gray-800'
-                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200',
+                      ? 'bg-neutral-100 text-neutral-800'
+                      : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200',
                   )}
                 >
                   <SlidersHorizontal className="w-5 h-5" />
                   {selectedIngredients.length > 0 && (
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#E85A4F] text-white rounded-full text-[10px] flex items-center justify-center font-bold border-2 border-white box-content">
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold border-2 border-white box-content">
                       {selectedIngredients.length}
                     </div>
                   )}
@@ -421,7 +449,7 @@ export const AIQueryModal = ({
                 ) : (
                   <button
                     onClick={() => setShowFilterModal(true)}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-dashed border-gray-300 text-gray-400 text-sm hover:border-gray-400 hover:text-gray-500 transition-colors"
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-dashed border-neutral-300 text-neutral-400 text-sm hover:border-neutral-400 hover:text-neutral-500 transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     加入庫存食材

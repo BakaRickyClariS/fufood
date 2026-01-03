@@ -6,8 +6,8 @@
 import { useState, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
-// import { getAuthToken } from '@/modules/auth/utils/authUtils';
 import { aiRecipeApi } from '../api/aiRecipeApi';
+import { validateRecipes, validateGreeting } from '../utils/responseValidator';
 import type { AIRecipeRequest, AIRecipeItem, AIStreamEvent } from '../types';
 
 export type StreamState = {
@@ -74,12 +74,18 @@ export const useRecipeStream = () => {
           }));
           break;
 
-        case 'chunk':
+        case 'chunk': {
+          // 驗證 greeting 內容
+          const safeText =
+            event.data.section === 'greeting'
+              ? validateGreeting(event.data.text)
+              : event.data.text;
           setState((s) => ({
             ...s,
-            text: s.text + event.data.text,
+            text: s.text + safeText,
           }));
           break;
+        }
 
         case 'progress':
           setState((s) => ({
@@ -90,7 +96,18 @@ export const useRecipeStream = () => {
           break;
 
         case 'done': {
-          let finalRecipes = event.data.recipes;
+          // 驗證 AI 回應結構
+          let finalRecipes = validateRecipes(event.data.recipes || []);
+
+          if (finalRecipes.length === 0 && event.data.recipes?.length > 0) {
+            console.warn(
+              '[AI Security] All recipes filtered due to invalid structure',
+            );
+          } else if (finalRecipes.length < (event.data.recipes?.length || 0)) {
+            console.warn(
+              `[AI Security] Some recipes filtered: ${event.data.recipes?.length} -> ${finalRecipes.length}`,
+            );
+          }
 
           // 自動儲存食譜到後端
           if (finalRecipes && finalRecipes.length > 0) {

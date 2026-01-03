@@ -9,6 +9,17 @@ export * from './types';
 export { aiRecipeApi } from './api/aiRecipeApi';
 export { aiMediaApi } from './api/aiMediaApi';
 
+// Utils (Security)
+export {
+  validatePrompt,
+  validateIngredients,
+  isValidPrompt,
+  validateRecipes,
+  validateGreeting,
+  sanitizeText,
+} from './utils';
+export type { PromptValidationResult, PromptErrorCode } from './utils';
+
 // Hooks
 export {
   useRecipeSuggestions,
