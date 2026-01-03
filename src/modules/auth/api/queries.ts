@@ -134,13 +134,14 @@ export async function getUserProfile(): Promise<User | null> {
 }
 
 export function useGetUserProfileQuery() {
-  // 使用共用模組檢查是否可以發送認證請求
-  const shouldQuery = identity.canMakeAuthenticatedRequest();
+  // 只檢查是否明確登出，否則嘗試呼叫 API
+  // 這允許首次登入時（localStorage 還沒有 user 資料）也能呼叫 Profile API
+  const isExplicitlyLoggedOut = sessionStorage.getItem('logged_out') === 'true';
 
   return useQuery({
     queryKey: ['GET_USER_PROFILE'],
     queryFn: getUserProfile,
-    enabled: shouldQuery,
+    enabled: !isExplicitlyLoggedOut,
     retry: false,
     // 設定 5 分鐘內資料視為新鮮，避免頻繁 refetch 導致 loading 閃爍
     staleTime: 5 * 60 * 1000,
