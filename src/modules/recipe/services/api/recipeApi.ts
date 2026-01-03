@@ -44,39 +44,41 @@ export class RealRecipeApi implements RecipeApi {
     refrigeratorId?: string;
   }): Promise<RecipeListItem[]> => {
     // 從 AI API 取得所有食譜
-    const savedRecipes = await aiRecipeApi.getSavedRecipes(params?.refrigeratorId);
+    const savedRecipes = await aiRecipeApi.getSavedRecipes(
+      params?.refrigeratorId,
+    );
 
     // Helper to normalize category
     const normalizeRecipeCategory = (input?: string | null): RecipeCategory => {
-      if (!input) return '其他' as RecipeCategory; 
-      
+      if (!input) return '其他' as RecipeCategory;
+
       const map: Record<string, RecipeCategory> = {
-        '日式': '日式料理',
-        '台式': '中式料理', 
-        '美式': '美式料理',
-        '義式': '義式料理',
-        '泰式': '泰式料理',
-        '韓式': '韓式料理',
-        '墨西哥': '墨西哥料理',
-        '川菜': '川菜',
-        '越南': '越南料理',
-        '甜點': '甜點',
-        '飲品': '飲品',
+        日式: '日式料理',
+        台式: '中式料理',
+        美式: '美式料理',
+        義式: '義式料理',
+        泰式: '泰式料理',
+        韓式: '韓式料理',
+        墨西哥: '墨西哥料理',
+        川菜: '川菜',
+        越南: '越南料理',
+        甜點: '甜點',
+        飲品: '飲品',
       };
-      
+
       for (const key in map) {
         if (input.includes(key)) return map[key];
       }
-      
-      return (input as RecipeCategory);
+
+      return input as RecipeCategory;
     };
 
     // 轉換型別並過濾
     const recipes: RecipeListItem[] = savedRecipes.map((r) => {
       const category = normalizeRecipeCategory(r.category);
       // Fallback for UI safety if normalization failed to find a strict match and input was weird
-      const finalCategory = category || ('中式料理' as RecipeCategory); 
-      
+      const finalCategory = category || ('中式料理' as RecipeCategory);
+
       return {
         id: r.id,
         name: r.name,
@@ -113,13 +115,13 @@ export class RealRecipeApi implements RecipeApi {
       difficulty: saved.difficulty || '簡單',
       ingredients: (saved.ingredients || []).map((i) => ({
         name: i.name,
-        quantity: i.amount,
+        quantity: i.quantity,
         unit: i.unit,
         category: '準備材料' as const,
       })),
       seasonings: (saved.seasonings || []).map((s) => ({
         name: s.name,
-        quantity: s.amount,
+        quantity: s.quantity,
         unit: s.unit,
         category: '調味料' as const,
       })),
