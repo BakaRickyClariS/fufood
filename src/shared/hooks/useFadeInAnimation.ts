@@ -65,7 +65,13 @@ const useFadeInAnimation = <T extends HTMLElement = HTMLDivElement>({
     setShouldAnimate(true);
   }, []);
 
-  return { ref, resetAnimation, triggerAnimation, isAnimating: shouldAnimate };
+  return {
+    ref,
+    resetAnimation,
+    triggerAnimation,
+    isAnimating: shouldAnimate,
+    isAnimationComplete: hasAnimated,
+  };
 };
 
 export default useFadeInAnimation;

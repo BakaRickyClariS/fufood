@@ -4,10 +4,20 @@
  * 提供 AI 食譜生成的 React Query hooks
  * 支援 SSE 開關切換
  */
+import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import { aiRecipeApi } from '../api/aiRecipeApi';
 import { useRecipeStream } from './useRecipeStream';
-import type { AIRecipeRequest, AIRecipeItem } from '../types';
+import { useSaveAIRecipeMutation } from '../api/queries';
+import { useSendNotificationMutation } from '@/modules/notifications/api/queries';
+import {
+  transformAIRecipesToDisplayModels,
+  type DisplayRecipe,
+} from '../utils/recipeTransformer';
+import type { AIRecipeRequest } from '../types';
+import { validateRecipes } from '../utils/responseValidator';
 
 // ============================================================
 // Query Keys
@@ -69,8 +79,8 @@ export type AIRecipeGenerateResult = {
   progress: number;
   /** 目前階段描述 */
   stage: string;
-  /** 生成的食譜陣列 */
-  recipes: AIRecipeItem[] | null;
+  /** 生成的食譜陣列（已轉換為前端顯示格式） */
+  recipes: DisplayRecipe[] | null;
   /** 錯誤訊息 */
   error: string | null;
   /** 剩餘查詢次數 */
@@ -111,13 +121,103 @@ export const useAIRecipeGenerate = (
 
   // 標準模式
   const mutation = useGenerateRecipeMutation();
+  const { mutateAsync: saveRecipe } = useSaveAIRecipeMutation();
+  const { mutateAsync: sendNotification } = useSendNotificationMutation();
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const [manualRecipes, setManualRecipes] = useState<DisplayRecipe[] | null>(
+    null,
+  );
 
   // 統一的生成函式
   const generate = async (request: AIRecipeRequest): Promise<void> => {
+    // 重置之前的結果
+    setManualRecipes(null);
+
     if (shouldUseStreaming) {
       await streamHook.startStream(request);
     } else {
-      await mutation.mutateAsync(request);
+      const response = await mutation.mutateAsync(request);
+
+      // 如果是真實 API 回傳且有食譜，執行自動儲存
+      if (!response.isMock && response.data.recipes.length > 0) {
+        try {
+          // 1. 驗證並清理資料 (確保結構正確且安全)
+          const validatedRecipes = validateRecipes(response.data.recipes);
+
+          const savedResults = await Promise.all(
+            validatedRecipes.map((r) =>
+              saveRecipe({
+                name: r.name,
+                category: r.category,
+                imageUrl: r.imageUrl,
+                servings: r.servings,
+                cookTime: r.cookTime,
+                difficulty: r.difficulty,
+                ingredients: (r.ingredients || []).map((i) => ({
+                  name: i.name,
+                  quantity: String(i.amount), // 已由 validator 處理為字串或 '適量'
+                  unit: i.unit || '',
+                })),
+                seasonings: (r.seasonings || []).map((s) => ({
+                  name: s.name,
+                  quantity: String(s.amount), // 已由 validator 處理為字串或 '適量'
+                  unit: s.unit || '',
+                })),
+                steps: (r.steps || []).map((s) => ({
+                  step: s.step,
+                  description: s.description,
+                })),
+                originalPrompt: request.prompt,
+                refrigeratorId: activeRefrigeratorId || undefined,
+              }),
+            ),
+          );
+
+          // 發送 AI 食譜生成通知
+          if (activeRefrigeratorId && savedResults.length > 0) {
+            const firstRecipeName = savedResults[0].name;
+            const msg =
+              savedResults.length > 1
+                ? `已為您生成 ${firstRecipeName} 等 ${savedResults.length} 道新食譜！`
+                : `已為您生成新食譜：${firstRecipeName}`;
+
+            sendNotification({
+              groupId: activeRefrigeratorId,
+              title: 'AI 食譜生成完成',
+              body: msg,
+              type: 'recipe',
+              action: {
+                type: 'recipe',
+                payload: { recipeId: savedResults[0].id },
+              },
+            }).catch((err) =>
+              console.error('[useAIRecipe] Failed to send notification:', err),
+            );
+          }
+
+          // 使用後端回傳的真實 ID 轉換資料
+          const savedIds = savedResults.map((s) => s?.id);
+          const transformedRecipes = transformAIRecipesToDisplayModels(
+            response.data.recipes,
+            savedIds,
+          );
+
+          setManualRecipes(transformedRecipes);
+        } catch (err) {
+          console.error('Auto-save failed in normal mode:', err);
+          // 儲存失敗仍顯示原始結果（也需轉換以正確顯示）
+          const transformedRecipes = transformAIRecipesToDisplayModels(
+            response.data.recipes,
+          );
+          setManualRecipes(transformedRecipes);
+        }
+      } else {
+        // Mock 資料或無結果
+        const transformedRecipes = transformAIRecipesToDisplayModels(
+          response.data.recipes,
+        );
+        setManualRecipes(transformedRecipes);
+      }
     }
   };
 
@@ -130,6 +230,7 @@ export const useAIRecipeGenerate = (
 
   // 重置函式
   const reset = () => {
+    setManualRecipes(null);
     if (shouldUseStreaming) {
       streamHook.reset();
     } else {
@@ -153,27 +254,35 @@ export const useAIRecipeGenerate = (
     };
   }
 
-  // 標準模式
-    // 標準模式下的錯誤處理
-    let errorMsg = mutation.error?.message ?? null;
-    if (mutation.error) {
-       console.error('[AI useAIRecipeGenerate] Mutation error:', mutation.error);
-       // @ts-ignore
-       if (mutation.error?.code === 'AI_007') {
-         errorMsg = '輸入內容包含不允許的指令或關鍵字，請重新輸入。';
-       }
+  // 標準模式下的錯誤處理
+  let errorMsg = mutation.error?.message ?? null;
+  if (mutation.error) {
+    console.error('[AI useAIRecipeGenerate] Mutation error:', mutation.error);
+    // @ts-ignore
+    if (mutation.error?.code === 'AI_007') {
+      errorMsg = '輸入內容包含不允許的指令或關鍵字，請重新輸入。';
     }
+  }
 
-    return {
-      generate,
-      isLoading: mutation.isPending,
-      text: mutation.data?.data.greeting ?? '',
-      progress: mutation.isSuccess ? 100 : 0,
-      stage: mutation.isPending ? '生成中...' : mutation.isSuccess ? '完成' : '',
-      recipes: mutation.data?.data.recipes ?? null,
-      error: errorMsg,
-      remainingQueries: mutation.data?.data.remainingQueries ?? null,
-      stop,
-      reset,
-    };
+  // 計算 recipes（確保型別一致）
+  const getRecipes = (): DisplayRecipe[] | null => {
+    if (manualRecipes) return manualRecipes;
+    if (mutation.data?.data.recipes) {
+      return transformAIRecipesToDisplayModels(mutation.data.data.recipes);
+    }
+    return null;
+  };
+
+  return {
+    generate,
+    isLoading: mutation.isPending,
+    text: mutation.data?.data.greeting ?? '',
+    progress: mutation.isSuccess ? 100 : 0,
+    stage: mutation.isPending ? '生成中...' : mutation.isSuccess ? '完成' : '',
+    recipes: getRecipes(),
+    error: errorMsg,
+    remainingQueries: mutation.data?.data.remainingQueries ?? null,
+    stop,
+    reset,
+  };
 };
