@@ -56,7 +56,7 @@ export const ThemeSelectionSheet = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  
+
   // Redux
   const dispatch = useDispatch();
   const storedSelectedId = useSelector(selectThemeSelectionSelectedId);
@@ -70,7 +70,7 @@ export const ThemeSelectionSheet = ({
   const [shouldRender, setShouldRender] = useState(!skipAnimation);
 
   const [selectedId, setSelectedId] = useState<number | null>(
-    currentThemeId ?? null
+    currentThemeId ?? null,
   );
   const [userName, setUserName] = useState(defaultUserName);
   const [isLoading, setIsLoading] = useState(false);
@@ -100,7 +100,7 @@ export const ThemeSelectionSheet = ({
       } else if (currentThemeId) {
         setSelectedId(currentThemeId);
       }
-      
+
       if (storedUserName) {
         setUserName(storedUserName);
       } else if (defaultUserName) {
@@ -108,12 +108,23 @@ export const ThemeSelectionSheet = ({
       }
     }
     wasOpenRef.current = isOpen;
-  }, [isOpen, storedSelectedId, storedUserName, currentThemeId, defaultUserName]);
+  }, [
+    isOpen,
+    storedSelectedId,
+    storedUserName,
+    currentThemeId,
+    defaultUserName,
+  ]);
 
   // 同步選擇狀態到 Redux
   useEffect(() => {
     if (isOpen) {
-      dispatch(updateThemeSelection({ selectedThemeId: selectedId ?? undefined, userName }));
+      dispatch(
+        updateThemeSelection({
+          selectedThemeId: selectedId ?? undefined,
+          userName,
+        }),
+      );
     }
   }, [isOpen, selectedId, userName, dispatch]);
 
@@ -201,7 +212,7 @@ export const ThemeSelectionSheet = ({
     try {
       setIsLoading(true);
       await onConfirm(selectedId, isFirstLogin ? userName : undefined);
-      
+
       // 關閉動畫
       const tl = gsap.timeline({
         onComplete: onClose,
@@ -259,8 +270,8 @@ export const ThemeSelectionSheet = ({
   if (!isOpen || !shouldRender) return null;
 
   return createPortal(
-    <div 
-      ref={containerRef} 
+    <div
+      ref={containerRef}
       className="fixed inset-0 flex items-end pointer-events-auto z-[110]"
     >
       {/* Backdrop */}
@@ -280,20 +291,23 @@ export const ThemeSelectionSheet = ({
         onTouchEnd={handleTouchEnd}
       >
         {/* 下滑提示條 - 加入 touch-action: none 防止瀏覽器下拉刷新 */}
-        <div className="flex justify-center py-3 shrink-0" style={{ touchAction: 'none' }}>
+        <div
+          className="flex justify-center py-3 shrink-0"
+          style={{ touchAction: 'none' }}
+        >
           <div className="w-10 h-1 bg-neutral-300 rounded-full" />
         </div>
 
         {/* Content - 可滾動區域 */}
-        <div className="px-6 space-y-6 overflow-y-auto flex-1">
+        <div className="px-6 space-y-6 overflow-y-auto flex-1 select-none">
           {/* 選擇頭貼區塊 */}
-          <div>
+          <div className="mb-6">
             {/* 標題 - 左邊橘色條 */}
             <div className="flex items-center gap-2 mb-4">
               <div className="w-1 h-6 bg-primary-500 rounded-full" />
               <h2 className="text-lg font-bold text-neutral-800">選擇頭貼</h2>
             </div>
-            
+
             {/* 主題選擇區 - 3 欄 */}
             <div className="grid grid-cols-3 gap-3">
               {THEMES.map((theme: Theme) => (
@@ -304,14 +318,14 @@ export const ThemeSelectionSheet = ({
                     'relative aspect-square rounded-2xl overflow-hidden border-2 transition-all duration-200 bg-neutral-50',
                     selectedId === theme.id
                       ? 'border-primary-500'
-                      : 'border-neutral-200 hover:border-neutral-300'
+                      : 'border-neutral-200 hover:border-neutral-300',
                   )}
                   onClick={() => setSelectedId(theme.id)}
                 >
                   <img
                     src={theme.avatar}
                     alt={`頭貼 ${theme.id}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover scale-150 translate-y-5"
                   />
                   {selectedId === theme.id && (
                     <div className="absolute top-2 left-2 w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center shadow-md">
@@ -325,25 +339,29 @@ export const ThemeSelectionSheet = ({
 
           {/* 建立用戶名區塊 - 僅首次登入時顯示 */}
           {isFirstLogin && (
-            <div>
+            <div className="mb-6">
               {/* 標題 - 左邊橘色條 */}
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-1 h-6 bg-primary-500 rounded-full" />
-                <h2 className="text-lg font-bold text-neutral-800">建立用戶名</h2>
+                <h2 className="text-lg font-bold text-neutral-800">
+                  建立用戶名
+                </h2>
               </div>
-              
+
               {/* 輸入欄位 */}
               <div className="relative">
                 <Input
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
                   placeholder="Add value"
-                  className="h-14 rounded-xl pr-32 text-base border-neutral-200 bg-white"
+                  className="h-14 rounded-xl pr-32 text-base border-neutral-200 bg-white select-text"
                 />
                 {/* 已綁定LINE帳戶標記 */}
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 bg-success-50 px-2 py-2 rounded-full">
                   <img src={LineIconGreen} alt="LINE" className="w-4 h-4" />
-                  <span className="text-xs text-neutral-600 font-medium">已綁定LINE帳戶</span>
+                  <span className="text-xs text-neutral-600 font-medium">
+                    已綁定LINE帳戶
+                  </span>
                 </div>
               </div>
             </div>
@@ -368,7 +386,7 @@ export const ThemeSelectionSheet = ({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };
 
@@ -388,7 +406,7 @@ export const CurrentThemeCard = ({
   onChangeClick,
 }: CurrentThemeCardProps) => {
   return (
-    <div 
+    <div
       onClick={onChangeClick}
       className="bg-white rounded-2xl p-4 cursor-pointer hover:bg-neutral-50 transition-colors"
     >
@@ -401,17 +419,15 @@ export const CurrentThemeCard = ({
             className="w-full h-full object-cover scale-110"
           />
         </div>
-        
+
         {/* 角色資訊 */}
         <div className="flex-1">
           <h3 className="text-base font-bold text-neutral-800">目前角色</h3>
           <p className="text-sm text-neutral-500">{theme.name}</p>
         </div>
-        
+
         {/* 變更按鈕 */}
-        <div
-          className="flex items-center gap-1 text-primary-500 font-medium text-sm"
-        >
+        <div className="flex items-center gap-1 text-primary-500 font-medium text-sm">
           變更
           <ChevronRight className="w-4 h-4" />
         </div>
