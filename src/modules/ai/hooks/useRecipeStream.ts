@@ -6,9 +6,15 @@
 import { useState, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
-// import { getAuthToken } from '@/modules/auth/utils/authUtils';
 import { aiRecipeApi } from '../api/aiRecipeApi';
-import type { AIRecipeRequest, AIRecipeItem, AIStreamEvent } from '../types';
+import { validateRecipes, validateGreeting } from '../utils/responseValidator';
+import {
+  transformAIRecipesToDisplayModels,
+  type DisplayRecipe,
+} from '../utils/recipeTransformer';
+import { useSaveAIRecipeMutation } from '../api/queries';
+import { useSendNotificationMutation } from '@/modules/notifications/api/queries';
+import type { AIRecipeRequest, AIStreamEvent } from '../types';
 
 export type StreamState = {
   /** 是否正在串流 */
@@ -19,8 +25,8 @@ export type StreamState = {
   progress: number;
   /** 目前階段描述 */
   stage: string;
-  /** 完成後的食譜陣列 */
-  recipes: AIRecipeItem[] | null;
+  /** 完成後的食譜陣列（已轉換為前端顯示格式） */
+  recipes: DisplayRecipe[] | null;
   /** 錯誤訊息 */
   error: string | null;
   /** 剩餘查詢次數 */
@@ -57,6 +63,10 @@ export const useRecipeStream = () => {
   // 從 Redux 取得當前冰箱 ID（根據 Code Review 建議，統一來源）
   const refrigeratorId = useSelector(selectActiveRefrigeratorId);
 
+  // Mutations
+  const { mutateAsync: saveRecipe } = useSaveAIRecipeMutation();
+  const { mutateAsync: sendNotification } = useSendNotificationMutation();
+
   /**
    * 解析 SSE 事件並更新狀態
    */
@@ -74,12 +84,18 @@ export const useRecipeStream = () => {
           }));
           break;
 
-        case 'chunk':
+        case 'chunk': {
+          // 驗證 greeting 內容
+          const safeText =
+            event.data.section === 'greeting'
+              ? validateGreeting(event.data.text)
+              : event.data.text;
           setState((s) => ({
             ...s,
-            text: s.text + event.data.text,
+            text: s.text + safeText,
           }));
           break;
+        }
 
         case 'progress':
           setState((s) => ({
@@ -90,20 +106,31 @@ export const useRecipeStream = () => {
           break;
 
         case 'done': {
-          let finalRecipes = event.data.recipes;
+          // 驗證 AI 回應結構
+          const validatedRecipes = validateRecipes(event.data.recipes || []);
+
+          if (validatedRecipes.length === 0 && event.data.recipes?.length > 0) {
+            console.warn(
+              '[AI Security] All recipes filtered due to invalid structure',
+            );
+          } else if (
+            validatedRecipes.length < (event.data.recipes?.length || 0)
+          ) {
+            console.warn(
+              `[AI Security] Some recipes filtered: ${event.data.recipes?.length} -> ${validatedRecipes.length}`,
+            );
+          }
+
+          // 使用集中式轉換工具函式
+          let finalRecipes =
+            transformAIRecipesToDisplayModels(validatedRecipes);
 
           // 自動儲存食譜到後端
-          if (finalRecipes && finalRecipes.length > 0) {
+          if (validatedRecipes && validatedRecipes.length > 0) {
             try {
-              // 引入儲存服務 (使用同模組的 aiRecipeApi)
-              const { aiRecipeApi: savedRecipeApi } = await import(
-                '@/modules/ai/api/aiRecipeApi'
-              );
-
               const savedRecipes = await Promise.all(
-                finalRecipes.map(async (recipe) => {
-                  // SaveRecipeInput 格式: { name, amount, unit }
-                  const input = {
+                validatedRecipes.map(async (recipe) => {
+                  return saveRecipe({
                     name: recipe.name,
                     category: recipe.category,
                     imageUrl: recipe.imageUrl,
@@ -112,69 +139,56 @@ export const useRecipeStream = () => {
                     difficulty: recipe.difficulty,
                     ingredients: (recipe.ingredients || []).map((i) => ({
                       name: i.name,
-                      amount: i.amount,
-                      unit: i.unit,
+                      quantity: String(i.amount),
+                      unit: i.unit || '',
                     })),
                     seasonings: (recipe.seasonings || []).map((s) => ({
                       name: s.name,
-                      amount: s.amount,
-                      unit: s.unit,
+                      quantity: String(s.amount),
+                      unit: s.unit || '',
                     })),
                     steps: (recipe.steps || []).map((s) => ({
                       step: s.step,
                       description: s.description,
                     })),
                     originalPrompt: currentPromptRef.current,
-                  };
-                  return savedRecipeApi.saveRecipe(input);
+                    refrigeratorId: refrigeratorId || undefined,
+                  });
                 }),
               );
 
-              // 將回傳的已儲存食譜 (含 ID + source) 轉換回 AIRecipeItem 格式供 UI 顯示
-              finalRecipes = savedRecipes.map((r) => ({
-                id: r.id,
-                name: r.name,
-                category: r.category || '其他',
-                imageUrl: r.imageUrl ?? null, // 保留 null，不轉為空字串
-                servings: r.servings,
-                cookTime: r.cookTime || 0,
-                isFavorite: r.isFavorite ?? false,
-                difficulty: r.difficulty || '簡單',
-                ingredients: r.ingredients,
-                seasonings: r.seasonings,
-                steps: r.steps,
-              }));
+              // 使用後端回傳的真實 ID 重新轉換
+              const savedIds = savedRecipes.map((s) => s?.id);
+              finalRecipes = transformAIRecipesToDisplayModels(
+                validatedRecipes,
+                savedIds,
+              );
+
               // 發送 AI 食譜生成通知
-              try {
-                const { notificationsApiImpl } = await import(
-                  '@/modules/notifications/api/notificationsApiImpl'
-                );
-                // 取得當前冰箱 ID (從 localStorage 或 Redux，這裡簡單起見先從常用路徑處理)
-                // refrigeratorId 已在 hook 頂層透過 useSelector 取得
+              if (refrigeratorId && finalRecipes.length > 0) {
+                const firstRecipeName = finalRecipes[0].name;
+                const msg =
+                  finalRecipes.length > 1
+                    ? `已為您生成 ${firstRecipeName} 等 ${finalRecipes.length} 道新食譜！`
+                    : `已為您生成新食譜：${firstRecipeName}`;
 
-                if (refrigeratorId && finalRecipes.length > 0) {
-                  const firstRecipeName = finalRecipes[0].name;
-                  const msg =
-                    finalRecipes.length > 1
-                      ? `已為您生成 ${firstRecipeName} 等 ${finalRecipes.length} 道新食譜！`
-                      : `已為您生成新食譜：${firstRecipeName}`;
-
-                  await notificationsApiImpl.sendNotification({
-                    groupId: refrigeratorId,
-                    title: 'AI 食譜生成完成',
-                    body: msg,
+                await sendNotification({
+                  groupId: refrigeratorId,
+                  title: 'AI 食譜生成完成',
+                  body: msg,
+                  type: 'recipe',
+                  action: {
                     type: 'recipe',
-                    action: {
-                      type: 'recipe',
-                      payload: { recipeId: finalRecipes[0].id },
-                    },
-                  });
-                }
-              } catch (notifyErr) {
-                console.warn('AI 通知發送失敗:', notifyErr);
+                    payload: { recipeId: finalRecipes[0].id },
+                  },
+                });
               }
             } catch (err) {
               console.error('Auto-save recipes failed:', err);
+              // 動態引入 toast 以避免頂層循環依賴或 SSR 問題
+              import('sonner').then(({ toast }) => {
+                toast.error('食譜自動儲存失敗，請稍後再試');
+              });
             }
           }
 
@@ -211,7 +225,7 @@ export const useRecipeStream = () => {
         }
       }
     },
-    [refrigeratorId],
+    [refrigeratorId, saveRecipe, sendNotification],
   );
 
   /**

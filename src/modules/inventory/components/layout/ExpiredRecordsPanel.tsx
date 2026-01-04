@@ -58,6 +58,38 @@ const ExpiredRecordsPanel: React.FC = () => {
   const [isContentLoading, setIsContentLoading] = useState(false);
   const { groupId } = useParams<{ groupId: string }>();
   const dispatch = useDispatch();
+
+  // 使用共用的淡入動畫 hook
+  const {
+    ref: contentRef,
+    resetAnimation,
+    isAnimationComplete,
+  } = useFadeInAnimation<HTMLDivElement>({
+    isLoading: isLoading || isContentLoading,
+  });
+
+  // Restore usage of Session Storage for memory
+  useEffect(() => {
+    // Wait for loading to finish AND animation to complete
+    if (isLoading || isContentLoading || !isAnimationComplete) return;
+
+    const savedId = sessionStorage.getItem('active_food_id');
+    if (savedId && !selectedItem && expiredItems.length > 0) {
+      // Add a noticeable delay after animation completes
+      const timer = setTimeout(() => {
+        const found = expiredItems.find((item) => item.id === savedId);
+        if (found) setSelectedItem(found);
+      }, 800); // Increased to 0.8s
+      return () => clearTimeout(timer);
+    }
+  }, [
+    expiredItems,
+    selectedItem,
+    isLoading,
+    isContentLoading,
+    isAnimationComplete,
+  ]);
+
   const groups = useSelector(selectAllGroups);
   const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
   const targetGroupId = activeRefrigeratorId || groupId || groups[0]?.id;
@@ -77,12 +109,6 @@ const ExpiredRecordsPanel: React.FC = () => {
     });
     return map;
   }, [settingsData]);
-
-  // 使用共用的淡入動畫 hook
-  const { ref: contentRef, resetAnimation } =
-    useFadeInAnimation<HTMLDivElement>({
-      isLoading: isLoading || isContentLoading,
-    });
 
   // Effect 1: 確保 groups 已載入
   useEffect(() => {
@@ -186,7 +212,10 @@ const ExpiredRecordsPanel: React.FC = () => {
                         image={item.imageUrl || ''}
                         value={item.lastPurchaseQuantity || item.quantity || 1}
                         label="上次購買數量"
-                        onClick={() => setSelectedItem(item)}
+                        onClick={() => {
+                          setSelectedItem(item);
+                          sessionStorage.setItem('active_food_id', item.id);
+                        }}
                       />
                     ))}
                   </div>
@@ -201,7 +230,10 @@ const ExpiredRecordsPanel: React.FC = () => {
         <FoodDetailModal
           item={selectedItem}
           isOpen={!!selectedItem}
-          onClose={() => setSelectedItem(null)}
+          onClose={() => {
+            setSelectedItem(null);
+            sessionStorage.removeItem('active_food_id');
+          }}
           isCompleted={filter === 'completed'}
           onItemUpdate={() => {
             if (targetGroupId) fetchExpiredItems(filter, 1, 20, targetGroupId);

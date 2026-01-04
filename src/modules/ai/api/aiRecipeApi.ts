@@ -11,6 +11,9 @@ import type {
   AIRecipeResponse,
   AISuggestionsResponse,
   AIRecipeItem,
+  SavedRecipe,
+  SavedRecipeListItem,
+  SaveRecipeInput,
 } from '../types';
 
 const AI_API_BASE = import.meta.env.VITE_AI_API_BASE_URL || '';
@@ -155,6 +158,12 @@ export const aiRecipeApi = {
         '[AI API] generateRecipe 真實 API 失敗，使用 Mock 資料',
         error,
       );
+
+      // 如果不是 Mock 模式且發生錯誤，應該拋出錯誤讓前端顯示 (例如 500 或 400)
+      if (!USE_MOCK) {
+        throw error;
+      }
+
       // 模擬一點延遲讓 UX 更自然
       await new Promise((resolve) => setTimeout(resolve, 800));
       // 真實 API 失敗，回傳 Mock 資料
@@ -210,7 +219,9 @@ export const aiRecipeApi = {
   /**
    * 取得使用者已儲存的食譜列表
    */
-  getSavedRecipes: async (refrigeratorId?: string): Promise<SavedRecipeListItem[]> => {
+  getSavedRecipes: async (
+    refrigeratorId?: string,
+  ): Promise<SavedRecipeListItem[]> => {
     const userId = identity.getUserId();
     if (!userId) {
       console.warn('No user ID, returning empty list');
@@ -256,57 +267,46 @@ export const aiRecipeApi = {
     );
     return response.data;
   },
+
+  /**
+   * 為新使用者自動儲存預設食譜
+   *
+   * 此方法會：
+   * 1. 檢查使用者是否已登入
+   * 2. 檢查是否已有食譜（避免重複儲存）
+   * 3. 若無食譜，批次儲存預設食譜
+   *
+   * @param refrigeratorId - 可選的冰箱 ID
+   * @returns 是否成功儲存預設食譜
+   */
+  seedDefaultRecipes: async (refrigeratorId?: string): Promise<boolean> => {
+    const userId = identity.getUserId();
+    if (!userId) {
+      console.log('[AI API] 未登入，跳過預設食譜 seed');
+      return false;
+    }
+
+    try {
+      // 動態載入預設食譜資料（避免不必要的初始載入）
+      const { DEFAULT_RECIPES } = await import('../data/defaultRecipes');
+
+      // 批次儲存所有預設食譜
+      await Promise.all(
+        DEFAULT_RECIPES.map((recipe) =>
+          aiRecipeApi.saveRecipe({
+            ...recipe,
+            refrigeratorId,
+          }),
+        ),
+      );
+
+      console.log(`[AI API] 成功儲存 ${DEFAULT_RECIPES.length} 道預設食譜`);
+      return true;
+    } catch (error) {
+      console.error('[AI API] 儲存預設食譜失敗:', error);
+      return false;
+    }
+  },
 };
 
-// ============================================================
-// 儲存食譜型別
-// ============================================================
-
-/** 儲存食譜的輸入格式 */
-export type SaveRecipeInput = {
-  name: string;
-  category?: string;
-  description?: string;
-  imageUrl?: string | null;  // 允許 null，表示圖片生成失敗
-  servings?: number;
-  cookTime?: number;
-  difficulty?: '簡單' | '中等' | '困難';
-  ingredients: { name: string; amount: string; unit: string }[];
-  seasonings?: { name: string; amount: string; unit: string }[];
-  steps: { step: number; description: string }[];
-  originalPrompt?: string;
-};
-
-/** 已儲存的食譜 (完整) */
-export type SavedRecipe = {
-  id: string;
-  userId: string;
-  name: string;
-  category: string | null;
-  description: string | null;
-  imageUrl: string | null;
-  servings: number;
-  cookTime: number | null;
-  difficulty: '簡單' | '中等' | '困難' | null;
-  ingredients: { name: string; amount: string; unit: string }[];
-  seasonings: { name: string; amount: string; unit: string }[];
-  steps: { step: number; description: string }[];
-  source: 'ai_generated' | 'manual';
-  originalPrompt: string | null;
-  isFavorite: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
-
-/** 已儲存的食譜列表項目 */
-export type SavedRecipeListItem = {
-  id: string;
-  name: string;
-  category: string | null;
-  imageUrl: string | null;
-  servings: number;
-  cookTime: number | null;
-  difficulty: '簡單' | '中等' | '困難' | null;
-  isFavorite: boolean;
-  createdAt: string;
-};
+// 移除底部的類型定義，因為已移動到 types/index.ts

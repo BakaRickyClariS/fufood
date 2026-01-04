@@ -20,7 +20,12 @@ export const IngredientList = ({ ingredients }: IngredientListProps) => {
             className="flex justify-between items-center py-2 border-b border-gray-200 last:border-0"
           >
             <span className="text-gray-900">{item.name}</span>
-            <span className="text-gray-900 font-medium">{item.quantity}</span>
+            <div className="flex items-center gap-1">
+              <span className="text-gray-900 font-medium">{item.quantity}</span>
+              {item.unit && (
+                <span className="text-gray-500 text-sm">{item.unit}</span>
+              )}
+            </div>
           </div>
         ))}
       </div>
