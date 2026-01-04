@@ -1,6 +1,6 @@
-import joAvatar from '@/assets/images/group/jo.png';
-import koAvatar from '@/assets/images/group/ko.png';
-import zoAvatar from '@/assets/images/group/zo.png';
+import Group01 from '@/assets/images/group/01-group.png';
+import Group02 from '@/assets/images/group/02-group.png';
+import Group03 from '@/assets/images/group/03-group.png';
 
 // User Avatars from auth folder
 import avatar1 from '@/assets/images/auth/Avatar-1.png';
@@ -27,7 +27,7 @@ export const mockGroups: Group[] = [
     name: 'My Home',
     admin: 'Jocelyn',
     members: mockMembers,
-    imageUrl: joAvatar,
+    imageUrl: Group01,
     plan: 'free',
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -37,7 +37,7 @@ export const mockGroups: Group[] = [
     name: 'R Home',
     admin: 'Ricky',
     members: mockMembers,
-    imageUrl: koAvatar,
+    imageUrl: Group02,
     plan: 'free',
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -47,7 +47,7 @@ export const mockGroups: Group[] = [
     name: 'Z Home',
     admin: 'Zoe',
     members: mockMembers,
-    imageUrl: zoAvatar,
+    imageUrl: Group03,
     plan: 'free',
     createdAt: new Date(),
     updatedAt: new Date(),

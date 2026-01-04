@@ -7,6 +7,8 @@ import groupModalReducer from '@/modules/groups/store/groupModalSlice';
 import refrigeratorReducer from './slices/refrigeratorSlice';
 import shoppingListReducer from './slices/shoppingListSlice';
 import consumptionReducer from '@/modules/inventory/store/consumptionSlice';
+import themeSelectionReducer from './slices/themeSelectionSlice';
+import recipeReducer from '@/modules/recipe/store/recipeSlice';
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +20,8 @@ export const store = configureStore({
     refrigerator: refrigeratorReducer,
     shoppingList: shoppingListReducer,
     consumption: consumptionReducer,
+    themeSelection: themeSelectionReducer,
+    recipe: recipeReducer,
   },
 });
 

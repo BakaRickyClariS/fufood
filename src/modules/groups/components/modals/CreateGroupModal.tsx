@@ -15,15 +15,15 @@ import { useAuth } from '@/modules/auth';
 import { getGroupLimit } from '@/modules/groups/constants/membershipLimits';
 import { toast } from 'sonner';
 
-// Check available images in source
-import joImg from '@/assets/images/group/jo.png';
-import koImg from '@/assets/images/group/ko.png';
-import zoImg from '@/assets/images/group/zo.png';
+// 使用主題系統的群組圖片
+import Group01 from '@/assets/images/group/01-group.png';
+import Group02 from '@/assets/images/group/02-group.png';
+import Group03 from '@/assets/images/group/03-group.png';
 
 const AVAILABLE_GROUP_IMAGES = [
-  { id: 'jo', src: joImg, alt: 'Jo Group' },
-  { id: 'ko', src: koImg, alt: 'Ko Group' },
-  { id: 'zo', src: zoImg, alt: 'Zo Group' },
+  { id: '1', src: Group01, alt: '群組圖片 1' },
+  { id: '2', src: Group02, alt: '群組圖片 2' },
+  { id: '3', src: Group03, alt: '群組圖片 3' },
 ];
 
 type CreateGroupModalProps = {

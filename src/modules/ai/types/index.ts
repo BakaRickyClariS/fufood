@@ -4,6 +4,13 @@
  * 包含 AI 食譜生成、SSE Streaming、媒體上傳與影像辨識的類型
  */
 
+// 重新匯出前端顯示用型別（來自 recipeTransformer）
+export type {
+  DisplayRecipe,
+  DisplayIngredient,
+  DisplayStep,
+} from '../utils/recipeTransformer';
+
 // ============================================================
 // 請求類型
 // ============================================================
@@ -50,8 +57,8 @@ export type AIRecipeRequest = {
 /** 食材項目（準備材料或調味料） */
 export type AIIngredientItem = {
   name: string;
-  amount: string;
-  unit: string;
+  amount: string | number;
+  unit?: string;
 };
 
 /** 烹煮步驟 */
@@ -65,7 +72,7 @@ export type AIRecipeItem = {
   id: string;
   name: string;
   category: string;
-  imageUrl: string | null;  // 允許 null，表示圖片生成失敗或未完成
+  imageUrl: string | null; // 允許 null，表示圖片生成失敗或未完成
   servings: number;
   cookTime: number;
   isFavorite: boolean;
@@ -210,3 +217,57 @@ export type AIErrorCode =
   | 'MEDIA_001' // 未提供檔案
   | 'MEDIA_002' // 檔案類型不支援
   | 'MEDIA_003'; // 檔案過大
+
+// ============================================================
+// 儲存食譜型別
+// ============================================================
+
+/** 儲存食譜的輸入格式 */
+export type SaveRecipeInput = {
+  name: string;
+  category?: string;
+  description?: string;
+  imageUrl?: string | null; // 允許 null，表示圖片生成失敗
+  servings?: number;
+  cookTime?: number;
+  difficulty?: '簡單' | '中等' | '困難';
+  ingredients: { name: string; quantity: string; unit: string }[];
+  seasonings?: { name: string; quantity: string; unit: string }[];
+  steps: { step: number; description: string }[];
+  originalPrompt?: string;
+  refrigeratorId?: string;
+};
+
+/** 已儲存的食譜 (完整) */
+export type SavedRecipe = {
+  id: string;
+  userId: string;
+  name: string;
+  category: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  servings: number;
+  cookTime: number | null;
+  difficulty: '簡單' | '中等' | '困難' | null;
+  ingredients: { name: string; quantity: string; unit: string }[];
+  seasonings: { name: string; quantity: string; unit: string }[];
+  steps: { step: number; description: string }[];
+  source: 'ai_generated' | 'manual';
+  originalPrompt: string | null;
+  isFavorite: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** 已儲存的食譜列表項目 */
+export type SavedRecipeListItem = {
+  id: string;
+  name: string;
+  category: string | null;
+  imageUrl: string | null;
+  servings: number;
+  cookTime: number | null;
+  difficulty: '簡單' | '中等' | '困難' | null;
+  isFavorite: boolean;
+  createdAt: string;
+};

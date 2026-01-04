@@ -3,13 +3,16 @@ import { ChevronLeft, Bell, BellRing } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectConsumptionContextId } from '@/modules/inventory/store/consumptionSlice';
 import gsap from 'gsap';
-import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { InfoTooltip } from '@/shared/components/feedback/InfoTooltip';
+import { useGSAP } from '@gsap/react';
 import type { FoodItem } from '@/modules/inventory/types';
 import { useExpiryCheck } from '@/modules/inventory/hooks';
 import { inventoryApi } from '@/modules/inventory/api';
-import { aiRecipeApi } from '@/modules/ai/api/aiRecipeApi';
+// import { aiRecipeApi } from '@/modules/ai/api/aiRecipeApi';
+import { AIQueryModal } from '@/modules/ai/components/AIQueryModal';
+import { recipeApi } from '@/modules/recipe/services';
+import type { RecipeListItem } from '@/modules/recipe/types';
 import { ConsumptionModal } from '@/modules/inventory/components/consumption';
 import { useInventorySettingsQuery } from '@/modules/inventory/api/queries';
 import { categories as defaultCategories } from '@/modules/inventory/constants/categories';
@@ -44,8 +47,16 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
     item.lowStockAlert ?? false,
   );
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [aiModalProps, setAIModalProps] = useState<{
+    initialQuery?: string;
+    initialSelectedIngredients?: string[];
+    initialRecipes?: RecipeListItem[];
+    autoGenerate?: boolean;
+    mode?: 'default' | 'inspiration';
+  }>({});
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const navigate = useNavigate();
   const { status, daysUntilExpiry } = useExpiryCheck(item);
 
   // 取得設定資料以獲取分類中文名稱
@@ -74,7 +85,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
     categories.forEach((cat) => {
       map[cat.id] = cat.title;
     });
-    
+
     return map;
   }, [settingsData]);
 
@@ -94,35 +105,36 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
     setLowStockAlertEnabled(item.lowStockAlert ?? false);
   }, [item.lowStockAlert]);
 
-  // GSAP 進場動畫
-  useEffect(() => {
-    if (isOpen) {
-      const tl = gsap.timeline();
-      // 從右側滑入完整頁面
-      tl.fromTo(
-        modalRef.current,
-        { x: '100%' },
-        { x: '0%', duration: 0.4, ease: 'power3.out' },
-      );
-    }
-  }, [isOpen]);
+  // GSAP 進場/退場動畫
+  useGSAP(
+    () => {
+      if (isOpen) {
+        gsap.fromTo(
+          modalRef.current,
+          { x: '100%' },
+          { x: '0%', duration: 0.6, ease: 'power3.out' },
+        );
+      }
+    },
+    { scope: modalRef, dependencies: [isOpen] },
+  );
 
-  const handleClose = () => {
+  const { contextSafe } = useGSAP({ scope: modalRef });
+
+  const handleClose = contextSafe(() => {
     // 如果使用者手動關閉 Modal，且當前有此食材的消耗流程，則清除流程狀態
     if (consumptionContextId === item.id) {
       dispatch(clearConsumption());
     }
 
-    const tl = gsap.timeline({
-      onComplete: onClose,
-    });
     // 向右滑出
-    tl.to(modalRef.current, {
+    gsap.to(modalRef.current, {
       x: '100%',
       duration: 0.3,
       ease: 'power3.in',
+      onComplete: onClose,
     });
-  };
+  });
 
   const handleToggleAlert = async () => {
     if (isUpdating) return;
@@ -149,22 +161,51 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
 
   // 處理食譜靈感 (AI 生成)
   const handleRecipeInspiration = async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    // 1. 先嘗試從現有食譜搜尋
     try {
-      const result = await aiRecipeApi.generateRecipe({
-        prompt: `使用 ${item.name} 製作料理`,
-        selectedIngredients: [item.name],
-      });
+      // 這裡簡單抓取所有食譜並過濾 (若資料量大應改為後端 API 支援)
+      // 注意：這裡不傳 refrigeratorId 以搜尋所有已儲存食譜
+      const allSavedRecipes = await recipeApi.getRecipes(); // 需要 import recipeApi
 
-      if (result.data.recipes && result.data.recipes.length > 0) {
-        // 使用 id 參數並傳遞完整食譜物件，避免前端因資料尚未寫入 DB 而無法透過 API 取得
-        navigate(`/planning?tab=recipes&id=${result.data.recipes[0].id}`, {
-          state: { openRecipe: result.data.recipes[0] },
+      const matchedRecipes = allSavedRecipes.filter((r) =>
+        r.name.includes(item.name),
+      );
+
+      if (matchedRecipes.length > 0) {
+        // 有現有食譜：直接開啟 AIQueryModal 顯示結果，不觸發 AI
+        setAIModalProps({
+          initialQuery: `使用 ${item.name} 製作料理`,
+          initialSelectedIngredients: [item.name],
+          initialRecipes: matchedRecipes,
+          autoGenerate: false,
+          mode: 'default',
+        });
+      } else {
+        // 無現有食譜：開啟 AIQueryModal 並自動觸發 AI 生成 (靈感模式)
+        setAIModalProps({
+          initialQuery: `使用 ${item.name} 製作料理`,
+          initialSelectedIngredients: [item.name],
+          initialRecipes: [],
+          autoGenerate: true,
+          mode: 'inspiration', // 啟用靈感模式：單一結果、自動開啟、Loading 圖示
         });
       }
-
-      handleClose();
+      setShowAIModal(true);
     } catch (error) {
-      console.error('Failed to generate recipe', error);
+      console.error('Check existing recipes failed', error);
+      // 發生錯誤則 Fallback 到原本邏輯 (直接 AI)
+      setAIModalProps({
+        initialQuery: `使用 ${item.name} 製作料理`,
+        initialSelectedIngredients: [item.name],
+        initialRecipes: [],
+        autoGenerate: true,
+        mode: 'inspiration',
+      });
+      setShowAIModal(true);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -203,10 +244,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
   if (!isOpen) return null;
 
   return createPortal(
-    <div
-      ref={modalRef}
-      className="fixed inset-0 z-[100] bg-white flex flex-col"
-    >
+    <div ref={modalRef} className="fixed inset-0 z-100 bg-white flex flex-col">
       {/* Consumpion Modal */}
       <ConsumptionModal
         isOpen={showConsumptionModal}
@@ -412,13 +450,34 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
               <button
                 className="flex-1 py-3 bg-primary-400 text-white rounded-lg text-base font-bold active:scale-95 transition-transform shadow-md shadow-orange-100"
                 onClick={handleRecipeInspiration}
+                disabled={isProcessing}
               >
-                食譜靈感
+                {isProcessing ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    處理中...
+                  </span>
+                ) : (
+                  '食譜靈感'
+                )}
               </button>
             </div>
           </div>
         </div>
       </div>
+      {/* AI Query Modal */}
+      <AIQueryModal
+        isOpen={showAIModal}
+        onClose={() => setShowAIModal(false)}
+        initialQuery={aiModalProps.initialQuery || `使用 ${item.name} 製作料理`}
+        initialSelectedIngredients={
+          aiModalProps.initialSelectedIngredients || [item.name]
+        }
+        initialRecipes={aiModalProps.initialRecipes}
+        autoGenerate={aiModalProps.autoGenerate}
+        mode={aiModalProps.mode}
+        useStreaming={false}
+      />
     </div>,
     document.body,
   );

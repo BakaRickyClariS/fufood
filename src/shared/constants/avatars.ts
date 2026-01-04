@@ -12,7 +12,6 @@ import Avatar5 from '@/assets/images/auth/Avatar-5.png';
 import Avatar6 from '@/assets/images/auth/Avatar-6.png';
 import Avatar7 from '@/assets/images/auth/Avatar-7.png';
 import Avatar8 from '@/assets/images/auth/Avatar-8.png';
-import Avatar9 from '@/assets/images/auth/Avatar-9.png';
 import DefaultAvatarImg from '@/assets/images/inventory/members-zo.png';
 
 /**
@@ -27,7 +26,6 @@ export const AVATAR_MAP: Record<string, string> = {
   '6': Avatar6,
   '7': Avatar7,
   '8': Avatar8,
-  '9': Avatar9,
 };
 
 /**
@@ -42,10 +40,10 @@ export const AVATAR_OPTIONS = [
   { id: 6, src: Avatar6 },
   { id: 7, src: Avatar7 },
   { id: 8, src: Avatar8 },
-  { id: 9, src: Avatar9 },
 ] as const;
 
 /**
  * 預設頭像
  */
 export const DEFAULT_AVATAR = DefaultAvatarImg;
+

@@ -160,7 +160,7 @@ export const authApi = {
         name: data.name,
         profilePictureUrl: data.profilePictureUrl || currentUser.profilePictureUrl,
         email: data.email || currentUser.email,
-        preference: data.preference || [],
+        preferences: data.preferences || [],
         avatar: data.avatar || currentUser.avatar,
         gender: data.gender ?? 0,
         customGender: data.customGender || null,
