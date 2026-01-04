@@ -144,19 +144,14 @@ export const useJoinGroupMutation = () => {
 };
 
 /**
- * 離開群組 Mutation
+ * 成員自行退出群組 Mutation
+ * 使用正確的 API 路徑 DELETE /api/v1/refrigerator/{id}/leave
  */
 export const useLeaveGroupMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      groupId,
-      memberId,
-    }: {
-      groupId: string;
-      memberId: string;
-    }) => groupsApi.leave(groupId, memberId),
+    mutationFn: (groupId: string) => groupsApi.leaveGroup(groupId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
     },
@@ -180,6 +175,12 @@ export const useRemoveMemberMutation = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: groupKeys.members(variables.groupId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: groupKeys.lists(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: groupKeys.detail(variables.groupId),
       });
     },
   });
