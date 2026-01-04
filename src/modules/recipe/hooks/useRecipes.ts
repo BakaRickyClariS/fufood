@@ -28,17 +28,6 @@ export const useRecipes = (
 
   useEffect(() => {
     fetchRecipes();
-
-    // 監聽食譜更新事件 (例如 AI 生成完成後)
-    const handleRecipeUpdate = () => {
-      fetchRecipes();
-    };
-
-    window.addEventListener('recipe-updated', handleRecipeUpdate);
-
-    return () => {
-      window.removeEventListener('recipe-updated', handleRecipeUpdate);
-    };
   }, [category, refrigeratorId, lastUpdated]);
 
   return { recipes, isLoading, error, refetch: fetchRecipes };
