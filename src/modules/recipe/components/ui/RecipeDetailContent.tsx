@@ -100,7 +100,7 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
         {/* 我的最愛按鈕 */}
         <button
           onClick={handleToggleFavorite}
-          className="absolute top-4 right-4 z-50 p-2.5 bg-white/30 rounded-full backdrop-blur-[2px] transition-transform active:scale-95"
+          className="absolute top-20 right-4 z-50 p-2.5 bg-white/30 rounded-full backdrop-blur-[2px] transition-transform active:scale-95"
         >
           <Heart
             className={`w-6 h-6 transition-colors ${
