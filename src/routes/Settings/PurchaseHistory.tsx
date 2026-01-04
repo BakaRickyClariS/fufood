@@ -1,34 +1,52 @@
-import { useNavigate } from 'react-router-dom';
-import ComponentHeader from '@/modules/settings/components/SimpleHeader';
+import { useState, useEffect } from 'react';
+import SettingsModalLayout from '@/modules/settings/components/SettingsModalLayout';
 import { ShoppingBag, Clock, CheckCircle2 } from 'lucide-react';
 
-const MOCK_ORDERS = [
-  {
-    id: 'ORD-20231201-001',
-    date: '2023/12/01',
-    item: '進階版會員 (月費)',
-    amount: 'NT$90',
-    status: 'completed',
-  },
-  {
-    id: 'ORD-20231101-001',
-    date: '2023/11/01',
-    item: '進階版會員 (月費)',
-    amount: 'NT$90',
-    status: 'completed',
-  },
-];
+const PURCHASE_HISTORY_KEY = 'fufood_mock_orders';
 
-const PurchaseHistory = () => {
-  const navigate = useNavigate();
+type Order = {
+  id: string;
+  date: string;
+  item: string;
+  amount: string;
+  status: string;
+};
+
+type PurchaseHistoryProps = {
+  isOpen: boolean;
+  onClose: () => void;
+};
+
+const PurchaseHistory = ({ isOpen, onClose }: PurchaseHistoryProps) => {
+  const [orders, setOrders] = useState<Order[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      const stored = localStorage.getItem(PURCHASE_HISTORY_KEY);
+      if (stored) {
+        try {
+          const newOrders = JSON.parse(stored);
+          setOrders(newOrders);
+        } catch (e) {
+          console.error('Failed to parse mock orders', e);
+          setOrders([]);
+        }
+      } else {
+        setOrders([]);
+      }
+    }
+  }, [isOpen]);
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
-      <ComponentHeader title="購買紀錄" onBack={() => navigate(-1)} />
+    <SettingsModalLayout
+      isOpen={isOpen}
+      onClose={onClose}
+      title="購買紀錄"
+    >
 
       <div className="max-w-layout-container mx-auto px-4 py-6 space-y-4">
-        {MOCK_ORDERS.length > 0 ? (
-          MOCK_ORDERS.map((order) => (
+        {orders.length > 0 ? (
+          orders.map((order) => (
             <div
               key={order.id}
               className="bg-white rounded-2xl p-4 shadow-sm flex items-center justify-between"
@@ -61,7 +79,7 @@ const PurchaseHistory = () => {
           </div>
         )}
       </div>
-    </div>
+    </SettingsModalLayout>
   );
 };
 
