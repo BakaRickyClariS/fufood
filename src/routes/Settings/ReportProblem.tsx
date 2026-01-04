@@ -1,11 +1,16 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { Camera } from 'lucide-react';
-import ComponentHeader from '@/modules/settings/components/SimpleHeader';
+import SettingsModalLayout from '@/modules/settings/components/SettingsModalLayout';
 import { Button } from '@/shared/components/ui/button';
 
-const ReportProblem = () => {
-  const navigate = useNavigate();
+type ReportProblemProps = {
+  isOpen: boolean;
+  onClose: () => void;
+};
+
+const ReportProblem = ({ isOpen, onClose }: ReportProblemProps) => {
+  // const navigate = useNavigate(); // remove
   // const { user } = useAuth(); // User unused for now
 
   const [formData, setFormData] = useState({
@@ -18,12 +23,15 @@ const ReportProblem = () => {
     // Mock submit logic
     console.log('Report submitted:', formData);
     alert('感謝您的回報！我們會盡快處理。');
-    navigate(-1);
+    onClose();
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
-      <ComponentHeader title="回報問題" onBack={() => navigate(-1)} />
+    <SettingsModalLayout
+      isOpen={isOpen}
+      onClose={onClose}
+      title="回報問題"
+    >
 
       <form
         onSubmit={handleSubmit}
@@ -95,7 +103,7 @@ const ReportProblem = () => {
           </p>
         </div>
       </form>
-    </div>
+    </SettingsModalLayout>
   );
 };
 

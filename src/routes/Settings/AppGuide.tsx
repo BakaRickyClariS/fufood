@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom';
-import ComponentHeader from '@/modules/settings/components/SimpleHeader';
+// import { useNavigate } from 'react-router-dom';
+import SettingsModalLayout from '@/modules/settings/components/SettingsModalLayout';
 import { BookOpen, Search, Zap, Users } from 'lucide-react';
 
 const GUIDES = [
@@ -29,12 +29,20 @@ const GUIDES = [
   },
 ];
 
-const AppGuide = () => {
-  const navigate = useNavigate();
+type AppGuideProps = {
+  isOpen: boolean;
+  onClose: () => void;
+};
+
+const AppGuide = ({ isOpen, onClose }: AppGuideProps) => {
+  // const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
-      <ComponentHeader title="使用說明" onBack={() => navigate(-1)} />
+    <SettingsModalLayout
+      isOpen={isOpen}
+      onClose={onClose}
+      title="使用說明"
+    >
 
       <div className="max-w-layout-container mx-auto px-4 py-6 space-y-6">
         {/* Intro */}
@@ -75,7 +83,7 @@ const AppGuide = () => {
           </p>
         </div>
       </div>
-    </div>
+    </SettingsModalLayout>
   );
 };
 

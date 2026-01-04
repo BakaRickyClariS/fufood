@@ -1,10 +1,9 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
+import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '@/modules/auth';
 import { useUpdateProfileMutation } from '@/modules/settings/api/queries';
 import { useGetUserProfileQuery } from '@/modules/auth/api/queries';
-import { getUserAvatarUrl } from '@/shared/utils/avatarUtils';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import {
@@ -14,11 +13,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import SimpleHeader from '@/modules/settings/components/SimpleHeader';
-import AvatarEditor from '@/modules/settings/components/AvatarEditor';
+import SettingsModalLayout from '@/modules/settings/components/SettingsModalLayout';
+import ProfileAvatar from '@/modules/settings/components/ProfileAvatar';
 import { Gender, type GenderValue } from '@/modules/auth/types';
 import { SuccessModal } from '@/shared/components/ui/SuccessModal';
-// import { toast } from '@/shared/components/ui/use-toast'; // Assuming toast exists
+import {
+  ThemeSelectionSheet,
+  CurrentThemeCard,
+} from '@/shared/components/modals/ThemeSelectionSheet';
+import { useTheme } from '@/shared/providers/ThemeProvider';
+import {
+  getThemeById,
+} from '@/shared/constants/themes';
+import {
+  openThemeSelection,
+  selectThemeSelectionIsOpen,
+} from '@/store/slices/themeSelectionSlice';
 
 /**
  * 表單值類型
@@ -29,6 +39,7 @@ type ProfileFormValues = {
   email: string;
   gender: string;  // 以字串儲存數值，方便 Select 元件使用
   customGender: string;
+  themeId: number;
 };
 
 /**
@@ -40,15 +51,35 @@ const stringToGenderValue = (str: string): GenderValue => {
   return Gender.NotSpecified;
 };
 
-const EditProfile = () => {
-  const navigate = useNavigate();
+
+type EditProfileProps = {
+  isOpen: boolean;
+  onClose: () => void;
+};
+
+const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
+  const dispatch = useDispatch();
   const { user } = useAuth();
   // 主動呼叫 Query 確保最新資料（優先使用 fetch 回來的資料）
   const { data: latestUserData } = useGetUserProfileQuery();
   const effectiveUser = latestUserData || user;
 
+  // 主題系統
+  const { setTheme, currentThemeId } = useTheme();
+  
+  // 使用 Redux 狀態驅動 modal 顯示，支援重整時恢復
+  const showThemeSheet = useSelector(selectThemeSelectionIsOpen);
+
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const updateProfileMutation = useUpdateProfileMutation();
+
+  // 處理開啟主題選擇面板
+  const handleOpenThemeSheet = () => {
+    dispatch(openThemeSelection({
+      selectedThemeId: selectedThemeId,
+      userName: displayName,
+    }));
+  };
 
   // 使用 memo 化的資料作為表單初始值，當使用者資料載入或更新時自動重設表單
   const initialValues = useMemo(() => {
@@ -59,13 +90,15 @@ const EditProfile = () => {
       email: effectiveUser.email || '',
       gender: String(userGender),
       customGender: userGender === Gender.Other ? (effectiveUser.customGender || '') : '',
+      themeId: currentThemeId,
     };
-  }, [effectiveUser]);
+  }, [effectiveUser, currentThemeId]);
 
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     control,
     formState: { errors, isDirty },
   } = useForm<ProfileFormValues>({
@@ -73,6 +106,8 @@ const EditProfile = () => {
   });
 
   const selectedGender = watch('gender');
+  const selectedThemeId = watch('themeId');
+  const selectedTheme = getThemeById(selectedThemeId);
 
   const onSubmit = (data: ProfileFormValues) => {
     const genderValue = stringToGenderValue(data.gender);
@@ -87,7 +122,9 @@ const EditProfile = () => {
         },
       },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
+          // 儲存主題設定
+          await setTheme(data.themeId);
           // 顯示成功彈跳視窗
           setShowSuccessModal(true);
         },
@@ -99,51 +136,57 @@ const EditProfile = () => {
     );
   };
 
-  const handleAvatarEdit = () => {
-    // Implement avatar upload logic or modal here
-    console.log('Edit avatar');
+  const handleThemeConfirm = (themeId: number) => {
+    setValue('themeId', themeId, { shouldDirty: true });
   };
 
-  return (
-    <div className="min-h-screen bg-slate-50 pb-24">
-      <SimpleHeader title="編輯個人檔案" onBack={() => navigate(-1)} />
+  const displayName = effectiveUser?.name || effectiveUser?.displayName || 'User';
 
+  return (
+    <SettingsModalLayout
+      isOpen={isOpen}
+      onClose={onClose}
+      title="編輯個人檔案"
+    >
       <div className="max-w-layout-container mx-auto px-4 py-6 space-y-6">
-        {/* Avatar Section */}
+        {/* Avatar Section - 顯示 LINE 大頭貼 */}
         <div className="flex justify-center">
-          <AvatarEditor
-            src={getUserAvatarUrl(user)}
-            alt={user?.name || 'User'}
-            onEdit={handleAvatarEdit}
+          <ProfileAvatar
+            lineProfilePictureUrl={effectiveUser?.pictureUrl}
+            alt={displayName}
           />
         </div>
 
+        {/* 目前角色區塊 - 點擊變更開啟主題選擇 */}
+        <CurrentThemeCard
+          theme={selectedTheme}
+          onChangeClick={handleOpenThemeSheet}
+        />
+
+        {/* 主題選擇底部彈出面板 */}
+        <ThemeSelectionSheet
+          isOpen={showThemeSheet}
+          onClose={() => {}} // 關閉由 ThemeSelectionSheet 內部處理
+          onConfirm={handleThemeConfirm}
+          currentThemeId={selectedThemeId}
+          isFirstLogin={true}  // TODO: 之後在這裡改為 false 來關閉用戶名欄位
+          defaultUserName={displayName}
+        />
+
         {/* Form Section */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Read-only LINE ID */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-700">
-              LINE ID
-            </label>
-            <Input
-              value={user?.lineId || '未綁定'}
-              readOnly
-              disabled
-              className="bg-neutral-100 text-neutral-500"
-            />
-          </div>
+        <form id="profile-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-4 rounded-2xl">
 
           {/* Name */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-neutral-700">
-              使用者名稱 <span className="text-red-500">*</span>
+              使用者名稱 <span className="text-primary-500">*</span>
             </label>
             <Input
               {...register('name', { required: '請輸入使用者名稱' })}
               placeholder="請輸入名稱"
             />
             {errors.name && (
-              <p className="text-sm text-red-500">{errors.name.message}</p>
+              <p className="text-sm text-primary-500">{errors.name.message}</p>
             )}
           </div>
 
@@ -158,7 +201,7 @@ const EditProfile = () => {
               placeholder="請輸入電子郵件"
             />
             {errors.email && (
-              <p className="text-sm text-red-500">{errors.email.message}</p>
+              <p className="text-sm text-primary-500">{errors.email.message}</p>
             )}
           </div>
 
@@ -201,15 +244,17 @@ const EditProfile = () => {
               />
             </div>
           )}
-
-          <Button
-            type="submit"
-            className="w-full mt-6"
-            disabled={!isDirty || updateProfileMutation.isPending}
-          >
-            {updateProfileMutation.isPending ? '儲存中...' : '儲存'}
-          </Button>
         </form>
+
+        {/* 儲存按鈕 - 放在 form 外面避免被白色背景影響 */}
+        <Button
+          type="submit"
+          form="profile-form"
+          className="w-full py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-primary-300 disabled:opacity-100"
+          disabled={!isDirty || updateProfileMutation.isPending}
+        >
+          {updateProfileMutation.isPending ? '儲存中...' : '儲存'}
+        </Button>
       </div>
 
       {/* 儲存成功彈跳視窗 */}
@@ -217,12 +262,12 @@ const EditProfile = () => {
         isOpen={showSuccessModal}
         onClose={() => {
           setShowSuccessModal(false);
-          navigate(-1);
+          onClose();
         }}
         title="儲存成功！"
         autoCloseMs={1500}
       />
-    </div>
+    </SettingsModalLayout>
   );
 };
 

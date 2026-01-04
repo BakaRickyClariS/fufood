@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { ChevronDown, MessageCircle } from 'lucide-react';
-import ComponentHeader from '@/modules/settings/components/SimpleHeader';
+import SettingsModalLayout from '@/modules/settings/components/SettingsModalLayout';
 import { Button } from '@/shared/components/ui/button';
 
 type FAQItem = {
@@ -32,8 +31,12 @@ const FAQS: FAQItem[] = [
   },
 ];
 
-const HelpCenter = () => {
-  const navigate = useNavigate();
+type HelpCenterProps = {
+  isOpen: boolean;
+  onClose: () => void;
+};
+
+const HelpCenter = ({ isOpen, onClose }: HelpCenterProps) => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const toggleFAQ = (index: number) => {
@@ -41,8 +44,11 @@ const HelpCenter = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
-      <ComponentHeader title="問題與幫助" onBack={() => navigate(-1)} />
+    <SettingsModalLayout
+      isOpen={isOpen}
+      onClose={onClose}
+      title="問題與幫助"
+    >
 
       <div className="max-w-layout-container mx-auto px-4 py-6 space-y-6">
         {/* Contact Support CTA */}
@@ -97,7 +103,7 @@ const HelpCenter = () => {
           </div>
         </div>
       </div>
-    </div>
+    </SettingsModalLayout>
   );
 };
 
