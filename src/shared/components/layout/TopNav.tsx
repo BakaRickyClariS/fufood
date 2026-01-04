@@ -60,7 +60,7 @@ const TopNav = () => {
 
           <Button
             variant="ghost"
-            className="flex items-center gap-1 text-base font-bold text-primary-700 p-2 bg-primary-100 rounded-full hover:bg-primary-200"
+            className="flex items-center gap-1 text-base font-bold text-primary-700 p-2 bg-primary-50 rounded-full hover:bg-primary-200"
             onClick={openHome}
           >
             {displayHomeName}
@@ -92,10 +92,7 @@ const TopNav = () => {
               />
             </div>
             {/* Restore MembershipBadge */}
-            <MembershipBadge
-              tier={user?.membershipTier || 'premium'}
-              size="sm"
-            />
+            <MembershipBadge tier={user?.membershipTier || 'pro'} size="sm" />
           </div>
         </div>
       </div>

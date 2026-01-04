@@ -7,7 +7,7 @@ import {
   setActiveRefrigeratorId,
 } from '@/store/slices/refrigeratorSlice';
 import { useTheme } from '@/shared/providers/ThemeProvider';
-import { ThemeSelectionModal } from '@/shared/components/modals/ThemeSelectionModal';
+import { ThemeSelectionSheet } from '@/shared/components/modals/ThemeSelectionSheet';
 import InventorySection from '@/modules/dashboard/components/InventorySection';
 import RecipeSection from '@/modules/dashboard/components/RecipeSection';
 
@@ -43,12 +43,20 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
-      {/* 首次登入主題選擇 Modal */}
-      <ThemeSelectionModal
+      {/* 首次登入主題選擇 Sheet */}
+      <ThemeSelectionSheet
         isOpen={shouldShowThemeModal}
-        onClose={dismissThemeModal}
-        onConfirm={setTheme}
+        onClose={async () => {
+          // 跳過設定時自動套用預設值（第一個頭貼）
+          await setTheme(1);
+          dismissThemeModal();
+        }}
+        onConfirm={async (themeId, _userName) => {
+          // TODO: 若需要 userName 可在此處理
+          await setTheme(themeId);
+        }}
         isFirstLogin={true}
+        defaultUserName={displayName !== 'Guest' ? displayName : ''}
       />
 
       {/* Hero 區塊 */}

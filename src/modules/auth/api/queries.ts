@@ -11,7 +11,6 @@ import { backendApi } from '@/api/client';
 import { MOCK_USERS } from './mock/authMockData';
 import { parsePreferences } from '@/modules/settings/utils/dietaryUtils';
 
-
 // Gender 字串轉數值對應表
 const mapBackendGenderToEnum = (
   genderStr: string | number | undefined | null,
@@ -25,20 +24,16 @@ const mapBackendGenderToEnum = (
   return Gender.NotSpecified;
 };
 
-// Membership 轉換 ("Free" -> "free")
+// Membership 轉換 (0: free, 1: pro)
 export const mapBackendTierToFrontend = (
-  tier: string | number | undefined | null,
+  tier: number | undefined | null,
 ): MembershipTier => {
-  const t = String(tier).toLowerCase();
-  if (t === 'premium') return 'premium';
-  if (t === 'vip') return 'vip';
-  return 'free';
+  return tier && tier >= 1 ? 'pro' : 'free';
 };
 
 /**
  * 解析後端 preference 字串陣列為 DietaryPreference 物件
  */
-
 
 /**
  * 從後端 Profile API 取得已登入用戶資訊
@@ -49,8 +44,6 @@ export async function getUserProfile(): Promise<User | null> {
   if (loggedOut === 'true') {
     return null;
   }
-
-
 
   // 檢查 localStorage 中的 user 資料 (LINE 登入時會存)
   const userStr = localStorage.getItem('user');

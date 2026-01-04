@@ -22,9 +22,7 @@ import {
   CurrentThemeCard,
 } from '@/shared/components/modals/ThemeSelectionSheet';
 import { useTheme } from '@/shared/providers/ThemeProvider';
-import {
-  getThemeById,
-} from '@/shared/constants/themes';
+import { getThemeById } from '@/shared/constants/themes';
 import {
   openThemeSelection,
   selectThemeSelectionIsOpen,
@@ -37,7 +35,7 @@ import {
 type ProfileFormValues = {
   name: string;
   email: string;
-  gender: string;  // 以字串儲存數值，方便 Select 元件使用
+  gender: string; // 以字串儲存數值，方便 Select 元件使用
   customGender: string;
   themeId: number;
 };
@@ -50,7 +48,6 @@ const stringToGenderValue = (str: string): GenderValue => {
   if (num >= 0 && num <= 4) return num as GenderValue;
   return Gender.NotSpecified;
 };
-
 
 type EditProfileProps = {
   isOpen: boolean;
@@ -66,7 +63,7 @@ const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
 
   // 主題系統
   const { setTheme, currentThemeId } = useTheme();
-  
+
   // 使用 Redux 狀態驅動 modal 顯示，支援重整時恢復
   const showThemeSheet = useSelector(selectThemeSelectionIsOpen);
 
@@ -75,10 +72,12 @@ const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
 
   // 處理開啟主題選擇面板
   const handleOpenThemeSheet = () => {
-    dispatch(openThemeSelection({
-      selectedThemeId: selectedThemeId,
-      userName: displayName,
-    }));
+    dispatch(
+      openThemeSelection({
+        selectedThemeId: selectedThemeId,
+        userName: displayName,
+      }),
+    );
   };
 
   // 使用 memo 化的資料作為表單初始值，當使用者資料載入或更新時自動重設表單
@@ -89,7 +88,8 @@ const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
       name: effectiveUser.name || '',
       email: effectiveUser.email || '',
       gender: String(userGender),
-      customGender: userGender === Gender.Other ? (effectiveUser.customGender || '') : '',
+      customGender:
+        userGender === Gender.Other ? effectiveUser.customGender || '' : '',
       themeId: currentThemeId,
     };
   }, [effectiveUser, currentThemeId]);
@@ -111,7 +111,7 @@ const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
 
   const onSubmit = (data: ProfileFormValues) => {
     const genderValue = stringToGenderValue(data.gender);
-    
+
     updateProfileMutation.mutate(
       {
         data: {
@@ -140,14 +140,11 @@ const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
     setValue('themeId', themeId, { shouldDirty: true });
   };
 
-  const displayName = effectiveUser?.name || effectiveUser?.displayName || 'User';
+  const displayName =
+    effectiveUser?.name || effectiveUser?.displayName || 'User';
 
   return (
-    <SettingsModalLayout
-      isOpen={isOpen}
-      onClose={onClose}
-      title="編輯個人檔案"
-    >
+    <SettingsModalLayout isOpen={isOpen} onClose={onClose} title="編輯個人檔案">
       <div className="max-w-layout-container mx-auto px-4 py-6 space-y-6">
         {/* Avatar Section - 顯示 LINE 大頭貼 */}
         <div className="flex justify-center">
@@ -169,13 +166,15 @@ const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
           onClose={() => {}} // 關閉由 ThemeSelectionSheet 內部處理
           onConfirm={handleThemeConfirm}
           currentThemeId={selectedThemeId}
-          isFirstLogin={true}  // TODO: 之後在這裡改為 false 來關閉用戶名欄位
-          defaultUserName={displayName}
+          isFirstLogin={false}
         />
 
         {/* Form Section */}
-        <form id="profile-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-4 rounded-2xl">
-
+        <form
+          id="profile-form"
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4 bg-white p-4 rounded-2xl"
+        >
           {/* Name */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-neutral-700">
@@ -212,18 +211,19 @@ const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
               control={control}
               name="gender"
               render={({ field }) => (
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value}
-                >
+                <Select onValueChange={field.onChange} value={field.value}>
                   <SelectTrigger>
                     <SelectValue placeholder="選擇性別" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={String(Gender.NotSpecified)}>不透露</SelectItem>
+                    <SelectItem value={String(Gender.NotSpecified)}>
+                      不透露
+                    </SelectItem>
                     <SelectItem value={String(Gender.Female)}>女</SelectItem>
                     <SelectItem value={String(Gender.Male)}>男</SelectItem>
-                    <SelectItem value={String(Gender.NonBinary)}>無性別</SelectItem>
+                    <SelectItem value={String(Gender.NonBinary)}>
+                      無性別
+                    </SelectItem>
                     <SelectItem value={String(Gender.Other)}>其他</SelectItem>
                   </SelectContent>
                 </Select>

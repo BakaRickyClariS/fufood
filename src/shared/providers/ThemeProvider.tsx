@@ -1,9 +1,9 @@
 /**
  * 主題 Provider
  * 管理應用程式的主題狀態，包含主題選擇、儲存與同步
- * 
- * 注意：主題 ID 目前儲存在 localStorage 而非 Profile API，
- * 因為後端 avatar 欄位可能有格式限制。
+ *
+ * 判斷初次登入條件：使用後端 Profile API 的 avatar 欄位
+ * - 若 avatar 為空字串，則視為初次登入，顯示主題選擇面板
  */
 
 import {
@@ -15,6 +15,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useAuth } from '@/modules/auth';
+import { useGetUserProfileQuery } from '@/modules/auth/api/queries';
 import {
   THEMES,
   getThemeById,
@@ -22,8 +23,7 @@ import {
   type Theme,
 } from '@/shared/constants/themes';
 
-/** localStorage 儲存 key */
-const HAS_SELECTED_THEME_KEY = 'hasSelectedTheme';
+/** localStorage 儲存 key（僅用於暫存選擇的主題 ID） */
 const THEME_ID_KEY = 'selectedThemeId';
 
 /**
@@ -36,11 +36,11 @@ type ThemeContextValue = {
   currentTheme: Theme;
   /** 所有可用主題 */
   themes: Theme[];
-  /** 設定主題（儲存到 localStorage） */
+  /** 設定主題（儲存到 localStorage 與後端） */
   setTheme: (themeId: number) => Promise<void>;
   /** 是否應該顯示主題選擇 Modal（首次登入） */
   shouldShowThemeModal: boolean;
-  /** 關閉主題選擇 Modal（不儲存選擇） */
+  /** 關閉主題選擇 Modal（套用預設值） */
   dismissThemeModal: () => void;
   /** 是否正在載入 */
   isLoading: boolean;
@@ -72,47 +72,58 @@ const getSavedThemeId = (): number => {
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const { user } = useAuth();
 
+  // 取得最新的 Profile 資料來判斷是否為初次登入
+  const { data: profileData } = useGetUserProfileQuery();
+
   const [currentThemeId, setCurrentThemeId] = useState(getSavedThemeId);
-  const [hasSelectedTheme, setHasSelectedTheme] = useState(
-    () => localStorage.getItem(HAS_SELECTED_THEME_KEY) === 'true'
-  );
+  const [isDismissed, setIsDismissed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  /**
+   * 判斷是否為初次登入：
+   * - 用戶已登入
+   * - Profile 的 avatar 或 name 欄位為空
+   * - 尚未在本次 session 中關閉過 modal
+   */
+  const isFirstLogin = useMemo(() => {
+    if (!user || !profileData) return false;
+    // avatar 或 name 為空表示用戶尚未完成初次設定
+    const isAvatarEmpty = !profileData.avatar || profileData.avatar === '';
+    const isNameEmpty = !profileData.name || profileData.name.trim() === '';
+    return isAvatarEmpty || isNameEmpty;
+  }, [user, profileData]);
 
   /**
    * 設定主題並儲存到 localStorage
    */
-  const setTheme = useCallback(
-    async (themeId: number) => {
-      // 驗證 themeId 有效性
-      if (themeId < 1 || themeId > THEMES.length) {
-        console.warn(`[ThemeProvider] Invalid themeId: ${themeId}`);
-        return;
-      }
+  const setTheme = useCallback(async (themeId: number) => {
+    // 驗證 themeId 有效性
+    if (themeId < 1 || themeId > THEMES.length) {
+      console.warn(`[ThemeProvider] Invalid themeId: ${themeId}`);
+      return;
+    }
 
-      setIsLoading(true);
-      
-      try {
-        // 儲存到 localStorage
-        localStorage.setItem(THEME_ID_KEY, String(themeId));
-        localStorage.setItem(HAS_SELECTED_THEME_KEY, 'true');
-        
-        setCurrentThemeId(themeId);
-        setHasSelectedTheme(true);
-        
-        console.log(`[ThemeProvider] Theme ${themeId} saved to localStorage`);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    []
-  );
+    setIsLoading(true);
+
+    try {
+      // 儲存到 localStorage
+      localStorage.setItem(THEME_ID_KEY, String(themeId));
+
+      setCurrentThemeId(themeId);
+      setIsDismissed(true);
+
+      console.log(`[ThemeProvider] Theme ${themeId} saved to localStorage`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   /**
-   * 關閉主題選擇 Modal（不儲存選擇，使用預設主題）
+   * 關閉主題選擇 Modal
+   * 這只會設定本次 session 的狀態，下次登入若 avatar 仍為空則仍會顯示
    */
   const dismissThemeModal = useCallback(() => {
-    localStorage.setItem(HAS_SELECTED_THEME_KEY, 'true');
-    setHasSelectedTheme(true);
+    setIsDismissed(true);
   }, []);
 
   const value: ThemeContextValue = useMemo(
@@ -121,18 +132,18 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
       currentTheme: getThemeById(currentThemeId),
       themes: THEMES,
       setTheme,
-      shouldShowThemeModal: !hasSelectedTheme && !!user,
+      shouldShowThemeModal: isFirstLogin && !isDismissed,
       dismissThemeModal,
       isLoading,
     }),
     [
       currentThemeId,
       setTheme,
-      hasSelectedTheme,
-      user,
+      isFirstLogin,
+      isDismissed,
       dismissThemeModal,
       isLoading,
-    ]
+    ],
   );
 
   return (
@@ -151,4 +162,3 @@ export const useTheme = (): ThemeContextValue => {
   }
   return context;
 };
-
