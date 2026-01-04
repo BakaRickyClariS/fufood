@@ -8,7 +8,7 @@ type Option = {
 type ChipGroupProps = {
   options: Option[];
   value?: string | string[]; // Single value or array
-  onChange: (value: string | string[]) => void;
+  onChange: (value: string | string[] | undefined) => void;
   multiple?: boolean;
   className?: string;
 };
@@ -28,9 +28,11 @@ const ChipGroup = ({
         : [...currentValues, optionValue];
       onChange(newValues);
     } else {
-      // Single select: toggle effective only if not already selected, or allow deselect?
-      // Usually single select radio behavior: clicking selected one does nothing (or remains selected).
-      if (value !== optionValue) {
+      // Single select: toggle logic
+      if (value === optionValue) {
+        // Deselect if clicking the currently selected item
+        onChange(undefined);
+      } else {
         onChange(optionValue);
       }
     }
