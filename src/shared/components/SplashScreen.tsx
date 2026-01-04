@@ -36,7 +36,7 @@ export const SplashScreen = () => {
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-50 overflow-hidden bg-primary-100"
+      className="fixed inset-0 z-[9999] overflow-hidden bg-primary-100"
     >
       {/* 內容容器 */}
       <div className="relative h-full flex flex-col items-center justify-center px-6">
