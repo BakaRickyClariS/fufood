@@ -9,6 +9,8 @@ import type {
 import { Gender } from '../types';
 import { backendApi } from '@/api/client';
 import { MOCK_USERS } from './mock/authMockData';
+import { parsePreferences } from '@/modules/settings/utils/dietaryUtils';
+
 
 // Gender 字串轉數值對應表
 const mapBackendGenderToEnum = (
@@ -24,7 +26,7 @@ const mapBackendGenderToEnum = (
 };
 
 // Membership 轉換 ("Free" -> "free")
-const mapBackendTierToFrontend = (
+export const mapBackendTierToFrontend = (
   tier: string | number | undefined | null,
 ): MembershipTier => {
   const t = String(tier).toLowerCase();
@@ -32,6 +34,11 @@ const mapBackendTierToFrontend = (
   if (t === 'vip') return 'vip';
   return 'free';
 };
+
+/**
+ * 解析後端 preference 字串陣列為 DietaryPreference 物件
+ */
+
 
 /**
  * 從後端 Profile API 取得已登入用戶資訊
@@ -71,14 +78,9 @@ export async function getUserProfile(): Promise<User | null> {
       membershipTier: mapBackendTierToFrontend(backendData.subscriptionTier),
       createdAt: new Date(backendData.createdAt),
       updatedAt: new Date(backendData.updatedAt),
-      // 飲食偏好暫時使用預設值或從 preference 陣列轉換
-      dietaryPreference: backendData.preference
-        ? {
-            cookingFrequency: '1-2' as const,
-            prepTime: '15-30' as const,
-            seasoningLevel: 'moderate' as const,
-            restrictions: [],
-          }
+      // 飲食偏好：從 preferences 陣列解析
+      dietaryPreference: backendData.preferences
+        ? parsePreferences(backendData.preferences)
         : undefined,
     };
 

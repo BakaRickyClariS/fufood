@@ -22,9 +22,9 @@ export type DietaryRestriction =
   | 'nut-allergy';
 
 export type DietaryPreference = {
-  cookingFrequency: CookingFrequency;
-  prepTime: PrepTime;
-  seasoningLevel: SeasoningLevel;
+  cookingFrequency?: CookingFrequency;
+  prepTime?: PrepTime;
+  seasoningLevel?: SeasoningLevel;
   restrictions: DietaryRestriction[];
 };
 
@@ -97,13 +97,15 @@ export type MockLoginData = {
  * Profile API 回傳格式
  * @see docs/backend/api_profile_guide.md
  */
+// Profile API 回傳格式
+// @see docs/backend/api_profile_guide.md
 export type ProfileData = {
   id: UUID;
   lineId: string;
   name: string;
   profilePictureUrl?: string | null;
   email?: string | null;
-  preference?: string[] | null;  // 飲食偏好標籤
+  preferences?: string[] | null;  // 飲食偏好標籤
   avatar?: string;               // 自訂頭像
   gender: GenderValue;           // 性別數值（0-4）
   customGender?: string | null;  // 自訂性別文字（gender=4 時使用）
@@ -125,7 +127,8 @@ export type UpdateProfilePayload = {
   profilePictureUrl?: string;    // 選填，頭像 URL
   avatar?: string;               // 選填
   email?: string;                // 選填，電子郵件
-  preference?: string[];         // 選填，飲食偏好標籤陣列
+  preferences?: string[];         // 選填，飲食偏好標籤陣列
   gender?: GenderValue;          // 選填，性別數值
   customGender?: string | null;  // 選填，自訂性別（gender=4 時）
+  subscriptionTier?: number;     // 前端模擬用
 };

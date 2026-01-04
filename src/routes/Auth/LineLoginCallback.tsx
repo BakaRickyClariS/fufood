@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { parsePreferences } from '@/modules/settings/utils/dietaryUtils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { authApi, authService } from '@/modules/auth';
@@ -81,12 +82,9 @@ const LineLoginCallback = () => {
           gender: response.data.gender,
           customGender: response.data.customGender,
           email: response.data.email || undefined,
-          dietaryPreference: response.data.preference ? {
-            cookingFrequency: '1-2' as const,
-            prepTime: '15-30' as const,
-            seasoningLevel: 'moderate' as const,
-            restrictions: []
-          } : undefined,
+          dietaryPreference: response.data.preferences
+            ? parsePreferences(response.data.preferences)
+            : undefined,
         };
 
         // 儲存到 localStorage（作為備份）
