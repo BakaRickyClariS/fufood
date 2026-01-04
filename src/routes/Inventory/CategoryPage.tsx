@@ -27,7 +27,8 @@ const CategoryPage: React.FC = () => {
   // 取得 groups 並計算 refrigeratorId
   const groups = useSelector(selectAllGroups);
   const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
-  const refrigeratorId = activeRefrigeratorId || getRefrigeratorId(urlGroupId, groups);
+  const refrigeratorId =
+    activeRefrigeratorId || getRefrigeratorId(urlGroupId, groups);
 
   // 確保 groups 載入
   useEffect(() => {
@@ -64,15 +65,42 @@ const CategoryPage: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  // Add a delay state to simulate waiting for "list animation"
+  const [isReady, setIsReady] = useState(false);
 
   // 檢查是否有未完成的消耗流程並自動開啟對應的 Modal (Redux)
   const consumptionContextId = useSelector(selectConsumptionContextId);
-  
+
+  // Simulate animation wait time
+  useEffect(() => {
+    if (!isLoading) {
+      const timer = setTimeout(() => {
+        setIsReady(true);
+      }, 1000); // 1.0s delay to let the list "settle"
+      return () => clearTimeout(timer);
+    } else {
+      setIsReady(false);
+    }
+  }, [isLoading]);
+
+  // Restore usage of Session Storage for memory (Modal persistence)
+  useEffect(() => {
+    if (!isReady) return; // Wait for delay to finish
+    const savedId = sessionStorage.getItem('active_food_id');
+    if (savedId && !selectedItem && allItems.length > 0) {
+      const found = allItems.find((item) => item.id === savedId);
+      if (found) setSelectedItem(found);
+    }
+  }, [allItems, selectedItem, isReady]);
+
+  // Handle auto-opening for consumption (Redux)
   useEffect(() => {
     // 當列表資料載入後，檢查是否有暫存的流程狀態
     if (allItems.length > 0 && !selectedItem && consumptionContextId) {
       // 嘗試從當前列表中找到對應的 item
-      const targetItem = allItems.find(item => item.id === consumptionContextId);
+      const targetItem = allItems.find(
+        (item) => item.id === consumptionContextId,
+      );
       if (targetItem) {
         setSelectedItem(targetItem);
       }
@@ -275,7 +303,10 @@ const CategoryPage: React.FC = () => {
                   <FoodCard
                     key={item.id}
                     item={item}
-                    onClick={() => setSelectedItem(item)}
+                    onClick={() => {
+                      setSelectedItem(item);
+                      sessionStorage.setItem('active_food_id', item.id);
+                    }}
                   />
                 ))
               ) : (
@@ -301,7 +332,10 @@ const CategoryPage: React.FC = () => {
         <FoodDetailModal
           item={selectedItem}
           isOpen={!!selectedItem}
-          onClose={() => setSelectedItem(null)}
+          onClose={() => {
+            setSelectedItem(null);
+            sessionStorage.removeItem('active_food_id');
+          }}
           onItemUpdate={refetch}
           isCompleted={selectedItem.quantity <= 0}
         />
