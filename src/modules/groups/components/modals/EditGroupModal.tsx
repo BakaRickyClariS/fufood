@@ -1,17 +1,16 @@
-import type { FC } from 'react';
-import { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/components/ui/dialog';
+import { useRef, useEffect, useState, type FC } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
-import { ChevronLeft } from 'lucide-react';
-import { useGroupModal } from '../../hooks/useGroupModal';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import type { Group } from '../../types/group.types';
-import { useAuth } from '@/modules/auth';
+import { useGroupModal } from '../../hooks/useGroupModal';
+import { useTheme } from '@/shared/providers/ThemeProvider';
+import { getThemeById, DEFAULT_THEME_ID } from '@/shared/constants/themes';
+import { useAuth } from '@/modules/auth/hooks';
+import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock';
+import { toast } from 'sonner';
 
 type EditGroupModalProps = {
   open: boolean;
@@ -20,8 +19,15 @@ type EditGroupModalProps = {
   onBack?: () => void;
 };
 
+/** 下滑關閉閾值 */
+const DRAG_THRESHOLD = 200;
+
 /**
- * 編輯群組 Modal
+ * 編輯群組 Modal（從下方彈出的 BottomSheet 樣式）
+ * - 使用 GSAP 實現從下方滑入/滑出動畫
+ * - 使用 createPortal 確保 Modal 在最上層
+ * - 支援下滑手勢關閉
+ * - 只能修改群組名稱
  */
 export const EditGroupModal: FC<EditGroupModalProps> = ({
   open,
@@ -29,149 +35,222 @@ export const EditGroupModal: FC<EditGroupModalProps> = ({
   group,
   onBack,
 }) => {
-  const { user } = useAuth();
-  const isOwner = user?.id === group?.ownerId;
-  const {
-    updateGroup,
-    deleteGroup,
-    isGroupsLoading: isLoading,
-  } = useGroupModal();
-  const [name, setName] = useState('');
-  const [isDeleteConfirm, setIsDeleteConfirm] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
+  const { user } = useAuth();
+  const { currentTheme } = useTheme();
+  const { updateGroup, isGroupsLoading: isLoading } = useGroupModal();
+
+  // 下滑關閉用
+  const dragStartY = useRef<number | null>(null);
+
+  // 表單狀態
+  const [name, setName] = useState('');
+
+  // 判斷自己是否為 owner，若是則顯示自己的主題群組圖片
+  const isOwner = group?.ownerId === user?.id;
+  const displayGroupImage = isOwner
+    ? currentTheme.groupImage
+    : getThemeById(DEFAULT_THEME_ID).groupImage;
+
+  // 初始化表單
   useEffect(() => {
-    if (group) {
+    if (open && group) {
       setName(group.name);
     }
-  }, [group]);
+  }, [open, group]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!group || !name.trim()) return;
+  // 鎖定背景滾動
+  useBodyScrollLock(open);
 
-    await updateGroup(group.id, {
-      name,
+  // 使用 useGSAP 管理動畫
+  const { contextSafe } = useGSAP(
+    () => {
+      if (open) {
+        const tl = gsap.timeline();
+
+        // Animate overlay
+        tl.fromTo(
+          overlayRef.current,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.3, ease: 'power2.out' },
+        );
+
+        // Animate modal (slide up)
+        tl.fromTo(
+          modalRef.current,
+          { y: '100%', opacity: 0 },
+          { y: '0%', opacity: 1, duration: 0.5, ease: 'back.out(1.2)' },
+          '-=0.2',
+        );
+      }
+    },
+    { scope: containerRef, dependencies: [open] },
+  );
+
+  const handleClose = contextSafe(() => {
+    const tl = gsap.timeline({
+      onComplete: () => {
+        if (onBack) {
+          onBack();
+        } else {
+          onClose();
+        }
+      },
     });
 
-    onClose();
+    // Animate modal (slide down)
+    tl.to(modalRef.current, {
+      y: '100%',
+      opacity: 0,
+      duration: 0.3,
+      ease: 'power2.in',
+    });
+
+    // Animate overlay
+    tl.to(
+      overlayRef.current,
+      { opacity: 0, duration: 0.3, ease: 'power2.in' },
+      '-=0.3',
+    );
+  });
+
+  // 下滑關閉 - Touch Events
+  const handleTouchStart = contextSafe((e: React.TouchEvent) => {
+    dragStartY.current = e.touches[0].clientY;
+  });
+
+  const handleTouchMove = contextSafe((e: React.TouchEvent) => {
+    if (dragStartY.current === null || !modalRef.current) return;
+
+    const deltaY = e.touches[0].clientY - dragStartY.current;
+    if (deltaY > 0) {
+      gsap.set(modalRef.current, { y: deltaY });
+    }
+  });
+
+  const handleTouchEnd = contextSafe((e: React.TouchEvent) => {
+    if (dragStartY.current === null || !modalRef.current) return;
+
+    const deltaY = e.changedTouches[0].clientY - dragStartY.current;
+
+    if (deltaY > DRAG_THRESHOLD) {
+      handleClose();
+    } else {
+      gsap.to(modalRef.current, {
+        y: 0,
+        duration: 0.3,
+        ease: 'power2.out',
+      });
+    }
+
+    dragStartY.current = null;
+  });
+
+  // 處理儲存
+  const handleSave = async () => {
+    if (!group || !name.trim()) return;
+
+    try {
+      await updateGroup(group.id, { name: name.trim() });
+
+      toast.success('群組名稱已更新');
+      handleClose();
+    } catch (error) {
+      console.error('更新群組失敗:', error);
+      toast.error('更新群組失敗');
+    }
   };
 
-  const handleDelete = async () => {
-    if (!group) return;
-    await deleteGroup(group.id);
-    onClose();
-  };
+  // 判斷是否可以儲存
+  const canSave = isOwner && name.trim() && name.trim() !== group?.name;
 
-  if (!group) return null;
+  if (!open || !group) return null;
 
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-none w-full h-full p-0 rounded-none border-0 sm:rounded-none !fixed !left-0 !top-0 !translate-x-0 !translate-y-0 !duration-300 data-[state=open]:!slide-in-from-left-full data-[state=closed]:!slide-out-to-left-full data-[state=closed]:!zoom-out-100 data-[state=open]:!zoom-in-100 data-[state=closed]:!slide-out-to-top-0 data-[state=open]:!slide-in-from-top-0">
-        <div className="flex flex-col h-full bg-neutral-50">
-          <DialogHeader className="flex-shrink-0 px-4 py-3 bg-white border-b border-neutral-100 flex flex-row items-center justify-center relative">
-            <button
-              onClick={() => {
-                if (isDeleteConfirm) setIsDeleteConfirm(false);
-                else if (onBack) onBack();
-                else onClose();
-              }}
-              className="absolute left-4 p-1 -ml-1 text-neutral-600"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-            <DialogTitle className="text-lg font-bold text-neutral-900">
-              {isDeleteConfirm ? '刪除群組' : '修改群組內容'}
-            </DialogTitle>
-          </DialogHeader>
+  return createPortal(
+    <div
+      ref={containerRef}
+      className="fixed inset-0 flex items-end pointer-events-auto z-110"
+    >
+      {/* Backdrop */}
+      <div
+        ref={overlayRef}
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={handleClose}
+      />
 
-          <div className="flex-1 overflow-y-auto px-4 py-6">
-            {isDeleteConfirm ? (
-              <div className="flex flex-col gap-6 items-center justify-center h-full pb-20">
-                <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center text-4xl mb-2">
-                  ⚠️
-                </div>
-                <div className="text-center space-y-2">
-                  <h3 className="text-xl font-bold text-neutral-900">
-                    確定要刪除此群組嗎？
-                  </h3>
-                  <p className="text-neutral-500">
-                    一旦刪除，所有成員將被移除，且無法復原此動作。
-                  </p>
-                </div>
+      {/* Modal Content */}
+      <div
+        ref={modalRef}
+        className="relative w-full bg-white max-w-layout-container mx-auto rounded-t-3xl overflow-hidden flex flex-col shadow-2xl"
+        style={{ maxHeight: 'min(60vh, 700px)', touchAction: 'none' }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* 下滑提示條 */}
+        <div
+          className="flex justify-center py-3 shrink-0"
+          style={{ touchAction: 'none' }}
+        >
+          <div className="w-10 h-1 bg-neutral-300 rounded-full" />
+        </div>
 
-                <div className="w-full mt-auto flex flex-col gap-3">
-                  <Button
-                    type="button"
-                    onClick={handleDelete}
-                    disabled={isLoading}
-                    className="w-full bg-primary-500 hover:bg-primary-600 text-white h-12 text-base rounded-xl shadow-sm"
-                  >
-                    {isLoading ? '刪除中...' : '確認刪除'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsDeleteConfirm(false)}
-                    className="w-full border-neutral-200 text-neutral-600 hover:bg-neutral-50 h-12 text-base rounded-xl"
-                  >
-                    取消
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <form
-                onSubmit={handleSubmit}
-                className="flex flex-col gap-6 h-full"
-              >
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="editGroupName"
-                    className="text-sm font-medium text-neutral-700"
-                  >
-                    群組名稱
-                  </label>
-                  <Input
-                    id="editGroupName"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="輸入群組名稱"
-                    className="h-12 rounded-xl"
-                    required
-                    readOnly={!isOwner}
-                  />
-                </div>
+        {/* Content - 可滾動區域 */}
+        <div className="px-6 overflow-y-auto flex-1 select-none">
+          {/* 群組圖片 */}
+          <div className="flex justify-center mb-6">
+            <div className="w-40 h-40">
+              <img
+                src={displayGroupImage}
+                alt={group.name}
+                className="w-full h-full object-contain drop-shadow-md"
+              />
+            </div>
+          </div>
 
-                <div className="mt-auto pt-4 flex flex-col gap-3">
-                  {isOwner ? (
-                    <>
-                      <Button
-                        type="submit"
-                        disabled={isLoading || !name.trim()}
-                        className="w-full bg-primary-400 hover:bg-primary-500 text-white h-12 text-base rounded-xl shadow-sm"
-                      >
-                        {isLoading ? '儲存中...' : '儲存變更'}
-                      </Button>
+          {/* 群組名稱輸入 */}
+          <div className="mb-6">
+            {/* 標題 - 左邊橘色條 */}
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-1 h-6 bg-primary-500 rounded-full" />
+              <label className="text-base font-bold text-neutral-800">
+                群組名稱 <span className="text-red-500">*</span>
+              </label>
+            </div>
 
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setIsDeleteConfirm(true)}
-                        className="w-full border-primary-200 text-primary-500 hover:bg-primary-50 h-12 text-base rounded-xl"
-                      >
-                        刪除群組
-                      </Button>
-                    </>
-                  ) : (
-                    <div className="text-center text-neutral-500 py-4 bg-neutral-100 rounded-xl">
-                      只有群組擁有者可以修改這些設定
-                    </div>
-                  )}
-                </div>
-              </form>
+            {/* 輸入欄位 */}
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Add value"
+              className="h-14 rounded-xl text-base border-neutral-200 bg-white"
+              readOnly={!isOwner}
+            />
+
+            {/* 非擁有者提示 */}
+            {!isOwner && (
+              <p className="text-sm text-neutral-400 mt-2">
+                只有群組擁有者可以修改名稱
+              </p>
             )}
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+
+        {/* 按鈕固定在底部 */}
+        <div className="shrink-0 px-6 py-4 bg-white border-t border-neutral-100">
+          <Button
+            className="w-full bg-primary-500 hover:bg-primary-600 text-white rounded-xl h-14 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleSave}
+            disabled={!canSave || isLoading}
+          >
+            {isLoading ? '套用中...' : '套用'}
+          </Button>
+        </div>
+      </div>
+    </div>,
+    document.body,
   );
 };
