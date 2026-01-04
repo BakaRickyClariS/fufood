@@ -33,7 +33,7 @@ const TopNav = () => {
 
   return (
     <div
-      className={`top-nav-wrapper sticky top-0 left-0 right-0 z-40 px-4 py-3 ${isDashboard ? 'body-dashboard-bg' : 'bg-white'}`}
+      className={`top-nav-wrapper sticky top-0 left-0 right-0 z-40 px-4 py-3 ${isDashboard ? 'bg-primary-100' : 'bg-white'}`}
     >
       <div className="flex items-center justify-between max-w-layout-container mx-auto">
         {/* Left: Group Avatar & Selector */}
