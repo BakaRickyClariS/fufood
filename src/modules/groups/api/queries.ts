@@ -4,6 +4,7 @@
  * 提供群組（冰箱）模組的快取和狀態管理
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { identity } from '@/shared/utils/identity';
 import { groupsApi } from './groupsApi';
 import type {
   CreateGroupForm,
@@ -26,9 +27,13 @@ export const groupKeys = {
  * 取得所有群組（冰箱）
  */
 export const useGroupsQuery = () => {
+  // 使用共用模組檢查是否可以發送認證請求
+  const shouldQuery = identity.canMakeAuthenticatedRequest();
+
   return useQuery({
     queryKey: groupKeys.lists(),
     queryFn: () => groupsApi.getAll(),
+    enabled: shouldQuery,
     staleTime: 1000 * 60 * 5, // 5 分鐘
   });
 };

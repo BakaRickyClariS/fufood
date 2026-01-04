@@ -67,11 +67,18 @@ export const identity = {
    */
   getUserId: (): string | null => {
     try {
-      // 直接使用 activeRefrigeratorId 作為 X-User-Id
-      // 這是原始設計：X-User-Id = 群組 ID
       const refId = localStorage.getItem(STORAGE_KEYS.REFRIGERATOR_ID);
       if (refId) {
         return refId;
+      }
+
+      // Fallback: 如果沒有 activeRefrigeratorId，嘗試使用 User ID
+      const userStr = localStorage.getItem(STORAGE_KEYS.USER);
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user && user.id) {
+          return user.id;
+        }
       }
     } catch (e) {
       console.warn('[Identity] Failed to get activeRefrigeratorId', e);
@@ -125,6 +132,58 @@ export const identity = {
    */
   hasUser: (): boolean => {
     return identity.getUserId() !== null;
+  },
+
+  /**
+   * 檢查是否可以發送需要認證的 API 請求
+   *
+   * 策略：
+   * 1. 若已標記為登出 (logged_out = 'true')，不允許
+   * 2. 若有使用者快取或冰箱 ID，允許
+   * 3. 完全無登入痕跡，不允許（避免在登入頁面產生 401 錯誤）
+   *
+   * @returns 是否可以發送認證請求
+   */
+  canMakeAuthenticatedRequest: (): boolean => {
+    try {
+      const loggedOut = sessionStorage.getItem('logged_out');
+      if (loggedOut === 'true') return false;
+
+      const hasUserCache = localStorage.getItem(STORAGE_KEYS.USER) !== null;
+      const hasRefrigeratorId =
+        localStorage.getItem(STORAGE_KEYS.REFRIGERATOR_ID) !== null;
+
+      return hasUserCache || hasRefrigeratorId;
+    } catch (e) {
+      console.warn('[Identity] Failed to check auth state', e);
+      return false;
+    }
+  },
+
+  /**
+   * 登入成功時呼叫，清除登出標記
+   * 應該在登入回調成功後呼叫
+   */
+  onLoginSuccess: (): void => {
+    try {
+      sessionStorage.removeItem('logged_out');
+      console.log('[Identity] Login success - cleared logged_out flag');
+    } catch (e) {
+      console.warn('[Identity] Failed to clear logged_out flag', e);
+    }
+  },
+
+  /**
+   * 登出時呼叫，設定登出標記
+   * 應該在登出操作時呼叫
+   */
+  onLogout: (): void => {
+    try {
+      sessionStorage.setItem('logged_out', 'true');
+      console.log('[Identity] Logout - set logged_out flag');
+    } catch (e) {
+      console.warn('[Identity] Failed to set logged_out flag', e);
+    }
   },
 
   // ----------------------------------------------------------

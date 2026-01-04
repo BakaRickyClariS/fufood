@@ -60,9 +60,18 @@ export const FCMProvider = ({
     onMessageReceived,
   });
 
+  // 只有在登入且 FCM 已準備好（註冊成功或無法註冊）時才啟動 Polling
+  // 這解決了剛登入時 AI 後端 Session 未同步導致的 401 錯誤
+  const isPollingEnabled =
+    isAuthenticated &&
+    (fcm.isRegistered ||
+      fcm.permission === 'denied' ||
+      !fcm.isSupported ||
+      fcm.error !== null);
+
   // 所有平台都啟用 In-App Polling（當 App 在前景時輪詢並顯示 Toast）
   useNotificationPolling({
-    enabled: isAuthenticated,
+    enabled: isPollingEnabled,
     interval: 30000, // 30 秒
   });
 

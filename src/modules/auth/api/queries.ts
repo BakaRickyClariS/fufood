@@ -43,6 +43,8 @@ export async function getUserProfile(): Promise<User | null> {
     return null;
   }
 
+
+
   // 檢查 localStorage 中的 user 資料 (LINE 登入時會存)
   const userStr = localStorage.getItem('user');
 
@@ -126,28 +128,14 @@ export async function getUserProfile(): Promise<User | null> {
 }
 
 export function useGetUserProfileQuery() {
-  /**
-   * 判斷是否應該執行 Profile Query
-   *
-   * 重要修正：使用 HttpOnly Cookie 認證時，應預設嘗試呼叫 API，
-   * 讓後端回傳 401 來判斷未登入狀態，而非依賴 localStorage。
-   *
-   * 只有以下情況不執行 query：
-   * 1. 明確標記為已登出 (logged_out = 'true')
-   */
-  const shouldQuery = ((): boolean => {
-    const loggedOut = sessionStorage.getItem('logged_out');
-    if (loggedOut === 'true') return false;
-
-    // HttpOnly Cookie 認證模式：預設嘗試呼叫 API
-    // 即使 localStorage 沒有 user 資料，Cookie 可能仍然有效
-    return true;
-  })();
+  // 只檢查是否明確登出，否則嘗試呼叫 API
+  // 這允許首次登入時（localStorage 還沒有 user 資料）也能呼叫 Profile API
+  const isExplicitlyLoggedOut = sessionStorage.getItem('logged_out') === 'true';
 
   return useQuery({
     queryKey: ['GET_USER_PROFILE'],
     queryFn: getUserProfile,
-    enabled: shouldQuery,
+    enabled: !isExplicitlyLoggedOut,
     retry: false,
     // 設定 5 分鐘內資料視為新鮮，避免頻繁 refetch 導致 loading 閃爍
     staleTime: 5 * 60 * 1000,

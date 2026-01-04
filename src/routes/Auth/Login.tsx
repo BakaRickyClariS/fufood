@@ -1,12 +1,19 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import { Button } from '@/shared/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { LineLoginUrl, useAuth } from '@/modules/auth';
+import { useQueryClient } from '@tanstack/react-query';
+import { LineLoginUrl, useAuth, authService } from '@/modules/auth';
+import { identity } from '@/shared/utils/identity';
+import { groupsApi } from '@/modules/groups/api/groupsApi';
 import LoginCarousel from './LoginCarousel';
+import { Bot, X } from 'lucide-react';
 
 const Login = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
   const { isLoading, isAuthenticated, refetch, error: authError } = useAuth();
   const popupWindowRef = useRef<Window | null>(null);
   const checkIntervalRef = useRef<number | null>(null);
@@ -16,30 +23,102 @@ const Login = () => {
   const [lineLoginLoading, setLineLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showProjectNotice, setShowProjectNotice] = useState(true);
 
   // 處理 LineLoginCallback 發送的 postMessage
   const handlePopupMessage = useCallback(
-    (e: MessageEvent) => {
-      // 只接收來自同源的 postMessage（LineLoginCallback 發送的）
-      if (e.origin !== window.location.origin) {
+    async (e: MessageEvent) => {
+      // [Debug] Log all messages to debug LINE Login issues
+      console.log('[Login] Received message:', {
+        type: e.data?.type,
+        origin: e.origin,
+        currentOrigin: window.location.origin,
+        data: e.data,
+      });
+
+      // 允許的來源列表
+      const allowedOrigins = [
+        window.location.origin,
+        'https://fufood.jocelynh.me', // Production domain
+        'http://localhost:5173', // Localhost
+        'http://127.0.0.1:5173',
+      ];
+
+      // 檢查來源是否在允許列表中
+      if (!allowedOrigins.includes(e.origin)) {
+        console.warn(
+          '[Login] Message rejected due to origin mismatch:',
+          e.origin,
+          'Allowed:',
+          allowedOrigins,
+        );
         return;
       }
 
-      // 清除登出標記，讓 getUserProfile 正常運作
-      sessionStorage.removeItem('logged_out');
-
-      // 清除 popup 監聽定時器
-      if (checkIntervalRef.current) {
-        clearInterval(checkIntervalRef.current);
-        checkIntervalRef.current = null;
+      // 檢查是否為 LINE 登入成功與錯誤訊息
+      if (e.data?.type === 'LINE_LOGIN_ERROR') {
+        setLoginError(e.data.error || '登入失敗');
+        setLineLoginLoading(false);
+        if (checkIntervalRef.current) {
+          clearInterval(checkIntervalRef.current);
+          checkIntervalRef.current = null;
+        }
+        popupWindowRef.current?.close();
+        return;
       }
 
-      refetch().then(() => {
-        setLineLoginLoading(false);
+      if (e.data?.type === 'LINE_LOGIN_SUCCESS') {
+        // [關鍵] 在導航前確保 user 資料已存入 localStorage 及 TanStack Query 快取
+        if (e.data.user) {
+          console.log(
+            '[Login] Received user data from popup, saving to localStorage and query cache',
+          );
+          authService.saveUser(e.data.user);
+          // 直接設定 TanStack Query 快取，讓 useAuth 立即取得用戶資料
+          queryClient.setQueryData(['GET_USER_PROFILE'], e.data.user);
+
+          // [新增] 初始化 activeRefrigeratorId：
+          // 為了避免 Dashboard 載入時因為沒有群組 ID 而導致 API 失敗，
+          // 我們在登入當下就先抓取群組列表，並設定預設 ID。
+          try {
+            console.log(
+              '[Login] 正在預先抓取群組資料以初始化 activeRefrigeratorId...',
+            );
+            const groups = await groupsApi.getAll();
+            if (groups && groups.length > 0) {
+              const defaultGroupId = groups[0].id;
+              console.log(
+                '[Login] 設定預設 activeRefrigeratorId:',
+                defaultGroupId,
+              );
+              localStorage.setItem('activeRefrigeratorId', defaultGroupId);
+            } else {
+              console.log('[Login] 用戶沒有群組，無法設定預設 ID');
+            }
+          } catch (err) {
+            console.warn('[Login] 預先抓取群組失敗 (非致命錯誤):', err);
+          }
+        }
+
+        // 清除登出標記，讓 API 正常運作
+        identity.onLoginSuccess();
+
+        // 清除 popup 監聯定時器
+        if (checkIntervalRef.current) {
+          clearInterval(checkIntervalRef.current);
+          checkIntervalRef.current = null;
+        }
+
+        // 關閉 popup
         popupWindowRef.current?.close();
-      });
+
+        setLineLoginLoading(false);
+
+        // 強制刷新頁面以確保 Cookie 和狀態完全同步
+        window.location.href = '/';
+      }
     },
-    [refetch],
+    [navigate, queryClient],
   );
 
   useEffect(() => {
@@ -55,38 +134,28 @@ const Login = () => {
     };
   }, [handlePopupMessage]);
 
-  const handleEmailLogin = async () => {
-    navigate('/auth/avatar-selection');
-  };
-
-  // 登入成功轉場動畫
-  const playExitAnimation = useCallback(() => {
-    if (!containerRef.current) {
-      navigate('/');
-      return;
-    }
-
-    setIsTransitioning(true);
-
-    // GSAP 轉場動畫：淡出 + 輕微放大
-    gsap.to(containerRef.current, {
-      opacity: 0,
-      scale: 1.02,
-      duration: 0.25,
-      ease: 'power2.out',
-      onComplete: () => {
-        navigate('/');
-      },
-    });
-  }, [navigate]);
-
   // 當已認證時，播放轉場動畫後導向首頁
-  useEffect(() => {
-    if (isAuthenticated && !isTransitioning) {
-      setLineLoginLoading(false);
-      playExitAnimation();
-    }
-  }, [isAuthenticated, isTransitioning, playExitAnimation]);
+  // 使用 useGSAP 自動處理動畫和 cleanup
+  useGSAP(
+    () => {
+      if (isAuthenticated && !isTransitioning) {
+        setLineLoginLoading(false);
+        setIsTransitioning(true);
+
+        // GSAP 轉場動畫：淡出 + 輕微放大
+        gsap.to(containerRef.current, {
+          opacity: 0,
+          scale: 1.02,
+          duration: 0.25,
+          ease: 'power2.out',
+          onComplete: () => {
+            navigate('/');
+          },
+        });
+      }
+    },
+    { scope: containerRef, dependencies: [isAuthenticated, isTransitioning] },
+  );
 
   // 防止重複檢查初始狀態（避免無限循環）
   const hasInitialCheckRef = useRef(false);
@@ -158,6 +227,10 @@ const Login = () => {
     const left = window.screenX + (window.innerWidth - width) / 2;
     const top = window.screenY + (window.innerHeight - height) / 2;
 
+    // Popup 模式：使用後端預設 callback URL (Production)
+    // Production 的 LineLoginCallback 會透過 postMessage 通知父視窗登入結果
+    // 注意：不要嘗試覆寫 callback URL 到 localhost，因為後端 Cookie domain 設為 fufood.jocelynh.me
+    // localhost 無法接收該 Cookie，會導致 Profile API 401
     const popup = window.open(
       LineLoginUrl,
       'lineLogin',
@@ -208,26 +281,49 @@ const Login = () => {
   const displayError = loginError || authError;
 
   return (
-    <div ref={containerRef} className="flex flex-col min-h-screen px-5">
+    <div ref={containerRef} className="flex flex-col min-h-screen px-5 my-8">
+      {/* 學生專題作品提示框 */}
+      {showProjectNotice ? (
+        <div className="mb-[18px] p-4 bg-warning-50 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+          {/* 左側 Icon */}
+          <Bot className="w-6 h-6 text-neutral-600 shrink-0" />
+
+          {/* 中間文字 */}
+          <p className="flex-1 text-neutral-600 text-sm font-semibold leading-relaxed">
+            此產品為學生專題作品，僅學習與展示用，並沒有提供任何服務及商業行為。
+          </p>
+
+          {/* 右側關閉按鈕 */}
+          <button
+            onClick={() => setShowProjectNotice(false)}
+            className="text-neutral-700 hover:text-neutral-900 font-bold transition-colors shrink-0"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ) : (
+        <div className="mt-8" />
+      )}
+
       <LoginCarousel />
 
       {/* 登入按鈕區域 */}
       <div className="flex flex-col gap-4">
         {displayError && (
-          <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg">
+          <div className="text-primary-500 text-sm text-center bg-primary-50 p-2 rounded-lg">
             {String(displayError)}
           </div>
         )}
 
         <Button
-          className="w-full bg-[#f58274] hover:bg-[#e06d5f] text-white h-12 text-base rounded-lg"
+          className="w-full bg-primary-500 hover:bg-primary-600 text-white h-12 text-base rounded-lg"
           onClick={handleLineLogin}
           disabled={isLoading || lineLoginLoading}
         >
           {lineLoginLoading ? '登入中...' : '使用LINE應用程式登入'}
         </Button>
 
-        <Button
+        {/* <Button
           variant="outline"
           className="w-full border-neutral-200 text-neutral-700 h-12 text-base rounded-lg hover:bg-neutral-50"
           onClick={handleEmailLogin}
@@ -240,7 +336,7 @@ const Login = () => {
           <button className="text-sm text-neutral-500 font-medium hover:text-neutral-800 transition-colors">
             忘記密碼？
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );
