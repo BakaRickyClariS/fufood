@@ -267,6 +267,46 @@ export const aiRecipeApi = {
     );
     return response.data;
   },
+
+  /**
+   * 為新使用者自動儲存預設食譜
+   *
+   * 此方法會：
+   * 1. 檢查使用者是否已登入
+   * 2. 檢查是否已有食譜（避免重複儲存）
+   * 3. 若無食譜，批次儲存預設食譜
+   *
+   * @param refrigeratorId - 可選的冰箱 ID
+   * @returns 是否成功儲存預設食譜
+   */
+  seedDefaultRecipes: async (refrigeratorId?: string): Promise<boolean> => {
+    const userId = identity.getUserId();
+    if (!userId) {
+      console.log('[AI API] 未登入，跳過預設食譜 seed');
+      return false;
+    }
+
+    try {
+      // 動態載入預設食譜資料（避免不必要的初始載入）
+      const { DEFAULT_RECIPES } = await import('../data/defaultRecipes');
+
+      // 批次儲存所有預設食譜
+      await Promise.all(
+        DEFAULT_RECIPES.map((recipe) =>
+          aiRecipeApi.saveRecipe({
+            ...recipe,
+            refrigeratorId,
+          }),
+        ),
+      );
+
+      console.log(`[AI API] 成功儲存 ${DEFAULT_RECIPES.length} 道預設食譜`);
+      return true;
+    } catch (error) {
+      console.error('[AI API] 儲存預設食譜失敗:', error);
+      return false;
+    }
+  },
 };
 
 // 移除底部的類型定義，因為已移動到 types/index.ts

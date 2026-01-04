@@ -10,11 +10,10 @@ import {
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { cn } from '@/lib/utils';
-// import { useSelector } from 'react-redux'; // Removed
-// import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice'; // Removed
+import { useDispatch } from 'react-redux';
+import { triggerRecipeRefresh } from '@/modules/recipe/store/recipeSlice';
 import { useAIRecipeGenerate, useRecipeSuggestions } from '@/modules/ai';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
-// import { useInventoryQuery } from '@/modules/inventory/api/queries'; // Removed
 import { useQueryClient } from '@tanstack/react-query';
 
 import { RecipeCard } from '@/shared/components/recipe/RecipeCard';
@@ -25,6 +24,7 @@ import { validatePrompt, validateIngredients } from '../utils/promptSecurity';
 import { recipeKeys } from '@/modules/recipe/api/queries';
 import type { RecipeListItem } from '@/modules/recipe/types';
 import aiAvatar from '@/assets/images/recipe/ai-avator.png';
+import processingImage from '@/assets/images/shared/processing.png';
 
 /** 預設建議標籤（API 不可用時的 fallback） */
 const DEFAULT_SUGGESTION_TAGS = [
@@ -39,14 +39,21 @@ type AIQueryModalProps = {
   onClose: () => void;
   initialQuery?: string;
   initialSelectedIngredients?: string[];
+  initialRecipes?: RecipeListItem[];
   useStreaming?: boolean;
+  autoGenerate?: boolean;
+  mode?: 'default' | 'inspiration';
 };
+
 export const AIQueryModal = ({
   isOpen,
   onClose,
   initialQuery = '',
   initialSelectedIngredients = [],
+  initialRecipes = [],
   useStreaming = false,
+  autoGenerate = false,
+  mode = 'default',
 }: AIQueryModalProps) => {
   const [query, setQuery] = useState('');
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
@@ -55,14 +62,15 @@ export const AIQueryModal = ({
   const [validationError, setValidationError] = useState<string | null>(null);
   /* New State: Store actual submitted prompt to decouple from input query */
   const [submittedPrompt, setSubmittedPrompt] = useState('');
-  // const [useInventory, setUseInventory] = useState(false); // Removed
   const containerRef = useRef<HTMLDivElement>(null);
 
   const queryClient = useQueryClient();
   //用來追蹤本次開啟是否生成過食譜
   const hasGeneratedRef = useRef(false);
+  // 用來追蹤是否已經自動開啟過食譜 (避免重複開啟)
+  const hasAutoOpenedRef = useRef(false);
 
-  // const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId); // Removed
+  const dispatch = useDispatch();
 
   // 食譜詳細 Modal 狀態
   const [selectedRecipe, setSelectedRecipe] = useState<RecipeListItem | null>(
@@ -78,6 +86,13 @@ export const AIQueryModal = ({
   const { generate, isLoading, text, recipes, error, remainingQueries, reset } =
     useAIRecipeGenerate({ useStreaming });
 
+  // 結合 initialRecipes 與生成結果
+  const displayRecipes = useMemo(() => {
+    if (recipes && recipes.length > 0) return recipes;
+    if (initialRecipes && initialRecipes.length > 0) return initialRecipes;
+    return null;
+  }, [recipes, initialRecipes]);
+
   // 建議標籤
   const { data: suggestionsData } = useRecipeSuggestions();
   const suggestionTags = useMemo(() => {
@@ -88,12 +103,8 @@ export const AIQueryModal = ({
     return Array.from(new Set(tags));
   }, [suggestionsData]);
 
-  // useInventoryQuery Logic Removed
-
-  // useInventory logic removed
-
   // 判斷是否有結果
-  const hasResult = text || recipes || validationError || error;
+  const hasResult = text || displayRecipes || validationError || error;
 
   // 初始化 Query 與 Ingredients
   useEffect(() => {
@@ -102,23 +113,51 @@ export const AIQueryModal = ({
         setSelectedIngredients(initialSelectedIngredients);
       }
 
-      if (initialQuery) {
-        // 使用 handleSubmit 確保 initialQuery 也經過驗證
-        // 明確傳入 initialSelectedIngredients 以確保使用最新值
-        handleSubmit(initialQuery, initialSelectedIngredients);
-      }
-
       // 重置生成標記
       hasGeneratedRef.current = false;
-    }
-  }, [isOpen, initialQuery]); // Warning: initialSelectedIngredients missing from deps, but it changes rarely or with isOpen. Safe to ignore or add.
+      hasAutoOpenedRef.current = false;
 
-  // 監聽 recipes 變化，如果有新生成，標記為已生成
+      // 如果設定了 autoGenerate，且有 query 或 ingredients，自動觸發
+      if (
+        autoGenerate &&
+        (initialQuery || initialSelectedIngredients.length > 0)
+      ) {
+        // 使用 setTimeout 確保 state 更新後執行，且避免 React 警告
+        setTimeout(() => {
+          handleSubmit(initialQuery, initialSelectedIngredients);
+        }, 100);
+      } else if (initialQuery) {
+        // 如果沒有 autoGenerate 但有 initialQuery，預填入 input (但不提交)
+        // 或者是為了保持與舊邏輯兼容，也可以視情況提交
+        // 但根據需求，這裡主要處理 autoGenerate
+        setQuery(initialQuery);
+      }
+    }
+  }, [isOpen, autoGenerate]); // initialQuery & initialSelectedIngredients usually stable or changes with isOpen
+
+  // 監聽 recipes 變化，判斷是否需要自動開啟 (Inspiration Mode)
   useEffect(() => {
     if (recipes && recipes.length > 0) {
       hasGeneratedRef.current = true;
+
+      // 如果是靈感模式，且尚未自動開啟過，則開啟第一道食譜
+      if (mode === 'inspiration' && !hasAutoOpenedRef.current) {
+        const firstRecipe = recipes[0];
+        if (firstRecipe) {
+          hasAutoOpenedRef.current = true;
+          // 稍微延遲一點開啟，讓使用者能看到生成的過程或結果卡片出現的瞬間
+          setTimeout(() => {
+            // 這裡直接使用 handleCardClick 邏輯，但為了避免重複 code，直接呼叫
+            const mappedRecipe = recipes.find((r) => r.id === firstRecipe.id);
+            if (mappedRecipe) {
+              setSelectedRecipe(mappedRecipe as unknown as RecipeListItem);
+              setIsRecipeModalOpen(true);
+            }
+          }, 500);
+        }
+      }
     }
-  }, [recipes]);
+  }, [recipes, mode]);
 
   // 追蹤是否已經播放過進場動畫
   const hasAnimatedIn = useRef(false);
@@ -155,12 +194,15 @@ export const AIQueryModal = ({
           // 如果有生成過食譜，刷新列表
           if (hasGeneratedRef.current) {
             queryClient.invalidateQueries({ queryKey: recipeKeys.lists() });
+            dispatch(triggerRecipeRefresh());
           }
 
-          // 清除狀態與對話紀錄 (User Request: Clear content on close)
+          // 清除狀態與對話紀錄
           reset();
           setQuery('');
           setSelectedIngredients([]);
+          setSubmittedPrompt('');
+          setValidationError(null);
           onClose();
         },
       });
@@ -180,10 +222,7 @@ export const AIQueryModal = ({
     // 2. 如果 Prompt 無效且沒有選擇食材，顯示錯誤
     if (!validation.isValid && ingredientsToSubmit.length === 0) {
       if (validation.reason) {
-        // showToast(validation.reason, 'error'); // Optional: keep or remove. User wants visible UI.
-        // Set local error state to display in the chat bubble
         setValidationError(validation.reason);
-        // NOTE: update submittedPrompt so correct text shows in bubble
         setSubmittedPrompt(textToSubmit);
       }
       return;
@@ -195,13 +234,16 @@ export const AIQueryModal = ({
     // 4. 防止重複提交
     if (isLoading) return;
 
-    // 5. 更新 UI 顯示
-    // ...
-    const finalPrompt = validation.isValid
+    // 5. 處理 Prompt
+    let finalPrompt = validation.isValid
       ? validation.sanitized
       : '請根據我選擇的食材推薦食譜';
-    // setQuery(finalPrompt); // Do NOT update input field to allow re-edit without clobbering history feeling
-    // Instead update submittedPrompt used for display
+
+    // 如果是靈感模式，強制加入 "只提供一道" 的指令
+    if (mode === 'inspiration') {
+      finalPrompt += ' (請只提供一道食譜)';
+    }
+
     setSubmittedPrompt(finalPrompt);
 
     // 6. 發送請求
@@ -224,12 +266,9 @@ export const AIQueryModal = ({
   };
 
   const handleCardClick = (recipeId: string) => {
-    // 由於 useRecipeStream 已經執行了資料轉換，這裡取得的 recipe 已經是符合前端結構的物件
-    // 包含完整的 ingredients (merged & categorized), steps, seasonings 等
-    const recipe = recipes?.find((r) => r.id === recipeId);
+    // 優先從 displayRecipes 找
+    const recipe = displayRecipes?.find((r) => r.id === recipeId);
     if (recipe) {
-      // 需要轉型為 RecipeListItem 以符合 setSelectedRecipe 的型別
-      // 但此時傳遞給 RecipeDetailModal 的物件其實已包含完整屬性 (Hydration)
       setSelectedRecipe(recipe as unknown as RecipeListItem);
       setIsRecipeModalOpen(true);
     }
@@ -240,7 +279,27 @@ export const AIQueryModal = ({
     setTimeout(() => setSelectedRecipe(null), 300);
   };
 
-  // 移除 if (!isOpen) return null; 改用 CSS 控制顯示以保留狀態
+  // 如果是在靈感模式下且正在 Loading，顯示全版 Loading 畫面
+  if (isOpen && mode === 'inspiration' && isLoading && !text) {
+    return createPortal(
+      <div className="fixed inset-0 z-100 bg-white flex flex-col items-center justify-center">
+        <div className="w-full max-w-[320px] aspect-square relative mb-8">
+          <img
+            src={processingImage}
+            alt="Processing"
+            className="w-full h-full object-contain"
+          />
+        </div>
+        <h3 className="text-xl font-bold text-neutral-900 mb-2">
+          正在配對適合的食譜
+        </h3>
+        <p className="text-neutral-500 font-medium tracking-wider">
+          請給我們幾秒鐘...
+        </p>
+      </div>,
+      document.body,
+    );
+  }
 
   return (
     <>
@@ -248,15 +307,13 @@ export const AIQueryModal = ({
         <div
           className={cn(
             'fixed inset-0 z-100 flex flex-col transition-all duration-0',
-            !isOpen && 'invisible pointer-events-none', // 使用 CSS 隱藏
+            !isOpen && 'invisible pointer-events-none',
           )}
         >
-          {/* Overlay (Hidden for slide-over effect, keeping consistent with design) */}
-
           <div
             ref={containerRef}
             className="absolute inset-0 bg-white flex flex-col shadow-xl"
-            style={{ transform: 'translate(100%, 0)' }} // 預設位置在右側外
+            style={{ transform: 'translate(100%, 0)' }}
           >
             {/* Header */}
             <header className="bg-white border-b border-neutral-100 shrink-0">
@@ -331,7 +388,9 @@ export const AIQueryModal = ({
                           </div>
                         )}
                         <p className="text-neutral-800 text-[14px]">
-                          {submittedPrompt || '庫存食材食譜推薦'}
+                          {submittedPrompt ||
+                            initialQuery ||
+                            '庫存食材食譜推薦'}
                         </p>
                       </div>
                     </div>
@@ -339,7 +398,6 @@ export const AIQueryModal = ({
                     {/* Loader (New Design: White bubble with dots) */}
                     {isLoading && !text && (
                       <div className="flex justify-start">
-                        {/* 純白氣泡 + 黑色跳動圓點 */}
                         <div className="bg-white border border-neutral-100 rounded-2xl rounded-tl-none px-5 py-4 shadow-sm flex items-center gap-1.5 min-h-[52px]">
                           <span className="w-2 h-2 bg-neutral-800 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
                           <span className="w-2 h-2 bg-neutral-800 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
@@ -349,7 +407,10 @@ export const AIQueryModal = ({
                     )}
 
                     {/* AI Response (Left) */}
-                    {(text || error || validationError) && (
+                    {(text ||
+                      error ||
+                      validationError ||
+                      (displayRecipes && displayRecipes.length > 0)) && (
                       <div className="space-y-4">
                         {/* Avatar Row */}
                         <div className="flex justify-start">
@@ -377,15 +438,18 @@ export const AIQueryModal = ({
                             </div>
                           ) : (
                             <div className="text-neutral-900 font-bold text-lg px-1 leading-relaxed whitespace-pre-wrap">
-                              {text}
+                              {text ||
+                                (initialRecipes.length > 0
+                                  ? `為您找到 ${initialRecipes.length} 道相關食譜：`
+                                  : '')}
                             </div>
                           )}
 
                           {/* Recipe Horizontal Scroll */}
-                          {recipes && recipes.length > 0 && (
+                          {displayRecipes && displayRecipes.length > 0 && (
                             <div className="w-full overflow-x-auto pb-4 pt-2 -mx-1 px-1 custom-scrollbar hide-scrollbar">
                               <div className="flex gap-4">
-                                {recipes.map((recipe) => (
+                                {displayRecipes.map((recipe) => (
                                   <div
                                     key={recipe.id}
                                     className="w-[280px] h-[280px] shrink-0"
