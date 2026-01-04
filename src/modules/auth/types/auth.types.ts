@@ -2,8 +2,9 @@ import type { ISOTimestamp, UUID } from '@/api/types';
 
 /**
  * 會員等級型別
+ * 對應後端 API subscriptionTier: 0=free, 1=pro
  */
-export type MembershipTier = 'free' | 'premium' | 'vip';
+export type MembershipTier = 'free' | 'pro';
 
 export type CookingFrequency = '1-2' | '3-4' | '5-7' | 'daily';
 
@@ -33,11 +34,11 @@ export type DietaryPreference = {
  * @see docs/backend/api_profile_guide.md
  */
 export const Gender = {
-  NotSpecified: 0,  // 不透露
-  Female: 1,        // 女孩兒
-  Male: 2,          // 男孩紙
-  NonBinary: 3,     // 無性別
-  Other: 4,         // 其他（可自訂）
+  NotSpecified: 0, // 不透露
+  Female: 1, // 女孩兒
+  Male: 2, // 男孩紙
+  NonBinary: 3, // 無性別
+  Other: 4, // 其他（可自訂）
 } as const;
 
 export type GenderValue = (typeof Gender)[keyof typeof Gender];
@@ -105,11 +106,11 @@ export type ProfileData = {
   name: string;
   profilePictureUrl?: string | null;
   email?: string | null;
-  preferences?: string[] | null;  // 飲食偏好標籤
-  avatar?: string;               // 自訂頭像
-  gender: GenderValue;           // 性別數值（0-4）
-  customGender?: string | null;  // 自訂性別文字（gender=4 時使用）
-  subscriptionTier: number;      // 訂閱等級（0: Free）
+  preferences?: string[] | null; // 飲食偏好標籤
+  avatar?: string; // 自訂頭像
+  gender: GenderValue; // 性別數值（0-4）
+  customGender?: string | null; // 自訂性別文字（gender=4 時使用）
+  subscriptionTier: number; // 訂閱等級（0: Free）
   createdAt: ISOTimestamp;
   updatedAt: ISOTimestamp;
 };
@@ -123,12 +124,12 @@ export type ProfileResponse = {
  * @see docs/backend/api_profile_guide.md
  */
 export type UpdateProfilePayload = {
-  name: string;                  // 必填，使用者名稱
-  profilePictureUrl?: string;    // 選填，頭像 URL
-  avatar?: string;               // 選填
-  email?: string;                // 選填，電子郵件
-  preferences?: string[];         // 選填，飲食偏好標籤陣列
-  gender?: GenderValue;          // 選填，性別數值
-  customGender?: string | null;  // 選填，自訂性別（gender=4 時）
-  subscriptionTier?: number;     // 前端模擬用
+  name: string; // 必填，使用者名稱
+  profilePictureUrl?: string; // 選填，頭像 URL
+  avatar?: string; // 選填
+  email?: string; // 選填，電子郵件
+  preferences?: string[]; // 選填，飲食偏好標籤陣列
+  gender?: GenderValue; // 選填，性別數值
+  customGender?: string | null; // 選填，自訂性別（gender=4 時）
+  subscriptionTier?: number; // 前端模擬用
 };

@@ -25,7 +25,7 @@ const PLANS = [
     borderColor: 'border-[#F68072]',
   },
   {
-    id: 'premium',
+    id: 'pro',
     name: 'Pro專業家庭',
     price: '$200元/月',
     image: silverShield,
@@ -64,17 +64,21 @@ const Subscription = ({ isOpen, onClose, onNavigate }: SubscriptionProps) => {
 
   // Sync selected with current when opening
   if (!isOpen && selectedPlanId !== currentTier) {
-     // This logic might be buggy if done during render without useEffect.
-     // But since we mount/unmount or use key, maybe ok.
-     // Better to use useEffect.
+    // This logic might be buggy if done during render without useEffect.
+    // But since we mount/unmount or use key, maybe ok.
+    // Better to use useEffect.
   }
-  
+
   const handlePaymentConfirm = async () => {
     if (!selectedPlan || !user) return;
 
     // 1. Save mock order to localStorage
     const newOrder = {
-      id: `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+      id: `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(
+        Math.random() * 1000,
+      )
+        .toString()
+        .padStart(3, '0')}`,
       date: new Date().toLocaleDateString('zh-TW'),
       item: selectedPlan.name,
       amount: selectedPlan.price.split('/')[0], // "$200元"
@@ -83,14 +87,17 @@ const Subscription = ({ isOpen, onClose, onNavigate }: SubscriptionProps) => {
 
     const storedOrders = localStorage.getItem('fufood_mock_orders');
     const orders = storedOrders ? JSON.parse(storedOrders) : [];
-    localStorage.setItem('fufood_mock_orders', JSON.stringify([newOrder, ...orders]));
+    localStorage.setItem(
+      'fufood_mock_orders',
+      JSON.stringify([newOrder, ...orders]),
+    );
 
     // 2. Update profile with mock subscription tier
     return updateProfileMutation.mutateAsync(
       {
         data: {
           name: user.name || '',
-          subscriptionTier: selectedPlan.id === 'premium' ? 1 : 0, // Mock mapping
+          subscriptionTier: selectedPlan.id === 'pro' ? 1 : 0, // 0: free, 1: pro
         },
       },
       {
@@ -98,17 +105,13 @@ const Subscription = ({ isOpen, onClose, onNavigate }: SubscriptionProps) => {
           setIsPaymentSuccess(true);
           // 不要在這裡立即關閉，讓 MockPaymentModal 處理動畫和關閉
         },
-      }
+      },
     );
   };
 
   return (
     <>
-      <SettingsModalLayout
-        isOpen={isOpen}
-        onClose={onClose}
-        title="會員方案"
-      >
+      <SettingsModalLayout isOpen={isOpen} onClose={onClose} title="會員方案">
         <div className="max-w-layout-container mx-auto px-4 py-6 space-y-4 pb-24">
           {PLANS.map((plan) => {
             const isCurrent = currentTier === plan.id;
@@ -119,8 +122,8 @@ const Subscription = ({ isOpen, onClose, onNavigate }: SubscriptionProps) => {
                 key={plan.id}
                 onClick={() => setSelectedPlanId(plan.id)}
                 className={`relative bg-white rounded-3xl p-6 shadow-sm border-2 cursor-pointer transition-all ${
-                  isSelected 
-                    ? 'border-[#F68072] ring-1 ring-[#F68072]' 
+                  isSelected
+                    ? 'border-[#F68072] ring-1 ring-[#F68072]'
                     : 'border-neutral-200 hover:border-neutral-300'
                 }`}
               >
@@ -170,7 +173,7 @@ const Subscription = ({ isOpen, onClose, onNavigate }: SubscriptionProps) => {
           })}
 
           <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-sm border-t border-neutral-100 max-w-[430px] mx-auto w-full z-20">
-            <Button 
+            <Button
               onClick={() => {
                 setIsPaymentSuccess(false);
                 setShowPayment(true);
