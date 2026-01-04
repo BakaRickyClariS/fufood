@@ -5,7 +5,7 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { identity } from '@/shared/utils/identity';
-import { notificationsApi } from './index';
+import { notificationsApi } from './client';
 import type { GetNotificationsRequest, NotificationCategory } from '../types';
 
 // Query Keys

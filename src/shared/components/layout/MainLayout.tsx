@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { Outlet, useMatches } from 'react-router-dom';
 import { GroupModalProvider } from '@/modules/groups/providers/GroupModalProvider';
+import { ThemeProvider } from '@/shared/providers/ThemeProvider';
 import TopNav from './TopNav';
 import BottomNav from './BottomNav';
 
@@ -47,23 +48,25 @@ const MainLayout = () => {
   }, [bodyClass]);
 
   return (
-    <GroupModalProvider>
-      {showHeader && (
-        <div className="sticky top-0 z-40">
-          <TopNav />
-        </div>
-      )}
-      <main>
-        <Outlet />
-      </main>
-      {showFooter && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
-          <div className="pointer-events-auto">
-            <BottomNav />
+    <ThemeProvider>
+      <GroupModalProvider>
+        {showHeader && (
+          <div className="sticky top-0 z-40">
+            <TopNav />
           </div>
-        </div>
-      )}
-    </GroupModalProvider>
+        )}
+        <main>
+          <Outlet />
+        </main>
+        {showFooter && (
+          <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
+            <div className="pointer-events-auto">
+              <BottomNav />
+            </div>
+          </div>
+        )}
+      </GroupModalProvider>
+    </ThemeProvider>
   );
 };
 

@@ -6,13 +6,18 @@ import {
   selectActiveRefrigeratorId,
   setActiveRefrigeratorId,
 } from '@/store/slices/refrigeratorSlice';
-import heroBanner from '@/assets/images/dashboard/hero-banner.png';
+import { useTheme } from '@/shared/providers/ThemeProvider';
+import { ThemeSelectionModal } from '@/shared/components/modals/ThemeSelectionModal';
 import InventorySection from '@/modules/dashboard/components/InventorySection';
 import RecipeSection from '@/modules/dashboard/components/RecipeSection';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const dispatch = useDispatch();
+
+  // 主題系統
+  const { currentTheme, shouldShowThemeModal, setTheme, dismissThemeModal } =
+    useTheme();
 
   // 使用 useGroups 確保群組資料被載入，並取得群組列表
   const { groups } = useGroups();
@@ -38,11 +43,19 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
+      {/* 首次登入主題選擇 Modal */}
+      <ThemeSelectionModal
+        isOpen={shouldShowThemeModal}
+        onClose={dismissThemeModal}
+        onConfirm={setTheme}
+        isFirstLogin={true}
+      />
+
       {/* Hero 區塊 */}
       <section>
         <div className="flex justify-center px-4 w-full">
           <div className="flex flex-row justify-center max-w-layout-container w-full">
-            <div className="flex flex-col max-w-[150px] mr-[-70px] mt-5 w-full z-10">
+            <div className="flex flex-col max-w-[150px] mr-[-90px] mt-5 w-full z-10">
               <h1 className="text-xl/7 font-bold text-primary-800">
                 Good Morning,
               </h1>
@@ -52,14 +65,14 @@ const Dashboard: React.FC = () => {
               >
                 {displayName}.
               </h1>
-              <p className="text-sm text-neutral-600 py-1 px-3 bg-[#FEF3F2] rounded-b-xl rounded-tl-xl">
+              <p className="text-sm text-neutral-600 py-1 px-3 bg-primary-50 rounded-b-xl rounded-tl-xl whitespace-nowrap">
                 歡迎回到冰箱小隊～
               </p>
             </div>
 
             <img
               className="max-w-[300px] w-full h-auto object-cover"
-              src={heroBanner}
+              src={currentTheme.homeBanner}
               alt="Illustration of a person looking into a fridge"
             />
           </div>

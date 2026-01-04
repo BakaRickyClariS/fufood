@@ -6,7 +6,8 @@ import { useGSAP } from '@gsap/react';
 import type { Group } from '../../types/group.types';
 import { useGroupModal } from '../../hooks/useGroupModal';
 import { useAuth } from '@/modules/auth/hooks';
-import defaultAvatar from '@/assets/images/auth/Avatar-1.png';
+import { useTheme } from '@/shared/providers/ThemeProvider';
+import { getThemeById, DEFAULT_THEME_ID } from '@/shared/constants/themes';
 
 /** 顯示的頭像數量上限 */
 const MAX_AVATARS_DISPLAY = 4;
@@ -43,6 +44,13 @@ export const GroupCard: FC<GroupCardProps> = ({
   const arrowRef = useRef<HTMLButtonElement>(null);
   const { switchGroup } = useGroupModal();
   const { user } = useAuth();
+  const { currentTheme } = useTheme();
+
+  // 判斷自己是否為 owner，若是則顯示自己的主題群組圖片
+  const isOwner = group.ownerId === user?.id;
+  const displayGroupImage = isOwner
+    ? currentTheme.groupImage
+    : getThemeById(DEFAULT_THEME_ID).groupImage;
 
   // 使用 useGSAP 管理動畫生命週期
   useGSAP(
@@ -125,7 +133,7 @@ export const GroupCard: FC<GroupCardProps> = ({
         {/* 群組圖片 */}
         <div className="w-40 h-40 absolute -right-2 -top-2">
           <img
-            src={group.imageUrl || defaultAvatar}
+            src={displayGroupImage}
             alt={group.name}
             className="w-full h-full object-contain drop-shadow-md"
           />
