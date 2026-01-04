@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { getToken } from 'firebase/messaging';
 import { toast } from 'sonner';
 import { aiApi } from '@/api/client';
+import { messaging, onMessageListener } from '@/lib/firebase';
 
 // Firebase 相關
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
@@ -133,9 +134,9 @@ export const useFCM = ({
         return null;
       }
 
-      // 2. 動態載入 Firebase messaging
-      const { messaging } = await import('@/lib/firebase');
-
+      // 2. Firebase messaging (Static)
+      // const { messaging } = await import('@/lib/firebase'); // REMOVED dynamic import
+      
       if (!messaging) {
         setError('Firebase Messaging 初始化失敗');
         return null;
@@ -192,7 +193,7 @@ export const useFCM = ({
 
     const setupListener = async () => {
       try {
-        const { onMessageListener } = await import('@/lib/firebase');
+        // const { onMessageListener } = await import('@/lib/firebase'); // REMOVED dynamic import
 
         onMessageListener((payload: any) => {
           console.log('[useFCM] 📩 收到前景訊息:', payload);

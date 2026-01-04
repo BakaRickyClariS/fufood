@@ -59,6 +59,7 @@ export async function requestNotificationPermission(): Promise<string | null> {
   }
 }
 
+
 export const onMessageListener = (callback: (payload: any) => void) => {
   if (messaging) {
     import('firebase/messaging').then(({ onMessage }) => {
@@ -69,4 +70,4 @@ export const onMessageListener = (callback: (payload: any) => void) => {
   }
 };
 
-export { messaging };
+export { app, messaging };
