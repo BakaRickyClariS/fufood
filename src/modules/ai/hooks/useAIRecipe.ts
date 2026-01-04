@@ -12,7 +12,11 @@ import { aiRecipeApi } from '../api/aiRecipeApi';
 import { useRecipeStream } from './useRecipeStream';
 import { useSaveAIRecipeMutation } from '../api/queries';
 import { useSendNotificationMutation } from '@/modules/notifications/api/queries';
-import type { AIRecipeRequest, AIRecipeItem } from '../types';
+import {
+  transformAIRecipesToDisplayModels,
+  type DisplayRecipe,
+} from '../utils/recipeTransformer';
+import type { AIRecipeRequest } from '../types';
 import { validateRecipes } from '../utils/responseValidator';
 
 // ============================================================
@@ -75,8 +79,8 @@ export type AIRecipeGenerateResult = {
   progress: number;
   /** 目前階段描述 */
   stage: string;
-  /** 生成的食譜陣列 */
-  recipes: AIRecipeItem[] | null;
+  /** 生成的食譜陣列（已轉換為前端顯示格式） */
+  recipes: DisplayRecipe[] | null;
   /** 錯誤訊息 */
   error: string | null;
   /** 剩餘查詢次數 */
@@ -120,7 +124,7 @@ export const useAIRecipeGenerate = (
   const { mutateAsync: saveRecipe } = useSaveAIRecipeMutation();
   const { mutateAsync: sendNotification } = useSendNotificationMutation();
   const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
-  const [manualRecipes, setManualRecipes] = useState<AIRecipeItem[] | null>(
+  const [manualRecipes, setManualRecipes] = useState<DisplayRecipe[] | null>(
     null,
   );
 
@@ -191,95 +195,28 @@ export const useAIRecipeGenerate = (
             );
           }
 
-          // 更新 ID 並轉換資料結構以供前端顯示 (合併 ingredients)
-          const transformedRecipes = response.data.recipes.map((r, index) => {
-            const transformedIngredients = [
-              ...(r.ingredients || []).map((i) => ({
-                name: i.name,
-                // @ts-ignore
-                quantity: String(i.amount), // Map amount to quantity for frontend
-                amount: i.amount,
-                unit: i.unit,
-                category: '準備材料',
-              })),
-              ...(r.seasonings || []).map((s) => ({
-                name: s.name,
-                // @ts-ignore
-                quantity: String(s.amount), // Map amount to quantity for frontend
-                amount: s.amount,
-                unit: s.unit,
-                category: '調味料',
-              })),
-            ];
-            return {
-              ...r,
-              id: savedResults[index]?.id || r.id,
-              ingredients: transformedIngredients as any, // Cast to any to bypass strict type check for now
-              seasonings: undefined, // 清除 seasonings 以避免混淆
-            };
-          });
+          // 使用後端回傳的真實 ID 轉換資料
+          const savedIds = savedResults.map((s) => s?.id);
+          const transformedRecipes = transformAIRecipesToDisplayModels(
+            response.data.recipes,
+            savedIds,
+          );
 
-          setManualRecipes(transformedRecipes as unknown as AIRecipeItem[]);
+          setManualRecipes(transformedRecipes);
         } catch (err) {
           console.error('Auto-save failed in normal mode:', err);
-          // 儲存失敗仍顯示原始結果 (也需轉換以正確顯示)
-          const transformedRecipes = response.data.recipes.map((r) => {
-            const transformedIngredients = [
-              ...(r.ingredients || []).map((i) => ({
-                name: i.name,
-                // @ts-ignore
-                quantity: String(i.amount),
-                amount: i.amount,
-                unit: i.unit,
-                category: '準備材料',
-              })),
-              ...(r.seasonings || []).map((s) => ({
-                name: s.name,
-                // @ts-ignore
-                quantity: String(s.amount),
-                amount: s.amount,
-                unit: s.unit,
-                category: '調味料',
-              })),
-            ];
-            return {
-              ...r,
-              ingredients: transformedIngredients as any,
-              seasonings: undefined,
-            };
-          });
-          setManualRecipes(transformedRecipes as unknown as AIRecipeItem[]);
+          // 儲存失敗仍顯示原始結果（也需轉換以正確顯示）
+          const transformedRecipes = transformAIRecipesToDisplayModels(
+            response.data.recipes,
+          );
+          setManualRecipes(transformedRecipes);
         }
       } else {
-        // Mock 資料或無結果，直接顯示 (Mock 資料通常已符合結構或簡單顯示，但為求一致也可轉換)
-        // 這裡維持原樣，因為 Mock 資料定義在 aiRecipeApi 中且可能結構固定
-        // 為了確保 Mock 資料也能顯示材料，我們也進行轉換
-        const transformedRecipes = response.data.recipes.map((r) => {
-          const transformedIngredients = [
-            ...(r.ingredients || []).map((i) => ({
-              name: i.name,
-              // @ts-ignore
-              quantity: String(i.amount),
-              amount: i.amount,
-              unit: i.unit,
-              category: '準備材料',
-            })),
-            ...(r.seasonings || []).map((s) => ({
-              name: s.name,
-              // @ts-ignore
-              quantity: String(s.amount),
-              amount: s.amount,
-              unit: s.unit,
-              category: '調味料',
-            })),
-          ];
-          return {
-            ...r,
-            ingredients: transformedIngredients as any,
-            seasonings: undefined,
-          };
-        });
-        setManualRecipes(transformedRecipes as unknown as AIRecipeItem[]);
+        // Mock 資料或無結果
+        const transformedRecipes = transformAIRecipesToDisplayModels(
+          response.data.recipes,
+        );
+        setManualRecipes(transformedRecipes);
       }
     }
   };
@@ -327,13 +264,22 @@ export const useAIRecipeGenerate = (
     }
   }
 
+  // 計算 recipes（確保型別一致）
+  const getRecipes = (): DisplayRecipe[] | null => {
+    if (manualRecipes) return manualRecipes;
+    if (mutation.data?.data.recipes) {
+      return transformAIRecipesToDisplayModels(mutation.data.data.recipes);
+    }
+    return null;
+  };
+
   return {
     generate,
     isLoading: mutation.isPending,
     text: mutation.data?.data.greeting ?? '',
     progress: mutation.isSuccess ? 100 : 0,
     stage: mutation.isPending ? '生成中...' : mutation.isSuccess ? '完成' : '',
-    recipes: manualRecipes ?? mutation.data?.data.recipes ?? null,
+    recipes: getRecipes(),
     error: errorMsg,
     remainingQueries: mutation.data?.data.remainingQueries ?? null,
     stop,

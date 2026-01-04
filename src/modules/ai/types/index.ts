@@ -4,6 +4,13 @@
  * 包含 AI 食譜生成、SSE Streaming、媒體上傳與影像辨識的類型
  */
 
+// 重新匯出前端顯示用型別（來自 recipeTransformer）
+export type {
+  DisplayRecipe,
+  DisplayIngredient,
+  DisplayStep,
+} from '../utils/recipeTransformer';
+
 // ============================================================
 // 請求類型
 // ============================================================

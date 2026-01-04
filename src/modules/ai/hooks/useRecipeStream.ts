@@ -8,9 +8,13 @@ import { useSelector } from 'react-redux';
 import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import { aiRecipeApi } from '../api/aiRecipeApi';
 import { validateRecipes, validateGreeting } from '../utils/responseValidator';
+import {
+  transformAIRecipesToDisplayModels,
+  type DisplayRecipe,
+} from '../utils/recipeTransformer';
 import { useSaveAIRecipeMutation } from '../api/queries';
 import { useSendNotificationMutation } from '@/modules/notifications/api/queries';
-import type { AIRecipeRequest, AIRecipeItem, AIStreamEvent } from '../types';
+import type { AIRecipeRequest, AIStreamEvent } from '../types';
 
 export type StreamState = {
   /** 是否正在串流 */
@@ -21,8 +25,8 @@ export type StreamState = {
   progress: number;
   /** 目前階段描述 */
   stage: string;
-  /** 完成後的食譜陣列 */
-  recipes: AIRecipeItem[] | null;
+  /** 完成後的食譜陣列（已轉換為前端顯示格式） */
+  recipes: DisplayRecipe[] | null;
   /** 錯誤訊息 */
   error: string | null;
   /** 剩餘查詢次數 */
@@ -117,39 +121,9 @@ export const useRecipeStream = () => {
             );
           }
 
-          // 資料轉換 (Centralized Data Transformation)
-          // 將 AIRecipeItem 轉換為前端通用的 Recipe 結構
-          // 1. 合併 ingredients 和 seasonings -> ingredients (with category)
-          // 2. amount -> quantity
-          let finalRecipes: any[] = validatedRecipes.map((r) => {
-            const transformedIngredients = [
-              ...(r.ingredients || []).map((i) => ({
-                name: i.name,
-                quantity: String(i.amount), // Map amount to quantity
-                unit: i.unit,
-                category: '準備材料', // Assign category
-              })),
-              ...(r.seasonings || []).map((s) => ({
-                name: s.name,
-                quantity: String(s.amount), // Map amount to quantity
-                unit: s.unit,
-                category: '調味料', // Assign category
-              })),
-            ];
-
-            return {
-              id: r.id,
-              name: r.name,
-              category: r.category || '其他',
-              imageUrl: r.imageUrl, // Keep null if null
-              servings: r.servings,
-              cookTime: r.cookTime || 0,
-              isFavorite: r.isFavorite || false,
-              difficulty: r.difficulty || '簡單',
-              ingredients: transformedIngredients, // Merged list
-              steps: r.steps || [],
-            };
-          });
+          // 使用集中式轉換工具函式
+          let finalRecipes =
+            transformAIRecipesToDisplayModels(validatedRecipes);
 
           // 自動儲存食譜到後端
           if (validatedRecipes && validatedRecipes.length > 0) {
@@ -183,11 +157,12 @@ export const useRecipeStream = () => {
                 }),
               );
 
-              // 更新 finalRecipes 的 ID (使用後端回傳的真實 ID)
-              finalRecipes = finalRecipes.map((r, index) => ({
-                ...r,
-                id: savedRecipes[index]?.id || r.id,
-              }));
+              // 使用後端回傳的真實 ID 重新轉換
+              const savedIds = savedRecipes.map((s) => s?.id);
+              finalRecipes = transformAIRecipesToDisplayModels(
+                validatedRecipes,
+                savedIds,
+              );
 
               // 發送 AI 食譜生成通知
               if (refrigeratorId && finalRecipes.length > 0) {
@@ -222,7 +197,7 @@ export const useRecipeStream = () => {
             isStreaming: false,
             progress: 100,
             stage: '完成',
-            recipes: finalRecipes, // Now contains fully transformed Recipe objects
+            recipes: finalRecipes,
             remainingQueries: event.data.remainingQueries,
           }));
           break;
