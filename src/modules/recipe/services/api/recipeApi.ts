@@ -34,9 +34,13 @@ export type RecipeApi = {
 };
 
 export class RealRecipeApi implements RecipeApi {
+  // Flag 用來避免重複 seed
+  private _isSeeding = false;
+
   /**
    * 取得食譜列表
    * 目前改為從 AI Backend 取得已儲存的食譜
+   * 若使用者沒有任何食譜，會自動儲存預設食譜
    */
   getRecipes = async (params?: {
     category?: RecipeCategory;
@@ -44,39 +48,59 @@ export class RealRecipeApi implements RecipeApi {
     refrigeratorId?: string;
   }): Promise<RecipeListItem[]> => {
     // 從 AI API 取得所有食譜
-    const savedRecipes = await aiRecipeApi.getSavedRecipes(params?.refrigeratorId);
+    let savedRecipes = await aiRecipeApi.getSavedRecipes(
+      params?.refrigeratorId,
+    );
+
+    // 若列表為空且未在 seeding 中，自動儲存預設食譜
+    if (savedRecipes.length === 0 && !this._isSeeding) {
+      this._isSeeding = true;
+      try {
+        const seeded = await aiRecipeApi.seedDefaultRecipes(
+          params?.refrigeratorId,
+        );
+        if (seeded) {
+          // 重新取得食譜列表
+          savedRecipes = await aiRecipeApi.getSavedRecipes(
+            params?.refrigeratorId,
+          );
+        }
+      } finally {
+        this._isSeeding = false;
+      }
+    }
 
     // Helper to normalize category
     const normalizeRecipeCategory = (input?: string | null): RecipeCategory => {
-      if (!input) return '其他' as RecipeCategory; 
-      
+      if (!input) return '其他' as RecipeCategory;
+
       const map: Record<string, RecipeCategory> = {
-        '日式': '日式料理',
-        '台式': '中式料理', 
-        '美式': '美式料理',
-        '義式': '義式料理',
-        '泰式': '泰式料理',
-        '韓式': '韓式料理',
-        '墨西哥': '墨西哥料理',
-        '川菜': '川菜',
-        '越南': '越南料理',
-        '甜點': '甜點',
-        '飲品': '飲品',
+        日式: '日式料理',
+        台式: '中式料理',
+        美式: '美式料理',
+        義式: '義式料理',
+        泰式: '泰式料理',
+        韓式: '韓式料理',
+        墨西哥: '墨西哥料理',
+        川菜: '川菜',
+        越南: '越南料理',
+        甜點: '甜點',
+        飲品: '飲品',
       };
-      
+
       for (const key in map) {
         if (input.includes(key)) return map[key];
       }
-      
-      return (input as RecipeCategory);
+
+      return input as RecipeCategory;
     };
 
     // 轉換型別並過濾
     const recipes: RecipeListItem[] = savedRecipes.map((r) => {
       const category = normalizeRecipeCategory(r.category);
       // Fallback for UI safety if normalization failed to find a strict match and input was weird
-      const finalCategory = category || ('中式料理' as RecipeCategory); 
-      
+      const finalCategory = category || ('中式料理' as RecipeCategory);
+
       return {
         id: r.id,
         name: r.name,
@@ -111,18 +135,21 @@ export class RealRecipeApi implements RecipeApi {
       servings: saved.servings,
       cookTime: saved.cookTime || 0,
       difficulty: saved.difficulty || '簡單',
-      ingredients: (saved.ingredients || []).map((i) => ({
-        name: i.name,
-        quantity: i.amount,
-        unit: i.unit,
-        category: '準備材料' as const,
-      })),
-      seasonings: (saved.seasonings || []).map((s) => ({
-        name: s.name,
-        quantity: s.amount,
-        unit: s.unit,
-        category: '調味料' as const,
-      })),
+      // 合併 ingredients 和 seasonings 到同一個陣列 (與 useRecipeStream 一致)
+      ingredients: [
+        ...(saved.ingredients || []).map((i) => ({
+          name: i.name,
+          quantity: i.quantity,
+          unit: i.unit,
+          category: '準備材料' as const,
+        })),
+        ...(saved.seasonings || []).map((s) => ({
+          name: s.name,
+          quantity: s.quantity,
+          unit: s.unit,
+          category: '調味料' as const,
+        })),
+      ],
       steps: (saved.steps || []).map((s) => ({
         stepNumber: s.step,
         description: s.description,

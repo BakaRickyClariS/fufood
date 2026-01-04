@@ -4,7 +4,7 @@
  * 提供通知模組的快取和狀態管理
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { notificationsApi } from './index';
+import { notificationsApi } from './client';
 import type { GetNotificationsRequest, NotificationCategory } from '../types';
 
 // Query Keys

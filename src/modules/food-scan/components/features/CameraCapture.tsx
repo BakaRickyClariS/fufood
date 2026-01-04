@@ -203,7 +203,6 @@ export const CameraCapture: React.FC = () => {
           screenshotFormat="image/jpeg"
           screenshotQuality={0.92}
           videoConstraints={videoConstraints}
-          forceScreenshotSourceSize
           playsInline
           onUserMediaError={(e) => {
             console.error('Webcam error', e);
