@@ -63,23 +63,17 @@ const Dashboard: React.FC = () => {
       <section>
         <div className="flex justify-center px-4 w-full">
           <div className="flex flex-row justify-center max-w-layout-container w-full">
-            <div className="flex flex-col max-w-[150px] mr-[-90px] mt-5 w-full z-10">
-              <h1 className="text-xl/7 font-bold text-primary-800">
-                Good Morning,
+            <div className="flex flex-col max-w-[150px] mr-[-100px] mt-14 w-full z-10">
+              <h1 className="text-xl/7 font-bold text-neutral-600 mb-5">
+                早安,{displayName}!
               </h1>
-              <h1
-                className="text-xl font-bold text-primary-800 mb-4 truncate"
-                title={displayName}
-              >
-                {displayName}.
-              </h1>
-              <p className="text-sm text-neutral-600 py-1 px-3 bg-primary-50 rounded-b-xl rounded-tl-xl whitespace-nowrap">
+              <p className="text-sm text-neutral-600 py-1 px-3 bg-white rounded-b-xl rounded-tl-xl whitespace-nowrap">
                 歡迎回到冰箱小隊～
               </p>
             </div>
 
             <img
-              className="max-w-[300px] w-full h-auto object-cover"
+              className="max-w-[300px] w-full h-auto object-cover translate-x-6 mt-3"
               src={currentTheme.homeBanner}
               alt="Illustration of a person looking into a fridge"
             />
