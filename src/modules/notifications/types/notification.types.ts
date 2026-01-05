@@ -62,6 +62,7 @@ export type NotificationMessage = {
   // 新增顯示欄位
   groupName?: string;
   actorName?: string;
+  actorId?: string; // 觸發通知的使用者 UID，用於過濾本人操作
 };
 
 // 按日期分組的通知
