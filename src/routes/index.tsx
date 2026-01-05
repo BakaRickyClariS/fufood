@@ -12,6 +12,7 @@ import CategoryPage from './Inventory/CategoryPage';
 import { RecipeDetailView } from '@/modules/recipe/components/features/RecipeDetailView';
 
 import { useAuth } from '@/modules/auth';
+import { FCMProvider } from '@/shared/providers/FCMProvider';
 
 /**
  * 受保護路由元件
@@ -70,7 +71,11 @@ type RouteHandle = {
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <MainLayout />,
+    element: (
+      <FCMProvider autoRequest>
+        <MainLayout />
+      </FCMProvider>
+    ),
     children: [
       {
         index: true,

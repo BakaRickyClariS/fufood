@@ -6,6 +6,7 @@ import { recipeApi } from '@/modules/recipe/services';
 import { IngredientList } from '@/modules/recipe/components/ui/IngredientList';
 import { CookingSteps } from '@/modules/recipe/components/ui/CookingSteps';
 import { ConsumptionModal } from '@/modules/inventory/components/consumption';
+import { TOAST_MESSAGES } from '@/constants/messages';
 import {
   Sheet,
   SheetContent,
@@ -54,7 +55,7 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
 
     // 檢查是否為 Mock 資料
     if (recipe.id.startsWith('ai-mock-')) {
-      toast.error('範例食譜無法加入收藏，請使用正式生成的食譜');
+      toast.error(TOAST_MESSAGES.ERROR.DEMO_RECIPE);
       return;
     }
 
@@ -64,9 +65,9 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
         !recipe.isFavorite,
       );
       onRecipeUpdate?.({ ...recipe, isFavorite });
-      toast.success(isFavorite ? '已加入收藏' : '已取消收藏');
+      toast.success(isFavorite ? TOAST_MESSAGES.SUCCESS.ADD_FAVORITE : TOAST_MESSAGES.SUCCESS.REMOVE_FAVORITE);
     } catch {
-      toast.error('操作失敗');
+      toast.error(TOAST_MESSAGES.ERROR.GENERIC);
     }
   };
 

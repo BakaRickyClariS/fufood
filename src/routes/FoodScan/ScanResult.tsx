@@ -151,15 +151,25 @@ const ScanResult: React.FC = () => {
           }
 
           if (targetUserIds.length > 0) {
+            // 取得群組名稱和使用者名稱
+            const currentGroup = groups.find((g) => g.id === notifyGroupId);
+            const groupName = currentGroup?.name || '我的冰箱';
+            const actorName = user?.displayName || user?.email || '使用者';
+
             import('@/api/services/notification').then(({ notificationService }) => {
               notificationService.sendNotification({
                 type: 'inventory',
-                title: '食材入庫通知',
-                body: `已新增 ${dataToSubmit.productName}`,
+                subType: 'stockIn', // 新增 subType
+                title: 'AI 辨識完成！食材已入庫',
+                body: '剛買的食材已安全進入庫房，快去看看庫房！',
                 userIds: targetUserIds,
                 // groupId 設為 undefined，避免個人冰箱 ID 被後端視為無效群組 ID 而報錯 (400)
                 // 我們已透過 userIds 指定接收者
                 groupId: undefined,
+                groupName,
+                actorName,
+                group_name: groupName,
+                actor_name: actorName,
                 action: {
                   type: 'inventory',
                   payload: {
@@ -281,13 +291,11 @@ const ScanResult: React.FC = () => {
     try {
       // Submit all pending items
       let successCount = 0;
-      let firstItemName = '';
       
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         if (item.status === 'pending') {
           await foodScanApi.submitFoodItem(item.data);
-          if (successCount === 0) firstItemName = item.data.productName;
           successCount++;
         }
       }
@@ -306,17 +314,27 @@ const ScanResult: React.FC = () => {
           }
 
           if (targetUserIds.length > 0) {
+            // 取得群組名稱和使用者名稱
+            const currentGroup = groups.find((g) => g.id === targetGroupId);
+            const groupName = currentGroup?.name || '我的冰箱';
+            const actorName = user?.displayName || user?.email || '使用者';
+
             const message = successCount === 1 
-              ? `已新增 ${firstItemName}`
-              : `已新增 ${firstItemName} 等 ${successCount} 項食材`;
+              ? '剛買的食材已安全進入庫房，快去看看庫房！'
+              : `${successCount} 項新食材已安全進入庫房，快去看看庫房！`;
               
             import('@/api/services/notification').then(({ notificationService }) => {
               notificationService.sendNotification({
                 type: 'inventory',
-                title: '食材入庫通知',
+                subType: 'stockIn', // 新增 subType
+                title: 'AI 辨識完成！食材已入庫',
                 body: message,
                 userIds: targetUserIds,
-                groupId: undefined, 
+                groupId: undefined,
+                groupName,
+                actorName,
+                group_name: groupName,
+                actor_name: actorName,
                 action: {
                   type: 'inventory',
                   payload: {
