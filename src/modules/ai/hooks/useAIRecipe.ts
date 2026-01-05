@@ -12,6 +12,7 @@ import { aiRecipeApi } from '../api/aiRecipeApi';
 import { useRecipeStream } from './useRecipeStream';
 import { useSaveAIRecipeMutation } from '../api/queries';
 import { useSendNotificationMutation } from '@/modules/notifications/api/queries';
+import { useNotificationMetadata } from '@/modules/notifications/hooks/useNotificationMetadata';
 import {
   transformAIRecipesToDisplayModels,
   type DisplayRecipe,
@@ -124,6 +125,7 @@ export const useAIRecipeGenerate = (
   const { mutateAsync: saveRecipe } = useSaveAIRecipeMutation();
   const { mutateAsync: sendNotification } = useSendNotificationMutation();
   const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const { groupName, actorName, actorId } = useNotificationMetadata(activeRefrigeratorId || undefined);
   const [manualRecipes, setManualRecipes] = useState<DisplayRecipe[] | null>(
     null,
   );
@@ -176,16 +178,27 @@ export const useAIRecipeGenerate = (
           // 發送 AI 食譜生成通知
           if (activeRefrigeratorId && savedResults.length > 0) {
             const firstRecipeName = savedResults[0].name;
+            const title =
+              savedResults.length > 1
+                ? `阿福靈感大爆發！${savedResults.length} 道新食譜出爐`
+                : `阿福靈感大爆發！新食譜出爐`;
             const msg =
               savedResults.length > 1
-                ? `已為您生成 ${firstRecipeName} 等 ${savedResults.length} 道新食譜！`
-                : `已為您生成新食譜：${firstRecipeName}`;
+                ? `冰箱小隊為您獻上 ${firstRecipeName} 等 ${savedResults.length} 道料理靈感！`
+                : `冰箱小隊為您獻上今日料理靈感：${firstRecipeName}`;
 
             sendNotification({
               groupId: activeRefrigeratorId,
-              title: 'AI 食譜生成完成',
+              title,
               body: msg,
               type: 'recipe',
+              subType: 'generate',
+              groupName,
+              actorName,
+              actorId,
+              group_name: groupName,
+              actor_name: actorName,
+              actor_id: actorId,
               action: {
                 type: 'recipe',
                 payload: { recipeId: savedResults[0].id },

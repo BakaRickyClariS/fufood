@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSelector } from 'react-redux';
 import type {
   SharedList,
   CreateSharedListInput,
   SharedListStatus,
 } from '../types';
 import { sharedListApi } from '../services/api/sharedListApi';
+import { selectAllGroups } from '@/modules/groups/store/groupsSlice';
+import { useAuth } from '@/modules/auth';
 
 export const useSharedLists = (
   refrigeratorId: string,
@@ -15,6 +18,8 @@ export const useSharedLists = (
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasLoadedRef = useRef(false);
+  const groups = useSelector(selectAllGroups);
+  const { user } = useAuth();
 
   // Status 計算邏輯
   const computeStatus = (startsAt: string): SharedListStatus => {
@@ -79,14 +84,24 @@ export const useSharedLists = (
 
       // 發送通知給群組成員
       try {
+        // 取得群組名稱和使用者名稱
+        const currentGroup = groups.find((g) => g.id === refrigeratorId);
+        const groupName = currentGroup?.name || '我的冰箱';
+        const actorName = user?.displayName || user?.email || '使用者';
+
         const { notificationsApiImpl } = await import(
           '@/modules/notifications/api/notificationsApiImpl'
         );
         await notificationsApiImpl.sendNotification({
           groupId: refrigeratorId,
-          title: '新增共享清單',
-          body: `已建立新清單：${input.title}`,
+          title: `採購清單「${input.title}」已建立`,
+          body: '快來看看需要買什麼，一起規劃下次的購物行程吧！',
           type: 'shopping',
+          subType: 'list', // 新增 subType
+          groupName,
+          actorName,
+          group_name: groupName,
+          actor_name: actorName,
           action: {
             type: 'shopping-list',
             payload: {

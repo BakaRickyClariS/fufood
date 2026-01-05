@@ -68,8 +68,9 @@ const NotificationsPage = () => {
   const [openItemId, setOpenItemId] = useState<string | null>(null);
   const [openRecipeId, setOpenRecipeId] = useState<string | null>(null);
 
-  // 使用 API 取得通知
+  // 使用 API 取得通知 (Production Mode)
   const { data, isLoading } = useNotificationsByCategoryQuery(activeTab);
+
   const markAsRead = useMarkAsReadMutation();
   const deleteBatch = useDeleteNotificationsMutation();
   const markAsReadBatch = useMarkAsReadBatchMutation();
@@ -238,8 +239,11 @@ const NotificationsPage = () => {
                 key={item.id}
                 id={item.id}
                 type={item.type}
+                subType={item.subType} // Pass subType
                 title={item.title}
                 message={item.message}
+                groupName={item.groupName || (item as any).group_name} // Pass groupName (with snake_case fallback)
+                actorName={item.actorName || (item as any).actor_name} // Pass actorName (with snake_case fallback)
                 isRead={item.isRead}
                 onClick={() => handleNotificationClick(item)}
                 category={activeTab}
