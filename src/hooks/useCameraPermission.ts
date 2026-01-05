@@ -24,6 +24,10 @@ export const useCameraPermission = () => {
           };
         } catch (e) {
           // 瀏覽器不支援 'camera' 權限查詢，繼續使用 fallback
+          console.warn(
+            "Permissions API does not support 'camera' query, using fallback.",
+            e,
+          );
         }
       }
 
@@ -60,7 +64,7 @@ export const useCameraPermission = () => {
       // Granted
       setPermission('granted');
       // Stop immediately
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track) => track.stop());
     } catch (error) {
       console.error('Request camera permission denied:', error);
       setPermission('denied');
