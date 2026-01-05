@@ -257,7 +257,7 @@ export const GroupCard: FC<GroupCardProps> = ({
       {!isDeleteMode ? (
         <button
           onClick={handleExpandClick}
-          className="w-full flex justify-center py-2 cursor-pointer hover:bg-neutral-50 rounded-xl transition-colors"
+          className="w-full flex justify-center pt-4 pb-2 cursor-pointer hover:bg-neutral-50 rounded-xl transition-colors"
         >
           <div
             ref={arrowRef}

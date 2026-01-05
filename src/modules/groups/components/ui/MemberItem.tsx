@@ -20,23 +20,30 @@ export const MemberItem: FC<MemberItemProps> = ({
   showDeleteButton,
   isCurrentUser = false,
 }) => (
-  <div className="flex items-center justify-between p-4 border-b border-stone-100 last:border-0 hover:bg-stone-50 transition-colors">
+  <div className="flex items-center justify-between py-4 border-b border-neutral-100 last:border-0 hover:bg-neutral-50 transition-colors px-4">
     <div className="flex items-center gap-4">
-      <div className="w-12 h-12 rounded-full overflow-hidden border border-stone-100 bg-gray-100 shrink-0">
+      {/* Avatar: w-14 h-14 (56px) */}
+      <div className="w-14 h-14 rounded-full overflow-hidden border border-neutral-300 shrink-0">
         <img
           src={member.avatar || ''}
           alt={member.name}
           className="w-full h-full object-cover"
         />
       </div>
-      <div className="flex flex-col">
-        <span className="text-base font-bold text-stone-800">
+      <div className="flex flex-col gap-1">
+        {/* Name: 12px semibold */}
+        <span className="text-xs font-semibold text-neutral-700">
           {member.name}
-          {isCurrentUser && ' (我)'}
+          {isCurrentUser && <span className="text-primary-400"> (你)</span>}
         </span>
-        <span className="text-xs text-stone-400 font-medium">
-          {member.role === 'owner' ? '擁有者' : '成員'}
-        </span>
+        {/* Role: Owner Badge */}
+        {member.role === 'owner' ? (
+          <span className="text-[10px] text-white font-semibold bg-primary-400 px-2 py-1 rounded-full w-fit">
+            擁有者
+          </span>
+        ) : (
+          <span className="text-xs text-neutral-400 font-semibold">成員</span>
+        )}
       </div>
     </div>
 
@@ -45,7 +52,7 @@ export const MemberItem: FC<MemberItemProps> = ({
       <Button
         variant="ghost"
         size="icon"
-        className="text-stone-300 hover:text-[#EE5D50] hover:bg-red-50"
+        className="text-neutral-300 hover:text-[#EE5D50] hover:bg-red-50"
         onClick={() => onRemove(member.id)}
       >
         <Trash2 className="w-5 h-5" />

@@ -1,145 +1,89 @@
 import { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
-import { ChevronLeft, Camera, CalendarDays, CalendarCheck } from 'lucide-react';
-import { useSharedListsContext } from '@/modules/planning/contexts/SharedListsContext';
+import { Camera, CalendarDays, CalendarCheck } from 'lucide-react';
 import { sharedListApi } from '@/modules/planning/services/api/sharedListApi';
 import { CoverImagePicker } from '@/modules/planning/components/ui/CoverImagePicker';
 import { COVER_IMAGES } from '@/modules/planning/constants/coverImages';
-import gsap from 'gsap';
-import type { ConsumptionItem } from '@/modules/recipe/types';
+import { SuccessModal } from '@/shared/components/ui/SuccessModal';
+import { TOAST_MESSAGES } from '@/constants/messages';
+import {
+  SlideModalLayout,
+  type SlideModalLayoutRef,
+} from '@/shared/components/layout/SlideModalLayout';
+import type { SharedList } from '@/modules/planning/types';
 
-type CreateSharedListDrawerProps = {
+type SharedListEditModalProps = {
+  list: SharedList | null;
   isOpen: boolean;
   onClose: () => void;
-  defaultTitle?: string;
-  initialItems?: ConsumptionItem[];
 };
 
-export const CreateSharedListDrawer = ({
+/**
+ * 編輯共享清單 Modal
+ * 使用 SlideModalLayout 實現滑入/滑出動畫
+ */
+export const SharedListEditModal = ({
+  list,
   isOpen,
   onClose,
-  initialItems = [],
-  defaultTitle = '',
-}: CreateSharedListDrawerProps) => {
-  const { createList } = useSharedListsContext();
-  const drawerRef = useRef<HTMLDivElement>(null);
-  const backdropRef = useRef<HTMLDivElement>(null);
+}: SharedListEditModalProps) => {
+  const layoutRef = useRef<SlideModalLayoutRef>(null);
 
+  // 表單狀態
   const [title, setTitle] = useState('');
-  const [startsAt, setStartsAt] = useState(
-    new Date().toISOString().split('T')[0],
-  );
+  const [startsAt, setStartsAt] = useState('');
   const [enableNotifications, setEnableNotifications] = useState(true);
   const [coverPhotoPath, setCoverPhotoPath] = useState('');
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // 開啟動畫
+  // 當 list 變更時，初始化表單
   useEffect(() => {
-    if (isOpen && drawerRef.current && backdropRef.current) {
-      // 重設表單
-      setTitle(defaultTitle || (initialItems.length > 0 ? '採買清單' : ''));
-      setStartsAt(new Date().toISOString().split('T')[0]);
-      setEnableNotifications(true);
-      setCoverPhotoPath('');
-
-      // 動畫：Drawer 從右側滑入
-      gsap.fromTo(
-        drawerRef.current,
-        { x: '100%' },
-        { x: '0%', duration: 0.35, ease: 'power2.out' },
-      );
-      // Backdrop 淡入
-      gsap.fromTo(
-        backdropRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.25 },
-      );
+    if (list) {
+      setTitle(list.title);
+      setStartsAt(new Date(list.startsAt).toISOString().split('T')[0]);
+      setEnableNotifications(list.enableNotifications ?? true);
+      setCoverPhotoPath(list.coverPhotoPath || COVER_IMAGES[0]);
     }
-  }, [isOpen, initialItems, defaultTitle]);
-
-  // 關閉動畫
-  const handleClose = () => {
-    if (drawerRef.current && backdropRef.current) {
-      gsap.to(drawerRef.current, {
-        x: '100%',
-        duration: 0.3,
-        ease: 'power2.in',
-      });
-      gsap.to(backdropRef.current, {
-        opacity: 0,
-        duration: 0.25,
-        onComplete: onClose,
-      });
-    } else {
-      onClose();
-    }
-  };
+  }, [list]);
 
   const handleSubmit = async () => {
-    if (!title.trim()) return;
+    if (!title.trim() || !list?.id) return;
 
     setIsSubmitting(true);
     try {
-      // 1. 建立清單
-      const newList = await createList({
+      await sharedListApi.updateSharedList(list.id, {
         title,
         startsAt: new Date(startsAt).toISOString(),
         coverPhotoPath: coverPhotoPath || COVER_IMAGES[0],
         enableNotifications,
       });
-
-      // 2. 如果有初始項目，逐一加入清單
-      if (initialItems.length > 0 && newList?.id) {
-        await Promise.all(
-          initialItems.map((item) =>
-            sharedListApi.createSharedListItem(newList.id, {
-              name: item.ingredientName,
-              quantity: item.consumedQuantity,
-              unit: item.unit,
-              // 如果有分類資訊也可以帶入，目前先不帶
-            }),
-          ),
-        );
-      }
-
-      toast.success('清單建立成功');
-      handleClose();
+      setShowSuccessModal(true);
     } catch (error) {
-      console.error(error);
-      toast.error('建立失敗，請稍後再試');
+      console.error('更新失敗:', error);
+      toast.error(TOAST_MESSAGES.ERROR.UPDATE_FAILED);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!isOpen) return null;
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    layoutRef.current?.close();
+  };
 
-  return createPortal(
-    <div className="fixed inset-0 z-50">
-      {/* Backdrop */}
-      <div
-        ref={backdropRef}
-        className="absolute inset-0 bg-black/50"
-        onClick={handleClose}
-      />
+  if (!list) return null;
 
-      {/* Drawer */}
-      <div
-        ref={drawerRef}
-        className="absolute top-0 right-0 h-full w-full bg-neutral-100 shadow-2xl overflow-y-auto"
-        style={{ transform: 'translateX(100%)' }}
+  return (
+    <>
+      <SlideModalLayout
+        ref={layoutRef}
+        isOpen={isOpen}
+        onClose={onClose}
+        title="編輯清單"
+        bgClassName="bg-neutral-100"
       >
-        {/* Header */}
-        <header className="sticky top-0 z-10 bg-white px-4 py-3 flex items-center justify-between border-b border-neutral-100 shadow-sm">
-          <button onClick={handleClose} className="p-1">
-            <ChevronLeft className="w-6 h-6 text-neutral-700" />
-          </button>
-          <h1 className="text-base font-bold text-neutral-800">建立清單</h1>
-          <div className="w-8" /> {/* Spacer for centering */}
-        </header>
-
         <div className="px-4 pt-6 space-y-6">
           {/* 建立時間 (Display Only) */}
           <div className="bg-white rounded-2xl p-5">
@@ -155,20 +99,15 @@ export const CreateSharedListDrawer = ({
               </div>
               <div className="text-right">
                 <div className="text-base font-semibold text-primary-default tracking-wide font-mono">
-                  {new Date()
-                    .toLocaleDateString('zh-TW', {
-                      year: 'numeric',
-                      month: '2-digit',
-                      day: '2-digit',
-                    })
-                    .replace(/\//g, '/')}
-                </div>
-                <div className="text-base font-semibold text-primary-default tracking-wide font-mono">
-                  {new Date().toLocaleTimeString('zh-TW', {
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
+                  {list?.createdAt
+                    ? new Date(list.createdAt)
+                        .toLocaleDateString('zh-TW', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                        })
+                        .replace(/\//g, '/')
+                    : '-'}
                 </div>
               </div>
             </div>
@@ -190,7 +129,7 @@ export const CreateSharedListDrawer = ({
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Add value"
+                placeholder="輸入清單名稱"
                 className="w-full px-4 py-3 bg-white rounded-xl border border-neutral-300 text-neutral-800 placeholder:text-neutral-300 focus:border-primary-default focus:ring-1 focus:ring-primary-default focus:outline-none transition-all"
               />
             </div>
@@ -205,7 +144,6 @@ export const CreateSharedListDrawer = ({
                   type="date"
                   value={startsAt}
                   onChange={(e) => setStartsAt(e.target.value)}
-                  placeholder="Add value"
                   className="w-full px-4 py-3 bg-white rounded-xl border border-neutral-300 text-neutral-800 text-left focus:border-primary-default focus:ring-1 focus:ring-primary-default focus:outline-none transition-all appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer relative z-10"
                   style={{ minHeight: '48px' }}
                 />
@@ -263,28 +201,36 @@ export const CreateSharedListDrawer = ({
               </button>
             )}
           </div>
-        </div>
 
-        {/* 底部按鈕 */}
-        <div className="my-6 px-4 border-t border-neutral-100">
-          <button
-            onClick={handleSubmit}
-            disabled={!title.trim() || isSubmitting}
-            className="w-full py-3.5 bg-primary-default text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
-          >
-            {isSubmitting ? '儲存中...' : '儲存'}
-          </button>
+          {/* 底部按鈕 */}
+          <div className="my-6 border-t border-neutral-100">
+            <button
+              onClick={handleSubmit}
+              disabled={!title.trim() || isSubmitting}
+              className="w-full py-3.5 bg-primary-default text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
+            >
+              {isSubmitting ? '儲存中...' : '儲存'}
+            </button>
+          </div>
         </div>
+      </SlideModalLayout>
 
-        {/* 封面選擇器 */}
-        <CoverImagePicker
-          open={isPickerOpen}
-          onOpenChange={setIsPickerOpen}
-          selectedImage={coverPhotoPath}
-          onSelect={setCoverPhotoPath}
-        />
-      </div>
-    </div>,
-    document.body,
+      {/* 封面選擇器 */}
+      <CoverImagePicker
+        open={isPickerOpen}
+        onOpenChange={setIsPickerOpen}
+        selectedImage={coverPhotoPath}
+        onSelect={setCoverPhotoPath}
+      />
+
+      {/* 儲存成功 Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={handleSuccessModalClose}
+        title={TOAST_MESSAGES.SUCCESS.SAVE}
+      />
+    </>
   );
 };
+
+export default SharedListEditModal;

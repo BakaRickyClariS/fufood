@@ -1,5 +1,4 @@
 import { Card } from '@/shared/components/ui/card';
-import { Link } from 'react-router-dom';
 
 type CategoryCardProps = {
   id?: string;
@@ -8,6 +7,8 @@ type CategoryCardProps = {
   img: string; // local image path
   boxShadow?: string; // ex: "shadow-[0_8px_15px_-3px_rgba(0,0,0,0.1)]"
   borderColor?: string; // ex: "border-neutral-100"
+  /** 點擊回呼，若提供則使用回呼而非路由導航 */
+  onClick?: (id: string) => void;
 };
 
 const CategoryCard: React.FC<CategoryCardProps> = ({
@@ -16,7 +17,14 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
   bgColor = 'bg-white',
   boxShadow = '',
   img,
+  onClick,
 }) => {
+  const handleClick = () => {
+    if (id && onClick) {
+      onClick(id);
+    }
+  };
+
   const CardContent = (
     <Card
       className={`flex flex-row items-start justify-between p-4 rounded-2xl border-2 relative overflow-hidden h-full border-[#848484]/20 ${boxShadow} ${bgColor} transition-transform hover:scale-[1.02] active:scale-95`}
@@ -40,8 +48,13 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
     </Card>
   );
 
-  if (id) {
-    return <Link to={`/inventory/category/${id}`}>{CardContent}</Link>;
+  // 如果有 onClick 回呼，優先使用
+  if (id && onClick) {
+    return (
+      <button onClick={handleClick} className="w-full h-full text-left">
+        {CardContent}
+      </button>
+    );
   }
 
   return CardContent;

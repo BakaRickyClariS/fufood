@@ -77,7 +77,13 @@ export default defineConfig({
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-redux': ['@reduxjs/toolkit', 'react-redux'],
           'vendor-firebase': ['firebase/app', 'firebase/messaging'],
-          'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', 'sonner', 'lucide-react', 'gsap'],
+          // gsap 不放入此 chunk，因為 SplashScreen 需要同步載入以確保啟動動畫流暢
+          'vendor-ui': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            'sonner',
+            'lucide-react',
+          ],
         },
       },
     },

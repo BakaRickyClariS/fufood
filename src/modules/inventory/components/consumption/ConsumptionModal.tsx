@@ -100,7 +100,8 @@ export const ConsumptionModal = ({
   const consumptionItems = useSelector(selectConsumptionItems);
   const consumptionStep = useSelector(selectConsumptionStep);
   const consumptionContextId = useSelector(selectConsumptionContextId);
-  const { groupName, actorName, actorId } = useNotificationMetadata(refrigeratorId);
+  const { groupName, actorName, actorId } =
+    useNotificationMetadata(refrigeratorId);
 
   // Skip animation flag (local state based on restoration)
   const [skipAnimation, setSkipAnimation] = useState(false);
@@ -321,10 +322,10 @@ export const ConsumptionModal = ({
               groupId: undefined,
               groupName,
               actorName,
-              actorId,  // 明確發送 actorId
+              actorId,
               group_name: groupName,
               actor_name: actorName,
-              actor_id: actorId, // snake_case support
+              actor_id: actorId,
               action: {
                 type: 'inventory',
                 payload: {

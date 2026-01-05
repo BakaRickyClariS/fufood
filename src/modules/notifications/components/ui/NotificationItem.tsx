@@ -56,98 +56,43 @@ export const NotificationItem = ({
     }
   }, [isEditMode]);
 
-  const getTagStyle = (
-    type: NotificationType,
-    subType?: import('../../types').NotificationSubType | string,
-  ) => {
-    // Normalize subType to handle snake_case from backend
-    const normalizedSubType = subType?.toLowerCase();
-
-    if (normalizedSubType) {
-      switch (normalizedSubType) {
-        case 'generate':
-          return 'bg-[#FDE047] text-[#854D0E]'; // Yellow
-        case 'stock':
-          return 'bg-[#BEF264] text-[#3F6212]'; // Lime Green
-        case 'consume':
-          return 'bg-[#FCA5A5] text-[#991B1B]'; // Pink/Red
-        case 'stockin': // lowercase from DB
-          return 'bg-[#F87171] text-white'; // Red
-        case 'share':
-          return 'bg-[#BAE6FD] text-[#0369A1]'; // Light Blue
-        case 'list':
-          return 'bg-[#60A5FA] text-white'; // Blue
-        case 'self':
-          return 'bg-white border border-gray-200 text-gray-700'; // White
-        case 'member':
-          return 'bg-gray-300 text-gray-800'; // Grey
-      }
-    }
-
-    // Fallback based on main type if subType is missing
-    switch (type) {
-      case 'inventory':
-        return 'bg-[#BEF264] text-[#3F6212]';
-      case 'group':
-        return 'bg-gray-300 text-gray-800';
-      case 'shopping':
-        return 'bg-[#60A5FA] text-white';
-      case 'recipe':
-        return 'bg-[#FDE047] text-[#854D0E]';
-      case 'user':
-        return 'bg-white border border-gray-200 text-gray-700';
-      case 'system':
-        return 'bg-gray-100 text-gray-700';
-      default:
-        // Fallback for any unknown type - still show a default style
-        return 'bg-gray-200 text-gray-700';
-    }
+  // 標籤樣式與標籤文字的映射物件
+  const TAG_CONFIG: Record<string, { style: string; label: string }> = {
+    // SubType mappings
+    generate: { style: 'bg-[#FDE047] text-[#854D0E]', label: '生成' },
+    stock: { style: 'bg-[#BEF264] text-[#3F6212]', label: '庫存' },
+    consume: { style: 'bg-[#FCA5A5] text-[#991B1B]', label: '消耗' },
+    stockin: { style: 'bg-[#F87171] text-white', label: '入庫' },
+    share: { style: 'bg-[#BAE6FD] text-[#0369A1]', label: '共享' },
+    list: { style: 'bg-[#60A5FA] text-white', label: '清單' },
+    self: {
+      style: 'bg-white border border-gray-200 text-gray-700',
+      label: '本人',
+    },
+    member: { style: 'bg-gray-300 text-gray-800', label: '成員' },
+    // Type fallbacks
+    inventory: { style: 'bg-[#BEF264] text-[#3F6212]', label: '庫存' },
+    group: { style: 'bg-gray-300 text-gray-800', label: '成員' },
+    shopping: { style: 'bg-[#60A5FA] text-white', label: '清單' },
+    recipe: { style: 'bg-[#FDE047] text-[#854D0E]', label: '生成' },
+    user: {
+      style: 'bg-white border border-gray-200 text-gray-700',
+      label: '本人',
+    },
+    system: { style: 'bg-gray-100 text-gray-700', label: '系統' },
   };
 
-  const getTagLabel = (
+  const DEFAULT_TAG = { style: 'bg-gray-200 text-gray-700', label: '通知' };
+
+  const getTagConfig = (
     type: NotificationType,
-    subType?: import('../../types').NotificationSubType | string,
+    subType?: NotificationSubType | string,
   ) => {
-    // Normalize subType to handle different cases from backend
     const normalizedSubType = subType?.toLowerCase();
-
-    if (normalizedSubType) {
-      switch (normalizedSubType) {
-        case 'generate':
-          return '生成';
-        case 'stock':
-          return '庫存';
-        case 'consume':
-          return '消耗';
-        case 'stockin': // lowercase from DB
-          return '入庫';
-        case 'share':
-          return '共享';
-        case 'list':
-          return '清單';
-        case 'self':
-          return '本人';
-        case 'member':
-          return '成員';
-      }
-    }
-
-    switch (type) {
-      case 'inventory':
-        return '庫存';
-      case 'group':
-        return '成員';
-      case 'shopping':
-        return '清單';
-      case 'recipe':
-        return '生成';
-      case 'user':
-        return '本人';
-      case 'system':
-        return '系統';
-      default:
-        return '通知'; // Fallback for any unknown type
-    }
+    // 優先使用 subType，fallback 到 type
+    return (
+      TAG_CONFIG[normalizedSubType || ''] || TAG_CONFIG[type] || DEFAULT_TAG
+    );
   };
 
   const isOfficial = type === 'system';
@@ -165,8 +110,7 @@ export const NotificationItem = ({
     ? 'FuFood Official'
     : groupName || (type === 'user' ? 'My Fridge' : ''); // Fallback if missing
 
-  const tagLabel = getTagLabel(type, subType);
-  const tagStyle = getTagStyle(type, subType);
+  const { style: tagStyle, label: tagLabel } = getTagConfig(type, subType);
 
   return (
     <div

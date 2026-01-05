@@ -1,5 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { authService } from '../services/authService';
+import type { User } from '../types';
+import { parsePreferences } from '@/modules/settings/utils/dietaryUtils';
+import { mapBackendTierToFrontend } from './queries';
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_API !== 'false';
 
@@ -43,18 +46,34 @@ export const useUpdateProfileMutation = () => {
 
       // 同時也可以手動更新 cache 以獲得更即時的 UI 反應
       if (response && response.data) {
-        client.setQueryData(['GET_USER_PROFILE'], (oldData: any) => {
-          if (!oldData) return oldData;
-          return {
-            ...oldData,
-            ...response.data,
-            // 確保 avatar 同步更新
-            avatar:
-              response.data.profilePictureUrl ||
-              response.data.avatar ||
-              oldData.avatar,
-          };
-        });
+        const profileData = response.data;
+        const existingUser = authService.getUser();
+
+        // 將 ProfileData 轉換為 User 格式，確保型別一致
+        const updatedUser: User = {
+          ...existingUser,
+          id: profileData.id ?? existingUser?.id,
+          lineId: profileData.lineId ?? existingUser?.lineId,
+          name: profileData.name ?? existingUser?.name,
+          displayName: profileData.name ?? existingUser?.displayName,
+          avatar:
+            profileData.profilePictureUrl ??
+            profileData.avatar ??
+            existingUser?.avatar ??
+            '',
+          pictureUrl: profileData.profilePictureUrl ?? existingUser?.pictureUrl,
+          email: profileData.email ?? existingUser?.email,
+          dietaryPreference: profileData.preferences
+            ? parsePreferences(profileData.preferences)
+            : existingUser?.dietaryPreference,
+          membershipTier: profileData.subscriptionTier
+            ? mapBackendTierToFrontend(profileData.subscriptionTier)
+            : existingUser?.membershipTier,
+          createdAt: existingUser?.createdAt ?? new Date(),
+          updatedAt: new Date(),
+        };
+
+        client.setQueryData(['GET_USER_PROFILE'], updatedUser);
       }
     },
   });

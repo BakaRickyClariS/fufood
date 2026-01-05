@@ -1,9 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/modules/auth';
 import { useGroups } from '@/modules/groups/hooks/useGroups';
-import { useGroupModal } from '@/modules/groups/providers/GroupModalProvider';
 import {
   selectActiveRefrigeratorId,
   setActiveRefrigeratorId,
@@ -12,25 +10,10 @@ import { useTheme } from '@/shared/providers/ThemeProvider';
 import { ThemeSelectionSheet } from '@/shared/components/modals/ThemeSelectionSheet';
 import InventorySection from '@/modules/dashboard/components/InventorySection';
 import RecipeSection from '@/modules/dashboard/components/RecipeSection';
-import { getUserAvatarUrl } from '@/shared/utils/avatarUtils';
-import type { Group } from '@/modules/groups/types/group.types';
-
-// Group Modals
-import { GroupList } from '@/modules/groups/components/modals/GroupList';
-import { GroupMembers } from '@/modules/groups/components/modals/GroupMembers';
-import { GroupForm } from '@/modules/groups/components/modals/GroupForm';
-import { InviteFriendModal } from '@/modules/groups/components/modals/InviteFriendModal';
-import { HomeModal } from '@/modules/groups/components/modals/HomeModal';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const dispatch = useDispatch();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Group Modal Context
-  const { activeGroup, groups } = useGroupModal();
 
   // 主題系統
   const { currentTheme, shouldShowThemeModal, setTheme, dismissThemeModal } =
@@ -53,67 +36,6 @@ const Dashboard: React.FC = () => {
   }, [allGroups, activeRefrigeratorId, dispatch]);
 
   const displayName = user?.name || user?.displayName || 'Guest';
-  const userAvatar = getUserAvatarUrl(user);
-
-  // === Group Modal 狀態 ===
-  const modal = searchParams.get('modal');
-  const targetId = searchParams.get('id');
-
-  // 本地 State 控制 Create/Edit Modal（不改變 URL）
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  const [targetEditGroup, setTargetEditGroup] = useState<Group | null>(null);
-
-  // 處理來自 Provider 的 Location State (Deep Linking)
-  useEffect(() => {
-    if (location.state) {
-      const { action, groupId } = location.state as any;
-      if (action === 'create') {
-        setCreateOpen(true);
-        navigate(location.pathname + location.search, {
-          replace: true,
-          state: {},
-        });
-      } else if (action === 'edit' && groupId) {
-        const group = groups.find((g) => g.id === groupId);
-        if (group) {
-          setTargetEditGroup(group);
-          setEditOpen(true);
-          navigate(location.pathname + location.search, {
-            replace: true,
-            state: {},
-          });
-        }
-      }
-    }
-  }, [location.state, groups, navigate, location.pathname, location.search]);
-
-  // 根據 ID 尋找群組 (用於 members, invite)
-  const targetGroup = targetId
-    ? groups.find((g) => g.id === targetId) || null
-    : null;
-
-  // Modal 關閉 handlers
-  const handleCloseModal = () => {
-    setSearchParams({});
-  };
-
-  const handleBackToList = () => {
-    setSearchParams({ modal: 'groups-list' });
-  };
-
-  const handleOpenCreate = () => {
-    setCreateOpen(true);
-  };
-
-  const handleOpenEdit = (group: Group) => {
-    setTargetEditGroup(group);
-    setEditOpen(true);
-  };
-
-  const handleOpenMembers = (group: Group) => {
-    setSearchParams({ modal: 'groups-members', id: group.id });
-  };
 
   return (
     <>
@@ -158,66 +80,7 @@ const Dashboard: React.FC = () => {
       {/* 推薦食譜區塊 */}
       <RecipeSection />
 
-      {/* ===== Group Modals (首頁子路由) ===== */}
-
-      {/* HomeModal - groups-home */}
-      {activeGroup && (
-        <HomeModal
-          isOpen={modal === 'groups-home'}
-          onClose={handleCloseModal}
-          currentUser={{
-            name: displayName,
-            avatar: userAvatar,
-            role:
-              activeGroup.members?.find((m) => m.id === user?.id)?.role ||
-              'member',
-          }}
-          members={activeGroup.members || []}
-          onEditMembers={() => handleOpenMembers(activeGroup)}
-        />
-      )}
-
-      {/* 群組列表 - groups-list */}
-      <GroupList
-        open={modal === 'groups-list' || createOpen || editOpen}
-        onClose={handleCloseModal}
-        onOpenCreateModal={handleOpenCreate}
-        onOpenEditModal={handleOpenEdit}
-        onOpenMembersModal={handleOpenMembers}
-      />
-
-      {/* 成員列表 - groups-members */}
-      <GroupMembers
-        open={modal === 'groups-members'}
-        onClose={handleCloseModal}
-        group={targetGroup || activeGroup || null}
-        onBack={handleBackToList}
-      />
-
-      {/* 建立群組 - State 驅動 */}
-      <GroupForm
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        group={null}
-        mode="create"
-        onBack={() => setCreateOpen(false)}
-      />
-
-      {/* 編輯群組 - State 驅動 */}
-      <GroupForm
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        group={targetEditGroup}
-        mode="edit"
-        onBack={() => setEditOpen(false)}
-      />
-
-      {/* 邀請好友 - groups-invite */}
-      <InviteFriendModal
-        open={modal === 'groups-invite'}
-        onClose={handleCloseModal}
-        group={targetGroup || activeGroup || null}
-      />
+      {/* 群組 Modal 已移至 MainLayout 中的 GlobalGroupModals 處理 */}
     </>
   );
 };

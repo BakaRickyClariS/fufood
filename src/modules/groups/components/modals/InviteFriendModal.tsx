@@ -1,4 +1,5 @@
 import { type FC, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '@/store';
 import { getInviteCode } from '@/modules/groups/store/groupsSlice';
@@ -21,6 +22,33 @@ export const InviteFriendModal: FC<InviteFriendModalProps> = ({
   group,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
+
+  // 鎖定背景滾動
+  useEffect(() => {
+    if (open) {
+      // 鎖定背景滾動
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = `-${window.scrollY}px`;
+    } else {
+      // 解除鎖定
+      const scrollY = document.body.style.top;
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+    }
+
+    return () => {
+      // 清理
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+    };
+  }, [open]);
 
   // Redux State
   const { inviteCode, isGeneratingCode } = useSelector(
@@ -87,10 +115,18 @@ export const InviteFriendModal: FC<InviteFriendModalProps> = ({
     }
   }, [group, dispatch]);
 
+  // 建構 QR Code URL
+  // 格式: https://api.fufood.jocelynh.me/oauth/line/init?invite={token}&ref=https://fufood.jocelynh.me/refrigerators/{id}
+  const token = inviteCode?.token || inviteCode?.code;
+  const qrCodeUrl =
+    token && group?.id
+      ? `https://api.fufood.jocelynh.me/oauth/line/init?invite=${token}&ref=https://fufood.jocelynh.me/refrigerators/${group.id}`
+      : inviteCode?.inviteUrl || '';
+
   // 複製連結
   const handleCopyLink = () => {
-    if (inviteCode?.inviteUrl) {
-      navigator.clipboard.writeText(inviteCode.inviteUrl).then(() => {
+    if (qrCodeUrl) {
+      navigator.clipboard.writeText(qrCodeUrl).then(() => {
         alert('邀請連結已複製！');
       });
     }
@@ -133,10 +169,10 @@ export const InviteFriendModal: FC<InviteFriendModalProps> = ({
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       ref={containerRef}
-      className="fixed inset-0 z-60 flex items-end justify-center pointer-events-auto"
+      className="fixed inset-0 z-110 flex items-end justify-center pointer-events-auto"
     >
       {/* Backdrop */}
       <div
@@ -149,6 +185,7 @@ export const InviteFriendModal: FC<InviteFriendModalProps> = ({
       <div
         ref={modalRef}
         className="relative w-full bg-neutral-50 max-w-layout-container mx-auto rounded-t-3xl overflow-hidden flex flex-col shadow-2xl"
+        style={{ maxHeight: 'min(85vh, 600px)', touchAction: 'none' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -166,39 +203,41 @@ export const InviteFriendModal: FC<InviteFriendModalProps> = ({
         </div>
 
         {/* QR Code 區域 */}
-        <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8 space-y-6">
-          <p className="text-neutral-600 font-medium">
-            掃描 QR Code 即可加入群組
-          </p>
+        <div className="flex-1 overflow-y-auto w-full">
+          <div className="flex flex-col items-center justify-center px-6 space-y-3 min-h-full">
+            <p className="text-neutral-600 font-medium mt-4">
+              掃描 QR Code 即可加入群組
+            </p>
 
-          <div className="bg-white p-4 rounded-3xl shadow-sm w-64 h-64 flex items-center justify-center">
-            {isGeneratingCode ? (
-              <span className="text-neutral-400">生成中...</span>
-            ) : inviteCode?.inviteUrl ? (
-              <QRCodeSVG
-                value={inviteCode.inviteUrl}
-                size={200}
-                level="M"
-                includeMargin={true}
+            <div className="bg-white p-4 rounded-3xl shadow-sm w-64 h-64 flex items-center justify-center shrink-0">
+              {isGeneratingCode ? (
+                <span className="text-neutral-400">生成中...</span>
+              ) : qrCodeUrl ? (
+                <QRCodeSVG
+                  value={qrCodeUrl}
+                  size={200}
+                  level="M"
+                  includeMargin={true}
+                />
+              ) : (
+                <div className="w-full h-full bg-neutral-100 rounded-xl" />
+              )}
+            </div>
+
+            <p className="text-neutral-500 text-sm">24 小時內有效</p>
+
+            {/* 重新產生按鈕 */}
+            <button
+              onClick={handleRefreshQR}
+              disabled={isGeneratingCode}
+              className="flex items-center gap-2 text-primary-500 hover:text-primary-600 font-medium disabled:opacity-50 pb-4"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${isGeneratingCode ? 'animate-spin' : ''}`}
               />
-            ) : (
-              <div className="w-full h-full bg-neutral-100 rounded-xl" />
-            )}
+              重新產生
+            </button>
           </div>
-
-          <p className="text-neutral-500 text-sm">24 小時內有效</p>
-
-          {/* 重新產生按鈕 */}
-          <button
-            onClick={handleRefreshQR}
-            disabled={isGeneratingCode}
-            className="flex items-center gap-2 text-primary-500 hover:text-primary-600 font-medium disabled:opacity-50"
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${isGeneratingCode ? 'animate-spin' : ''}`}
-            />
-            重新產生
-          </button>
         </div>
 
         {/* 底部按鈕 */}
@@ -211,6 +250,7 @@ export const InviteFriendModal: FC<InviteFriendModalProps> = ({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };

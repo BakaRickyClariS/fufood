@@ -36,7 +36,12 @@ const DynamicGridAreaStyles = ({
   return <style>{css}</style>;
 };
 
-const OverviewPanel: React.FC = () => {
+type OverviewPanelProps = {
+  /** 開啟分類 Modal 的回呼 */
+  onOpenCategory?: (categoryId: string) => void;
+};
+
+const OverviewPanel: React.FC<OverviewPanelProps> = ({ onOpenCategory }) => {
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { ref: contentRef } = useFadeInAnimation<HTMLElement>({ isLoading });
@@ -262,6 +267,7 @@ const OverviewPanel: React.FC = () => {
                 img={category.imageUrl}
                 bgColor={category.bgColor}
                 boxShadow="shadow-[0_6px_14px_-2px_rgba(0,0,0,0.06)]"
+                onClick={onOpenCategory}
               />
             </div>
           );

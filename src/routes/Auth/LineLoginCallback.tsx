@@ -94,14 +94,19 @@ const LineLoginCallback = () => {
         if (isPopupWindow()) {
           // 通知父視窗登入成功
           // 通知父視窗登入成功
-          console.log('[LineLoginCallback] Sending success message to opener. Opener exists:', !!window.opener);
+          console.log(
+            '[LineLoginCallback] Sending success message to opener. Opener exists:',
+            !!window.opener,
+          );
           if (window.opener) {
             window.opener.postMessage(
               { type: 'LINE_LOGIN_SUCCESS', user: userData },
               '*',
             );
           } else {
-             console.error('[LineLoginCallback] window.opener is missing, cannot notify parent!');
+            console.error(
+              '[LineLoginCallback] window.opener is missing, cannot notify parent!',
+            );
           }
 
           // 關閉 Popup 視窗
@@ -117,7 +122,11 @@ const LineLoginCallback = () => {
 
           // 稍微延遲讓用戶看到成功訊息
           setTimeout(() => {
-            // 強制刷新頁面以確保 Cookie 和狀態完全同步
+            // 使用 window.location.href 強制刷新頁面是刻意設計：
+            // 1. 確保 HttpOnly Cookie（由後端設定）完全同步
+            // 2. 讓瀏覽器重新初始化所有狀態，避免殘留的登出狀態干擾
+            // 3. TanStack Query 快取已在上方同步更新，刷新不會造成資料遺失
+            // 註：若改用 navigate('/', { replace: true })，可能因 Cookie 未同步導致 API 401
             window.location.href = '/';
           }, 800);
         }
