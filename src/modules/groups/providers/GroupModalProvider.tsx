@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import {
   setActiveRefrigeratorId,
   selectActiveRefrigeratorId,
@@ -37,7 +37,7 @@ type GroupModalProviderProps = {
 };
 
 export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
-  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // State mgmt
   const { groups, createGroup, updateGroup, deleteGroup, isLoading } =
@@ -73,43 +73,61 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
     ? groups.find((g) => g.id === activeGroupId) || groups[0]
     : undefined;
 
-  // Actions - 首頁子路由策略
+  // Actions - 使用 URL query params，保留當前路徑
   const switchGroup = (groupId: string) => {
     dispatch(setActiveRefrigeratorId(groupId));
   };
 
   const openHome = () => {
-    // 首頁子路由：groups-home
-    navigate('/?modal=groups-home');
+    const params = new URLSearchParams(searchParams);
+    params.set('modal', 'groups-home');
+    setSearchParams(params);
   };
 
   const openSettings = () => {
-    // 首頁子路由：groups-list
-    navigate('/?modal=groups-list');
+    const params = new URLSearchParams(searchParams);
+    params.set('modal', 'groups-list');
+    setSearchParams(params);
   };
 
   const openCreate = () => {
-    // 使用 Location State 觸發 Create Modal（在 groups-list 內）
-    navigate('/?modal=groups-list', { state: { action: 'create' } });
+    const params = new URLSearchParams(searchParams);
+    params.set('modal', 'groups-list');
+    params.set('action', 'create');
+    setSearchParams(params);
   };
 
   const openEdit = (group: Group) => {
-    navigate('/?modal=groups-list', {
-      state: { action: 'edit', groupId: group.id },
-    });
+    const params = new URLSearchParams(searchParams);
+    params.set('modal', 'groups-list');
+    params.set('action', 'edit');
+    params.set('groupId', group.id);
+    setSearchParams(params);
   };
 
   const openMembers = (group: Group) => {
-    navigate(`/?modal=groups-members&id=${group.id}`);
+    const params = new URLSearchParams(searchParams);
+    params.set('modal', 'groups-members');
+    params.set('id', group.id);
+    setSearchParams(params);
   };
 
   const openInvite = (group: Group) => {
-    navigate(`/?modal=groups-invite&id=${group.id}`);
+    const params = new URLSearchParams(searchParams);
+    // Don't replace 'modal', just add 'action' to stack it
+    params.set('action', 'invite');
+    params.set('id', group.id);
+    setSearchParams(params);
   };
 
   const closeAll = () => {
-    // 關閉時只清空 query params，不導航到其他路由
-    navigate('/');
+    // 關閉時只清空群組相關的 query params，保留其他參數
+    const params = new URLSearchParams(searchParams);
+    params.delete('modal');
+    params.delete('action');
+    params.delete('groupId');
+    params.delete('id');
+    setSearchParams(params);
   };
 
   return (
