@@ -1,6 +1,9 @@
 import { useEffect, useMemo } from 'react';
 import { Outlet, useMatches } from 'react-router-dom';
 import { GroupModalProvider } from '@/modules/groups/providers/GroupModalProvider';
+import { GlobalGroupModals } from '@/modules/groups/components/GlobalGroupModals';
+import { AIModalProvider } from '@/modules/ai/providers/AIModalProvider';
+import { RecipeModalProvider } from '@/modules/recipe/providers/RecipeModalProvider';
 import { ThemeProvider } from '@/shared/providers/ThemeProvider';
 import TopNav from './TopNav';
 import BottomNav from './BottomNav';
@@ -50,21 +53,28 @@ const MainLayout = () => {
   return (
     <ThemeProvider>
       <GroupModalProvider>
-        {showHeader && (
-          <div className="sticky top-0 z-40">
-            <TopNav />
-          </div>
-        )}
-        <main>
-          <Outlet />
-        </main>
-        {showFooter && (
-          <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
-            <div className="pointer-events-auto">
-              <BottomNav />
-            </div>
-          </div>
-        )}
+        <AIModalProvider>
+          <RecipeModalProvider>
+            {showHeader && (
+              <div className="sticky top-0 z-40">
+                <TopNav />
+              </div>
+            )}
+            <main>
+              <Outlet />
+            </main>
+            {showFooter && (
+              <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
+                <div className="pointer-events-auto">
+                  <BottomNav />
+                </div>
+              </div>
+            )}
+
+            {/* 全局群組 Modal - 在任何頁面都能顯示 */}
+            <GlobalGroupModals />
+          </RecipeModalProvider>
+        </AIModalProvider>
       </GroupModalProvider>
     </ThemeProvider>
   );
