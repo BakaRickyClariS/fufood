@@ -34,16 +34,23 @@ export const useNotificationPolling = ({
   const navigate = useNavigate();
   const intervalRef = useRef<number | null>(null);
   const lastNotificationIdRef = useRef<string | null>(null);
+  const lastNotificationDateRef = useRef<Date | null>(null); // Track date locally
   const { user } = useAuth();
   const currentUserId = user?.id;
 
   // 取得通知列表
   const { data } = useNotificationsQuery();
 
-  // 記錄最新的通知 ID，用於檢測新通知
+  // 初始化：記錄最新的通知 ID 與時間
   useEffect(() => {
-    if (data?.data?.items?.[0]?.id && !lastNotificationIdRef.current) {
-      lastNotificationIdRef.current = data.data.items[0].id;
+    const latestItem = data?.data?.items?.[0];
+    if (latestItem && !lastNotificationIdRef.current) {
+      lastNotificationIdRef.current = latestItem.id;
+      lastNotificationDateRef.current = new Date(latestItem.createdAt);
+      console.log('[NotificationPolling]Initialized:', { 
+        id: latestItem.id, 
+        date: latestItem.createdAt 
+      });
     }
   }, [data?.data?.items]);
 
@@ -81,7 +88,7 @@ export const useNotificationPolling = ({
         return '/recipes';
       case 'group':
         // 跳轉到群組設定
-        return '/settings/groups';
+        return `/settings/groups`;
       case 'detail':
         // 跳轉到通知詳情
         return `/notifications/${notification.id}`;
@@ -95,28 +102,39 @@ export const useNotificationPolling = ({
     const items = data?.data?.items;
     if (!items || items.length === 0) return;
 
-    const latestId = items[0].id;
+    const latestItem = items[0];
+    const latestId = latestItem.id;
+    const latestDate = new Date(latestItem.createdAt);
 
     // 如果有新通知（ID 不同且未讀）
     if (
       lastNotificationIdRef.current &&
       latestId !== lastNotificationIdRef.current
     ) {
-      // 找出所有新的未讀通知
+      // 使用 ref 紀錄的時間比較，而不是去陣列裡找（避免找不到時 fallback 到 0 導致全部彈出）
+      const lastDate = lastNotificationDateRef.current || new Date(0);
+
+      // 找出所有新的未讀通知 (created after last known date)
       const newNotifications = items.filter(
         (n) =>
           !n.isRead &&
-          new Date(n.createdAt) >
-            new Date(
-              items.find((i) => i.id === lastNotificationIdRef.current)
-                ?.createdAt || 0,
-            ),
+          new Date(n.createdAt) > lastDate
       );
 
       // 過濾掉本人觸發的通知（避免重複提示）
-      const notificationsToShow = newNotifications.filter(
-        (n) => !currentUserId || n.actorId !== currentUserId
-      );
+      const notificationsToShow = newNotifications.filter((n) => {
+        const actorId = n.actorId || (n as any).actor_id;
+        const actorName = n.actorName || (n as any).actor_name;
+        
+        // 嚴格比對 ID
+        if (currentUserId && actorId === currentUserId) return false;
+
+        // Fallback: 如果 ID 若有似無，試著比對名稱 (有些後端可能沒存 ID)
+        // 注意：這有誤殺風險，但在本人操作當下，名稱通常完全一致
+        if (user?.displayName && actorName === user.displayName) return false;
+        
+        return true;
+      });
 
       // 顯示 Toast（最多顯示 3 個）
       notificationsToShow.slice(0, 3).forEach((notification) => {
@@ -133,14 +151,21 @@ export const useNotificationPolling = ({
 
       if (notificationsToShow.length > 0) {
         console.log(
-          `[NotificationPolling] 🔔 顯示 ${notificationsToShow.length} 個新通知 (過濾本人操作 ${newNotifications.length - notificationsToShow.length} 個)`,
+          `[NotificationPolling] 🔔 顯示 ${notificationsToShow.length} 個新通知`,
+          {
+            totalNew: newNotifications.length,
+            filtered: newNotifications.length - notificationsToShow.length,
+            latestId,
+            lastId: lastNotificationIdRef.current
+          }
         );
       }
     }
 
-    // 更新最後的通知 ID
+    // 更新最後的通知 ID 與時間
     lastNotificationIdRef.current = latestId;
-  }, [data?.data?.items, currentUserId, getNavigationPath, navigate]);
+    lastNotificationDateRef.current = latestDate;
+  }, [data?.data?.items, currentUserId, user, getNavigationPath, navigate]);
 
   // 當資料更新時檢查新通知
   useEffect(() => {

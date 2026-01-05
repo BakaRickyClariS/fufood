@@ -92,7 +92,9 @@ export type SendNotificationRequest = {
   // 新增顯示欄位 (前端傳入，後端直接儲存)
   groupName?: string; // 群組名稱
   actorName?: string; // 操作者名稱
+  actorId?: string;   // 操作者 ID
   // Compatibility with snake_case backends
   group_name?: string;
   actor_name?: string;
+  actor_id?: string;
 };

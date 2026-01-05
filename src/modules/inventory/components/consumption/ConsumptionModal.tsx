@@ -310,7 +310,11 @@ export const ConsumptionModal = ({
             // 取得群組名稱
             const currentGroup = groups.find((g) => g.id === refrigeratorId);
             const groupName = currentGroup?.name || '我的冰箱';
-            const actorName = user?.displayName || user?.email || '使用者';
+            
+            // 使用 Email 前綴作為 display name 的備案
+            const emailPrefix = user?.email ? user.email.split('@')[0] : '使用者';
+            const actorName = user?.displayName || user?.name || emailPrefix;
+            const actorId = user?.id;
 
             // 使用 mutation 發送通知，會自動觸發 query invalidation
             await sendNotification({
@@ -328,8 +332,10 @@ export const ConsumptionModal = ({
               groupId: undefined,
               groupName,
               actorName,
+              actorId,  // 明確發送 actorId
               group_name: groupName,
               actor_name: actorName,
+              actor_id: actorId, // snake_case support
               action: {
                 type: 'inventory',
                 payload: {
