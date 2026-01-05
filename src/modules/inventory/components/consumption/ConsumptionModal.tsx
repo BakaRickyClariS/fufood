@@ -22,8 +22,8 @@ import {
   selectConsumptionStep,
   selectConsumptionContextId,
 } from '@/modules/inventory/store/consumptionSlice';
-// import { useAuth } from '@/modules/auth';
 import { groupsApi } from '@/modules/groups/api';
+import { useNotificationMetadata } from '@/modules/notifications/hooks/useNotificationMetadata';
 // The user said "Execute and update ... docs". I should check inventoryApi first?
 // I'll proceed assuming I might need to add it or it exists.
 // Based on file reads, I saw `inventoryApi` but didn't check `consumeItem`.
@@ -100,7 +100,7 @@ export const ConsumptionModal = ({
   const consumptionItems = useSelector(selectConsumptionItems);
   const consumptionStep = useSelector(selectConsumptionStep);
   const consumptionContextId = useSelector(selectConsumptionContextId);
-  // const { user } = useAuth();
+  const { groupName, actorName, actorId } = useNotificationMetadata(refrigeratorId);
 
   // Skip animation flag (local state based on restoration)
   const [skipAnimation, setSkipAnimation] = useState(false);
@@ -308,10 +308,23 @@ export const ConsumptionModal = ({
             // 使用 mutation 發送通知，會自動觸發 query invalidation
             await sendNotification({
               type: 'inventory',
-              title: '食材消耗通知',
-              body: message,
+              subType: 'consume', // 新增 subType
+              title:
+                otherCount > 0
+                  ? `${firstItemName} 等 ${itemsToConsume.length} 項食材已出動！`
+                  : `${firstItemName} 完成任務，光榮退役！`,
+              body:
+                otherCount > 0
+                  ? `冰箱小隊報告！${itemsToConsume.length} 項食材已順利上桌，任務達成！`
+                  : `冰箱小隊報告！${firstItemName} 已順利上桌，美味任務達成！`,
               userIds: targetUserIds,
               groupId: undefined,
+              groupName,
+              actorName,
+              actorId,  // 明確發送 actorId
+              group_name: groupName,
+              actor_name: actorName,
+              actor_id: actorId, // snake_case support
               action: {
                 type: 'inventory',
                 payload: {

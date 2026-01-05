@@ -7,13 +7,25 @@
 export type NotificationCategory = 'stock' | 'inspiration' | 'official';
 
 // 通知類型標籤（用於顯示標籤樣式）
-// 後端使用: inventory | group | shopping | system | recipe
+// 後端使用: inventory | group | shopping | system | recipe | user
 export type NotificationType =
   | 'inventory'
   | 'group'
   | 'shopping'
   | 'system'
-  | 'recipe';
+  | 'recipe'
+  | 'user'; // New type for self actions
+
+// 通知子類型，對應具體標籤樣式
+export type NotificationSubType =
+  | 'generate' // 生成 (Yellow)
+  | 'stock' // 庫存 (Green)
+  | 'consume' // 消耗 (Pink)
+  | 'stockIn' // 入庫 (Red)
+  | 'share' // 共享 (Light Blue)
+  | 'list' // 清單 (Blue)
+  | 'self' // 本人 (White)
+  | 'member'; // 成員 (Grey)
 
 // 點擊動作類型
 export type NotificationActionType =
@@ -38,6 +50,7 @@ export type NotificationAction = {
 export type NotificationMessage = {
   id: string;
   type: NotificationType;
+  subType?: NotificationSubType; // 新增子類型
   title: string;
   message: string; // 後端使用 message 而非 description
   isRead: boolean;
@@ -45,6 +58,11 @@ export type NotificationMessage = {
   action?: NotificationAction; // 後端使用合併物件格式
   // 保留 category 供前端 Tab 分類使用（可由 type 映射）
   category?: NotificationCategory;
+  
+  // 新增顯示欄位
+  groupName?: string;
+  actorName?: string;
+  actorId?: string; // 觸發通知的使用者 UID，用於過濾本人操作
 };
 
 // 按日期分組的通知
@@ -69,5 +87,14 @@ export type SendNotificationRequest = {
   title: string;
   body: string;
   type: NotificationType;
+  subType?: NotificationSubType;
   action?: NotificationAction;
+  // 新增顯示欄位 (前端傳入，後端直接儲存)
+  groupName?: string; // 群組名稱
+  actorName?: string; // 操作者名稱
+  actorId?: string;   // 操作者 ID
+  // Compatibility with snake_case backends
+  group_name?: string;
+  actor_name?: string;
+  actor_id?: string;
 };

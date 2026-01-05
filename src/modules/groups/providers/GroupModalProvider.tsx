@@ -1,31 +1,15 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  type ReactNode,
-} from 'react';
+import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import {
   setActiveRefrigeratorId,
   selectActiveRefrigeratorId,
 } from '@/store/slices/refrigeratorSlice';
-import {
-  openModal,
-  closeModal,
-  selectModalStep,
-  selectTargetGroupId,
-} from '@/modules/groups/store/groupModalSlice';
+// import { closeModal } from '@/modules/groups/store/groupModalSlice';
 import type { Group } from '@/modules/groups/types/group.types';
-import { HomeModal } from '@/modules/groups/components/modals/HomeModal';
-import { GroupSettingsModal } from '@/modules/groups/components/modals/GroupSettingsModal';
-import { CreateGroupModal } from '@/modules/groups/components/modals/CreateGroupModal';
-import { EditGroupModal } from '@/modules/groups/components/modals/EditGroupModal';
-import { MembersModal } from '@/modules/groups/components/modals/MembersModal';
-import { InviteFriendModal } from '@/modules/groups/components/modals/InviteFriendModal';
 import { useAuth } from '@/modules/auth';
-import { getUserAvatarUrl } from '@/shared/utils/avatarUtils';
 import { useGroups } from '@/modules/groups/hooks/useGroups';
-import type { AppDispatch, RootState } from '@/store';
+import type { AppDispatch } from '@/store';
 
 type GroupModalContextType = {
   activeGroup: Group | undefined;
@@ -54,23 +38,18 @@ type GroupModalProviderProps = {
 
 export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
   const { user } = useAuth();
-  const userAvatar = getUserAvatarUrl(user);
-  const userName = user?.displayName || user?.name || '使用者';
+  const navigate = useNavigate();
 
   // State mgmt
   const { groups, createGroup, updateGroup, deleteGroup, isLoading } =
     useGroups();
 
   const dispatch = useDispatch<AppDispatch>();
-  
+
   // Redux: 活動群組 ID
   const reduxActiveId = useSelector(selectActiveRefrigeratorId);
   const activeGroupId =
     reduxActiveId || localStorage.getItem('activeRefrigeratorId') || '1';
-
-  // Redux: Modal 狀態
-  const modalStep = useSelector((state: RootState) => selectModalStep(state));
-  const targetGroupId = useSelector((state: RootState) => selectTargetGroupId(state));
 
   // 處理群組載入後的預設選取邏輯
   useEffect(() => {
@@ -95,46 +74,43 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
     ? groups.find((g) => g.id === activeGroupId) || groups[0]
     : undefined;
 
-  // 根據 targetGroupId 找到選中的群組
-  const selectedGroup = targetGroupId
-    ? groups.find((g) => g.id === targetGroupId) || null
-    : null;
-
-  // Actions
+  // Actions - 首頁子路由策略
   const switchGroup = (groupId: string) => {
     dispatch(setActiveRefrigeratorId(groupId));
   };
 
   const openHome = () => {
-    dispatch(openModal({ step: 'home' }));
+    // 首頁子路由：groups-home
+    navigate('/?modal=groups-home');
   };
 
   const openSettings = () => {
-    dispatch(openModal({ step: 'settings' }));
+    // 首頁子路由：groups-list
+    navigate('/?modal=groups-list');
   };
 
   const openCreate = () => {
-    dispatch(openModal({ step: 'create' }));
+    // 使用 Location State 觸發 Create Modal（在 groups-list 內）
+    navigate('/?modal=groups-list', { state: { action: 'create' } });
   };
 
   const openEdit = (group: Group) => {
-    dispatch(openModal({ step: 'edit', targetGroupId: group.id }));
+    navigate('/?modal=groups-list', {
+      state: { action: 'edit', groupId: group.id },
+    });
   };
 
   const openMembers = (group: Group) => {
-    dispatch(openModal({ step: 'members', targetGroupId: group.id }));
+    navigate(`/?modal=groups-members&id=${group.id}`);
   };
 
   const openInvite = (group: Group) => {
-    dispatch(openModal({ step: 'invite', targetGroupId: group.id }));
+    navigate(`/?modal=groups-invite&id=${group.id}`);
   };
 
   const closeAll = () => {
-    dispatch(closeModal());
-  };
-
-  const handleBackToSettings = () => {
-    dispatch(openModal({ step: 'settings' }));
+    // 關閉時只清空 query params，不導航到其他路由
+    navigate('/');
   };
 
   return (
@@ -157,57 +133,7 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
       }}
     >
       {children}
-
-      {/* Render Modals */}
-      {activeGroup && (
-        <HomeModal
-          isOpen={modalStep === 'home'}
-          onClose={closeAll}
-          currentUser={{
-            name: userName,
-            avatar: userAvatar,
-            role:
-              activeGroup.members?.find((m) => m.id === user?.id)?.role ||
-              'member',
-          }}
-          members={activeGroup.members || []}
-          onEditMembers={() => openMembers(activeGroup)}
-        />
-      )}
-
-      <GroupSettingsModal
-        open={modalStep === 'settings'}
-        onClose={closeAll}
-        onOpenCreateModal={openCreate}
-        onOpenEditModal={openEdit}
-        onOpenMembersModal={openMembers}
-      />
-
-      <CreateGroupModal
-        open={modalStep === 'create'}
-        onClose={closeAll}
-        onBack={handleBackToSettings}
-      />
-
-      <EditGroupModal
-        open={modalStep === 'edit'}
-        onClose={closeAll}
-        group={selectedGroup}
-        onBack={handleBackToSettings}
-      />
-
-      <MembersModal
-        open={modalStep === 'members'}
-        onClose={closeAll}
-        group={selectedGroup}
-        onBack={handleBackToSettings}
-      />
-
-      <InviteFriendModal
-        open={modalStep === 'invite'}
-        onClose={closeAll}
-        group={selectedGroup}
-      />
+      {/* 移除所有 Modal 渲染，改由 Router 處理 */}
     </GroupModalContext.Provider>
   );
 };

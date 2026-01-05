@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useLayoutEffect } from 'react';
 import Webcam from 'react-webcam';
 import { useDispatch } from 'react-redux';
 import gsap from 'gsap';
+import { toast } from 'sonner';
 import { useWebcam } from '../../hooks/useWebcam';
 import { useImageUpload } from '../../hooks/useImageUpload';
 import CameraOverlay, { type CameraOverlayStatus } from '../ui/CameraOverlay';
@@ -12,7 +13,6 @@ import {
   setUploadStatus,
 } from '@/modules/food-scan/store/cameraSlice';
 import { setItems } from '@/modules/food-scan/store/batchScanSlice';
-import { useToast } from '@/shared/contexts/ToastContext';
 import { ScanFrame } from '../ui/ScanFrame';
 
 // Test image import
@@ -51,7 +51,6 @@ export const CameraCapture: React.FC = () => {
     originalRetake();
   };
   const { uploadImage, isUploading, isAnalyzing } = useImageUpload({});
-  const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // GSAP Navigation Animations
@@ -147,7 +146,7 @@ export const CameraCapture: React.FC = () => {
       try {
         const result = await uploadImage(img);
         if (result && result.success) {
-          showToast('掃描成功！', 'success');
+          toast.success('掃描成功！');
 
           // Check if it's a MultipleScanResult (has ingredients array)
           // We cast to any to check for property existence easily or use type guard
