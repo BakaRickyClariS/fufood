@@ -242,8 +242,8 @@ const NotificationsPage = () => {
                 subType={item.subType} // Pass subType
                 title={item.title}
                 message={item.message}
-                groupName={item.groupName} // Pass groupName
-                actorName={item.actorName} // Pass actorName
+                groupName={item.groupName || (item as any).group_name} // Pass groupName (with snake_case fallback)
+                actorName={item.actorName || (item as any).actor_name} // Pass actorName (with snake_case fallback)
                 isRead={item.isRead}
                 onClick={() => handleNotificationClick(item)}
                 category={activeTab}
