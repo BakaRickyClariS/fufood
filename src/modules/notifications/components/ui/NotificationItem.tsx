@@ -5,25 +5,28 @@ import { useRef } from 'react';
 import { ChevronRight, Check } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import type { NotificationType, NotificationCategory } from '../../types';
+import type { NotificationType, NotificationCategory, NotificationSubType } from '../../types';
 
 export type NotificationItemProps = {
   id: string;
   type: NotificationType;
+  subType?: NotificationSubType;
   title: string;
   message: string; // 後端使用 message 而非 description
   isRead?: boolean;
   onClick?: () => void;
-  // New props
   category: NotificationCategory;
   isEditMode?: boolean;
   isSelected?: boolean;
   onToggleSelect?: () => void;
+  groupName?: string;
+  actorName?: string;
+  createdAt?: string;
 };
 
 export const NotificationItem = ({
   type,
-  subType, // Added subType
+  subType,
   title,
   message,
   isRead,
@@ -32,15 +35,9 @@ export const NotificationItem = ({
   isEditMode,
   isSelected,
   onToggleSelect,
-  groupName, // Added groupName
-  actorName, // Added actorName
-  // createdAt, // Unused
-}: NotificationItemProps & { 
-  subType?: import('../../types').NotificationSubType; 
-  groupName?: string; 
-  actorName?: string;
-  createdAt?: string;
-}) => {
+  groupName,
+  actorName,
+}: NotificationItemProps) => {
   const checkboxRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
