@@ -9,6 +9,7 @@ import SettingsRoutes from './Settings';
 import NotificationsRoutes from './Notifications';
 import InviteRoutes from './Invite';
 import CategoryPage from './Inventory/CategoryPage';
+// GroupsRoutes 已移除，Group Modals 改為在 Dashboard 渲染
 import { RecipeDetailView } from '@/modules/recipe/components/features/RecipeDetailView';
 
 import { useAuth } from '@/modules/auth';
@@ -129,6 +130,7 @@ export const router = createBrowserRouter([
       ...wrapRoutesWithProtection(PlanningRoutes),
       ...wrapRoutesWithProtection(FoodScanRoutes),
       ...wrapRoutesWithProtection(SettingsRoutes),
+      // GroupsRoutes 已移除，Group Modals 改為首頁子路由
       ...wrapRoutesWithProtection(NotificationsRoutes),
       // 邀請路由（公開，不需要登入即可查看邀請資訊）
       ...InviteRoutes,
