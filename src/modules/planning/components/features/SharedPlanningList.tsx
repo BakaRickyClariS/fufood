@@ -5,6 +5,7 @@ import { useSharedListsContext } from '@/modules/planning/contexts/SharedListsCo
 import { SharedListCard } from '../ui/SharedListCard';
 import { FloatingActionButton } from '@/shared/components/ui/FloatingActionButton';
 import { CreateSharedListDrawer } from './CreateSharedListDrawer';
+import { TOAST_MESSAGES } from '@/constants/messages';
 
 type SharedPlanningListProps = {
   statusFilter: string; // 當前選擇的 Tab 對應狀態 Id
@@ -66,9 +67,9 @@ export const SharedPlanningList = ({
                 ) {
                   try {
                     await deleteList(listItem.id);
-                    toast.success('清單已刪除');
+                    toast.success(TOAST_MESSAGES.SUCCESS.LIST_DELETED);
                   } catch {
-                    toast.error('刪除失敗，請稍後再試');
+                    toast.error(TOAST_MESSAGES.ERROR.DELETE_FAILED);
                   }
                 }
               }}

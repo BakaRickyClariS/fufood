@@ -5,6 +5,8 @@ import { ChevronLeft, Camera, CalendarDays, CalendarCheck } from 'lucide-react';
 import { useSharedListsContext } from '@/modules/planning/contexts/SharedListsContext';
 import { CoverImagePicker } from '@/modules/planning/components/ui/CoverImagePicker';
 import { COVER_IMAGES } from '@/modules/planning/constants/coverImages';
+import { SuccessModal } from '@/shared/components/ui/SuccessModal';
+import { TOAST_MESSAGES } from '@/constants/messages';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 
@@ -20,6 +22,7 @@ const CreateSharedList = () => {
   const [coverPhotoPath, setCoverPhotoPath] = useState('');
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useGSAP(
     () => {
@@ -54,13 +57,18 @@ const CreateSharedList = () => {
         coverPhotoPath: coverPhotoPath || COVER_IMAGES[0],
         enableNotifications,
       });
-      navigate('/planning');
+      setShowSuccessModal(true);
     } catch (error) {
       console.error(error);
-      toast.error('建立失敗，請稍後再試');
+      toast.error(TOAST_MESSAGES.ERROR.CREATE_FAILED);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    navigate('/planning');
   };
 
   return (
@@ -211,6 +219,13 @@ const CreateSharedList = () => {
         onOpenChange={setIsPickerOpen}
         selectedImage={coverPhotoPath}
         onSelect={setCoverPhotoPath}
+      />
+
+      {/* 建立成功 Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={handleSuccessModalClose}
+        title={TOAST_MESSAGES.SUCCESS.LIST_CREATED}
       />
     </div>
   );
