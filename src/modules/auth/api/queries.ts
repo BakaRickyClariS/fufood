@@ -63,7 +63,7 @@ export async function getUserProfile(): Promise<User | null> {
       lineId: backendData.lineId,
       name: backendData.name,
       displayName: backendData.name,
-      avatar: backendData.profilePictureUrl ?? '',
+      avatar: backendData.avatar ?? '',
       pictureUrl: backendData.profilePictureUrl ?? undefined,
       email: backendData.email || undefined,
       gender: mappedGender,
