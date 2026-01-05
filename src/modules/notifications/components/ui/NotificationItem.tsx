@@ -5,7 +5,11 @@ import { useRef } from 'react';
 import { ChevronRight, Check } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import type { NotificationType, NotificationCategory, NotificationSubType } from '../../types';
+import type {
+  NotificationType,
+  NotificationCategory,
+  NotificationSubType,
+} from '../../types';
 
 export type NotificationItemProps = {
   id: string;
@@ -52,17 +56,22 @@ export const NotificationItem = ({
     }
   }, [isEditMode]);
 
-  const getTagStyle = (type: NotificationType, subType?: import('../../types').NotificationSubType) => {
-    // If explicit subType provides style
-    if (subType) {
-      switch (subType) {
+  const getTagStyle = (
+    type: NotificationType,
+    subType?: import('../../types').NotificationSubType | string,
+  ) => {
+    // Normalize subType to handle snake_case from backend
+    const normalizedSubType = subType?.toLowerCase();
+
+    if (normalizedSubType) {
+      switch (normalizedSubType) {
         case 'generate':
           return 'bg-[#FDE047] text-[#854D0E]'; // Yellow
         case 'stock':
           return 'bg-[#BEF264] text-[#3F6212]'; // Lime Green
         case 'consume':
           return 'bg-[#FCA5A5] text-[#991B1B]'; // Pink/Red
-        case 'stockIn':
+        case 'stockin': // lowercase from DB
           return 'bg-[#F87171] text-white'; // Red
         case 'share':
           return 'bg-[#BAE6FD] text-[#0369A1]'; // Light Blue
@@ -95,28 +104,49 @@ export const NotificationItem = ({
     }
   };
 
-  const getTagLabel = (type: NotificationType, subType?: import('../../types').NotificationSubType) => {
-    if (subType) {
-      switch (subType) {
-        case 'generate': return '生成';
-        case 'stock': return '庫存';
-        case 'consume': return '消耗';
-        case 'stockIn': return '入庫';
-        case 'share': return '共享';
-        case 'list': return '清單';
-        case 'self': return '本人';
-        case 'member': return '成員';
+  const getTagLabel = (
+    type: NotificationType,
+    subType?: import('../../types').NotificationSubType | string,
+  ) => {
+    // Normalize subType to handle different cases from backend
+    const normalizedSubType = subType?.toLowerCase();
+
+    if (normalizedSubType) {
+      switch (normalizedSubType) {
+        case 'generate':
+          return '生成';
+        case 'stock':
+          return '庫存';
+        case 'consume':
+          return '消耗';
+        case 'stockin': // lowercase from DB
+          return '入庫';
+        case 'share':
+          return '共享';
+        case 'list':
+          return '清單';
+        case 'self':
+          return '本人';
+        case 'member':
+          return '成員';
       }
     }
 
     switch (type) {
-      case 'inventory': return '庫存';
-      case 'group': return '成員';
-      case 'shopping': return '清單';
-      case 'recipe': return '生成';
-      case 'user': return '本人';
-      case 'system': return '系統';
-      default: return '通知'; // Fallback for any unknown type
+      case 'inventory':
+        return '庫存';
+      case 'group':
+        return '成員';
+      case 'shopping':
+        return '清單';
+      case 'recipe':
+        return '生成';
+      case 'user':
+        return '本人';
+      case 'system':
+        return '系統';
+      default:
+        return '通知'; // Fallback for any unknown type
     }
   };
 
@@ -131,10 +161,10 @@ export const NotificationItem = ({
     : '';
 
   // Display Logic
-  const displayGroupName = isOfficial 
-    ? "FuFood Official" 
-    : (groupName || (type === 'user' ? 'My Fridge' : '')); // Fallback if missing
-  
+  const displayGroupName = isOfficial
+    ? 'FuFood Official'
+    : groupName || (type === 'user' ? 'My Fridge' : ''); // Fallback if missing
+
   const tagLabel = getTagLabel(type, subType);
   const tagStyle = getTagStyle(type, subType);
 
@@ -182,7 +212,7 @@ export const NotificationItem = ({
         <h3 className="text-sm font-bold text-gray-900 mb-1 leading-tight">
           {title}
         </h3>
-        
+
         {/* Message Body */}
         <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
           {message}

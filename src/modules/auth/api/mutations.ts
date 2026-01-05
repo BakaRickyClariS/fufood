@@ -31,3 +31,31 @@ export const useSignOutMutation = () => {
     },
   });
 };
+
+export const useUpdateProfileMutation = () => {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: any) => authService.updateProfile(data),
+    onSuccess: (response) => {
+      // 讓 GET_USER_PROFILE 失效以觸發重新抓取
+      client.invalidateQueries({ queryKey: ['GET_USER_PROFILE'] });
+
+      // 同時也可以手動更新 cache 以獲得更即時的 UI 反應
+      if (response && response.data) {
+        client.setQueryData(['GET_USER_PROFILE'], (oldData: any) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            ...response.data,
+            // 確保 avatar 同步更新
+            avatar:
+              response.data.profilePictureUrl ||
+              response.data.avatar ||
+              oldData.avatar,
+          };
+        });
+      }
+    },
+  });
+};

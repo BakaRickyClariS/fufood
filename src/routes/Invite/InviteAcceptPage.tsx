@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { groupsApi } from '@/modules/groups/api';
-import { fetchGroups, selectAllGroups } from '@/modules/groups/store/groupsSlice';
+import {
+  fetchGroups,
+  selectAllGroups,
+} from '@/modules/groups/store/groupsSlice';
 import { setActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import { useAuth } from '@/modules/auth';
 import { getGroupLimit } from '@/modules/groups/constants/membershipLimits';
@@ -31,7 +34,9 @@ const InviteAcceptPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   // Get current groups to check limits
-  const currentGroups = useSelector((state: RootState) => selectAllGroups(state));
+  const currentGroups = useSelector((state: RootState) =>
+    selectAllGroups(state),
+  );
 
   const [status, setStatus] = useState<InviteStatus>('checking-auth');
   const [invitation, setInvitation] = useState<InvitationResponse | null>(null);
@@ -100,10 +105,14 @@ const InviteAcceptPage = () => {
     const limit = getGroupLimit(user?.membershipTier);
     if (currentGroups.length >= limit) {
       // 檢查是否已經是成員（避免重複加入被擋）
-      const isAlreadyMember = currentGroups.some(g => g.id === invitation.refrigeratorId);
+      const isAlreadyMember = currentGroups.some(
+        (g) => g.id === invitation.refrigeratorId,
+      );
       if (!isAlreadyMember) {
         setStatus('error');
-        setError(`您的會員方案最多只能加入 ${limit} 個群組。請先升級方案或退出其他群組。`);
+        setError(
+          `您的會員方案最多只能加入 ${limit} 個群組。請先升級方案或退出其他群組。`,
+        );
         return;
       }
     }
@@ -114,33 +123,44 @@ const InviteAcceptPage = () => {
       await groupsApi.join(invitation.refrigeratorId, {
         invitationToken: token,
       });
-      
+
       // ✅ 1. 設定活動冰箱為新加入的群組
       dispatch(setActiveRefrigeratorId(invitation.refrigeratorId));
-      
+
       // ✅ 2. 刷新群組列表
       dispatch(fetchGroups());
-      
+
       setStatus('success');
 
       // 發送推播通知 (通知群組其他成員)
       try {
         const joinerName = user?.displayName || user?.name || '新成員';
-        import('@/api/services/notification').then(({ notificationService }) => {
-          notificationService.sendNotification({
-            type: 'group',
-            title: '群組成員變動',
-            body: `${joinerName} 已加入群組`,
-            // userIds: [], // 發送給群組所有人 (若未指定 userIds 且有 groupId)
-            groupId: invitation.refrigeratorId,
-            action: {
-              type: 'detail',
-              payload: {
-                refrigeratorId: invitation.refrigeratorId
-              }
-            }
-          }).catch(err => console.error('Failed to send join notification:', err));
-        });
+        const groupName = invitation.refrigeratorName || '我的冰箱';
+        import('@/api/services/notification').then(
+          ({ notificationService }) => {
+            notificationService
+              .sendNotification({
+                type: 'group',
+                subType: 'member',
+                title: '群組成員變動',
+                body: `${joinerName} 已加入群組`,
+                groupId: invitation.refrigeratorId,
+                // 補上操作者資訊
+                group_name: groupName,
+                actor_name: joinerName,
+                actor_id: user?.id,
+                action: {
+                  type: 'detail',
+                  payload: {
+                    refrigeratorId: invitation.refrigeratorId,
+                  },
+                },
+              })
+              .catch((err) =>
+                console.error('Failed to send join notification:', err),
+              );
+          },
+        );
       } catch (notifyError) {
         console.error('Notification error:', notifyError);
       }
@@ -155,7 +175,6 @@ const InviteAcceptPage = () => {
       setError('加入群組失敗，請稍後再試');
     }
   };
-
 
   // 檢查登入狀態中
   if (status === 'checking-auth' || isAuthLoading) {
