@@ -31,11 +31,10 @@ const ChipGroup = ({
       // Single select: toggle logic
       if (value === optionValue) {
         // Deselect if clicking the currently selected item
-        onChange(undefined);
+        onChange(null);
       } else {
         onChange(optionValue);
       }
-    }
   };
 
   return (
