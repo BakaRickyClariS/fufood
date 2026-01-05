@@ -248,7 +248,7 @@ export const GroupForm: FC<GroupFormProps> = ({
   return createPortal(
     <div
       ref={containerRef}
-      className="fixed inset-0 flex items-end pointer-events-auto z-[110]"
+      className="fixed inset-0 flex items-end pointer-events-auto z-110"
     >
       {/* Backdrop - 不關閉底層，僅覆蓋 */}
       <div

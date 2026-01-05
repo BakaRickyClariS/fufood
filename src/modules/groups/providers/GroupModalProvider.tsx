@@ -7,7 +7,7 @@ import {
 } from '@/store/slices/refrigeratorSlice';
 // import { closeModal } from '@/modules/groups/store/groupModalSlice';
 import type { Group } from '@/modules/groups/types/group.types';
-import { useAuth } from '@/modules/auth';
+// import { useAuth } from '@/modules/auth'; // Removed unused
 import { useGroups } from '@/modules/groups/hooks/useGroups';
 import type { AppDispatch } from '@/store';
 
@@ -37,7 +37,6 @@ type GroupModalProviderProps = {
 };
 
 export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   // State mgmt
