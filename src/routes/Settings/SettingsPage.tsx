@@ -102,13 +102,13 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  
+
   const activeModal = searchParams.get('modal');
 
   const handleNavigate = (key: string) => {
     setSearchParams({ modal: key });
   };
-    
+
   const handleCloseModal = () => {
     setSearchParams({});
   };
@@ -149,7 +149,7 @@ const SettingsPage = () => {
         <OtherSettingsList onNavigate={handleNavigate} />
 
         {/* ... */}
-        
+
         <LogoutSection
           email={user?.email}
           onLogout={handleLogout}
@@ -207,24 +207,18 @@ const SettingsPage = () => {
         isOpen={activeModal === 'purchase-history'}
         onClose={handleCloseModal}
       />
-      <HelpCenter
-        isOpen={activeModal === 'help'}
-        onClose={handleCloseModal}
-      />
+      <HelpCenter isOpen={activeModal === 'help'} onClose={handleCloseModal} />
       <ReportProblem
         isOpen={activeModal === 'report'}
         onClose={handleCloseModal}
       />
-      <AppGuide
-        isOpen={activeModal === 'guide'}
-        onClose={handleCloseModal}
-      />
+      <AppGuide isOpen={activeModal === 'guide'} onClose={handleCloseModal} />
       <LineBinding
         isOpen={activeModal === 'line-binding'}
         onClose={handleCloseModal}
       />
       <ConsumptionReason
-        isOpen={activeModal === 'consumption-reason'} // Matches key in QuickActions (Step 1046 fixed definition)
+        isOpen={activeModal === 'consumption-reasons'}
         onClose={handleCloseModal}
       />
     </div>

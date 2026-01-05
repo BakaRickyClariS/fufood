@@ -1,4 +1,9 @@
-import { ShieldUser, ClipboardClock, UserRoundCheck, Bubbles } from 'lucide-react';
+import {
+  ShieldUser,
+  ClipboardClock,
+  UserRoundCheck,
+  Bubbles,
+} from 'lucide-react';
 import { cn } from '@/shared/utils/styleUtils';
 
 type QuickActionsProps = {
@@ -33,7 +38,7 @@ const QuickActions = ({ onNavigate }: QuickActionsProps) => {
       label: '消耗原因',
       icon: <Bubbles className="w-6 h-6 text-neutral-800" />,
       bg: 'bg-primary-100',
-      onClick: () => onNavigate('consumption-reason'), // Typo in key: keeping consistant with next steps
+      onClick: () => onNavigate('consumption-reasons'),
     },
   ];
 
@@ -47,10 +52,12 @@ const QuickActions = ({ onNavigate }: QuickActionsProps) => {
             className="flex flex-col items-center gap-2 group"
           >
             {/* Dynamic background color usage */}
-            <div className={cn(
-              "w-12 h-12 rounded-full flex items-center justify-center transition-colors",
-              action.bg
-            )}>
+            <div
+              className={cn(
+                'w-12 h-12 rounded-full flex items-center justify-center transition-colors',
+                action.bg,
+              )}
+            >
               {action.icon}
             </div>
             <span className="text-[12px] font-semibold text-neutral-700">
