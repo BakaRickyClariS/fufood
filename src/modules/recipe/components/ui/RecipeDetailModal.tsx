@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -20,6 +21,7 @@ export const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
   onClose,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   const [isHidden, setIsHidden] = useState(false);
 
   // 判斷傳入的 recipe 是否包含完整資訊 (由 State 傳遞而來)
@@ -28,7 +30,9 @@ export const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
     return r && Array.isArray(r.ingredients) && Array.isArray(r.steps);
   };
 
-  const initialRecipe = isFullRecipe(recipeListItem) ? (recipeListItem as Recipe) : null;
+  const initialRecipe = isFullRecipe(recipeListItem)
+    ? (recipeListItem as Recipe)
+    : null;
 
   // 使用共用邏輯
   const {
@@ -127,7 +131,14 @@ export const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
           onRecipeUpdate={setRecipe}
           showShoppingListButton={true}
           onAddToShoppingList={() => {
-            console.log('加入採買清單:', consumptionItems);
+            navigate('/planning?tab=planning', {
+              state: {
+                action: 'autoCreate',
+                recipeData: displayRecipe,
+                initialItems: consumptionItems,
+              },
+            });
+            onClose(); // Close the modal
           }}
           onConfirmConsumption={handleConfirmConsumption}
           isLoading={isLoading && !fullRecipe}
