@@ -22,9 +22,8 @@ import {
   selectConsumptionStep,
   selectConsumptionContextId,
 } from '@/modules/inventory/store/consumptionSlice';
-import { useAuth } from '@/modules/auth';
 import { groupsApi } from '@/modules/groups/api';
-import { selectAllGroups } from '@/modules/groups/store/groupsSlice';
+import { useNotificationMetadata } from '@/modules/notifications/hooks/useNotificationMetadata';
 // The user said "Execute and update ... docs". I should check inventoryApi first?
 // I'll proceed assuming I might need to add it or it exists.
 // Based on file reads, I saw `inventoryApi` but didn't check `consumeItem`.
@@ -101,8 +100,7 @@ export const ConsumptionModal = ({
   const consumptionItems = useSelector(selectConsumptionItems);
   const consumptionStep = useSelector(selectConsumptionStep);
   const consumptionContextId = useSelector(selectConsumptionContextId);
-  const { user } = useAuth();
-  const groups = useSelector(selectAllGroups);
+  const { groupName, actorName, actorId } = useNotificationMetadata(refrigeratorId);
 
   // Skip animation flag (local state based on restoration)
   const [skipAnimation, setSkipAnimation] = useState(false);
@@ -306,15 +304,6 @@ export const ConsumptionModal = ({
               `[ConsumptionModal] Sending notification: "${message}" to`,
               targetUserIds,
             );
-
-            // 取得群組名稱
-            const currentGroup = groups.find((g) => g.id === refrigeratorId);
-            const groupName = currentGroup?.name || '我的冰箱';
-            
-            // 使用 Email 前綴作為 display name 的備案
-            const emailPrefix = user?.email ? user.email.split('@')[0] : '使用者';
-            const actorName = user?.displayName || user?.name || emailPrefix;
-            const actorId = user?.id;
 
             // 使用 mutation 發送通知，會自動觸發 query invalidation
             await sendNotification({

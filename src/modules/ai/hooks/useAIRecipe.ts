@@ -8,12 +8,11 @@ import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
-import { selectAllGroups } from '@/modules/groups/store/groupsSlice';
-import { useAuth } from '@/modules/auth';
 import { aiRecipeApi } from '../api/aiRecipeApi';
 import { useRecipeStream } from './useRecipeStream';
 import { useSaveAIRecipeMutation } from '../api/queries';
 import { useSendNotificationMutation } from '@/modules/notifications/api/queries';
+import { useNotificationMetadata } from '@/modules/notifications/hooks/useNotificationMetadata';
 import {
   transformAIRecipesToDisplayModels,
   type DisplayRecipe,
@@ -126,8 +125,7 @@ export const useAIRecipeGenerate = (
   const { mutateAsync: saveRecipe } = useSaveAIRecipeMutation();
   const { mutateAsync: sendNotification } = useSendNotificationMutation();
   const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
-  const groups = useSelector(selectAllGroups);
-  const { user } = useAuth();
+  const { groupName, actorName, actorId } = useNotificationMetadata(activeRefrigeratorId || undefined);
   const [manualRecipes, setManualRecipes] = useState<DisplayRecipe[] | null>(
     null,
   );
@@ -189,21 +187,18 @@ export const useAIRecipeGenerate = (
                 ? `冰箱小隊為您獻上 ${firstRecipeName} 等 ${savedResults.length} 道料理靈感！`
                 : `冰箱小隊為您獻上今日料理靈感：${firstRecipeName}`;
 
-            // 取得群組名稱和使用者名稱
-            const currentGroup = groups.find((g) => g.id === activeRefrigeratorId);
-            const groupName = currentGroup?.name || '我的冰箱';
-            const actorName = user?.displayName || user?.email || '使用者';
-
             sendNotification({
               groupId: activeRefrigeratorId,
               title,
               body: msg,
               type: 'recipe',
-              subType: 'generate', // 新增 subType
+              subType: 'generate',
               groupName,
               actorName,
+              actorId,
               group_name: groupName,
               actor_name: actorName,
+              actor_id: actorId,
               action: {
                 type: 'recipe',
                 payload: { recipeId: savedResults[0].id },
