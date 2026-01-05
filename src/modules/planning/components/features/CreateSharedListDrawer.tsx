@@ -3,18 +3,24 @@ import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 import { ChevronLeft, Camera, CalendarDays, CalendarCheck } from 'lucide-react';
 import { useSharedListsContext } from '@/modules/planning/contexts/SharedListsContext';
+import { sharedListApi } from '@/modules/planning/services/api/sharedListApi';
 import { CoverImagePicker } from '@/modules/planning/components/ui/CoverImagePicker';
 import { COVER_IMAGES } from '@/modules/planning/constants/coverImages';
 import gsap from 'gsap';
+import type { ConsumptionItem } from '@/modules/recipe/types';
 
 type CreateSharedListDrawerProps = {
   isOpen: boolean;
   onClose: () => void;
+  defaultTitle?: string;
+  initialItems?: ConsumptionItem[];
 };
 
 export const CreateSharedListDrawer = ({
   isOpen,
   onClose,
+  initialItems = [],
+  defaultTitle = '',
 }: CreateSharedListDrawerProps) => {
   const { createList } = useSharedListsContext();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -33,7 +39,7 @@ export const CreateSharedListDrawer = ({
   useEffect(() => {
     if (isOpen && drawerRef.current && backdropRef.current) {
       // 重設表單
-      setTitle('');
+      setTitle(defaultTitle || (initialItems.length > 0 ? '採買清單' : ''));
       setStartsAt(new Date().toISOString().split('T')[0]);
       setEnableNotifications(true);
       setCoverPhotoPath('');
@@ -51,7 +57,7 @@ export const CreateSharedListDrawer = ({
         { opacity: 1, duration: 0.25 },
       );
     }
-  }, [isOpen]);
+  }, [isOpen, initialItems, defaultTitle]);
 
   // 關閉動畫
   const handleClose = () => {
@@ -76,12 +82,28 @@ export const CreateSharedListDrawer = ({
 
     setIsSubmitting(true);
     try {
-      await createList({
+      // 1. 建立清單
+      const newList = await createList({
         title,
         startsAt: new Date(startsAt).toISOString(),
         coverPhotoPath: coverPhotoPath || COVER_IMAGES[0],
         enableNotifications,
       });
+
+      // 2. 如果有初始項目，逐一加入清單
+      if (initialItems.length > 0 && newList?.id) {
+        await Promise.all(
+          initialItems.map((item) =>
+            sharedListApi.createSharedListItem(newList.id, {
+              name: item.ingredientName,
+              quantity: item.consumedQuantity,
+              unit: item.unit,
+              // 如果有分類資訊也可以帶入，目前先不帶
+            }),
+          ),
+        );
+      }
+
       toast.success('清單建立成功');
       handleClose();
     } catch (error) {
