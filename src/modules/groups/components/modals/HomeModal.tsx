@@ -1,10 +1,9 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/shared/components/ui/button';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import type { GroupMember } from '../../types/group.types';
-import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock';
 
 type HomeModalProps = {
   isOpen: boolean;
@@ -43,7 +42,31 @@ export const HomeModal = ({
   const dragStartY = useRef<number | null>(null);
 
   // 鎖定背景滾動
-  useBodyScrollLock(isOpen);
+  useEffect(() => {
+    if (isOpen) {
+      // 鎖定背景滾動
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = `-${window.scrollY}px`;
+    } else {
+      // 解除鎖定
+      const scrollY = document.body.style.top;
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+    }
+
+    return () => {
+      // 清理
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+    };
+  }, [isOpen]);
 
   // 使用 useGSAP 管理動畫
   const { contextSafe } = useGSAP(
@@ -141,7 +164,7 @@ export const HomeModal = ({
       <div
         ref={modalRef}
         className="relative w-full bg-white max-w-layout-container mx-auto rounded-t-3xl overflow-hidden flex flex-col shadow-2xl"
-        style={{ maxHeight: 'min(60vh, 700px)', touchAction: 'none' }}
+        style={{ maxHeight: 'min(60vh, 600px)', touchAction: 'none' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
