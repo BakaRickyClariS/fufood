@@ -1,19 +1,17 @@
-import { type FC, useState, useEffect } from 'react';
-import { ChevronLeft, Trash2, Plus } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/components/ui/dialog';
+import { type FC, useState, useEffect, useRef } from 'react';
+import { Trash2, Plus } from 'lucide-react';
+import { Dialog, DialogContent } from '@/shared/components/ui/dialog';
 import { Button } from '@/shared/components/ui/button';
 import { GroupCard } from '../ui/GroupCard';
+import {
+  GroupPageLayout,
+  type GroupPageLayoutRef,
+} from '../ui/GroupPageLayout';
 import { useGroupModal } from '../../hooks/useGroupModal';
-// import { useDeleteGroupMutation } from '../../api/queries';
 import type { Group } from '../../types/group.types';
 import { toast } from 'sonner';
 
-type GroupSettingsModalProps = {
+type GroupListProps = {
   open: boolean;
   onClose: () => void;
   onOpenMembersModal?: (group: Group) => void;
@@ -22,18 +20,17 @@ type GroupSettingsModalProps = {
 };
 
 /**
- * 群組設定 Modal（群組列表管理）
- * - 支援群組切換
- * - 支援刪除模式
- * - 支援建立群組
+ * 群組列表管理頁面
+ * - 使用 GroupPageLayout 從右側滑入
  */
-export const GroupSettingsModal: FC<GroupSettingsModalProps> = ({
+export const GroupList: FC<GroupListProps> = ({
   open,
   onClose,
   onOpenMembersModal,
   onOpenEditModal,
   onOpenCreateModal,
 }) => {
+  const layoutRef = useRef<GroupPageLayoutRef>(null);
   const {
     groups,
     isGroupsLoading: isLoading,
@@ -41,7 +38,6 @@ export const GroupSettingsModal: FC<GroupSettingsModalProps> = ({
     switchGroup,
     deleteGroup,
   } = useGroupModal();
-  // const deleteGroupMutation = useDeleteGroupMutation(); // 改用 Redux action
 
   // 暫存選中的群組 ID（尚未套用）
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
@@ -87,18 +83,16 @@ export const GroupSettingsModal: FC<GroupSettingsModalProps> = ({
     toast.success('已切換群組');
     setSelectedGroupId(null);
 
-    // 1.5 秒後自動關閉設定畫面
+    // 0.5 秒後自動關閉設定畫面
     setTimeout(() => {
-      onClose();
+      layoutRef.current?.close();
     }, 500);
   };
 
   // 處理選擇群組
-  // 處理選擇群組
   const handleSelectGroup = (groupId: string) => {
     if (isDeleteMode) return;
     setSelectedGroupId(groupId);
-    // 選擇時不再自動展開，需手動點擊箭頭
   };
 
   // 處理展開/收合
@@ -168,105 +162,88 @@ export const GroupSettingsModal: FC<GroupSettingsModalProps> = ({
     return checkedGroups.map((g) => g.name).join('、');
   };
 
+  // 底部按鈕
+  const footerContent = isDeleteMode ? (
+    <Button
+      className="w-full bg-primary-400 hover:bg-primary-500 text-white h-12 text-lg font-bold rounded-xl shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+      onClick={handleDeleteClick}
+      disabled={checkedGroupIds.size === 0}
+    >
+      刪除
+    </Button>
+  ) : (
+    <Button
+      className="w-full bg-primary-400 hover:bg-primary-500 text-white h-12 text-lg font-bold rounded-xl shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+      onClick={handleApply}
+      disabled={isCurrentGroup}
+    >
+      套用
+    </Button>
+  );
+
   return (
     <>
-      <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-none w-full h-dvh p-0 gap-0 rounded-none border-0 sm:rounded-none fixed! left-0! top-0! translate-x-0! translate-y-0! duration-300! data-[state=open]:slide-in-from-left-full! data-[state=closed]:slide-out-to-left-full! data-[state=closed]:zoom-out-100! data-[state=open]:zoom-in-100! data-[state=closed]:slide-out-to-top-0! data-[state=open]:slide-in-from-top-0! overflow-hidden flex flex-col [&>button]:hidden">
-          <DialogHeader className="shrink-0 px-4 py-3 bg-white flex flex-row items-center justify-center relative">
+      <GroupPageLayout
+        ref={layoutRef}
+        isOpen={open}
+        onClose={onClose}
+        title="群組設定"
+        className="px-4 py-6 pb-24"
+        footer={footerContent}
+      >
+        <div className="flex flex-col">
+          {/* 建立群組按鈕 - 設計稿樣式 */}
+          <button
+            onClick={onOpenCreateModal}
+            className="w-full h-14 rounded-lg border-2 mb-6 border-neutral-300 bg-white flex items-center justify-center gap-2 text-neutral-600 font-semibold hover:bg-neutral-50 hover:border-neutral-400 transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            建立群組
+          </button>
+
+          {/* 群組列表標題與刪除按鈕 */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base text-neutral-600 font-semibold">群組</h2>
             <button
-              onClick={onClose}
-              className="absolute left-4 p-1 -ml-1 text-neutral-600"
+              onClick={toggleDeleteMode}
+              className={`flex items-center gap-1 text-base font-semibold transition-colors ${
+                isDeleteMode
+                  ? 'text-primary-500'
+                  : 'text-primary-400 hover:text-primary-500'
+              }`}
             >
-              <ChevronLeft className="w-6 h-6" />
+              <Trash2 className="w-4 h-4" />
+              刪除群組
             </button>
-            <DialogTitle className="text-lg font-bold text-neutral-900">
-              群組設定
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="flex-1 overflow-y-auto px-4 py-6 min-h-0 bg-neutral-100 pb-24">
-            <div className="flex flex-col">
-              {/* 建立群組按鈕 - 設計稿樣式 */}
-              <button
-                onClick={onOpenCreateModal}
-                className="w-full h-14 rounded-lg border-2 mb-6 border-neutral-300 bg-white flex items-center justify-center gap-2 text-neutral-600 font-semibold hover:bg-neutral-50 hover:border-neutral-400 transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-                建立群組
-              </button>
-
-              {/* 群組列表標題與刪除按鈕 */}
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base text-neutral-600 font-semibold">
-                  群組
-                </h2>
-                <button
-                  onClick={toggleDeleteMode}
-                  className={`flex items-center gap-1 text-base font-semibold transition-colors ${
-                    isDeleteMode
-                      ? 'text-primary-500'
-                      : 'text-primary-400 hover:text-primary-500'
-                  }`}
-                >
-                  <Trash2 className="w-4 h-4" />
-                  刪除群組
-                </button>
-              </div>
-
-              {/* 群組列表 */}
-              <div className="flex flex-col gap-6">
-                {isLoading ? (
-                  <div className="text-center py-8 text-neutral-400">
-                    載入中...
-                  </div>
-                ) : !Array.isArray(groups) || groups.length === 0 ? (
-                  <div className="text-center py-8 text-neutral-400">
-                    尚無群組
-                  </div>
-                ) : (
-                  groups.map((group) => (
-                    <GroupCard
-                      key={group.id}
-                      group={group}
-                      isActive={activeGroup?.id === group.id}
-                      isSelected={selectedGroupId === group.id}
-                      isExpanded={!isDeleteMode && expandedGroupId === group.id}
-                      isDeleteMode={isDeleteMode}
-                      isChecked={checkedGroupIds.has(group.id)}
-                      onSelect={handleSelectGroup}
-                      onCheckChange={handleCheckChange}
-                      onToggleExpand={handleToggleExpand}
-                      onEditMembers={onOpenMembersModal}
-                      onEditGroup={onOpenEditModal}
-                    />
-                  ))
-                )}
-              </div>
-            </div>
           </div>
 
-          {/* 底部固定套用/刪除按鈕 */}
-          <div className="shrink-0 px-4 py-4 bg-white rounded-t-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] relative -mt-4 z-50">
-            {isDeleteMode ? (
-              <Button
-                className="w-full bg-primary-400 hover:bg-primary-500 text-white h-12 text-lg font-bold rounded-xl shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={handleDeleteClick}
-                disabled={checkedGroupIds.size === 0}
-              >
-                刪除
-              </Button>
+          {/* 群組列表 */}
+          <div className="flex flex-col gap-6">
+            {isLoading ? (
+              <div className="text-center py-8 text-neutral-400">載入中...</div>
+            ) : !Array.isArray(groups) || groups.length === 0 ? (
+              <div className="text-center py-8 text-neutral-400">尚無群組</div>
             ) : (
-              <Button
-                className="w-full bg-primary-400 hover:bg-primary-500 text-white h-12 text-lg font-bold rounded-xl shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={handleApply}
-                disabled={isCurrentGroup}
-              >
-                套用
-              </Button>
+              groups.map((group) => (
+                <GroupCard
+                  key={group.id}
+                  group={group}
+                  isActive={activeGroup?.id === group.id}
+                  isSelected={selectedGroupId === group.id}
+                  isExpanded={!isDeleteMode && expandedGroupId === group.id}
+                  isDeleteMode={isDeleteMode}
+                  isChecked={checkedGroupIds.has(group.id)}
+                  onSelect={handleSelectGroup}
+                  onCheckChange={handleCheckChange}
+                  onToggleExpand={handleToggleExpand}
+                  onEditMembers={onOpenMembersModal}
+                  onEditGroup={onOpenEditModal}
+                />
+              ))
             )}
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </GroupPageLayout>
 
       {/* 刪除確認 Modal */}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>

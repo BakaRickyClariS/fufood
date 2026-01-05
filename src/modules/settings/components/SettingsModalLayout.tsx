@@ -1,4 +1,9 @@
-import React, { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
 import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { ChevronLeft } from 'lucide-react';
@@ -21,25 +26,27 @@ export type SettingsModalLayoutRef = {
  * 模仿 FoodDetailModal 的 GSAP 動畫與 Portal 行為
  * 支援透過 ref 呼叫 close() 觸發滑出動畫
  */
-export const SettingsModalLayout = forwardRef<SettingsModalLayoutRef, SettingsModalLayoutProps>(({
-  isOpen,
-  onClose,
-  title,
-  children,
-  className,
-}, ref) => {
+export const SettingsModalLayout = forwardRef<
+  SettingsModalLayoutRef,
+  SettingsModalLayoutProps
+>(({ isOpen, onClose, title, children, className }, ref) => {
   const modalRef = useRef<HTMLDivElement>(null);
+
+  const hasAnimatedRef = useRef(false);
 
   // GSAP 進場動畫
   useEffect(() => {
-    if (isOpen && modalRef.current) {
+    if (isOpen && modalRef.current && !hasAnimatedRef.current) {
+      hasAnimatedRef.current = true;
       const tl = gsap.timeline();
       // 從右側滑入
       tl.fromTo(
         modalRef.current,
         { x: '100%' },
-        { x: '0%', duration: 0.4, ease: 'power3.out' }
+        { x: '0%', duration: 0.4, ease: 'power3.out' },
       );
+    } else if (!isOpen) {
+      hasAnimatedRef.current = false;
     }
   }, [isOpen]);
 
@@ -61,7 +68,7 @@ export const SettingsModalLayout = forwardRef<SettingsModalLayoutRef, SettingsMo
 
   // 暴露 close 方法給父層使用
   useImperativeHandle(ref, () => ({
-    close: handleClose
+    close: handleClose,
   }));
 
   if (!isOpen) return null;
@@ -73,8 +80,8 @@ export const SettingsModalLayout = forwardRef<SettingsModalLayoutRef, SettingsMo
     >
       {/* Header */}
       <div className="bg-white px-4 py-3 flex items-center shadow-sm sticky top-0 z-10 shrink-0">
-        <button 
-          onClick={handleClose} 
+        <button
+          onClick={handleClose}
           className="p-1 -ml-1 text-neutral-700 hover:bg-neutral-50 rounded-full transition-colors"
         >
           <ChevronLeft className="w-6 h-6" />
@@ -85,11 +92,11 @@ export const SettingsModalLayout = forwardRef<SettingsModalLayoutRef, SettingsMo
       </div>
 
       {/* Main Content */}
-      <div className={cn("flex-1 overflow-y-auto w-full", className)}>
+      <div className={cn('flex-1 overflow-y-auto w-full', className)}>
         {children}
       </div>
     </div>,
-    document.body
+    document.body,
   );
 });
 
