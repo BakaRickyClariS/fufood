@@ -1,11 +1,13 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
+import { useSelector } from 'react-redux';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import type { RecipeListItem, Recipe } from '@/modules/recipe/types';
 import { RecipeDetailContent } from '@/modules/recipe/components/ui/RecipeDetailContent';
 import { RecipeHeader } from '@/modules/recipe/components/layout/RecipeHeader';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 
 import { useRecipeDetailLogic } from '@/modules/recipe/hooks/useRecipeDetailLogic';
 
@@ -23,6 +25,7 @@ export const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const [isHidden, setIsHidden] = useState(false);
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
 
   // 判斷傳入的 recipe 是否包含完整資訊 (由 State 傳遞而來)
   // 這樣可以避免對剛生成的食譜 (尚未存入 DB) 進行 API 查詢
@@ -144,6 +147,7 @@ export const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
           isLoading={isLoading && !fullRecipe}
           onHideParent={hideParent}
           onShowParent={showParent}
+          refrigeratorId={activeRefrigeratorId || undefined}
         />
       </div>
     </div>,
