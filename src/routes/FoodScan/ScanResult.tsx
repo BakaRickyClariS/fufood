@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { useQueryClient } from '@tanstack/react-query';
 import { ScanResultEditor } from '@/modules/food-scan/components/features/ScanResultEditor';
 import { ScanResultPreview } from '@/modules/food-scan/components/features/ScanResultPreview';
 import { StockInSuccessModal } from '@/modules/food-scan/components/ui/StockInSuccessModal';
@@ -21,6 +22,7 @@ import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import { getRefrigeratorId } from '@/modules/inventory/utils/getRefrigeratorId';
 import { useAuth } from '@/modules/auth';
 import { groupsApi } from '@/modules/groups/api';
+import { inventoryKeys } from '@/modules/inventory/api/queries';
 import { useEffect } from 'react';
 
 const ScanResult: React.FC = () => {
@@ -28,6 +30,7 @@ const ScanResult: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // Redux state for batch scan
   const { items, currentIndex } = useSelector(
@@ -131,6 +134,10 @@ const ScanResult: React.FC = () => {
       // Use edited data if available, otherwise use initial data
       const dataToSubmit = editedData || initialData;
       await foodScanApi.submitFoodItem(dataToSubmit);
+
+      // 入庫成功後觸發庫存列表更新
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.lists() });
+
       const newSubmittedCount = submittedCount + 1;
       setSubmittedCount(newSubmittedCount);
 
@@ -143,9 +150,12 @@ const ScanResult: React.FC = () => {
           let targetUserIds: string[] = [];
           try {
             const members = await groupsApi.getMembers(notifyGroupId);
-            targetUserIds = members.map(m => m.id);
+            targetUserIds = members.map((m) => m.id);
           } catch (fetchErr) {
-            console.warn(`Failed to fetch members for group ${notifyGroupId}:`, fetchErr);
+            console.warn(
+              `Failed to fetch members for group ${notifyGroupId}:`,
+              fetchErr,
+            );
             // 若 API 失敗 (如個人冰箱無法取得成員)，降級為發送給自己
             if (user?.id) targetUserIds = [user.id];
           }
@@ -156,28 +166,34 @@ const ScanResult: React.FC = () => {
             const groupName = currentGroup?.name || '我的冰箱';
             const actorName = user?.displayName || user?.email || '使用者';
 
-            import('@/api/services/notification').then(({ notificationService }) => {
-              notificationService.sendNotification({
-                type: 'inventory',
-                subType: 'stockIn', // 新增 subType
-                title: 'AI 辨識完成！食材已入庫',
-                body: '剛買的食材已安全進入庫房，快去看看庫房！',
-                userIds: targetUserIds,
-                // groupId 設為 undefined，避免個人冰箱 ID 被後端視為無效群組 ID 而報錯 (400)
-                // 我們已透過 userIds 指定接收者
-                groupId: undefined,
-                groupName,
-                actorName,
-                group_name: groupName,
-                actor_name: actorName,
-                action: {
-                  type: 'inventory',
-                  payload: {
-                    refrigeratorId: notifyGroupId
-                  }
-                }
-              }).catch(err => console.error('Failed to send notification:', err));
-            });
+            import('@/api/services/notification').then(
+              ({ notificationService }) => {
+                notificationService
+                  .sendNotification({
+                    type: 'inventory',
+                    subType: 'stockIn', // 新增 subType
+                    title: 'AI 辨識完成！食材已入庫',
+                    body: '剛買的食材已安全進入庫房，快去看看庫房！',
+                    userIds: targetUserIds,
+                    // groupId 設為 undefined，避免個人冰箱 ID 被後端視為無效群組 ID 而報錯 (400)
+                    // 我們已透過 userIds 指定接收者
+                    groupId: undefined,
+                    groupName,
+                    actorName,
+                    group_name: groupName,
+                    actor_name: actorName,
+                    action: {
+                      type: 'inventory',
+                      payload: {
+                        refrigeratorId: notifyGroupId,
+                      },
+                    },
+                  })
+                  .catch((err) =>
+                    console.error('Failed to send notification:', err),
+                  );
+              },
+            );
           }
         }
       } catch (notifyError) {
@@ -291,7 +307,7 @@ const ScanResult: React.FC = () => {
     try {
       // Submit all pending items
       let successCount = 0;
-      
+
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         if (item.status === 'pending') {
@@ -299,6 +315,10 @@ const ScanResult: React.FC = () => {
           successCount++;
         }
       }
+
+      // 批次入庫成功後觸發庫存列表更新
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.lists() });
+
       setSubmittedCount(successCount);
 
       // 發送推播通知 (批次)
@@ -307,9 +327,12 @@ const ScanResult: React.FC = () => {
           let targetUserIds: string[] = [];
           try {
             const members = await groupsApi.getMembers(targetGroupId);
-            targetUserIds = members.map(m => m.id);
+            targetUserIds = members.map((m) => m.id);
           } catch (fetchErr) {
-            console.warn(`Failed to fetch members for group ${targetGroupId}:`, fetchErr);
+            console.warn(
+              `Failed to fetch members for group ${targetGroupId}:`,
+              fetchErr,
+            );
             if (user?.id) targetUserIds = [user.id];
           }
 
@@ -319,30 +342,37 @@ const ScanResult: React.FC = () => {
             const groupName = currentGroup?.name || '我的冰箱';
             const actorName = user?.displayName || user?.email || '使用者';
 
-            const message = successCount === 1 
-              ? '剛買的食材已安全進入庫房，快去看看庫房！'
-              : `${successCount} 項新食材已安全進入庫房，快去看看庫房！`;
-              
-            import('@/api/services/notification').then(({ notificationService }) => {
-              notificationService.sendNotification({
-                type: 'inventory',
-                subType: 'stockIn', // 新增 subType
-                title: 'AI 辨識完成！食材已入庫',
-                body: message,
-                userIds: targetUserIds,
-                groupId: undefined,
-                groupName,
-                actorName,
-                group_name: groupName,
-                actor_name: actorName,
-                action: {
-                  type: 'inventory',
-                  payload: {
-                    refrigeratorId: targetGroupId
-                  }
-                }
-              }).catch(err => console.error('Failed to send notification:', err));
-            });
+            const message =
+              successCount === 1
+                ? '剛買的食材已安全進入庫房，快去看看庫房！'
+                : `${successCount} 項新食材已安全進入庫房，快去看看庫房！`;
+
+            import('@/api/services/notification').then(
+              ({ notificationService }) => {
+                notificationService
+                  .sendNotification({
+                    type: 'inventory',
+                    subType: 'stockIn', // 新增 subType
+                    title: 'AI 辨識完成！食材已入庫',
+                    body: message,
+                    userIds: targetUserIds,
+                    groupId: undefined,
+                    groupName,
+                    actorName,
+                    group_name: groupName,
+                    actor_name: actorName,
+                    action: {
+                      type: 'inventory',
+                      payload: {
+                        refrigeratorId: targetGroupId,
+                      },
+                    },
+                  })
+                  .catch((err) =>
+                    console.error('Failed to send notification:', err),
+                  );
+              },
+            );
           }
         }
       } catch (notifyError) {
