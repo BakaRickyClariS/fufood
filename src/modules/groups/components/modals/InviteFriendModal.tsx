@@ -115,14 +115,9 @@ export const InviteFriendModal: FC<InviteFriendModalProps> = ({
     }
   }, [group, dispatch]);
 
-  // 建構 QR Code URL
-  // 格式: https://api.fufood.jocelynh.me/oauth/line/init?invite={token}&ref=https://fufood.jocelynh.me/invite/{token}
-  // OAuth 完成後會導向 /invite/{token}，由 InviteAcceptPage 處理加入流程並自動切換群組
-  const token = inviteCode?.token || inviteCode?.code;
-  const qrCodeUrl =
-    token && group?.id
-      ? `https://api.fufood.jocelynh.me/oauth/line/init?invite=${token}&ref=https://fufood.jocelynh.me/invite/${token}`
-      : inviteCode?.inviteUrl || '';
+  // 邏輯回復至 (commit 9d5ba33~2)
+  // 直接使用後端回傳的 inviteUrl，不進行前端組裝
+  const qrCodeUrl = inviteCode?.inviteUrl || '';
 
   // 複製連結
   const handleCopyLink = () => {
