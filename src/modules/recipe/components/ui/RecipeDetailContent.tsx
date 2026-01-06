@@ -4,16 +4,10 @@ import { Clock, Users, ChefHat, Heart, Loader2 } from 'lucide-react';
 import type { Recipe, ConsumptionItem } from '@/modules/recipe/types';
 import { recipeApi } from '@/modules/recipe/services';
 import { IngredientList } from '@/modules/recipe/components/ui/IngredientList';
-import { CookingSteps } from '@/modules/recipe/components/ui/CookingSteps';
+
 import { ConsumptionModal } from '@/modules/inventory/components/consumption';
 import { TOAST_MESSAGES } from '@/constants/messages';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/shared/components/ui/sheet';
+import { CookingStepsModal } from '@/modules/recipe/components/modals/CookingStepsModal';
 
 type RecipeDetailContentProps = {
   recipe: Recipe;
@@ -65,11 +59,17 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
         !recipe.isFavorite,
       );
       onRecipeUpdate?.({ ...recipe, isFavorite });
-      toast.success(isFavorite ? TOAST_MESSAGES.SUCCESS.ADD_FAVORITE : TOAST_MESSAGES.SUCCESS.REMOVE_FAVORITE);
+      toast.success(
+        isFavorite
+          ? TOAST_MESSAGES.SUCCESS.ADD_FAVORITE
+          : TOAST_MESSAGES.SUCCESS.REMOVE_FAVORITE,
+      );
     } catch {
       toast.error(TOAST_MESSAGES.ERROR.GENERIC);
     }
   };
+
+  const [showCookingSteps, setShowCookingSteps] = React.useState(false);
 
   return (
     <>
@@ -88,6 +88,13 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
           onShowConsumptionModal(false);
           onConfirmConsumption?.(success);
         }}
+      />
+
+      {/* 烹煮方式 Modal */}
+      <CookingStepsModal
+        isOpen={showCookingSteps}
+        onClose={() => setShowCookingSteps(false)}
+        steps={recipe.steps}
       />
 
       {/* 圖片區域 */}
@@ -136,38 +143,14 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
           </div>
 
           {/* 烹煮方式按鈕 */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <button
-                disabled={isLoading}
-                className="flex items-center gap-1.5 px-6 py-3 bg-white border-2 border-neutral-300 rounded-sm hover:bg-gray-50 transition-colors shrink-0 disabled:opacity-50"
-              >
-                <ChefHat className="w-5 h-5 text-gray-700" />
-                <span className="font-bold text-gray-900 text-sm">
-                  烹煮方式
-                </span>
-              </button>
-            </SheetTrigger>
-            <SheetContent
-              side="bottom"
-              className="h-[85vh] rounded-t-2xl px-0 pb-0 [&>button]:hidden"
-            >
-              <SheetHeader className="px-5 text-left mb-2 pb-4">
-                <SheetTitle className="text-xl font-bold text-gray-900">
-                  烹煮方式
-                </SheetTitle>
-              </SheetHeader>
-              <div className="overflow-y-auto h-full px-5 pb-32">
-                {isLoading ? (
-                  <div className="flex justify-center py-10">
-                    <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-                  </div>
-                ) : (
-                  <CookingSteps steps={recipe.steps} />
-                )}
-              </div>
-            </SheetContent>
-          </Sheet>
+          <button
+            onClick={() => setShowCookingSteps(true)}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 px-6 py-3 bg-white border-2 border-neutral-300 rounded-sm hover:bg-gray-50 transition-colors shrink-0 disabled:opacity-50"
+          >
+            <ChefHat className="w-5 h-5 text-gray-700" />
+            <span className="font-bold text-gray-900 text-sm">烹煮方式</span>
+          </button>
         </div>
 
         {/* 食材列表 */}

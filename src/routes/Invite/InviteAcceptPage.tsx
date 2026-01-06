@@ -41,12 +41,14 @@ const InviteAcceptPage = () => {
   const [status, setStatus] = useState<InviteStatus>('checking-auth');
   const [invitation, setInvitation] = useState<InvitationResponse | null>(null);
   const [error, setError] = useState<string>('');
+  const [groupsLoaded, setGroupsLoaded] = useState(false);
 
-  // 步驟 1: 檢查登入狀態
   useEffect(() => {
     // 確保已載入群組資料以檢查限制
     if (isAuthenticated) {
-      dispatch(fetchGroups());
+      dispatch(fetchGroups()).then(() => {
+        setGroupsLoaded(true);
+      });
     }
   }, [dispatch, isAuthenticated]);
 
@@ -69,14 +71,15 @@ const InviteAcceptPage = () => {
     setStatus('loading');
   }, [isAuthenticated, isAuthLoading, navigate]);
 
-  // 步驟 2: 驗證邀請 token（僅在已登入後執行）
   useEffect(() => {
     const validateInvitation = async () => {
-      if (status !== 'loading' || !token) {
+      // 等待群組資料載入完成
+      if (status !== 'loading' || !token || !groupsLoaded) {
         return;
       }
 
       try {
+        // 先嘗試取得邀請資訊
         const data = await groupsApi.getInvitation(token);
 
         // 檢查是否過期
@@ -104,13 +107,41 @@ const InviteAcceptPage = () => {
         setStatus('valid');
       } catch (err) {
         console.error('驗證邀請失敗:', err);
+
+        // 即使 getInvitation API 失敗，也檢查是否已經透過 OAuth 加入了群組
+        // (後端可能在 OAuth callback 時已自動加入，但邀請記錄已被標記為已使用)
+        // 透過刷新群組列表來確認
+        try {
+          const refreshResult = await dispatch(fetchGroups());
+          const refreshedGroups = refreshResult.payload as typeof currentGroups;
+
+          // 如果群組數量增加了，很可能是剛剛透過 OAuth 加入的
+          if (
+            refreshedGroups &&
+            refreshedGroups.length > currentGroups.length
+          ) {
+            // 找到新加入的群組（假設是最新的那個）
+            const newGroup = refreshedGroups.find(
+              (g) => !currentGroups.some((cg) => cg.id === g.id),
+            );
+            if (newGroup) {
+              dispatch(setActiveRefrigeratorId(newGroup.id));
+              setStatus('success');
+              setTimeout(() => navigate('/'), 1500);
+              return;
+            }
+          }
+        } catch {
+          // 靜默處理
+        }
+
         setStatus('error');
         setError('邀請連結無效或已過期');
       }
     };
 
     validateInvitation();
-  }, [status, token, currentGroups, dispatch, navigate]);
+  }, [status, token, currentGroups, dispatch, navigate, groupsLoaded]);
 
   // 處理加入群組
   const handleJoin = async () => {
@@ -184,8 +215,25 @@ const InviteAcceptPage = () => {
       setTimeout(() => {
         navigate('/');
       }, 2000);
-    } catch (err) {
+    } catch (err: any) {
       console.error('加入群組失敗:', err);
+
+      // 檢查是否是「已經是成員」的錯誤 (後端可能回傳 409 Conflict 或 500)
+      const errorMessage = err?.message || '';
+      const isAlreadyMemberError =
+        errorMessage.includes('already') ||
+        errorMessage.includes('已經是成員') ||
+        err?.statusCode === 409;
+
+      if (isAlreadyMemberError) {
+        // 已經是成員，視為成功
+        dispatch(setActiveRefrigeratorId(invitation.refrigeratorId));
+        dispatch(fetchGroups());
+        setStatus('success');
+        setTimeout(() => navigate('/'), 1500);
+        return;
+      }
+
       setStatus('error');
       setError('加入群組失敗，請稍後再試');
     }
