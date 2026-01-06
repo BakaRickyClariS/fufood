@@ -20,8 +20,6 @@ import {
 } from '@/modules/groups/store/groupsSlice';
 import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import { getRefrigeratorId } from '@/modules/inventory/utils/getRefrigeratorId';
-import { useAuth } from '@/modules/auth';
-import { groupsApi } from '@/modules/groups/api';
 import { inventoryKeys } from '@/modules/inventory/api/queries';
 import { useNotificationMetadata } from '@/modules/notifications/hooks/useNotificationMetadata';
 import { useEffect } from 'react';
@@ -30,7 +28,6 @@ const ScanResult: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   // Redux state for batch scan
@@ -139,7 +136,7 @@ const ScanResult: React.FC = () => {
     try {
       // Use edited data if available, otherwise use initial data
       const dataToSubmit = editedData || initialData;
-      await foodScanApi.submitFoodItem(dataToSubmit);
+      const response = await foodScanApi.submitFoodItem(dataToSubmit);
 
       // 入庫成功後觸發庫存列表更新
       queryClient.invalidateQueries({ queryKey: inventoryKeys.lists() });
@@ -147,65 +144,42 @@ const ScanResult: React.FC = () => {
       const newSubmittedCount = submittedCount + 1;
       setSubmittedCount(newSubmittedCount);
 
-      // 發送推播通知 (單筆)
+      // 發送推播通知（使用 groupId 發送給群組所有成員，與清單建立一致）
       try {
         const notifyGroupId = dataToSubmit.groupId || targetGroupId;
         if (notifyGroupId) {
-          // 2024-01-01 Fix: 依使用者要求，透過 API 取得成員列表發送通知
-          // 不再依賴前端 groups state 判斷是否為共享群組
-          let targetUserIds: string[] = [];
-          try {
-            const members = await groupsApi.getMembers(notifyGroupId);
-            targetUserIds = members.map((m) => m.id);
-          } catch (fetchErr) {
-            console.warn(
-              `Failed to fetch members for group ${notifyGroupId}:`,
-              fetchErr,
-            );
-            // 若 API 失敗 (如個人冰箱無法取得成員)，降級為發送給自己
-            if (user?.id) targetUserIds = [user.id];
-          }
+          console.log('🔔 [Stock-In Notification] Metadata:', {
+            groupName,
+            actorName,
+            actorId,
+            groupId: notifyGroupId,
+            itemId: response.data.id,
+          });
 
-          if (targetUserIds.length > 0) {
-            // Debug log 確認 metadata 值
-            console.log('🔔 [Stock-In Notification] Metadata:', {
-              groupName,
-              actorName,
-              actorId,
-              targetUserIds,
-            });
-
-            import('@/api/services/notification').then(
-              ({ notificationService }) => {
-                notificationService
-                  .sendNotification({
-                    type: 'inventory',
-                    subType: 'stockIn', // 新增 subType
-                    title: 'AI 辨識完成！食材已入庫',
-                    body: '剛買的食材已安全進入庫房，快去看看庫房！',
-                    userIds: targetUserIds,
-                    // groupId 設為 undefined，避免個人冰箱 ID 被後端視為無效群組 ID 而報錯 (400)
-                    // 我們已透過 userIds 指定接收者
-                    groupId: undefined,
-                    groupName,
-                    actorName,
-                    actorId,
-                    group_name: groupName,
-                    actor_name: actorName,
-                    actor_id: actorId,
-                    action: {
-                      type: 'inventory',
-                      payload: {
-                        refrigeratorId: notifyGroupId,
-                      },
-                    },
-                  })
-                  .catch((err) =>
-                    console.error('Failed to send notification:', err),
-                  );
+          const { notificationsApiImpl } = await import(
+            '@/modules/notifications/api/notificationsApiImpl'
+          );
+          const itemName = dataToSubmit.productName || '食材';
+          await notificationsApiImpl.sendNotification({
+            groupId: notifyGroupId, // 使用 groupId 發送給群組所有成員
+            type: 'inventory',
+            subType: 'stockIn',
+            title: `${itemName} 新成員報到，入位成功！`,
+            body: `冰箱小隊報告！${itemName} 已安全進入庫房，隨時待命！`,
+            groupName,
+            actorName,
+            actorId,
+            group_name: groupName,
+            actor_name: actorName,
+            actor_id: actorId,
+            action: {
+              type: 'inventory',
+              payload: {
+                refrigeratorId: notifyGroupId,
+                itemId: response.data.id,
               },
-            );
-          }
+            },
+          });
         }
       } catch (notifyError) {
         console.error('Notification error:', notifyError);
@@ -354,61 +328,53 @@ const ScanResult: React.FC = () => {
       // Invalidate queries to refresh inventory
       queryClient.invalidateQueries({ queryKey: inventoryKeys.lists() });
 
-      // 发送推播通知 (批次) - 只針對成功的項目發送
+      // 發送推播通知 (批次)（使用 groupId 發送給群組所有成員，與清單建立一致）
       try {
         if (targetGroupId) {
-          let targetUserIds: string[] = [];
-          try {
-            const members = await groupsApi.getMembers(targetGroupId);
-            targetUserIds = members.map((m) => m.id);
-          } catch (fetchErr) {
-            // ... error handling
-            if (user?.id) targetUserIds = [user.id];
-          }
+          // 取得第一個成功的食材名稱
+          const firstSuccessItem = currentItems.find((_, i) =>
+            successIndices.includes(i),
+          );
+          const firstName = firstSuccessItem?.data.productName || '食材';
 
-          if (targetUserIds.length > 0) {
-            const message =
-              successCount === 1
-                ? '剛買的食材已安全進入庫房，快去看看庫房！'
-                : `${successCount} 項新食材已安全進入庫房，快去看看庫房！`;
+          const title =
+            successCount === 1
+              ? `${firstName} 新成員報到，入位成功！`
+              : `${firstName} 等 ${successCount} 項食材報到，全員入位！`;
+          const body =
+            successCount === 1
+              ? `冰箱小隊報告！${firstName} 已安全進入庫房，隨時待命！`
+              : `冰箱小隊報告！${successCount} 項新成員已入位，整裝待發！`;
 
-            // Debug log 確認 metadata 值
-            console.log('🔔 [Batch Stock-In Notification] Metadata:', {
-              groupName,
-              actorName,
-              actorId,
-              targetUserIds,
-            });
+          console.log('🔔 [Batch Stock-In Notification] Metadata:', {
+            groupName,
+            actorName,
+            actorId,
+            groupId: targetGroupId,
+          });
 
-            import('@/api/services/notification').then(
-              ({ notificationService }) => {
-                notificationService
-                  .sendNotification({
-                    type: 'inventory',
-                    subType: 'stockIn',
-                    title: 'AI 辨識完成！食材已入庫',
-                    body: message,
-                    userIds: targetUserIds,
-                    groupId: undefined,
-                    groupName,
-                    actorName,
-                    actorId,
-                    group_name: groupName,
-                    actor_name: actorName,
-                    actor_id: actorId,
-                    action: {
-                      type: 'inventory',
-                      payload: {
-                        refrigeratorId: targetGroupId,
-                      },
-                    },
-                  })
-                  .catch((err) =>
-                    console.error('Failed to send notification:', err),
-                  );
+          const { notificationsApiImpl } = await import(
+            '@/modules/notifications/api/notificationsApiImpl'
+          );
+          await notificationsApiImpl.sendNotification({
+            groupId: targetGroupId, // 使用 groupId 發送給群組所有成員
+            type: 'inventory',
+            subType: 'stockIn',
+            title,
+            body,
+            groupName,
+            actorName,
+            actorId,
+            group_name: groupName,
+            actor_name: actorName,
+            actor_id: actorId,
+            action: {
+              type: 'inventory',
+              payload: {
+                refrigeratorId: targetGroupId,
               },
-            );
-          }
+            },
+          });
         }
       } catch (notifyError) {
         console.error('Notification error:', notifyError);
