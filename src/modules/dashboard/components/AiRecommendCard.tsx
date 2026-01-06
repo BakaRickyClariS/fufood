@@ -1,5 +1,5 @@
-import { Card } from '@/shared/components/ui/card';
-import aiImg from '@/assets/images/dashboard/ai-banner.png';
+﻿import { Card } from '@/shared/components/ui/card';
+import aiImg from '@/assets/images/dashboard/ai-banner.webp';
 import { useAIModal } from '@/modules/ai/providers/AIModalProvider';
 
 const AiRecommendCard = () => {

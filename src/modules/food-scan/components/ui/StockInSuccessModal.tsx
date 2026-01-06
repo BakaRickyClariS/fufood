@@ -1,8 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+﻿import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { X } from 'lucide-react';
-import successImage from '@/assets/images/food-scan/inventory-success.png';
+import successImage from '@/assets/images/food-scan/inventory-success.webp';
 
 type StockInSuccessModalProps = {
   isOpen: boolean;

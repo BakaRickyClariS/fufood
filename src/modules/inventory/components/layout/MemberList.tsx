@@ -1,6 +1,6 @@
-import jocelynImg from '@/assets/images/inventory/members-jo.png';
-import rickyImg from '@/assets/images/inventory/members-ri.png';
-import zoeImg from '@/assets/images/inventory/members-zo.png';
+﻿import jocelynImg from '@/assets/images/inventory/members-jo.webp';
+import rickyImg from '@/assets/images/inventory/members-ri.webp';
+import zoeImg from '@/assets/images/inventory/members-zo.webp';
 import type React from 'react';
 
 const members = [

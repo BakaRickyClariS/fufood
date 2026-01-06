@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { ChevronLeft } from 'lucide-react';
@@ -10,7 +10,7 @@ import type { RecipeListItem } from '@/modules/recipe/types';
 import { RecipeCardCarousel } from '@/shared/components/recipe';
 import { RecipeDetailModal } from '@/modules/recipe/components/ui/RecipeDetailModal';
 import { recipeApi } from '@/modules/recipe/services';
-import successImage from '@/assets/images/recipe/consumption-success.png';
+import successImage from '@/assets/images/recipe/consumption-success.webp';
 
 type ItemWithReason = ConsumptionItem & {
   selectedReasons?: ConsumptionReason[];

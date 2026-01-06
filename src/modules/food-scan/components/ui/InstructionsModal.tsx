@@ -1,6 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { Check } from 'lucide-react';
-import noticeImg from '@/assets/images/food-scan/notice.png';
+import noticeImg from '@/assets/images/food-scan/notice.webp';
 
 type InstructionsModalProps = {
   isOpen: boolean;

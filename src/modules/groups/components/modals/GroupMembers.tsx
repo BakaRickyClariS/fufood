@@ -1,5 +1,5 @@
-import ProBadge from '@/assets/images/settings/silver.png';
-import FreeBadge from '@/assets/images/settings/brown.png';
+﻿import ProBadge from '@/assets/images/settings/silver.webp';
+import FreeBadge from '@/assets/images/settings/brown.webp';
 
 import { useState, useRef, type FC } from 'react';
 import { Button } from '@/shared/components/ui/button';
@@ -13,7 +13,7 @@ import { useGroupModal } from '../../providers/GroupModalProvider';
 import { useAuth } from '@/modules/auth';
 import { getUserAvatarUrl } from '@/shared/utils/avatarUtils';
 import type { Group } from '../../types/group.types';
-import defaultAvatar from '@/assets/images/auth/Avatar-1.png';
+import defaultAvatar from '@/assets/images/auth/Avatar-1.webp';
 
 type GroupMembersProps = {
   open: boolean;

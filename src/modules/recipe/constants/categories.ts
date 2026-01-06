@@ -1,17 +1,17 @@
-import type { RecipeCategory } from '@/modules/recipe/types';
+﻿import type { RecipeCategory } from '@/modules/recipe/types';
 
-import chineseImg from '@/assets/images/recipe/category/Chinese.png';
-import americanImg from '@/assets/images/recipe/category/American.png';
-import italianImg from '@/assets/images/recipe/category/Italian.png';
-import japaneseImg from '@/assets/images/recipe/category/Japanese.png';
-import thaiImg from '@/assets/images/recipe/category/Thai.png';
-import koreanImg from '@/assets/images/recipe/category/Korean.png';
-import mexicanImg from '@/assets/images/recipe/category/Mexican.png';
-import sichuanImg from '@/assets/images/recipe/category/Sichuan.png';
-import vietnameseImg from '@/assets/images/recipe/category/Vietnamese.png';
-import healthyImg from '@/assets/images/recipe/category/Healthy.png';
-import sweetsImg from '@/assets/images/recipe/category/Sweets.png';
-import drinksImg from '@/assets/images/recipe/category/Drinks.png';
+import chineseImg from '@/assets/images/recipe/category/Chinese.webp';
+import americanImg from '@/assets/images/recipe/category/American.webp';
+import italianImg from '@/assets/images/recipe/category/Italian.webp';
+import japaneseImg from '@/assets/images/recipe/category/Japanese.webp';
+import thaiImg from '@/assets/images/recipe/category/Thai.webp';
+import koreanImg from '@/assets/images/recipe/category/Korean.webp';
+import mexicanImg from '@/assets/images/recipe/category/Mexican.webp';
+import sichuanImg from '@/assets/images/recipe/category/Sichuan.webp';
+import vietnameseImg from '@/assets/images/recipe/category/Vietnamese.webp';
+import healthyImg from '@/assets/images/recipe/category/Healthy.webp';
+import sweetsImg from '@/assets/images/recipe/category/Sweets.webp';
+import drinksImg from '@/assets/images/recipe/category/Drinks.webp';
 
 export const RECIPE_CATEGORIES: RecipeCategory[] = [
   '中式料理',
