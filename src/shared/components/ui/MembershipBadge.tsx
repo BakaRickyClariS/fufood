@@ -1,6 +1,6 @@
-import type { MembershipTier } from '@/modules/auth/types';
-import FreeBadge from '@/assets/images/settings/brown.png';
-import ProBadge from '@/assets/images/settings/silver.png';
+﻿import type { MembershipTier } from '@/modules/auth/types';
+import FreeBadge from '@/assets/images/settings/brown.webp';
+import ProBadge from '@/assets/images/settings/silver.webp';
 
 type MembershipBadgeProps = {
   tier: MembershipTier;

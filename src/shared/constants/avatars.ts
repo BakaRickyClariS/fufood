@@ -1,18 +1,18 @@
-/**
+﻿/**
  * 頭像資源常數
  * 統一管理所有頭像圖片的匯入
  */
 
 // 匯入所有預設頭像圖片
-import Avatar1 from '@/assets/images/auth/Avatar-1.png';
-import Avatar2 from '@/assets/images/auth/Avatar-2.png';
-import Avatar3 from '@/assets/images/auth/Avatar-3.png';
-import Avatar4 from '@/assets/images/auth/Avatar-4.png';
-import Avatar5 from '@/assets/images/auth/Avatar-5.png';
-import Avatar6 from '@/assets/images/auth/Avatar-6.png';
-import Avatar7 from '@/assets/images/auth/Avatar-7.png';
-import Avatar8 from '@/assets/images/auth/Avatar-8.png';
-import DefaultAvatarImg from '@/assets/images/inventory/members-zo.png';
+import Avatar1 from '@/assets/images/auth/Avatar-1.webp';
+import Avatar2 from '@/assets/images/auth/Avatar-2.webp';
+import Avatar3 from '@/assets/images/auth/Avatar-3.webp';
+import Avatar4 from '@/assets/images/auth/Avatar-4.webp';
+import Avatar5 from '@/assets/images/auth/Avatar-5.webp';
+import Avatar6 from '@/assets/images/auth/Avatar-6.webp';
+import Avatar7 from '@/assets/images/auth/Avatar-7.webp';
+import Avatar8 from '@/assets/images/auth/Avatar-8.webp';
+import DefaultAvatarImg from '@/assets/images/inventory/members-zo.webp';
 
 /**
  * 頭像 ID 對應圖片對照表（用於本地頭像 ID 轉換）

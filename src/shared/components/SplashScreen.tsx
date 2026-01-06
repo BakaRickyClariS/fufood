@@ -1,10 +1,10 @@
-
+﻿
 import { useRef } from 'react';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 
-import charImage from '@/assets/images/startup/char.png';
-import logoImage from '@/assets/images/startup/logo.png';
+import charImage from '@/assets/images/startup/char.webp';
+import logoImage from '@/assets/images/startup/logo.webp';
 
 export const SplashScreen = () => {
   const containerRef = useRef<HTMLDivElement>(null);

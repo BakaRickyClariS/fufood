@@ -1,11 +1,11 @@
-import Group01 from '@/assets/images/group/01-group.png';
-import Group02 from '@/assets/images/group/02-group.png';
-import Group03 from '@/assets/images/group/03-group.png';
+﻿import Group01 from '@/assets/images/group/01-group.webp';
+import Group02 from '@/assets/images/group/02-group.webp';
+import Group03 from '@/assets/images/group/03-group.webp';
 
 // User Avatars from auth folder
-import avatar1 from '@/assets/images/auth/Avatar-1.png';
-import avatar2 from '@/assets/images/auth/Avatar-2.png';
-import avatar3 from '@/assets/images/auth/Avatar-3.png';
+import avatar1 from '@/assets/images/auth/Avatar-1.webp';
+import avatar2 from '@/assets/images/auth/Avatar-2.webp';
+import avatar3 from '@/assets/images/auth/Avatar-3.webp';
 
 import type { Group, GroupMember } from '../types/group.types';
 

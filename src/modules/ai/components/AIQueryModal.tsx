@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+﻿import { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ChevronLeft,
@@ -23,8 +23,8 @@ import { RecipeDetailModal } from '@/modules/recipe/components/ui/RecipeDetailMo
 import { validatePrompt, validateIngredients } from '../utils/promptSecurity';
 import { recipeKeys } from '@/modules/recipe/api/queries';
 import type { RecipeListItem } from '@/modules/recipe/types';
-import aiAvatar from '@/assets/images/recipe/ai-avator.png';
-import processingImage from '@/assets/images/shared/processing.png';
+import aiAvatar from '@/assets/images/recipe/ai-avator.webp';
+import processingImage from '@/assets/images/shared/processing.webp';
 
 /** 預設建議標籤（API 不可用時的 fallback） */
 const DEFAULT_SUGGESTION_TAGS = [

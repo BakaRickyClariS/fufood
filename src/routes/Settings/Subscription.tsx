@@ -1,11 +1,11 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useAuth } from '@/modules/auth';
 import { useUpdateProfileMutation } from '@/modules/settings/api/queries';
 import SettingsModalLayout from '@/modules/settings/components/SettingsModalLayout';
 import { Button } from '@/shared/components/ui/button';
 import MockPaymentModal from '@/modules/settings/components/MockPaymentModal';
-import brownShield from '@/assets/images/settings/brown.png';
-import silverShield from '@/assets/images/settings/silver.png';
+import brownShield from '@/assets/images/settings/brown.webp';
+import silverShield from '@/assets/images/settings/silver.webp';
 
 const PLANS = [
   {

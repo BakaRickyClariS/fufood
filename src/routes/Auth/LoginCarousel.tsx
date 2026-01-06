@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 
 // 匯入 Hero 圖片
-import authHero1 from '@/assets/images/auth/authHero-1.png';
-import authHero2 from '@/assets/images/auth/authHero-2.png';
-import authHero3 from '@/assets/images/auth/authHero-3.png';
+import authHero1 from '@/assets/images/auth/authHero-1.webp';
+import authHero2 from '@/assets/images/auth/authHero-2.webp';
+import authHero3 from '@/assets/images/auth/authHero-3.webp';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 

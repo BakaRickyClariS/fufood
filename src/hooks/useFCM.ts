@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import { getToken } from 'firebase/messaging';
 import { toast } from 'sonner';
 import { aiApi } from '@/api/client';
@@ -136,7 +136,7 @@ export const useFCM = ({
 
       // 2. Firebase messaging (Static)
       // const { messaging } = await import('@/lib/firebase'); // REMOVED dynamic import
-      
+
       if (!messaging) {
         setError('Firebase Messaging 初始化失敗');
         return null;

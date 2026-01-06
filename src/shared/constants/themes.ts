@@ -1,37 +1,37 @@
-/**
+﻿/**
  * 主題常數檔案
  * 定義所有主題的圖片對應關係
  */
 
 // 匯入所有大頭貼圖片
-import Avatar1 from '@/assets/images/auth/Avatar-1.png';
-import Avatar2 from '@/assets/images/auth/Avatar-2.png';
-import Avatar3 from '@/assets/images/auth/Avatar-3.png';
-import Avatar4 from '@/assets/images/auth/Avatar-4.png';
-import Avatar5 from '@/assets/images/auth/Avatar-5.png';
-import Avatar6 from '@/assets/images/auth/Avatar-6.png';
-import Avatar7 from '@/assets/images/auth/Avatar-7.png';
-import Avatar8 from '@/assets/images/auth/Avatar-8.png';
+import Avatar1 from '@/assets/images/auth/Avatar-1.webp';
+import Avatar2 from '@/assets/images/auth/Avatar-2.webp';
+import Avatar3 from '@/assets/images/auth/Avatar-3.webp';
+import Avatar4 from '@/assets/images/auth/Avatar-4.webp';
+import Avatar5 from '@/assets/images/auth/Avatar-5.webp';
+import Avatar6 from '@/assets/images/auth/Avatar-6.webp';
+import Avatar7 from '@/assets/images/auth/Avatar-7.webp';
+import Avatar8 from '@/assets/images/auth/Avatar-8.webp';
 
 // 匯入所有首頁橫幅圖片
-import Home01 from '@/assets/images/group/01-home.png';
-import Home02 from '@/assets/images/group/02-home.png';
-import Home03 from '@/assets/images/group/03-home.png';
-import Home04 from '@/assets/images/group/04-home.png';
-import Home05 from '@/assets/images/group/05-home.png';
-import Home06 from '@/assets/images/group/06-home.png';
-import Home07 from '@/assets/images/group/07-home.png';
-import Home08 from '@/assets/images/group/08-home.png';
+import Home01 from '@/assets/images/group/01-home.webp';
+import Home02 from '@/assets/images/group/02-home.webp';
+import Home03 from '@/assets/images/group/03-home.webp';
+import Home04 from '@/assets/images/group/04-home.webp';
+import Home05 from '@/assets/images/group/05-home.webp';
+import Home06 from '@/assets/images/group/06-home.webp';
+import Home07 from '@/assets/images/group/07-home.webp';
+import Home08 from '@/assets/images/group/08-home.webp';
 
 // 匯入所有群組卡片圖片
-import Group01 from '@/assets/images/group/01-group.png';
-import Group02 from '@/assets/images/group/02-group.png';
-import Group03 from '@/assets/images/group/03-group.png';
-import Group04 from '@/assets/images/group/04-group.png';
-import Group05 from '@/assets/images/group/05-group.png';
-import Group06 from '@/assets/images/group/06-group.png';
-import Group07 from '@/assets/images/group/07-group.png';
-import Group08 from '@/assets/images/group/08-group.png';
+import Group01 from '@/assets/images/group/01-group.webp';
+import Group02 from '@/assets/images/group/02-group.webp';
+import Group03 from '@/assets/images/group/03-group.webp';
+import Group04 from '@/assets/images/group/04-group.webp';
+import Group05 from '@/assets/images/group/05-group.webp';
+import Group06 from '@/assets/images/group/06-group.webp';
+import Group07 from '@/assets/images/group/07-group.webp';
+import Group08 from '@/assets/images/group/08-group.webp';
 
 /**
  * 主題型別定義

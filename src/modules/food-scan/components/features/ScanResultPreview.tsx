@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+﻿import React, { useRef, useEffect, useState } from 'react';
 import {
   ChefHat,
   ChevronLeft,
@@ -9,7 +9,7 @@ import {
 import gsap from 'gsap';
 import type { FoodItemInput } from '../../types';
 import { calculateShelfLife } from '../../utils/dateHelpers';
-import resultDecoration from '@/assets/images/food-scan/result.png';
+import resultDecoration from '@/assets/images/food-scan/result.webp';
 import { InfoTooltip } from '@/shared/components/feedback/InfoTooltip';
 import { categories } from '@/modules/inventory/constants/categories';
 
