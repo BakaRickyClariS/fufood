@@ -282,7 +282,7 @@ export const AIQueryModal = ({
   // 如果是在靈感模式下且正在 Loading，顯示全版 Loading 畫面
   if (isOpen && mode === 'inspiration' && isLoading && !text) {
     return createPortal(
-      <div className="fixed inset-0 z-100 bg-white flex flex-col items-center justify-center">
+      <div className="fixed inset-0 z-150 bg-white flex flex-col items-center justify-center">
         <div className="w-full max-w-[320px] aspect-square relative mb-8">
           <img
             src={processingImage}
@@ -306,7 +306,7 @@ export const AIQueryModal = ({
       {createPortal(
         <div
           className={cn(
-            'fixed inset-0 z-100 flex flex-col transition-all duration-0',
+            'fixed inset-0 z-150 flex flex-col transition-all duration-0',
             !isOpen && 'invisible pointer-events-none',
           )}
         >
