@@ -116,11 +116,12 @@ export const InviteFriendModal: FC<InviteFriendModalProps> = ({
   }, [group, dispatch]);
 
   // 建構 QR Code URL
-  // 格式: https://api.fufood.jocelynh.me/oauth/line/init?invite={token}&ref=https://fufood.jocelynh.me/refrigerators/{id}
+  // 格式: https://api.fufood.jocelynh.me/oauth/line/init?invite={token}&ref=https://fufood.jocelynh.me/invite/{token}
+  // OAuth 完成後會導向 /invite/{token}，由 InviteAcceptPage 處理加入流程並自動切換群組
   const token = inviteCode?.token || inviteCode?.code;
   const qrCodeUrl =
     token && group?.id
-      ? `https://api.fufood.jocelynh.me/oauth/line/init?invite=${token}&ref=https://fufood.jocelynh.me/refrigerators/${group.id}`
+      ? `https://api.fufood.jocelynh.me/oauth/line/init?invite=${token}&ref=https://fufood.jocelynh.me/invite/${token}`
       : inviteCode?.inviteUrl || '';
 
   // 複製連結
