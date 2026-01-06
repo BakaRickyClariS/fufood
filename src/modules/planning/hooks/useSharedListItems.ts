@@ -11,7 +11,6 @@ import {
   selectShoppingListLoading,
 } from '@/store/slices/shoppingListSlice';
 import { useAuth } from '@/modules/auth';
-import { groupsApi } from '@/modules/groups/api';
 import { selectAllGroups } from '@/modules/groups/store/groupsSlice';
 import type { CreateSharedListItemInput } from '../types';
 
@@ -48,56 +47,49 @@ export const useSharedListItems = (
     if (!listId) throw new Error('No list ID provided');
     await dispatch(createListItems({ listId, inputs })).unwrap();
 
-    // 發送推播通知 (批次)
-    // 發送推播通知 (批次)
+    // 發送推播通知（使用 groupId 發送給群組所有成員，與清單建立一致）
     try {
       if (inputs.length > 0 && refrigeratorId) {
-        let targetUserIds: string[] = [];
-        try {
-          const members = await groupsApi.getMembers(refrigeratorId);
-          targetUserIds = members.map((m) => m.id);
-        } catch (fetchErr) {
-          console.warn(
-            `Failed to fetch members for group ${refrigeratorId}:`,
-            fetchErr,
-          );
-          if (user?.id) targetUserIds = [user.id];
-        }
+        const firstItemName = inputs[0].name;
+        const count = inputs.length;
+        const title =
+          count > 1
+            ? `${firstItemName} 等 ${count} 項商品加入採買行列！`
+            : `${firstItemName} 加入採買行列！`;
+        const body =
+          count > 1
+            ? `採買小隊報告！${count} 項新任務已登錄，壓大家快來看看！`
+            : `採買小隊報告！${firstItemName} 已加入購物清單，收到請回報！`;
 
-        if (targetUserIds.length > 0) {
-          const firstItemName = inputs[0].name;
-          const count = inputs.length;
-          const message =
-            count > 1
-              ? `已新增 ${firstItemName} 等 ${count} 項到採買清單`
-              : `已新增 ${firstItemName} 到採買清單`;
+        console.log('🔔 [Shopping List Item Notification] Metadata:', {
+          groupName,
+          actorName,
+          actorId,
+          groupId: refrigeratorId,
+        });
 
-          import('@/api/services/notification').then(
-            ({ notificationService }) => {
-              notificationService
-                .sendNotification({
-                  type: 'shopping',
-                  subType: 'list',
-                  title: '採買清單更新',
-                  body: message,
-                  userIds: targetUserIds,
-                  groupId: undefined,
-                  group_name: groupName,
-                  actor_name: actorName,
-                  actor_id: actorId,
-                  action: {
-                    type: 'shopping-list',
-                    payload: {
-                      listId: listId,
-                    },
-                  },
-                })
-                .catch((err) =>
-                  console.error('Failed to send notification:', err),
-                );
+        const { notificationsApiImpl } = await import(
+          '@/modules/notifications/api/notificationsApiImpl'
+        );
+        await notificationsApiImpl.sendNotification({
+          groupId: refrigeratorId, // 使用 groupId 發送給群組所有成員
+          type: 'shopping',
+          subType: 'list',
+          title,
+          body,
+          groupName,
+          actorName,
+          actorId,
+          group_name: groupName,
+          actor_name: actorName,
+          actor_id: actorId,
+          action: {
+            type: 'shopping-list',
+            payload: {
+              listId: listId,
             },
-          );
-        }
+          },
+        });
       }
     } catch (notifyError) {
       console.error('Notification error:', notifyError);
@@ -108,49 +100,38 @@ export const useSharedListItems = (
     if (!listId) throw new Error('No list ID provided');
     const result = await dispatch(createListItem({ listId, input })).unwrap();
 
-    // 發送推播通知 (單筆)
-    // 發送推播通知 (單筆)
+    // 發送推播通知（使用 groupId 發送給群組所有成員，與清單建立一致）
     try {
       if (refrigeratorId) {
-        let targetUserIds: string[] = [];
-        try {
-          const members = await groupsApi.getMembers(refrigeratorId);
-          targetUserIds = members.map((m) => m.id);
-        } catch (fetchErr) {
-          console.warn(
-            `Failed to fetch members for group ${refrigeratorId}:`,
-            fetchErr,
-          );
-          if (user?.id) targetUserIds = [user.id];
-        }
+        console.log('🔔 [Shopping List Item Notification] Metadata:', {
+          groupName,
+          actorName,
+          actorId,
+          groupId: refrigeratorId,
+        });
 
-        if (targetUserIds.length > 0) {
-          import('@/api/services/notification').then(
-            ({ notificationService }) => {
-              notificationService
-                .sendNotification({
-                  type: 'shopping',
-                  subType: 'list',
-                  title: '採買清單更新',
-                  body: `已新增 ${input.name} 到採買清單`,
-                  userIds: targetUserIds,
-                  groupId: undefined,
-                  group_name: groupName,
-                  actor_name: actorName,
-                  actor_id: actorId,
-                  action: {
-                    type: 'shopping-list',
-                    payload: {
-                      listId: listId,
-                    },
-                  },
-                })
-                .catch((err) =>
-                  console.error('Failed to send notification:', err),
-                );
+        const { notificationsApiImpl } = await import(
+          '@/modules/notifications/api/notificationsApiImpl'
+        );
+        await notificationsApiImpl.sendNotification({
+          groupId: refrigeratorId, // 使用 groupId 發送給群組所有成員
+          type: 'shopping',
+          subType: 'list',
+          title: `${input.name} 加入採買行列！`,
+          body: `採買小隊報告！${input.name} 已加入購物清單，收到請回報！`,
+          groupName,
+          actorName,
+          actorId,
+          group_name: groupName,
+          actor_name: actorName,
+          actor_id: actorId,
+          action: {
+            type: 'shopping-list',
+            payload: {
+              listId: listId,
             },
-          );
-        }
+          },
+        });
       }
     } catch (notifyError) {
       console.error('Notification error:', notifyError);
