@@ -1,11 +1,5 @@
 ﻿import React, { useRef, useEffect, useState } from 'react';
-import {
-  ChefHat,
-  ChevronLeft,
-  ChevronRight,
-  Trash2,
-  CheckCheck,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, CheckCheck } from 'lucide-react';
 import gsap from 'gsap';
 import type { FoodItemInput } from '../../types';
 import { calculateShelfLife } from '../../utils/dateHelpers';
@@ -222,12 +216,12 @@ export const ScanResultPreview: React.FC<ScanResultPreviewProps> = ({
         onTouchMove={isBatchMode ? onTouchMove : undefined}
         onTouchEnd={isBatchMode ? onTouchEnd : undefined}
       >
-        {/* 頂部裝飾圖片 - result.png */}
-        <div className="relative w-full">
+        {/* 頂部裝飾圖片 - result.png (縮小到 60%) */}
+        <div className="relative w-full flex justify-center pt-4">
           <img
             src={resultDecoration}
             alt="Result decoration"
-            className="w-full h-auto object-cover"
+            className="w-[60%] h-auto object-cover"
           />
 
           {/* 刪除項目按鈕 - 位於圖片右下角 (只在批次模式顯示) */}
@@ -358,28 +352,30 @@ export const ScanResultPreview: React.FC<ScanResultPreviewProps> = ({
           >
             編輯草稿
           </button>
-          <button
-            onClick={onConfirm}
-            disabled={submitStatus !== 'idle'}
-            className="w-full bg-white border-2 border-slate-100 text-slate-800 hover:bg-slate-50 py-3.5 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
-          >
-            <ChefHat size={20} />
-            {submitStatus === 'submitting'
-              ? '送出中...'
-              : submitStatus === 'completed'
-                ? '歸納完成'
-                : '確認歸納'}
-          </button>
 
-          {/* 一鍵歸納全部按鈕 - 只在批次模式顯示 */}
+          {/* 確認歸納按鈕 - 只在單筆模式顯示 */}
+          {!isBatchMode && (
+            <button
+              onClick={onConfirm}
+              disabled={submitStatus !== 'idle'}
+              className="w-full bg-white border-2 border-slate-100 text-slate-800 hover:bg-slate-50 py-3.5 rounded-xl font-bold transition-colors flex items-center justify-center shadow-sm disabled:opacity-50"
+            >
+              {submitStatus === 'submitting'
+                ? '送出中...'
+                : submitStatus === 'completed'
+                  ? '歸納完成'
+                  : '確認歸納'}
+            </button>
+          )}
+
+          {/* 全部入庫按鈕 - 只在批次模式顯示 */}
           {isBatchMode && onConfirmAll && (
             <button
               onClick={onConfirmAll}
               disabled={submitStatus !== 'idle'}
               className="w-full bg-white border-2 border-slate-100 text-slate-800 hover:bg-slate-50 py-3.5 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
             >
-              <CheckCheck size={20} />
-              一鍵歸納全部
+              全部入庫
             </button>
           )}
         </div>

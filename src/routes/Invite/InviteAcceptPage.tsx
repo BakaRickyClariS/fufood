@@ -85,6 +85,21 @@ const InviteAcceptPage = () => {
           return;
         }
 
+        // 檢查是否已經是該群組成員（後端 LINE callback 可能已自動加入）
+        const isAlreadyMember = currentGroups.some(
+          (g) => g.id === data.refrigeratorId,
+        );
+
+        if (isAlreadyMember) {
+          // 已經是成員，設定活動冰箱並直接跳轉首頁
+          dispatch(setActiveRefrigeratorId(data.refrigeratorId));
+          setStatus('success');
+          setTimeout(() => {
+            navigate('/');
+          }, 1500);
+          return;
+        }
+
         setInvitation(data);
         setStatus('valid');
       } catch (err) {
@@ -95,7 +110,7 @@ const InviteAcceptPage = () => {
     };
 
     validateInvitation();
-  }, [status, token]);
+  }, [status, token, currentGroups, dispatch, navigate]);
 
   // 處理加入群組
   const handleJoin = async () => {
@@ -165,9 +180,9 @@ const InviteAcceptPage = () => {
         console.error('Notification error:', notifyError);
       }
 
-      // 成功後導向 dashboard
+      // 成功後導向首頁
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/');
       }, 2000);
     } catch (err) {
       console.error('加入群組失敗:', err);

@@ -1,6 +1,10 @@
 import { type FC, useState, useEffect, useRef } from 'react';
 import { Trash2, Plus } from 'lucide-react';
-import { Dialog, DialogContent } from '@/shared/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from '@/shared/components/ui/dialog';
 import { Button } from '@/shared/components/ui/button';
 import { GroupCard } from '../ui/GroupCard';
 import {
@@ -37,6 +41,7 @@ export const GroupList: FC<GroupListProps> = ({
     activeGroup,
     switchGroup,
     deleteGroup,
+    leaveGroup,
   } = useGroupModal();
 
   // 暫存選中的群組 ID（尚未套用）
@@ -55,6 +60,11 @@ export const GroupList: FC<GroupListProps> = ({
   // 刪除確認 Modal 狀態
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  // 離開群組確認 Modal 狀態
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [groupToLeave, setGroupToLeave] = useState<Group | null>(null);
+  const [isLeaving, setIsLeaving] = useState(false);
+
   // 判斷是否為當前群組（套用按鈕要 disabled）
   const isCurrentGroup =
     selectedGroupId === activeGroup?.id || (!selectedGroupId && true);
@@ -72,6 +82,8 @@ export const GroupList: FC<GroupListProps> = ({
       setIsDeleting(false);
       setCheckedGroupIds(new Set());
       setShowDeleteConfirm(false);
+      setShowLeaveConfirm(false);
+      setGroupToLeave(null);
     }
   }, [open, activeGroup]);
 
@@ -162,6 +174,38 @@ export const GroupList: FC<GroupListProps> = ({
     return checkedGroups.map((g) => g.name).join('、');
   };
 
+  // 處理離開群組點擊
+  const handleLeaveClick = (group: Group) => {
+    setGroupToLeave(group);
+    setShowLeaveConfirm(true);
+  };
+
+  // 確認離開群組
+  const handleConfirmLeave = async () => {
+    if (!groupToLeave) return;
+    setIsLeaving(true);
+    try {
+      await leaveGroup(groupToLeave.id);
+      toast.success(`已離開「${groupToLeave.name}」`);
+      setShowLeaveConfirm(false);
+      setGroupToLeave(null);
+
+      // 如果離開的是當前群組，切換到其他群組
+      if (activeGroup?.id === groupToLeave.id) {
+        const remainingGroups =
+          groups?.filter((g) => g.id !== groupToLeave.id) || [];
+        if (remainingGroups.length > 0) {
+          switchGroup(remainingGroups[0].id);
+        }
+      }
+    } catch (error) {
+      console.error('離開群組失敗:', error);
+      toast.error('離開群組失敗');
+    } finally {
+      setIsLeaving(false);
+    }
+  };
+
   // 底部按鈕
   const footerContent = isDeleteMode ? (
     <Button
@@ -224,22 +268,30 @@ export const GroupList: FC<GroupListProps> = ({
             ) : !Array.isArray(groups) || groups.length === 0 ? (
               <div className="text-center py-8 text-neutral-400">尚無群組</div>
             ) : (
-              groups.map((group) => (
-                <GroupCard
-                  key={group.id}
-                  group={group}
-                  isActive={activeGroup?.id === group.id}
-                  isSelected={selectedGroupId === group.id}
-                  isExpanded={!isDeleteMode && expandedGroupId === group.id}
-                  isDeleteMode={isDeleteMode}
-                  isChecked={checkedGroupIds.has(group.id)}
-                  onSelect={handleSelectGroup}
-                  onCheckChange={handleCheckChange}
-                  onToggleExpand={handleToggleExpand}
-                  onEditMembers={onOpenMembersModal}
-                  onEditGroup={onOpenEditModal}
-                />
-              ))
+              // 排序群組：當前群組排在最上面
+              [...groups]
+                .sort((a, b) => {
+                  if (a.id === activeGroup?.id) return -1;
+                  if (b.id === activeGroup?.id) return 1;
+                  return 0;
+                })
+                .map((group) => (
+                  <GroupCard
+                    key={group.id}
+                    group={group}
+                    isActive={activeGroup?.id === group.id}
+                    isSelected={selectedGroupId === group.id}
+                    isExpanded={!isDeleteMode && expandedGroupId === group.id}
+                    isDeleteMode={isDeleteMode}
+                    isChecked={checkedGroupIds.has(group.id)}
+                    onSelect={handleSelectGroup}
+                    onCheckChange={handleCheckChange}
+                    onToggleExpand={handleToggleExpand}
+                    onEditMembers={onOpenMembersModal}
+                    onEditGroup={onOpenEditModal}
+                    onLeaveGroup={handleLeaveClick}
+                  />
+                ))
             )}
           </div>
         </div>
@@ -248,10 +300,10 @@ export const GroupList: FC<GroupListProps> = ({
       {/* 刪除確認 Modal */}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent className="max-w-[320px] rounded-2xl p-6 gap-0">
+          <DialogTitle className="text-xl font-bold text-neutral-800 mb-2 text-center">
+            確認刪除
+          </DialogTitle>
           <div className="flex flex-col items-center text-center">
-            <h2 className="text-xl font-bold text-neutral-800 mb-2">
-              確認刪除
-            </h2>
             <p className="text-neutral-600">「{getCheckedGroupNames()}」</p>
           </div>
 
@@ -269,6 +321,37 @@ export const GroupList: FC<GroupListProps> = ({
               disabled={isDeleting}
             >
               {isDeleting ? '刪除中...' : '確認'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 離開群組確認 Modal */}
+      <Dialog open={showLeaveConfirm} onOpenChange={setShowLeaveConfirm}>
+        <DialogContent className="max-w-[320px] rounded-2xl p-6 gap-0">
+          <DialogTitle className="text-xl font-bold text-neutral-800 mb-2 text-center">
+            確認離開群組
+          </DialogTitle>
+          <div className="flex flex-col items-center text-center">
+            <p className="text-neutral-600">
+              確定要離開「{groupToLeave?.name}」嗎？
+            </p>
+          </div>
+
+          <div className="flex gap-3 mt-6">
+            <Button
+              variant="outline"
+              className="flex-1 h-12 rounded-xl border-neutral-200 text-neutral-700 font-semibold"
+              onClick={() => setShowLeaveConfirm(false)}
+            >
+              取消
+            </Button>
+            <Button
+              className="flex-1 h-12 rounded-xl bg-red-500 hover:bg-red-600 text-white font-semibold"
+              onClick={handleConfirmLeave}
+              disabled={isLeaving}
+            >
+              {isLeaving ? '離開中...' : '確認離開'}
             </Button>
           </div>
         </DialogContent>

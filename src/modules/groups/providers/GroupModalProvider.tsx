@@ -25,6 +25,7 @@ type GroupModalContextType = {
   createGroup: (form: any) => Promise<any>;
   updateGroup: (id: string, form: any) => Promise<any>;
   deleteGroup: (id: string) => Promise<void>;
+  leaveGroup: (groupId: string) => Promise<void>;
   isGroupsLoading: boolean;
 };
 
@@ -40,8 +41,14 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // State mgmt
-  const { groups, createGroup, updateGroup, deleteGroup, isLoading } =
-    useGroups();
+  const {
+    groups,
+    createGroup,
+    updateGroup,
+    deleteGroup,
+    leaveGroup,
+    isLoading,
+  } = useGroups();
 
   const dispatch = useDispatch<AppDispatch>();
 
@@ -146,6 +153,7 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
         createGroup,
         updateGroup,
         deleteGroup,
+        leaveGroup,
         isGroupsLoading: isLoading,
       }}
     >
