@@ -29,6 +29,8 @@ export type SlideModalLayoutProps = {
   zIndex?: number;
   /** 背景顏色 className（預設 bg-neutral-100） */
   bgClassName?: string;
+  /** 內部滾動容器的 ref（供父層取得滾動位置） */
+  scrollRef?: React.RefObject<HTMLDivElement | null>;
 };
 
 export type SlideModalLayoutRef = {
@@ -59,6 +61,7 @@ export const SlideModalLayout = forwardRef<
       hasBackdrop = false,
       zIndex = 100,
       bgClassName = 'bg-neutral-100',
+      scrollRef,
     },
     ref,
   ) => {
@@ -164,7 +167,10 @@ export const SlideModalLayout = forwardRef<
               )}
 
           {/* Main Content */}
-          <div className={cn('flex-1 overflow-y-auto w-full', className)}>
+          <div
+            ref={scrollRef}
+            className={cn('flex-1 overflow-y-auto w-full', className)}
+          >
             {children}
           </div>
 
