@@ -160,13 +160,30 @@ export const useSharedListDetail = (id: string | undefined) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Status 計算邏輯（與 useSharedLists 一致）
+  const computeStatus = (startsAt: string): SharedListStatus => {
+    const startDate = new Date(startsAt);
+    // 設定為當天 23:59:59
+    startDate.setHours(23, 59, 59, 999);
+
+    const now = new Date();
+
+    // 只有當現在時間超過 startsAt 當天結束時（即隔天）才標記為已完成
+    return now.getTime() > startDate.getTime() ? 'completed' : 'in-progress';
+  };
+
   const fetchList = useCallback(async () => {
     if (!id) return;
     setIsLoading(true);
     setError(null);
     try {
       const data = await sharedListApi.getSharedListById(id);
-      setList(data);
+      // 前端加工 Status（與 useSharedLists 一致）
+      const processedList = {
+        ...data,
+        status: computeStatus(data.startsAt),
+      };
+      setList(processedList);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Failed to fetch list details',

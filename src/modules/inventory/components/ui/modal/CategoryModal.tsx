@@ -152,7 +152,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
         ? 1
         : 0) + (filters.attributes ? filters.attributes.length : 0);
 
-  if (!categoryId) return null;
+  if (!categoryId || !category) return null;
 
   // 自訂 Header
   const customHeader = category ? (
@@ -172,41 +172,6 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
         </h1>
         <div className="w-10" /> {/* Spacer for centering */}
       </header>
-
-      {/* Banner Section */}
-      <div className="relative w-full pt-4 overflow-hidden bg-neutral-300">
-        <img
-          src={category.img}
-          alt=""
-          className="absolute top-0 left-0 w-full h-48 object-cover object-center scale-250"
-        />
-        <div className="absolute inset-0 bg-white/70 backdrop-blur-sm" />
-
-        <div className="relative px-4 max-w-layout-container mx-auto z-10 rounded-3xl overflow-hidden">
-          <div
-            className={`relative w-full h-40 rounded-3xl overflow-hidden bg-white/60 p-6`}
-          >
-            <div className="flex justify-between items-start h-full">
-              <div className="flex flex-col justify-center h-full max-w-[80%] z-5">
-                <h2 className="text-base font-bold text-neutral-900 mb-2">
-                  {category.slogan}
-                </h2>
-                <div className="text-xs text-neutral-600 space-y-1 border-l-2 border-neutral-600 pl-3">
-                  {category.description.map((desc, index) => (
-                    <p key={index}>{desc}</p>
-                  ))}
-                </div>
-              </div>
-
-              <img
-                src={category.img}
-                alt={category.title}
-                className="absolute -right-30 -bottom-30 h-[200%] object-contain translate-y-2 translate-x-2"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
     </>
   ) : null;
 
@@ -220,9 +185,44 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
         customHeader={customHeader}
         bgClassName="bg-white"
         className="pb-24"
+        scrollRef={scrollRef}
       >
+        {/* Banner Section */}
+        <div className="relative w-full pt-4 pb-12 overflow-hidden bg-neutral-300">
+          <img
+            src={category.img}
+            alt=""
+            className="absolute top-0 left-0 w-full h-48 object-cover object-center scale-250"
+          />
+          <div className="absolute inset-0 bg-white/70 backdrop-blur-sm" />
+
+          <div className="relative px-4 max-w-layout-container mx-auto z-10 rounded-3xl overflow-hidden">
+            <div
+              className={`relative w-full h-40 rounded-3xl overflow-hidden bg-white/60 p-6`}
+            >
+              <div className="flex justify-between items-start h-full">
+                <div className="flex flex-col justify-center h-full max-w-[80%] z-5">
+                  <h2 className="text-base font-bold text-neutral-900 mb-2">
+                    {category.slogan}
+                  </h2>
+                  <div className="text-xs text-neutral-600 space-y-1 border-l-2 border-neutral-600 pl-3">
+                    {category.description.map((desc, index) => (
+                      <p key={index}>{desc}</p>
+                    ))}
+                  </div>
+                </div>
+
+                <img
+                  src={category.img}
+                  alt={category.title}
+                  className="absolute -right-30 -bottom-30 h-[200%] object-contain translate-y-2 translate-x-2"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
         {/* Content Section - Search & Items */}
-        <div ref={scrollRef} className="py-4 px-4 space-y-4 bg-white -mt-4">
+        <div className="relative z-10 px-4 pt-4 space-y-4 bg-white -mt-8 rounded-t-2xl">
           {/* Search Bar */}
           <div className="flex flex-row w-full cursor-pointer items-center gap-2">
             <div

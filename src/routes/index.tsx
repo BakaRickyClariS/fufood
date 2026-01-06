@@ -8,7 +8,7 @@ import AuthRoutes from './Auth';
 import SettingsRoutes from './Settings';
 import NotificationsRoutes from './Notifications';
 import InviteRoutes from './Invite';
-import CategoryPage from './Inventory/CategoryPage';
+
 // GroupsRoutes 已移除，Group Modals 改為在 Dashboard 渲染
 import { RecipeDetailView } from '@/modules/recipe/components/features/RecipeDetailView';
 
@@ -108,14 +108,6 @@ export const router = createBrowserRouter([
             element: (
               <ProtectedRoute>
                 <Inventory />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: 'category/:categoryId',
-            element: (
-              <ProtectedRoute>
-                <CategoryPage />
               </ProtectedRoute>
             ),
           },

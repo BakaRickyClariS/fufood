@@ -139,7 +139,7 @@ export const SharedListDetail = ({
   const statusConfig = {
     'in-progress': {
       text: '進行中',
-      bgClass: 'bg-success-500',
+      bgClass: 'bg-success-300',
     },
     completed: {
       text: '已完成',
@@ -150,9 +150,9 @@ export const SharedListDetail = ({
   const currentStatus = list
     ? (statusConfig[list.status as keyof typeof statusConfig] ?? {
         text: '進行中',
-        bgClass: 'bg-success-500',
+        bgClass: 'bg-success-300',
       })
-    : { text: '進行中', bgClass: 'bg-success-500' };
+    : { text: '進行中', bgClass: 'bg-success-300' };
 
   // 自訂 Header（覆蓋背景圖）
   const customHeader = list ? (
@@ -180,14 +180,14 @@ export const SharedListDetail = ({
 
         <div className="px-4 pb-4 pt-5 flex justify-between items-end">
           <div className="flex flex-col gap-2">
+            <h1 className="text-lg font-semibold text-neutral-700 tracking-wide">
+              {list.title}
+            </h1>
             <div
-              className={`text-white text-sm w-[67px] h-[32px] rounded-tr-[20px] rounded-br-[20px] rounded-bl-[20px] rounded-tl-none font-bold flex items-center justify-center ${currentStatus.bgClass}`}
+              className={`text-white text-sm w-[67px] h-[32px] rounded-[20px] font-bold flex items-center justify-center ${currentStatus.bgClass}`}
             >
               {currentStatus.text}
             </div>
-            <h1 className="text-2xl font-bold text-neutral-700 tracking-wide">
-              {list.title}
-            </h1>
           </div>
 
           <div className="bg-white/70 backdrop-blur rounded-2xl p-3 min-w-[70px] flex flex-col items-center justify-center shadow-lg">
@@ -212,7 +212,7 @@ export const SharedListDetail = ({
       onClose={onClose || (() => {})}
       showHeader={false}
       customHeader={customHeader}
-      bgClassName="bg-neutral-200"
+      bgClassName="bg-neutral-100"
       className="pb-24"
     >
       {/* Loading 狀態 */}
