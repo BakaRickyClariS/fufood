@@ -1,6 +1,6 @@
 import { useRef, type FC } from 'react';
 import { Button } from '@/shared/components/ui/button';
-import { Check, ChevronDown } from 'lucide-react';
+import { Check, ChevronDown, LogOut } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import type { Group } from '../../types/group.types';
@@ -32,6 +32,8 @@ type GroupCardProps = {
   onToggleExpand?: (groupId: string) => void;
   onEditMembers?: (group: Group) => void;
   onEditGroup?: (group: Group) => void;
+  /** 離開群組回呼（非擁有者使用） */
+  onLeaveGroup?: (group: Group) => void;
 };
 
 /**
@@ -53,6 +55,7 @@ export const GroupCard: FC<GroupCardProps> = ({
   onToggleExpand,
   onEditMembers,
   onEditGroup,
+  onLeaveGroup,
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -133,8 +136,9 @@ export const GroupCard: FC<GroupCardProps> = ({
   );
 
   const handleCardClick = () => {
-    // 刪除模式時，點擊卡片切換勾選狀態
+    // 刪除模式時，點擊卡片切換勾選狀態（只有擁有者可以勾選）
     if (isDeleteMode) {
+      if (!isOwner) return; // 非擁有者不能勾選
       onCheckChange?.(group.id, !isChecked);
       return;
     }
@@ -158,6 +162,7 @@ export const GroupCard: FC<GroupCardProps> = ({
   // 處理 checkbox 點擊
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!isOwner) return; // 非擁有者不能勾選
     onCheckChange?.(group.id, !isChecked);
   };
 
@@ -182,13 +187,16 @@ export const GroupCard: FC<GroupCardProps> = ({
       {isDeleteMode && (
         <button
           onClick={handleCheckboxClick}
+          disabled={!isOwner}
           className={`absolute top-4 right-4 w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all z-30 ${
-            isChecked
-              ? 'bg-primary-400 border-primary-400'
-              : 'bg-white border-neutral-300'
+            !isOwner
+              ? 'bg-neutral-100 border-neutral-200 cursor-not-allowed opacity-50'
+              : isChecked
+                ? 'bg-primary-400 border-primary-400'
+                : 'bg-white border-neutral-300'
           }`}
         >
-          {isChecked && <Check className="w-4 h-4 text-white" />}
+          {isChecked && isOwner && <Check className="w-4 h-4 text-white" />}
         </button>
       )}
 
@@ -285,13 +293,24 @@ export const GroupCard: FC<GroupCardProps> = ({
           >
             編輯成員
           </Button>
-          <Button
-            variant="outline"
-            className="w-full border-neutral-200 border-2 text-neutral-700 h-12 rounded-xl text-base font-bold bg-white hover:bg-neutral-50"
-            onClick={() => onEditGroup?.(group)}
-          >
-            修改群組內容
-          </Button>
+          {isOwner ? (
+            <Button
+              variant="outline"
+              className="w-full border-neutral-200 border-2 text-neutral-700 h-12 rounded-xl text-base font-bold bg-white hover:bg-neutral-50"
+              onClick={() => onEditGroup?.(group)}
+            >
+              修改群組內容
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              className="w-full border-red-200 border-2 text-red-600 h-12 rounded-xl text-base font-bold bg-white hover:bg-red-50 flex items-center justify-center gap-2"
+              onClick={() => onLeaveGroup?.(group)}
+            >
+              <LogOut className="w-5 h-5" />
+              離開群組
+            </Button>
+          )}
         </div>
       </div>
     </div>
