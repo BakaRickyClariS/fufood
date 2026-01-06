@@ -8,7 +8,8 @@ import SearchModal from '@/modules/inventory/components/ui/modal/SearchModal';
 import FilterModal from '@/modules/inventory/components/ui/modal/FilterModal';
 import CategoryStatsBar from '@/modules/inventory/components/ui/other/CategoryStatsBar';
 import { categories } from '@/modules/inventory/constants/categories';
-import { useInventory, useInventoryFilter } from '@/modules/inventory/hooks';
+import { useInventoryFilter } from '@/modules/inventory/hooks';
+import { useInventoryQuery } from '@/modules/inventory/api/queries';
 import {
   selectAllGroups,
   fetchGroups,
@@ -59,9 +60,12 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
     }
   }, [dispatch, groups.length]);
 
-  const { items: allItems, isLoading } = useInventory(
-    refrigeratorId || undefined,
-  );
+  const { data: inventoryData, isLoading } = useInventoryQuery({
+    refrigeratorId: refrigeratorId || undefined,
+  });
+
+  // 從 query 結果中取得 items
+  const allItems = inventoryData?.data?.items ?? [];
 
   const category = useMemo(
     () => categories.find((c) => c.id === categoryId),
