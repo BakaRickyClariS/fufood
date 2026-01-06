@@ -94,8 +94,8 @@ export const useSharedLists = (
         );
         await notificationsApiImpl.sendNotification({
           groupId: refrigeratorId,
-          title: `採購清單「${input.title}」已建立`,
-          body: '快來看看需要買什麼，一起規劃下次的購物行程吧！',
+          title: `新採購清單「${input.title}」出爐！`,
+          body: '採買小隊報告！新清單已建立，快來看看需要買什麼！',
           type: 'shopping',
           subType: 'list', // 新增 subType
           groupName,

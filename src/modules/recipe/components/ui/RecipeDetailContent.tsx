@@ -64,8 +64,18 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
           ? TOAST_MESSAGES.SUCCESS.ADD_FAVORITE
           : TOAST_MESSAGES.SUCCESS.REMOVE_FAVORITE,
       );
-    } catch {
-      toast.error(TOAST_MESSAGES.ERROR.GENERIC);
+    } catch (error) {
+      // 針對 404 錯誤提供更清晰的提示
+      const is404 =
+        error instanceof Error &&
+        (error.message.includes('404') ||
+          ('status' in error && (error as any).status === 404));
+
+      if (is404) {
+        toast.error('此食譜尚未儲存完成，請稍後再試');
+      } else {
+        toast.error(TOAST_MESSAGES.ERROR.GENERIC);
+      }
     }
   };
 

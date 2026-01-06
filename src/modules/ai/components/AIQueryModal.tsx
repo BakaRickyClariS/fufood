@@ -277,6 +277,12 @@ export const AIQueryModal = ({
   const handleCloseRecipeModal = () => {
     setIsRecipeModalOpen(false);
     setTimeout(() => setSelectedRecipe(null), 300);
+
+    // 在 inspiration 模式下，關閉 RecipeDetailModal 時也要關閉 AIQueryModal
+    // 讓用戶直接返回到 FoodDetailModal
+    if (mode === 'inspiration') {
+      handleCloseAnimation();
+    }
   };
 
   // 如果是在靈感模式下且正在 Loading，顯示全版 Loading 畫面
@@ -308,6 +314,11 @@ export const AIQueryModal = ({
           className={cn(
             'fixed inset-0 z-150 flex flex-col transition-all duration-0',
             !isOpen && 'invisible pointer-events-none',
+            // 在 inspiration 模式下，當 RecipeDetailModal 開啟時，隱藏 AIQueryModal 主體
+            // 這樣 RecipeDetailModal (z-130) 才能正確顯示在最上層
+            mode === 'inspiration' &&
+              isRecipeModalOpen &&
+              'invisible pointer-events-none',
           )}
         >
           <div

@@ -275,6 +275,8 @@ export const SharedListDetail = ({
               initialData={editingItem}
               initialItems={editingItems}
               onClose={handleCloseForm}
+              refrigeratorId={list?.refrigeratorId}
+              listName={list?.title}
             />
           )}
         </>

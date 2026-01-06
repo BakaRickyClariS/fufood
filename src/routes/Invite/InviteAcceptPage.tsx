@@ -99,7 +99,7 @@ const InviteAcceptPage = () => {
           setStatus('success');
           setTimeout(() => {
             navigate('/');
-          }, 1500);
+          }, 2500);
           return;
         }
 
@@ -144,7 +144,7 @@ const InviteAcceptPage = () => {
               console.log('找到新加入的群組:', newGroup.name);
               dispatch(setActiveRefrigeratorId(newGroup.id));
               setStatus('success');
-              setTimeout(() => navigate('/'), 1500);
+              setTimeout(() => navigate('/'), 2500);
               return;
             }
 
@@ -163,7 +163,7 @@ const InviteAcceptPage = () => {
             if (latestGroup) {
               dispatch(setActiveRefrigeratorId(latestGroup.id));
               setStatus('success');
-              setTimeout(() => navigate('/'), 1500);
+              setTimeout(() => navigate('/'), 2500);
               return;
             }
           }
@@ -250,7 +250,7 @@ const InviteAcceptPage = () => {
       // 成功後導向首頁
       setTimeout(() => {
         navigate('/');
-      }, 2000);
+      }, 2500);
     } catch (err: any) {
       console.error('加入群組失敗:', err);
 
@@ -266,7 +266,7 @@ const InviteAcceptPage = () => {
         dispatch(setActiveRefrigeratorId(invitation.refrigeratorId));
         dispatch(fetchGroups());
         setStatus('success');
-        setTimeout(() => navigate('/'), 1500);
+        setTimeout(() => navigate('/'), 2500);
         return;
       }
 
@@ -354,6 +354,12 @@ const InviteAcceptPage = () => {
             </div>
             <h2 className="text-xl font-bold text-neutral-900">加入成功！</h2>
             <p className="text-neutral-500">即將跳轉到首頁...</p>
+            <Button
+              onClick={() => navigate('/')}
+              className="mt-2 bg-primary-400 hover:bg-primary-500 text-white"
+            >
+              前往首頁
+            </Button>
           </div>
         )}
 
