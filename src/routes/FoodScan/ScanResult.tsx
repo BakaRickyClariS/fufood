@@ -304,40 +304,58 @@ const ScanResult: React.FC = () => {
   // Batch confirm all handler
   const handleConfirmAll = async () => {
     setSubmitStatus('submitting');
-    try {
-      // Submit all pending items
-      let successCount = 0;
 
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        if (item.status === 'pending') {
+    // Track results
+    let successCount = 0;
+    const failedIndices: number[] = [];
+    const successIndices: number[] = [];
+
+    // We need to process items one by one
+    // CAUTION: resolving Redux state changes in loop is tricky since indices shift if we delete immediately.
+    // Strategy:
+    // 1. Try to submit all pending items.
+    // 2. record which indices succeeded.
+    // 3. Dispatch remove actions for successful indices (from largest to smallest to maintain index validity) or use a bulk remove if available.
+    // Since we only have removeItem(index), we must be careful.
+
+    // Snapshot current items to avoid index confusion if state updates async (though redux state in var is snapshot)
+    const currentItems = [...items];
+
+    for (let i = 0; i < currentItems.length; i++) {
+      const item = currentItems[i];
+      // Only process pending items
+      if (item.status === 'pending') {
+        try {
           await foodScanApi.submitFoodItem(item.data);
           successCount++;
+          successIndices.push(i);
+        } catch (err) {
+          console.error(`Item ${i} (${item.data.productName}) failed:`, err);
+          failedIndices.push(i);
         }
       }
+    }
 
-      // 批次入庫成功後觸發庫存列表更新
+    // Update submitted count state
+    setSubmittedCount((prev) => prev + successCount);
+
+    if (successCount > 0) {
+      // Invalidate queries to refresh inventory
       queryClient.invalidateQueries({ queryKey: inventoryKeys.lists() });
 
-      setSubmittedCount(successCount);
-
-      // 發送推播通知 (批次)
+      // 发送推播通知 (批次) - 只針對成功的項目發送
       try {
-        if (successCount > 0 && targetGroupId) {
+        if (targetGroupId) {
           let targetUserIds: string[] = [];
           try {
             const members = await groupsApi.getMembers(targetGroupId);
             targetUserIds = members.map((m) => m.id);
           } catch (fetchErr) {
-            console.warn(
-              `Failed to fetch members for group ${targetGroupId}:`,
-              fetchErr,
-            );
+            // ... error handling
             if (user?.id) targetUserIds = [user.id];
           }
 
           if (targetUserIds.length > 0) {
-            // 取得群組名稱和使用者名稱
             const currentGroup = groups.find((g) => g.id === targetGroupId);
             const groupName = currentGroup?.name || '我的冰箱';
             const actorName = user?.displayName || user?.email || '使用者';
@@ -352,7 +370,7 @@ const ScanResult: React.FC = () => {
                 notificationService
                   .sendNotification({
                     type: 'inventory',
-                    subType: 'stockIn', // 新增 subType
+                    subType: 'stockIn',
                     title: 'AI 辨識完成！食材已入庫',
                     body: message,
                     userIds: targetUserIds,
@@ -378,16 +396,43 @@ const ScanResult: React.FC = () => {
       } catch (notifyError) {
         console.error('Notification error:', notifyError);
       }
+    }
 
+    // Handle UI updates based on results
+    if (successIndices.length > 0) {
+      // Remove successful items.
+      // To remove multiple items by index without messing up subsequent indices, remove from largest index to smallest.
+      const indicesToRemove = [...successIndices].sort((a, b) => b - a);
+
+      indicesToRemove.forEach((index) => {
+        dispatch(removeItem(index));
+      });
+    }
+
+    setSubmitStatus('idle'); // Always return to idle to allow user to retry failed items or confirm success
+
+    // Decision: What to show?
+    // If ALL succeeded -> Show Success Modal
+    // If PARTIAL succeeded -> Maybe show toast or partial success msg?
+    // Current requirement: "背景通知有跳出入庫完成通知" -> implies success modal might be confusing if shown for partial.
+    // Let's stick to logic: If nothing left (all succeeded), show modal. If some left, user sees them.
+
+    // Check remaining items count AFTER removal
+    const remainingCount = currentItems.length - successCount;
+
+    if (remainingCount === 0) {
       setSubmitStatus('completed');
-
       setTimeout(() => {
-        // Show success modal (don't reset here - let navigation handlers reset)
         setShowSuccessModal(true);
-      }, 800);
-    } catch (error) {
-      console.error('Batch submission failed:', error);
-      setSubmitStatus('idle');
+      }, 500);
+    } else {
+      // Maybe show a toast about failed items?
+      // For now, doing nothing lets user see failed items are still there.
+      if (successCount > 0) {
+        // Optionally show a toast saying "X items added, Y failed"
+        // Using console for now as we don't have a standardized toast handy in this context,
+        // but the remaining items in list is a visual cue.
+      }
     }
   };
 

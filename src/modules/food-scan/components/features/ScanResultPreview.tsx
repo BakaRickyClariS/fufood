@@ -217,7 +217,7 @@ export const ScanResultPreview: React.FC<ScanResultPreviewProps> = ({
         onTouchEnd={isBatchMode ? onTouchEnd : undefined}
       >
         {/* 頂部裝飾圖片 - result.png (縮小到 60%) */}
-        <div className="relative w-full flex justify-center">
+        <div className="relative w-full flex justify-center pt-4">
           <img
             src={resultDecoration}
             alt="Result decoration"
@@ -375,7 +375,6 @@ export const ScanResultPreview: React.FC<ScanResultPreviewProps> = ({
               disabled={submitStatus !== 'idle'}
               className="w-full bg-white border-2 border-slate-100 text-slate-800 hover:bg-slate-50 py-3.5 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
             >
-              <CheckCheck size={20} />
               全部入庫
             </button>
           )}
