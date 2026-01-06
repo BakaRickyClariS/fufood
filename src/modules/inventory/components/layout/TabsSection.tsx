@@ -14,7 +14,7 @@ import {
   hideLayoutAppliedNotification,
 } from '@/modules/inventory/store/inventorySlice';
 import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
-import { useInventory } from '@/modules/inventory/hooks';
+import { useInventoryQuery } from '@/modules/inventory/api/queries';
 
 type MainTabId = 'overview' | 'settings';
 type SubTabId = 'all' | 'common' | 'expired';
@@ -32,10 +32,13 @@ const TabsSection = () => {
   const layoutNotification = useSelector(selectLayoutAppliedNotification);
   const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
 
-  // Fetch inventory items for FoodDetailModal
-  const { items: allItems, refetch } = useInventory(
-    activeRefrigeratorId || undefined,
-  );
+  // Fetch inventory items for FoodDetailModal (使用 TanStack Query 以便自動更新)
+  const { data: inventoryData, refetch } = useInventoryQuery({
+    refrigeratorId: activeRefrigeratorId || undefined,
+  });
+
+  // 從 query 結果中取得 items
+  const allItems = inventoryData?.data?.items ?? [];
   const [selectedItem, setSelectedItem] = useState<(typeof allItems)[0] | null>(
     null,
   );

@@ -16,7 +16,7 @@ export const DEFAULT_RECIPES: SaveRecipeInput[] = [
   {
     name: '涼拌小黃瓜',
     category: '中式料理',
-    imageUrl: `${RECIPE_IMAGE_BASE}/Spicy-cucumber-salad.png`,
+    imageUrl: `${RECIPE_IMAGE_BASE}/Spicy-cucumber-salad.webp`,
     servings: 2,
     cookTime: 30,
     difficulty: '簡單',
@@ -47,7 +47,7 @@ export const DEFAULT_RECIPES: SaveRecipeInput[] = [
   {
     name: '鐵鍋煎餃',
     category: '日式料理',
-    imageUrl: `${RECIPE_IMAGE_BASE}/Pan-fried-dumplings.png`,
+    imageUrl: `${RECIPE_IMAGE_BASE}/Pan-fried-dumplings.webp`,
     servings: 2,
     cookTime: 20,
     difficulty: '簡單',
@@ -71,7 +71,7 @@ export const DEFAULT_RECIPES: SaveRecipeInput[] = [
   {
     name: '青醬義大利麵蛤蠣',
     category: '義式料理',
-    imageUrl: `${RECIPE_IMAGE_BASE}/Pesto-spaghetti-clams.png`,
+    imageUrl: `${RECIPE_IMAGE_BASE}/Pesto-spaghetti-clams.webp`,
     servings: 2,
     cookTime: 25,
     difficulty: '中等',
@@ -93,7 +93,7 @@ export const DEFAULT_RECIPES: SaveRecipeInput[] = [
   {
     name: '雞絲飯',
     category: '中式料理',
-    imageUrl: `${RECIPE_IMAGE_BASE}/Shredded-chicken-rice.png`,
+    imageUrl: `${RECIPE_IMAGE_BASE}/Shredded-chicken-rice.webp`,
     servings: 2,
     cookTime: 30,
     difficulty: '簡單',
@@ -115,7 +115,7 @@ export const DEFAULT_RECIPES: SaveRecipeInput[] = [
   {
     name: '乾炒鮮蝦麵',
     category: '中式料理',
-    imageUrl: `${RECIPE_IMAGE_BASE}/Stir-fried-shrimp-noodles.png`,
+    imageUrl: `${RECIPE_IMAGE_BASE}/Stir-fried-shrimp-noodles.webp`,
     servings: 2,
     cookTime: 15,
     difficulty: '簡單',
