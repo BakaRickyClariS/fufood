@@ -115,6 +115,10 @@ export const useMarkAsReadMutation = () => {
       });
       queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
     },
+    onError: (error) => {
+      // 靜默處理錯誤，不阻塞 UI 操作（如跳轉）
+      console.warn('[Notification] Failed to mark as read:', error);
+    },
   });
 };
 
