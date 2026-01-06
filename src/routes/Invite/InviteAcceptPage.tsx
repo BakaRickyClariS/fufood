@@ -105,34 +105,70 @@ const InviteAcceptPage = () => {
 
         setInvitation(data);
         setStatus('valid');
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('驗證邀請失敗:', err);
 
-        // 即使 getInvitation API 失敗，也檢查是否已經透過 OAuth 加入了群組
-        // (後端可能在 OAuth callback 時已自動加入，但邀請記錄已被標記為已使用)
-        // 透過刷新群組列表來確認
+        // 檢查是否為 404 錯誤（表示 token 已被消耗，可能是 OAuth 已自動加入）
+        const is404Error =
+          err instanceof Error &&
+          (err.message.includes('404') ||
+            ('statusCode' in err && (err as any).statusCode === 404));
+
+        if (!is404Error) {
+          // 非 404 錯誤，直接顯示錯誤
+          setStatus('error');
+          setError('邀請連結無效或已過期');
+          return;
+        }
+
+        // 404 錯誤：token 可能已被消耗（後端 OAuth callback 已處理）
+        // 刷新群組列表，檢查是否有新群組加入
+        console.log('邀請 token 返回 404，檢查是否已透過 OAuth 加入群組...');
+
         try {
+          // 記錄刷新前的群組 ID 列表
+          const previousGroupIds = new Set(currentGroups.map((g) => g.id));
+
           const refreshResult = await dispatch(fetchGroups());
           const refreshedGroups = refreshResult.payload as typeof currentGroups;
 
-          // 如果群組數量增加了，很可能是剛剛透過 OAuth 加入的
-          if (
-            refreshedGroups &&
-            refreshedGroups.length > currentGroups.length
-          ) {
-            // 找到新加入的群組（假設是最新的那個）
-            const newGroup = refreshedGroups.find(
-              (g) => !currentGroups.some((cg) => cg.id === g.id),
+          if (refreshedGroups && refreshedGroups.length > 0) {
+            // 找出真正的新群組（不在之前的列表中）
+            const newGroups = refreshedGroups.filter(
+              (g) => !previousGroupIds.has(g.id),
             );
-            if (newGroup) {
+
+            if (newGroups.length > 0) {
+              // 有新群組加入！使用第一個新群組
+              const newGroup = newGroups[0];
+              console.log('找到新加入的群組:', newGroup.name);
               dispatch(setActiveRefrigeratorId(newGroup.id));
               setStatus('success');
               setTimeout(() => navigate('/'), 1500);
               return;
             }
+
+            // 沒有新群組，但 404 表示 token 曾經有效
+            // 可能用戶已經是該群組成員（之前就加入過）
+            // 這種情況下，我們仍然視為成功，選擇最近更新的群組
+            console.log(
+              '沒有新群組，但 token 已消耗，可能用戶已是成員。切換到最近的群組。',
+            );
+            const sortedGroups = [...refreshedGroups].sort((a, b) => {
+              const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+              const dateB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+              return dateB - dateA;
+            });
+            const latestGroup = sortedGroups[0];
+            if (latestGroup) {
+              dispatch(setActiveRefrigeratorId(latestGroup.id));
+              setStatus('success');
+              setTimeout(() => navigate('/'), 1500);
+              return;
+            }
           }
-        } catch {
-          // 靜默處理
+        } catch (refreshErr) {
+          console.error('刷新群組列表失敗:', refreshErr);
         }
 
         setStatus('error');
