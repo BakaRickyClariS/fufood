@@ -1,7 +1,9 @@
 import { createContext, useContext, type ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useFCM } from '@/hooks/useFCM';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useNotificationPolling } from '@/modules/notifications/hooks';
+import { invalidateQueriesByNotification } from '@/modules/notifications/utils/invalidation';
 
 type FCMContextValue = {
   /** FCM Token */
@@ -53,11 +55,22 @@ export const FCMProvider = ({
 }: FCMProviderProps) => {
   const { user, isAuthenticated } = useAuth();
 
+  // 取得 queryClient 實例
+  const queryClient = useQueryClient();
+
   // 所有平台都使用 FCM（iOS 後端已配置 APNs）
   const fcm = useFCM({
     userId: isAuthenticated ? (user?.id ?? null) : null,
     autoRequest: autoRequest && isAuthenticated,
-    onMessageReceived,
+    onMessageReceived: (payload) => {
+      // 1. 執行外部傳入的回調（如果有的話）
+      onMessageReceived?.(payload);
+
+      // 2. 根據通知類型自動刷新資料
+      if (payload?.data) {
+        invalidateQueriesByNotification(queryClient, payload.data);
+      }
+    },
   });
 
   // 只有在登入且 FCM 已準備好（註冊成功或無法註冊）時才啟動 Polling
