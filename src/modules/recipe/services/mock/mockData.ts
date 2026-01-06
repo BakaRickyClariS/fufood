@@ -1,11 +1,7 @@
 import type { Recipe, RecipeListItem } from '@/modules/recipe/types';
 
-// Recipe 圖片 - 必須使用 import 才能在 Vercel 部署後正確顯示
-import spicyCucumberSalad from '@/assets/images/recipe/Spicy-cucumber-salad.png';
-import panFriedDumplings from '@/assets/images/recipe/Pan-fried-dumplings.png';
-import pestoSpaghettiClams from '@/assets/images/recipe/Pesto-spaghetti-clams.png';
-import shreddedChickenRice from '@/assets/images/recipe/Shredded-chicken-rice.png';
-import stirFriedShrimpNoodles from '@/assets/images/recipe/Stir-fried-shrimp-noodles.png';
+// 使用 public 資料夾的固定路徑，避免 Vite hash 導致部署後路徑失效
+const RECIPE_IMAGE_BASE = '/images/recipe';
 
 export const MOCK_RECIPES: Recipe[] = [
   // Dashboard 推薦食譜
@@ -15,7 +11,7 @@ export const MOCK_RECIPES: Recipe[] = [
     name: '涼拌小黃瓜',
     category: '中式料理',
     series: '慢火煮系列',
-    imageUrl: spicyCucumberSalad,
+    imageUrl: `${RECIPE_IMAGE_BASE}/Spicy-cucumber-salad.png`,
     servings: 2,
     cookTime: 30,
     difficulty: '簡單',
@@ -65,7 +61,7 @@ export const MOCK_RECIPES: Recipe[] = [
     id: 'recipe-002',
     name: '鐵鍋煎餃',
     category: '日式料理',
-    imageUrl: panFriedDumplings,
+    imageUrl: `${RECIPE_IMAGE_BASE}/Pan-fried-dumplings.png`,
     servings: 2,
     cookTime: 20,
     difficulty: '簡單',
@@ -98,7 +94,7 @@ export const MOCK_RECIPES: Recipe[] = [
     id: 'recipe-003',
     name: '青醬義大利麵蛤蠣',
     category: '義式料理',
-    imageUrl: pestoSpaghettiClams,
+    imageUrl: `${RECIPE_IMAGE_BASE}/Pesto-spaghetti-clams.png`,
     servings: 2,
     cookTime: 25,
     difficulty: '中等',
@@ -131,7 +127,7 @@ export const MOCK_RECIPES: Recipe[] = [
     id: 'recipe-004',
     name: '雞絲飯',
     category: '韓式料理',
-    imageUrl: shreddedChickenRice,
+    imageUrl: `${RECIPE_IMAGE_BASE}/Shredded-chicken-rice.png`,
     servings: 2,
     cookTime: 30,
     difficulty: '簡單',
@@ -164,7 +160,7 @@ export const MOCK_RECIPES: Recipe[] = [
     id: 'recipe-005',
     name: '乾炒鮮蝦麵',
     category: '中式料理',
-    imageUrl: stirFriedShrimpNoodles,
+    imageUrl: `${RECIPE_IMAGE_BASE}/Stir-fried-shrimp-noodles.png`,
     servings: 2,
     cookTime: 15,
     difficulty: '簡單',
