@@ -23,6 +23,7 @@ import { getRefrigeratorId } from '@/modules/inventory/utils/getRefrigeratorId';
 import { useAuth } from '@/modules/auth';
 import { groupsApi } from '@/modules/groups/api';
 import { inventoryKeys } from '@/modules/inventory/api/queries';
+import { useNotificationMetadata } from '@/modules/notifications/hooks/useNotificationMetadata';
 import { useEffect } from 'react';
 
 const ScanResult: React.FC = () => {
@@ -43,6 +44,11 @@ const ScanResult: React.FC = () => {
   // ScanResult doesn't have groupId in URL, so we rely on active or default
   const targetGroupId =
     activeRefrigeratorId || getRefrigeratorId(undefined, groups);
+
+  // 使用統一的 hook 取得通知 metadata（確保一致性）
+  const { groupName, actorName, actorId } = useNotificationMetadata(
+    targetGroupId || undefined,
+  );
 
   useEffect(() => {
     // Ensure groups are loaded so we can get the ID
@@ -161,10 +167,13 @@ const ScanResult: React.FC = () => {
           }
 
           if (targetUserIds.length > 0) {
-            // 取得群組名稱和使用者名稱
-            const currentGroup = groups.find((g) => g.id === notifyGroupId);
-            const groupName = currentGroup?.name || '我的冰箱';
-            const actorName = user?.displayName || user?.email || '使用者';
+            // Debug log 確認 metadata 值
+            console.log('🔔 [Stock-In Notification] Metadata:', {
+              groupName,
+              actorName,
+              actorId,
+              targetUserIds,
+            });
 
             import('@/api/services/notification').then(
               ({ notificationService }) => {
@@ -180,8 +189,10 @@ const ScanResult: React.FC = () => {
                     groupId: undefined,
                     groupName,
                     actorName,
+                    actorId,
                     group_name: groupName,
                     actor_name: actorName,
+                    actor_id: actorId,
                     action: {
                       type: 'inventory',
                       payload: {
@@ -356,14 +367,18 @@ const ScanResult: React.FC = () => {
           }
 
           if (targetUserIds.length > 0) {
-            const currentGroup = groups.find((g) => g.id === targetGroupId);
-            const groupName = currentGroup?.name || '我的冰箱';
-            const actorName = user?.displayName || user?.email || '使用者';
-
             const message =
               successCount === 1
                 ? '剛買的食材已安全進入庫房，快去看看庫房！'
                 : `${successCount} 項新食材已安全進入庫房，快去看看庫房！`;
+
+            // Debug log 確認 metadata 值
+            console.log('🔔 [Batch Stock-In Notification] Metadata:', {
+              groupName,
+              actorName,
+              actorId,
+              targetUserIds,
+            });
 
             import('@/api/services/notification').then(
               ({ notificationService }) => {
@@ -377,8 +392,10 @@ const ScanResult: React.FC = () => {
                     groupId: undefined,
                     groupName,
                     actorName,
+                    actorId,
                     group_name: groupName,
                     actor_name: actorName,
+                    actor_id: actorId,
                     action: {
                       type: 'inventory',
                       payload: {
