@@ -1,5 +1,5 @@
 ﻿import React, { useRef, useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Trash2, CheckCheck } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import gsap from 'gsap';
 import type { FoodItemInput } from '../../types';
 import { calculateShelfLife } from '../../utils/dateHelpers';

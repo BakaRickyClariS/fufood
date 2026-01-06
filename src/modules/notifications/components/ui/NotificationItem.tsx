@@ -153,7 +153,7 @@ export const NotificationItem = ({
           </div>
         )}
 
-        <h3 className="text-sm font-bold text-gray-900 mb-1 leading-tight">
+        <h3 className="text-sm font-bold text-gray-900 mb-1 leading-tight line-clamp-1">
           {title}
         </h3>
 
