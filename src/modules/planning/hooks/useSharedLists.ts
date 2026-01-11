@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSelector } from 'react-redux';
 import type {
   SharedList,
   CreateSharedListInput,
   SharedListStatus,
 } from '../types';
 import { sharedListApi } from '../services/api/sharedListApi';
+import { selectAllGroups } from '@/modules/groups/store/groupsSlice';
+import { useAuth } from '@/modules/auth';
 
 export const useSharedLists = (
   refrigeratorId: string,
@@ -15,6 +18,8 @@ export const useSharedLists = (
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasLoadedRef = useRef(false);
+  const groups = useSelector(selectAllGroups);
+  const { user } = useAuth();
 
   // Status 計算邏輯
   const computeStatus = (startsAt: string): SharedListStatus => {
@@ -79,14 +84,24 @@ export const useSharedLists = (
 
       // 發送通知給群組成員
       try {
+        // 取得群組名稱和使用者名稱
+        const currentGroup = groups.find((g) => g.id === refrigeratorId);
+        const groupName = currentGroup?.name || '我的冰箱';
+        const actorName = user?.displayName || user?.email || '使用者';
+
         const { notificationsApiImpl } = await import(
           '@/modules/notifications/api/notificationsApiImpl'
         );
         await notificationsApiImpl.sendNotification({
           groupId: refrigeratorId,
-          title: '新增共享清單',
-          body: `已建立新清單：${input.title}`,
+          title: `新採購清單「${input.title}」出爐！`,
+          body: '採買小隊報告！新清單已建立，快來看看需要買什麼！',
           type: 'shopping',
+          subType: 'list', // 新增 subType
+          groupName,
+          actorName,
+          group_name: groupName,
+          actor_name: actorName,
           action: {
             type: 'shopping-list',
             payload: {
@@ -145,13 +160,30 @@ export const useSharedListDetail = (id: string | undefined) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Status 計算邏輯（與 useSharedLists 一致）
+  const computeStatus = (startsAt: string): SharedListStatus => {
+    const startDate = new Date(startsAt);
+    // 設定為當天 23:59:59
+    startDate.setHours(23, 59, 59, 999);
+
+    const now = new Date();
+
+    // 只有當現在時間超過 startsAt 當天結束時（即隔天）才標記為已完成
+    return now.getTime() > startDate.getTime() ? 'completed' : 'in-progress';
+  };
+
   const fetchList = useCallback(async () => {
     if (!id) return;
     setIsLoading(true);
     setError(null);
     try {
       const data = await sharedListApi.getSharedListById(id);
-      setList(data);
+      // 前端加工 Status（與 useSharedLists 一致）
+      const processedList = {
+        ...data,
+        status: computeStatus(data.startsAt),
+      };
+      setList(processedList);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Failed to fetch list details',

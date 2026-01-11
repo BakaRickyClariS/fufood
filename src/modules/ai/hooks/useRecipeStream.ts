@@ -14,6 +14,7 @@ import {
 } from '../utils/recipeTransformer';
 import { useSaveAIRecipeMutation } from '../api/queries';
 import { useSendNotificationMutation } from '@/modules/notifications/api/queries';
+import { useNotificationMetadata } from '@/modules/notifications/hooks/useNotificationMetadata';
 import type { AIRecipeRequest, AIStreamEvent } from '../types';
 
 export type StreamState = {
@@ -62,6 +63,11 @@ export const useRecipeStream = () => {
 
   // 從 Redux 取得當前冰箱 ID（根據 Code Review 建議，統一來源）
   const refrigeratorId = useSelector(selectActiveRefrigeratorId);
+
+  // 取得群組名稱和操作者資訊
+  const { groupName, actorName, actorId } = useNotificationMetadata(
+    refrigeratorId || undefined,
+  );
 
   // Mutations
   const { mutateAsync: saveRecipe } = useSaveAIRecipeMutation();
@@ -177,6 +183,10 @@ export const useRecipeStream = () => {
                   title: 'AI 食譜生成完成',
                   body: msg,
                   type: 'recipe',
+                  subType: 'generate',
+                  group_name: groupName,
+                  actor_name: actorName,
+                  actor_id: actorId,
                   action: {
                     type: 'recipe',
                     payload: { recipeId: finalRecipes[0].id },
@@ -225,7 +235,14 @@ export const useRecipeStream = () => {
         }
       }
     },
-    [refrigeratorId, saveRecipe, sendNotification],
+    [
+      refrigeratorId,
+      groupName,
+      actorName,
+      actorId,
+      saveRecipe,
+      sendNotification,
+    ],
   );
 
   /**

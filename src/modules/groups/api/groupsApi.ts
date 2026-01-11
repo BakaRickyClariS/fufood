@@ -435,12 +435,14 @@ export const groupsApi = {
   },
 
   /**
-   * 離開群組（冰箱）
-   * DELETE /api/v1/refrigerators/{groupId}/members/{memberId}
+   * 成員自行退出冰箱群組
+   * DELETE /api/v1/refrigerator/{refrigeratorId}/leave
+   *
+   * 注意：擁有者不能退出自己的群組
    */
-  leave: async (groupId: string, memberId: string): Promise<void> => {
-    const endpoint = `${API_BASE}/${groupId}/members/${memberId}`;
-    console.log('� [Groups API] 離開群組:', { groupId, memberId });
+  leaveGroup: async (groupId: string): Promise<void> => {
+    const endpoint = `/api/v1/refrigerator/${groupId}/leave`;
+    console.log('🚪 [Groups API] 退出群組:', groupId);
 
     return tryRealApiWithMockFallback(
       'DELETE',
@@ -456,12 +458,36 @@ export const groupsApi = {
   },
 
   /**
-   * 移除成員
-   * DELETE /api/v1/refrigerators/{groupId}/members/{memberId}
+   * @deprecated 請使用 leaveGroup（自己退出）或 removeMemberByOwner（擁有者移除）
+   * 離開群組（冰箱）
+   */
+  leave: async (groupId: string, memberId: string): Promise<void> => {
+    console.warn(
+      '⚠️ leave 方法已棄用，請使用 leaveGroup 或 removeMemberByOwner',
+    );
+    const endpoint = `${API_BASE}/${groupId}/members/${memberId}`;
+    console.log('📤 [Groups API] 離開群組:', { groupId, memberId });
+
+    return tryRealApiWithMockFallback(
+      'DELETE',
+      endpoint,
+      () => backendApi.delete<void>(endpoint),
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return;
+      },
+    );
+  },
+
+  /**
+   * 擁有者移除冰箱成員
+   * DELETE /api/v1/refrigerator/{refrigeratorId}/memberships/{memberId}
+   *
+   * 注意：只有冰箱擁有者可以移除成員
    */
   removeMember: async (groupId: string, memberId: string): Promise<void> => {
-    const endpoint = `${API_BASE}/${groupId}/members/${memberId}`;
-    console.log('� [Groups API] 移除成員:', { groupId, memberId });
+    const endpoint = `/api/v1/refrigerator/${groupId}/memberships/${memberId}`;
+    console.log('❌ [Groups API] 移除成員:', { groupId, memberId });
 
     return tryRealApiWithMockFallback(
       'DELETE',

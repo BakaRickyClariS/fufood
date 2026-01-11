@@ -1,34 +1,44 @@
-import { useNavigate } from 'react-router-dom';
-import { Crown, ShoppingBag, MessageCircle, Bell } from 'lucide-react';
+import {
+  ShieldUser,
+  ClipboardClock,
+  UserRoundCheck,
+  Bubbles,
+} from 'lucide-react';
+import { cn } from '@/shared/utils/styleUtils';
 
-const QuickActions = () => {
-  const navigate = useNavigate();
+type QuickActionsProps = {
+  onNavigate: (key: string) => void;
+};
 
+const QuickActions = ({ onNavigate }: QuickActionsProps) => {
   const actions = [
     {
       id: 'subscription',
       label: '會員方案',
-      icon: <Crown className="w-6 h-6 text-neutral-700" />,
-      bg: 'bg-primary-100', // Example different color or just same
-      onClick: () => navigate('/settings/subscription'),
+      icon: <ShieldUser className="w-6 h-6 text-neutral-800" />,
+      bg: 'bg-primary-400',
+      onClick: () => onNavigate('subscription'),
     },
     {
       id: 'purchase-history',
       label: '購買紀錄',
-      icon: <ShoppingBag className="w-6 h-6 text-neutral-700" />,
-      onClick: () => navigate('/settings/purchase-history'), // Assuming route exists or will exist
+      icon: <ClipboardClock className="w-6 h-6 text-neutral-800" />,
+      bg: 'bg-primary-300',
+      onClick: () => onNavigate('purchase-history'),
     },
     {
       id: 'line-binding',
       label: 'LINE綁定',
-      icon: <MessageCircle className="w-6 h-6 text-neutral-700" />,
-      onClick: () => console.log('LINE Binding Clicked'), // To be implemented
+      icon: <UserRoundCheck className="w-6 h-6 text-neutral-800" />,
+      bg: 'bg-primary-200',
+      onClick: () => onNavigate('line-binding'),
     },
     {
-      id: 'notifications',
-      label: '推播通知',
-      icon: <Bell className="w-6 h-6 text-neutral-700" />,
-      onClick: () => navigate('/settings/notifications'),
+      id: 'consumption-reasons',
+      label: '消耗原因',
+      icon: <Bubbles className="w-6 h-6 text-neutral-800" />,
+      bg: 'bg-primary-100',
+      onClick: () => onNavigate('consumption-reasons'),
     },
   ];
 
@@ -41,10 +51,16 @@ const QuickActions = () => {
             onClick={action.onClick}
             className="flex flex-col items-center gap-2 group"
           >
-            <div className="w-12 h-12 rounded-full bg-primary-100/50 flex items-center justify-center group-hover:bg-primary-200 transition-colors">
+            {/* Dynamic background color usage */}
+            <div
+              className={cn(
+                'w-12 h-12 rounded-full flex items-center justify-center transition-colors',
+                action.bg,
+              )}
+            >
               {action.icon}
             </div>
-            <span className="text-xs font-medium text-neutral-700">
+            <span className="text-[12px] font-semibold text-neutral-700">
               {action.label}
             </span>
           </button>

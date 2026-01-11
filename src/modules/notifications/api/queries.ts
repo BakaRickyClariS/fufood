@@ -4,6 +4,7 @@
  * 提供通知模組的快取和狀態管理
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { identity } from '@/shared/utils/identity';
 import { notificationsApi } from './client';
 import type { GetNotificationsRequest, NotificationCategory } from '../types';
 
@@ -53,9 +54,13 @@ export const useMarkAsReadBatchMutation = () => {
  * 取得通知列表
  */
 export const useNotificationsQuery = (params?: GetNotificationsRequest) => {
+  // 使用共用模組檢查是否可以發送認證請求
+  const shouldQuery = identity.canMakeAuthenticatedRequest();
+
   return useQuery({
     queryKey: notificationKeys.list(params),
     queryFn: () => notificationsApi.getNotifications(params),
+    enabled: shouldQuery,
     staleTime: 1000 * 60 * 2, // 2 分鐘
   });
 };
@@ -109,6 +114,10 @@ export const useMarkAsReadMutation = () => {
         queryKey: notificationKeys.detail(variables.id),
       });
       queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
+    },
+    onError: (error) => {
+      // 靜默處理錯誤，不阻塞 UI 操作（如跳轉）
+      console.warn('[Notification] Failed to mark as read:', error);
     },
   });
 };

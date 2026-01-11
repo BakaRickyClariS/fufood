@@ -125,22 +125,57 @@ export const authApi = {
   updateProfile: async (
     data: UpdateProfilePayload,
   ): Promise<ProfileResponse> => {
-    console.log('[AuthApi] UpdateProfile: Starting...');
+    console.log('[AuthApi] UpdateProfile: Starting...', data);
 
-    // 1. 嘗試呼叫真實 API
     try {
-      console.log('[AuthApi] UpdateProfile: Trying Real API...');
-      const result = await backendApi.put<ProfileResponse>(
-        `/api/v1/profile`,
-        data,
-      );
-      console.log('[AuthApi] UpdateProfile: Real API Success');
-      return result;
-    } catch (error) {
-      console.warn('[AuthApi] UpdateProfile: Real API Failed:', error);
+      if (USE_MOCK) throw new Error('MOCK_MODE_FORCE');
 
-      // 2. 檢查是否啟用 Mock
+      // 1. 取得當前完整資料
+      console.log('[AuthApi] UpdateProfile: Fetching current profile...');
+      const currentProfileRes =
+        await backendApi.get<ProfileResponse>('/api/v1/profile');
+      const currentProfile = currentProfileRes.data;
+
+      // 2. 建構符合 Swagger 定義的 Payload
+      // 依據 Swagger (uploaded_image_1)，端點為 /api/v1/profile 且 Body 包含特定欄位
+      const payload = {
+        name: data.name || currentProfile.name,
+        email: data.email || currentProfile.email,
+        profilePictureUrl:
+          data.profilePictureUrl || currentProfile.profilePictureUrl,
+        avatar: data.avatar || currentProfile.avatar,
+        // Swagger 顯示欄位為 preferences (Array of string)
+        preferences:
+          data.preferences ||
+          currentProfile.preferences ||
+          (currentProfile as any).preference ||
+          [],
+        gender: data.gender ?? currentProfile.gender,
+        customGender: data.customGender ?? currentProfile.customGender,
+      };
+
+      console.log(
+        '[AuthApi] UpdateProfile: Sending PUT to /api/v1/profile',
+        payload,
+      );
+
+      // 3. 發送 PUT 請求 (無 ID)
+      // 如果此處發生 Failed to fetch，極高機率是後端 CORS 未開放 PUT 方法
+      return await backendApi.put<ProfileResponse>(`/api/v1/profile`, payload);
+    } catch (error) {
       if (!USE_MOCK) {
+        const errMessage = (error as Error)?.message || '';
+        // 偵測 CORS 相關錯誤
+        if (errMessage.includes('Failed to fetch')) {
+          console.error(
+            '[AuthApi] Critical: CORS Error Detected. 請確認後端是否允許 PUT /api/v1/profile 的跨域請求 (Access-Control-Allow-Methods).',
+          );
+        }
+
+        // @ts-ignore
+        if (error?.message !== 'MOCK_MODE_FORCE') {
+          console.warn('[AuthApi] UpdateProfile: Real API Failed:', error);
+        }
         throw error;
       }
 
@@ -157,19 +192,23 @@ export const authApi = {
       const mockProfileData: ProfileData = {
         id: currentUser.id || `mock-user-${Date.now()}`,
         lineId: currentUser.lineId || '',
-        name: data.name,
-        profilePictureUrl: data.profilePictureUrl || currentUser.profilePictureUrl,
+        name: data.name || currentUser.name,
+        profilePictureUrl:
+          data.profilePictureUrl || currentUser.profilePictureUrl,
         email: data.email || currentUser.email,
-        preference: data.preference || [],
+        preferences: data.preferences || currentUser.preferences || [],
         avatar: data.avatar || currentUser.avatar,
-        gender: data.gender ?? 0,
-        customGender: data.customGender || null,
+        gender: data.gender ?? currentUser.gender ?? 0,
+        customGender: data.customGender ?? currentUser.customGender,
         subscriptionTier: 0,
         createdAt: currentUser.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
 
-      console.log('[AuthApi] UpdateProfile: Mock update complete', mockProfileData);
+      console.log(
+        '[AuthApi] UpdateProfile: Mock update complete',
+        mockProfileData,
+      );
       return { data: mockProfileData };
     }
   },

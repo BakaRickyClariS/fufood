@@ -1,14 +1,15 @@
-import React, { useEffect, useRef } from 'react';
+﻿import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { X } from 'lucide-react';
-import successImage from '@/assets/images/food-scan/inventory-success.png';
+import successImage from '@/assets/images/food-scan/inventory-success.webp';
 
 type StockInSuccessModalProps = {
   isOpen: boolean;
   onViewInventory: () => void;
   onContinueScan: () => void;
   itemCount: number;
+  failedCount?: number;
 };
 
 export const StockInSuccessModal: React.FC<StockInSuccessModalProps> = ({
@@ -16,6 +17,7 @@ export const StockInSuccessModal: React.FC<StockInSuccessModalProps> = ({
   onViewInventory,
   onContinueScan,
   itemCount,
+  failedCount = 0,
 }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -102,11 +104,18 @@ export const StockInSuccessModal: React.FC<StockInSuccessModalProps> = ({
           </div>
 
           {/* 項目計數 */}
-          <p className="text-neutral-500 text-sm mb-6">
-            已將{' '}
-            <span className="font-bold text-primary-500">{itemCount}</span>{' '}
-            項加入庫存
-          </p>
+          <div className="flex flex-col items-center gap-1 mb-6 text-sm">
+            <p className="text-neutral-500">
+              已將{' '}
+              <span className="font-bold text-primary-500">{itemCount}</span>{' '}
+              項加入庫存
+            </p>
+            {failedCount > 0 && (
+              <p className="text-red-500">
+                有 <span className="font-bold">{failedCount}</span> 項無法辨識
+              </p>
+            )}
+          </div>
 
           {/* 按鈕區域 */}
           <div className="w-full flex gap-2">
@@ -132,4 +141,3 @@ export const StockInSuccessModal: React.FC<StockInSuccessModalProps> = ({
     document.body,
   );
 };
-

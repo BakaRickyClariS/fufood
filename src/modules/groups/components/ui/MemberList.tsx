@@ -18,13 +18,15 @@ export const MemberList: FC<MemberListProps> = ({
   isDeleteMode = false,
   currentUserName,
 }) => (
-  <div className="bg-white rounded-[24px] overflow-hidden shadow-sm border border-stone-100">
+  // Remove wrapper styles (bg-white, shadow, border) as they are now in GroupMembers parent container
+  // or implicitly handled by the items list design in HomeModal style
+  <div className="flex flex-col">
     {members.map((member) => (
       <MemberItem
         key={member.id}
         member={member}
         onRemove={onRemoveMember}
-        showDeleteButton={isDeleteMode && member.role !== 'owner'} // 只有非 owner 且在刪除模式下才顯示
+        showDeleteButton={isDeleteMode && member.role !== 'owner'}
         isCurrentUser={
           currentUserName ? member.name === currentUserName : false
         }

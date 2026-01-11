@@ -10,7 +10,6 @@ import type {
 import { EditConsumptionReasonModal } from './EditConsumptionReasonModal';
 import { ConsumptionSuccessModal } from './ConsumptionSuccessModal';
 import { useConsumeItemMutation } from '@/modules/inventory/api/queries';
-import { useSendNotificationMutation } from '@/modules/notifications/api/queries'; // Added
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -22,12 +21,7 @@ import {
   selectConsumptionStep,
   selectConsumptionContextId,
 } from '@/modules/inventory/store/consumptionSlice';
-// import { useAuth } from '@/modules/auth';
-import { groupsApi } from '@/modules/groups/api';
-// The user said "Execute and update ... docs". I should check inventoryApi first?
-// I'll proceed assuming I might need to add it or it exists.
-// Based on file reads, I saw `inventoryApi` but didn't check `consumeItem`.
-// I'll implement logic assuming I can call it.
+import { useNotificationMetadata } from '@/modules/notifications/hooks/useNotificationMetadata';
 
 // Helper type extending ConsumptionItem with reason info
 type ItemWithReason = ConsumptionItem & {
@@ -100,7 +94,8 @@ export const ConsumptionModal = ({
   const consumptionItems = useSelector(selectConsumptionItems);
   const consumptionStep = useSelector(selectConsumptionStep);
   const consumptionContextId = useSelector(selectConsumptionContextId);
-  // const { user } = useAuth();
+  const { groupName, actorName, actorId } =
+    useNotificationMetadata(refrigeratorId);
 
   // Skip animation flag (local state based on restoration)
   const [skipAnimation, setSkipAnimation] = useState(false);
@@ -246,9 +241,6 @@ export const ConsumptionModal = ({
     }
   });
 
-  // useSendNotificationMutation added to imports (need to verify imports first)
-  const { mutateAsync: sendNotification } = useSendNotificationMutation();
-
   const submitConsumption = async (itemsToConsume: ItemWithReason[]) => {
     setIsSubmitting(true);
     try {
@@ -274,52 +266,45 @@ export const ConsumptionModal = ({
         }),
       );
 
-      // 發送推播通知
+      // 發送推播通知（使用 groupId 發送給群組所有成員，與清單建立一致）
       try {
         if (itemsToConsume.length > 0 && refrigeratorId) {
-          let targetUserIds: string[] = [];
-          try {
-            const members = await groupsApi.getMembers(refrigeratorId);
-            targetUserIds = members.map((m) => m.id);
-          } catch (fetchErr) {
-            console.warn(
-              `Failed to fetch members for group ${refrigeratorId}:`,
-              fetchErr,
-            );
-            // 當無法取得成員列表時，至少發給自己 (如果有的話)
-            // if (user?.id) targetUserIds = [user.id];
-          }
+          const firstItemName = itemsToConsume[0].ingredientName || '未知食材';
+          const otherCount = itemsToConsume.length - 1;
 
-          if (targetUserIds.length > 0) {
-            const firstItemName =
-              itemsToConsume[0].ingredientName || '未知食材';
+          console.log(
+            `[ConsumptionModal] Sending notification to group: ${refrigeratorId}`,
+            { groupName, actorName, actorId },
+          );
 
-            const otherCount = itemsToConsume.length - 1;
-            const message =
+          const { notificationsApiImpl } = await import(
+            '@/modules/notifications/api/notificationsApiImpl'
+          );
+          await notificationsApiImpl.sendNotification({
+            groupId: refrigeratorId, // 使用 groupId 發送給群組所有成員
+            type: 'inventory',
+            subType: 'consume',
+            title:
               otherCount > 0
-                ? `已消耗 ${firstItemName} 等 ${itemsToConsume.length} 項食材`
-                : `已消耗 ${firstItemName}`;
-
-            console.log(
-              `[ConsumptionModal] Sending notification: "${message}" to`,
-              targetUserIds,
-            );
-
-            // 使用 mutation 發送通知，會自動觸發 query invalidation
-            await sendNotification({
+                ? `${firstItemName} 等 ${itemsToConsume.length} 項食材已出動！`
+                : `${firstItemName} 完成任務，光榮退役！`,
+            body:
+              otherCount > 0
+                ? `冰箱小隊報告！${itemsToConsume.length} 項食材已順利上桌，任務達成！`
+                : `冰箱小隊報告！${firstItemName} 已順利上桌，美味任務達成！`,
+            groupName,
+            actorName,
+            actorId,
+            group_name: groupName,
+            actor_name: actorName,
+            actor_id: actorId,
+            action: {
               type: 'inventory',
-              title: '食材消耗通知',
-              body: message,
-              userIds: targetUserIds,
-              groupId: undefined,
-              action: {
-                type: 'inventory',
-                payload: {
-                  refrigeratorId: refrigeratorId,
-                },
+              payload: {
+                refrigeratorId: refrigeratorId,
               },
-            });
-          }
+            },
+          });
         }
       } catch (notifyError) {
         console.error('Notification error:', notifyError);

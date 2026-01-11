@@ -10,7 +10,7 @@ import {
   RECIPE_CATEGORIES,
   CATEGORY_IMAGES,
 } from '@/modules/recipe/constants/categories';
-import { RecipeDetailModal } from '@/modules/recipe/components/ui/RecipeDetailModal';
+import { useRecipeModal } from '@/modules/recipe/providers/RecipeModalProvider';
 
 // 烹飪時間分類
 const COOKING_TIME_SECTIONS = [
@@ -32,33 +32,33 @@ import { useSearchParams, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 
-// ... (imports)
-
 export const RecipeList = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const { openRecipeModal } = useRecipeModal();
 
   // 優先從 location.state 取得完整食譜物件 (AI 生成/通知點擊)
-  const openRecipeFromState = (location.state as { openRecipe?: RecipeListItem })?.openRecipe;
-  const recipeIdFromUrl = searchParams.get('id') || searchParams.get('recipeId');
+  const openRecipeFromState = (
+    location.state as { openRecipe?: RecipeListItem }
+  )?.openRecipe;
+  const recipeIdFromUrl =
+    searchParams.get('id') || searchParams.get('recipeId');
 
   const [selectedCategory, setSelectedCategory] = useState<
     RecipeCategory | undefined
   >();
-  const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
-  const [selectedRecipe, setSelectedRecipe] = useState<RecipeListItem | null>(
-    null,
-  );
 
-  const { recipes, isLoading, error } = useRecipes(selectedCategory, activeRefrigeratorId || undefined);
+  const { recipes, isLoading, error } = useRecipes(
+    selectedCategory,
+    activeRefrigeratorId || undefined,
+  );
 
   // Handle recipe selection (from State or URL)
   useEffect(() => {
-    // 1. 如果有 State 中的完整食譜 (例如 AI 生成剛剛產生的)，直接使用，不需查列表
+    // 1. 如果有 State 中的完整食譜 (例如 AI 生成剛剛產生的)，直接使用
     if (openRecipeFromState) {
-      setSelectedRecipe(openRecipeFromState);
-      setSelectedRecipeId(openRecipeFromState.id);
+      openRecipeModal(openRecipeFromState);
       return;
     }
 
@@ -66,24 +66,16 @@ export const RecipeList = () => {
     if (recipeIdFromUrl && recipes.length > 0) {
       const recipe = recipes.find((r) => r.id === recipeIdFromUrl);
       if (recipe) {
-        setSelectedRecipe(recipe);
-        setSelectedRecipeId(recipeIdFromUrl);
-      } else {
-        // 若列表中找不到 (可能是直接貼連結來的，且不在當前分頁/分類中)，
-        // 為了讓 Modal 開啟並嘗試自行 fetch，我們先設定 ID
-        // RecipeDetailModal 內部會嘗試 fetch (如果沒有傳入 full recipe)
-        setSelectedRecipeId(recipeIdFromUrl);
-        // selectedRecipe 保持為 null，讓 Modal 處理載入
+        openRecipeModal(recipe);
       }
     }
-  }, [recipeIdFromUrl, recipes, openRecipeFromState]);
+  }, [recipeIdFromUrl, recipes, openRecipeFromState, openRecipeModal]);
 
   // Handle manual recipe click
   const handleRecipeClick = (id: string) => {
     const recipe = recipes.find((r) => r.id === id);
     if (recipe) {
-      setSelectedRecipe(recipe);
-      setSelectedRecipeId(id);
+      openRecipeModal(recipe);
     }
   };
 
@@ -117,11 +109,6 @@ export const RecipeList = () => {
     return groups;
   }, [recipes]);
 
-  const handleCloseModal = () => {
-    setSelectedRecipeId(null);
-    setSelectedRecipe(null);
-  };
-
   if (error) {
     return <div className="p-4 text-center text-red-500">{error}</div>;
   }
@@ -131,44 +118,36 @@ export const RecipeList = () => {
   }
 
   return (
-    <>
-      <div className="space-y-6 bg-white pt-7">
-        <div className="pl-0">
-          <CategoryGrid
-            categories={categoryItems}
-            selectedId={selectedCategory}
-            onCategoryClick={setSelectedCategory}
-            title="主題探索"
-            showScrollButton
-          />
-        </div>
-
-        <div className="space-y-6 -mb-13">
-          {COOKING_TIME_SECTIONS.map((section) => (
-            <RecipeCardCarousel
-              key={section.id}
-              title={section.title}
-              recipes={groupedRecipes[section.id]}
-              onRecipeClick={handleRecipeClick}
-            />
-          ))}
-
-          {/* 收藏食譜區塊 */}
-          <div className="bg-neutral-100 py-7">
-            <RecipeCardCarousel
-              title="收藏食譜"
-              recipes={groupedRecipes.favorites}
-              onRecipeClick={handleRecipeClick}
-            />
-          </div>
-        </div>
+    <div className="space-y-6 bg-white pt-7">
+      <div className="pl-0">
+        <CategoryGrid
+          categories={categoryItems}
+          selectedId={selectedCategory}
+          onCategoryClick={setSelectedCategory}
+          title="主題探索"
+          showScrollButton
+        />
       </div>
 
-      <RecipeDetailModal
-        recipe={selectedRecipe}
-        isOpen={!!selectedRecipeId}
-        onClose={handleCloseModal}
-      />
-    </>
+      <div className="space-y-6 -mb-13">
+        {COOKING_TIME_SECTIONS.map((section) => (
+          <RecipeCardCarousel
+            key={section.id}
+            title={section.title}
+            recipes={groupedRecipes[section.id]}
+            onRecipeClick={handleRecipeClick}
+          />
+        ))}
+
+        {/* 收藏食譜區塊 */}
+        <div className="bg-neutral-100 py-7">
+          <RecipeCardCarousel
+            title="收藏食譜"
+            recipes={groupedRecipes.favorites}
+            onRecipeClick={handleRecipeClick}
+          />
+        </div>
+      </div>
+    </div>
   );
 };

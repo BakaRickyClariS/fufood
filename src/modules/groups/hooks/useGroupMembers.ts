@@ -1,5 +1,7 @@
 ﻿import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSelector } from 'react-redux';
 import { groupsApi, GroupsApiError } from '../api';
+import { selectAllGroups } from '../store/groupsSlice';
 import type { GroupMember, InviteMemberForm } from '../types/group.types';
 
 type CurrentUserInfo = {
@@ -24,6 +26,13 @@ export const useGroupMembers = (
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+
+  // 取得群組資訊以獲取群組名稱
+  const allGroups = useSelector(selectAllGroups);
+  const currentGroup = allGroups.find((g) => g.id === groupId);
+  const groupName = currentGroup?.name || '我的冰箱';
+  const actorName = currentUser?.name || '使用者';
+  const actorId = currentUser?.id;
 
   // Use ref to avoid infinite loop from object dependency
   const currentUserRef = useRef(currentUser);
@@ -109,7 +118,11 @@ export const useGroupMembers = (
             userIds: memberIds,
             title: '新成員加入',
             body: `${form.email} 已被邀請加入群組`,
-            type: 'system',
+            type: 'group',
+            subType: 'member',
+            group_name: groupName,
+            actor_name: actorName,
+            actor_id: actorId,
             action: {
               type: 'detail',
               payload: { refrigeratorId: groupId },
@@ -167,7 +180,11 @@ export const useGroupMembers = (
             userIds: remainingMemberIds,
             title: '群組成員變動',
             body: `${memberName} 已離開群組`,
-            type: 'system',
+            type: 'group',
+            subType: 'member',
+            group_name: groupName,
+            actor_name: actorName,
+            actor_id: actorId,
             action: {
               type: 'detail',
               payload: { refrigeratorId: groupId },

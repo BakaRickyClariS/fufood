@@ -5,6 +5,8 @@ import { ChevronLeft, Camera, CalendarDays, CalendarCheck, Loader2 } from 'lucid
 import { sharedListApi } from '@/modules/planning/services/api/sharedListApi';
 import { CoverImagePicker } from '@/modules/planning/components/ui/CoverImagePicker';
 import { COVER_IMAGES } from '@/modules/planning/constants/coverImages';
+import { SuccessModal } from '@/shared/components/ui/SuccessModal';
+import { TOAST_MESSAGES } from '@/constants/messages';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import type { SharedList } from '@/modules/planning/types';
@@ -23,6 +25,7 @@ const EditSharedList = () => {
   const [coverPhotoPath, setCoverPhotoPath] = useState('');
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // 載入清單資料
   useEffect(() => {
@@ -37,7 +40,7 @@ const EditSharedList = () => {
         setCoverPhotoPath(data.coverPhotoPath || COVER_IMAGES[0]);
       } catch (error) {
         console.error('載入清單失敗:', error);
-        toast.error('載入清單失敗');
+        toast.error(TOAST_MESSAGES.ERROR.LOAD_FAILED);
         navigate('/planning');
       } finally {
         setIsLoading(false);
@@ -81,14 +84,18 @@ const EditSharedList = () => {
         coverPhotoPath: coverPhotoPath || COVER_IMAGES[0],
         enableNotifications,
       });
-      toast.success('儲存成功');
-      navigate(`/planning/list/${listId}`);
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('更新失敗:', error);
-      toast.error('更新失敗，請稍後再試');
+      toast.error(TOAST_MESSAGES.ERROR.UPDATE_FAILED);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    navigate(`/planning/list/${listId}`);
   };
 
   if (isLoading) {
@@ -241,6 +248,13 @@ const EditSharedList = () => {
         onOpenChange={setIsPickerOpen}
         selectedImage={coverPhotoPath}
         onSelect={setCoverPhotoPath}
+      />
+
+      {/* 儲存成功 Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={handleSuccessModalClose}
+        title={TOAST_MESSAGES.SUCCESS.SAVE}
       />
     </div>
   );

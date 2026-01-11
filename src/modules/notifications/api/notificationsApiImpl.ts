@@ -25,21 +25,54 @@ export const notificationsApiImpl: NotificationsApi = {
 
   // 取得通知列表
   getNotifications: async (params?: GetNotificationsRequest) => {
-    // aiApi.get 會自動處理 response.json()
-    // 假設後端回傳格式符合 GetNotificationsResponse
-    // 這裡需要根據實際後端回傳格式做調整，如果後端直接回傳 { items: [], total: 0 }
-    // 而不用 ApiSuccess 包裹，可能需要手動包裝
-
-    // 暫定後端回傳標準格式
-    return aiApi.get<GetNotificationsResponse>(
+    const response = await aiApi.get<GetNotificationsResponse>(
       '/notifications',
       params as Record<string, any>,
     );
+
+    if (response.success && response.data.items) {
+      console.log(
+        '🔍 [Notification Debug] Raw Items from Backend:',
+        // 只印出前 3 筆以避免 log 過長
+        response.data.items.slice(0, 3).map((i) => ({
+          type: i.type,
+          subType: i.subType,
+          actor_name: (i as any).actor_name,
+          actorName: i.actorName,
+          group_name: (i as any).group_name,
+          groupName: i.groupName,
+        })),
+      );
+
+      // 資料轉換：處理後端 snake_case 轉前端 camelCase
+      response.data.items = response.data.items.map((item: any) => ({
+        ...item,
+        groupName: item.groupName || item.group_name,
+        actorName: item.actorName || item.actor_name,
+        actorId: item.actorId || item.actor_id,
+      }));
+    }
+
+    return response;
   },
 
   // 取得單一通知
   getNotification: async (id: string) => {
-    return aiApi.get<GetNotificationResponse>(`/notifications/${id}`);
+    const response = await aiApi.get<GetNotificationResponse>(
+      `/notifications/${id}`,
+    );
+
+    if (response.success && response.data.item) {
+      const item: any = response.data.item;
+      response.data.item = {
+        ...item,
+        groupName: item.groupName || item.group_name,
+        actorName: item.actorName || item.actor_name,
+        actorId: item.actorId || item.actor_id,
+      };
+    }
+
+    return response;
   },
 
   // 標記已讀
