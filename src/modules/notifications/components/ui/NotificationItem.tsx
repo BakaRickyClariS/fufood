@@ -5,7 +5,11 @@ import { useRef } from 'react';
 import { ChevronRight, Check } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import type { NotificationType, NotificationCategory, NotificationSubType } from '../../types';
+import type {
+  NotificationType,
+  NotificationCategory,
+  NotificationSubType,
+} from '../../types';
 
 export type NotificationItemProps = {
   id: string;
@@ -52,72 +56,43 @@ export const NotificationItem = ({
     }
   }, [isEditMode]);
 
-  const getTagStyle = (type: NotificationType, subType?: import('../../types').NotificationSubType) => {
-    // If explicit subType provides style
-    if (subType) {
-      switch (subType) {
-        case 'generate':
-          return 'bg-[#FDE047] text-[#854D0E]'; // Yellow
-        case 'stock':
-          return 'bg-[#BEF264] text-[#3F6212]'; // Lime Green
-        case 'consume':
-          return 'bg-[#FCA5A5] text-[#991B1B]'; // Pink/Red
-        case 'stockIn':
-          return 'bg-[#F87171] text-white'; // Red
-        case 'share':
-          return 'bg-[#BAE6FD] text-[#0369A1]'; // Light Blue
-        case 'list':
-          return 'bg-[#60A5FA] text-white'; // Blue
-        case 'self':
-          return 'bg-white border border-gray-200 text-gray-700'; // White
-        case 'member':
-          return 'bg-gray-300 text-gray-800'; // Grey
-      }
-    }
-
-    // Fallback based on main type if subType is missing
-    switch (type) {
-      case 'inventory':
-        return 'bg-[#BEF264] text-[#3F6212]';
-      case 'group':
-        return 'bg-gray-300 text-gray-800';
-      case 'shopping':
-        return 'bg-[#60A5FA] text-white';
-      case 'recipe':
-        return 'bg-[#FDE047] text-[#854D0E]';
-      case 'user':
-        return 'bg-white border border-gray-200 text-gray-700';
-      case 'system':
-        return 'bg-gray-100 text-gray-700';
-      default:
-        // Fallback for any unknown type - still show a default style
-        return 'bg-gray-200 text-gray-700';
-    }
+  // 標籤樣式與標籤文字的映射物件
+  const TAG_CONFIG: Record<string, { style: string; label: string }> = {
+    // SubType mappings
+    generate: { style: 'bg-[#FDE047] text-[#854D0E]', label: '生成' },
+    stock: { style: 'bg-[#BEF264] text-[#3F6212]', label: '庫存' },
+    consume: { style: 'bg-[#FCA5A5] text-[#991B1B]', label: '消耗' },
+    stockin: { style: 'bg-[#F87171] text-white', label: '入庫' },
+    share: { style: 'bg-[#BAE6FD] text-[#0369A1]', label: '共享' },
+    list: { style: 'bg-[#60A5FA] text-white', label: '清單' },
+    self: {
+      style: 'bg-white border border-gray-200 text-gray-700',
+      label: '本人',
+    },
+    member: { style: 'bg-gray-300 text-gray-800', label: '成員' },
+    // Type fallbacks
+    inventory: { style: 'bg-[#BEF264] text-[#3F6212]', label: '庫存' },
+    group: { style: 'bg-gray-300 text-gray-800', label: '成員' },
+    shopping: { style: 'bg-[#60A5FA] text-white', label: '清單' },
+    recipe: { style: 'bg-[#FDE047] text-[#854D0E]', label: '生成' },
+    user: {
+      style: 'bg-white border border-gray-200 text-gray-700',
+      label: '本人',
+    },
+    system: { style: 'bg-gray-100 text-gray-700', label: '系統' },
   };
 
-  const getTagLabel = (type: NotificationType, subType?: import('../../types').NotificationSubType) => {
-    if (subType) {
-      switch (subType) {
-        case 'generate': return '生成';
-        case 'stock': return '庫存';
-        case 'consume': return '消耗';
-        case 'stockIn': return '入庫';
-        case 'share': return '共享';
-        case 'list': return '清單';
-        case 'self': return '本人';
-        case 'member': return '成員';
-      }
-    }
+  const DEFAULT_TAG = { style: 'bg-gray-200 text-gray-700', label: '通知' };
 
-    switch (type) {
-      case 'inventory': return '庫存';
-      case 'group': return '成員';
-      case 'shopping': return '清單';
-      case 'recipe': return '生成';
-      case 'user': return '本人';
-      case 'system': return '系統';
-      default: return '通知'; // Fallback for any unknown type
-    }
+  const getTagConfig = (
+    type: NotificationType,
+    subType?: NotificationSubType | string,
+  ) => {
+    const normalizedSubType = subType?.toLowerCase();
+    // 優先使用 subType，fallback 到 type
+    return (
+      TAG_CONFIG[normalizedSubType || ''] || TAG_CONFIG[type] || DEFAULT_TAG
+    );
   };
 
   const isOfficial = type === 'system';
@@ -131,12 +106,11 @@ export const NotificationItem = ({
     : '';
 
   // Display Logic
-  const displayGroupName = isOfficial 
-    ? "FuFood Official" 
-    : (groupName || (type === 'user' ? 'My Fridge' : '')); // Fallback if missing
-  
-  const tagLabel = getTagLabel(type, subType);
-  const tagStyle = getTagStyle(type, subType);
+  const displayGroupName = isOfficial
+    ? 'FuFood Official'
+    : groupName || (type === 'user' ? 'My Fridge' : ''); // Fallback if missing
+
+  const { style: tagStyle, label: tagLabel } = getTagConfig(type, subType);
 
   return (
     <div
@@ -179,10 +153,10 @@ export const NotificationItem = ({
           </div>
         )}
 
-        <h3 className="text-sm font-bold text-gray-900 mb-1 leading-tight">
+        <h3 className="text-sm font-bold text-gray-900 mb-1 leading-tight line-clamp-1">
           {title}
         </h3>
-        
+
         {/* Message Body */}
         <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
           {message}

@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRef, useEffect, useState } from 'react';
 import { useAuth } from '@/modules/auth';
 import { useUpdateProfileMutation } from '@/modules/settings/api/queries';
 import { Button } from '@/shared/components/ui/button';
-import SimpleHeader from '@/modules/settings/components/SimpleHeader';
+import SettingsModalLayout, { type SettingsModalLayoutRef } from '@/modules/settings/components/SettingsModalLayout';
 import ChipGroup from '@/modules/settings/components/ChipGroup';
 import {
   COOKING_FREQUENCY_OPTIONS,
@@ -19,17 +18,21 @@ import type {
   DietaryPreference,
 } from '@/modules/settings/types/settings.types';
 
-const EditDietaryPreference = () => {
-  const navigate = useNavigate();
+// 允許各欄位為 undefined（未選狀態）
+// type EditableDietaryPreference 已移除，直接使用 DietaryPreference
+
+const EditDietaryPreference = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  // const navigate = useNavigate(); // remove
   const { user } = useAuth();
   const updateProfileMutation = useUpdateProfileMutation();
+  const layoutRef = useRef<SettingsModalLayoutRef>(null);
 
-  // Local state for preference form
+  // Local state for preference form - 初始為空（未選狀態）
   const [preferences, setPreferences] = useState<DietaryPreference>({
-    cookingFrequency: '3-4',
-    prepTime: '15-30',
-    seasoningLevel: 'moderate',
-    restrictions: ['none'],
+    cookingFrequency: undefined,
+    prepTime: undefined,
+    seasoningLevel: undefined,
+    restrictions: [],
   });
 
   const [isDirty, setIsDirty] = useState(false);
@@ -38,12 +41,20 @@ const EditDietaryPreference = () => {
   useEffect(() => {
     if (user?.dietaryPreference) {
       setPreferences(user.dietaryPreference);
+    } else {
+      // 如果沒有喜好資料，重設為空狀態
+      setPreferences({
+        cookingFrequency: undefined,
+        prepTime: undefined,
+        seasoningLevel: undefined,
+        restrictions: [],
+      });
     }
   }, [user]);
 
   const handleChange = (
     key: keyof DietaryPreference,
-    value: string | string[],
+    value: string | string[] | undefined,
   ) => {
     setPreferences((prev) => ({
       ...prev,
@@ -54,24 +65,34 @@ const EditDietaryPreference = () => {
 
   const handleSave = () => {
     // 將 dietaryPreference 內容轉換成 preference 標籤陣列
-    // 注意：後端 API 的 preference 是字串陣列，需要進行格式轉換
-    const preferenceLabels = [
-      preferences.cookingFrequency,
-      preferences.prepTime,
-      preferences.seasoningLevel,
-      ...preferences.restrictions.filter((r) => r !== 'none'),
-    ];
+    // 只加入有選擇的值，過濾掉 undefined 和 'none'
+    const preferenceLabels: string[] = [];
+    
+    if (preferences.cookingFrequency) {
+      preferenceLabels.push(preferences.cookingFrequency);
+    }
+    if (preferences.prepTime) {
+      preferenceLabels.push(preferences.prepTime);
+    }
+    if (preferences.seasoningLevel) {
+      preferenceLabels.push(preferences.seasoningLevel);
+    }
+    // 過濾掉 'none' 的限制
+    preferences.restrictions
+      .filter((r) => r !== 'none')
+      .forEach((r) => preferenceLabels.push(r));
 
     updateProfileMutation.mutate(
       {
         data: {
           name: user?.name || '', // 從 user 物件取得當前名稱
-          preference: preferenceLabels,
+          preferences: preferenceLabels,
         },
       },
       {
         onSuccess: () => {
-          navigate(-1);
+          // 使用 layoutRef 觸發動畫關閉，而非直接 onClose
+          layoutRef.current?.close();
         },
         onError: (error) => {
           console.error('Update dietary preferences failed', error);
@@ -81,8 +102,12 @@ const EditDietaryPreference = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
-      <SimpleHeader title="編輯飲食喜好" onBack={() => navigate(-1)} />
+    <SettingsModalLayout
+      ref={layoutRef}
+      isOpen={isOpen}
+      onClose={onClose}
+      title="編輯飲食喜好"
+    >
 
       <div className="max-w-layout-container mx-auto px-4 py-6 space-y-8">
         {/* 烹飪基礎 */}
@@ -154,13 +179,13 @@ const EditDietaryPreference = () => {
 
         <Button
           onClick={handleSave}
-          className="w-full mt-8"
+          className="w-full mt-8 py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-primary-300 disabled:opacity-100"
           disabled={!isDirty || updateProfileMutation.isPending}
         >
           {updateProfileMutation.isPending ? '儲存中...' : '儲存'}
         </Button>
       </div>
-    </div>
+    </SettingsModalLayout>
   );
 };
 

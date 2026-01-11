@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react';
+﻿import React, { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
-import consumingImage from '@/assets/images/recipe/consuming.png';
+import consumingImage from '@/assets/images/recipe/consuming.webp';
 import type {
   ConsumptionItem,
   ConsumptionReason,

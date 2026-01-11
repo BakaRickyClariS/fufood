@@ -17,8 +17,24 @@ export default defineConfig({
       devOptions: { enabled: true, type: 'module' },
       injectRegister: 'auto',
       injectManifest: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB
+        globPatterns: ['**/*.{js,css,html,ico,svg}'],
+        globIgnores: ['**/assets/images/group/**'], // Exclude large group images from precache
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
+      },
+      workbox: {
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.destination === 'image',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 Days
+              },
+            },
+          },
+        ],
       },
       manifest: {
         name: 'fufood 食物管家',
@@ -58,8 +74,16 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          redux: ['@reduxjs/toolkit', 'react-redux'],
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-redux': ['@reduxjs/toolkit', 'react-redux'],
+          'vendor-firebase': ['firebase/app', 'firebase/messaging'],
+          // gsap 不放入此 chunk，因為 SplashScreen 需要同步載入以確保啟動動畫流暢
+          'vendor-ui': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            'sonner',
+            'lucide-react',
+          ],
         },
       },
     },

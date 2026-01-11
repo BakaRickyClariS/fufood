@@ -58,7 +58,7 @@ export type NotificationMessage = {
   action?: NotificationAction; // 後端使用合併物件格式
   // 保留 category 供前端 Tab 分類使用（可由 type 映射）
   category?: NotificationCategory;
-  
+
   // 新增顯示欄位
   groupName?: string;
   actorName?: string;
@@ -89,11 +89,11 @@ export type SendNotificationRequest = {
   type: NotificationType;
   subType?: NotificationSubType;
   action?: NotificationAction;
-  // 新增顯示欄位 (前端傳入，後端直接儲存)
+  // 新增顯示欄位 (前端使用 camelCase)
   groupName?: string; // 群組名稱
   actorName?: string; // 操作者名稱
-  actorId?: string;   // 操作者 ID
-  // Compatibility with snake_case backends
+  actorId?: string; // 操作者 ID
+  // 後端資料庫欄位相容 (snake_case)
   group_name?: string;
   actor_name?: string;
   actor_id?: string;

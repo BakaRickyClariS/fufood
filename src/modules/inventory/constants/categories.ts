@@ -1,12 +1,12 @@
-// src/data/categories.ts
+﻿// src/data/categories.ts
 
-import fruitImg from '@/assets/images/inventory/fruit.png';
-import frozenImg from '@/assets/images/inventory/frozen.png';
-import bakeImg from '@/assets/images/inventory/bake.png';
-import milkImg from '@/assets/images/inventory/milk.png';
-import seafoodImg from '@/assets/images/inventory/seafood.png';
-import meatImg from '@/assets/images/inventory/meat.png';
-import otherImg from '@/assets/images/inventory/other.png';
+import fruitImg from '@/assets/images/inventory/fruit.webp';
+import frozenImg from '@/assets/images/inventory/frozen.webp';
+import bakeImg from '@/assets/images/inventory/bake.webp';
+import milkImg from '@/assets/images/inventory/milk.webp';
+import seafoodImg from '@/assets/images/inventory/seafood.webp';
+import meatImg from '@/assets/images/inventory/meat.webp';
+import otherImg from '@/assets/images/inventory/other.webp';
 
 export type CategoryItem = {
   id: string;

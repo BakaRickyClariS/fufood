@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+﻿import { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ChevronLeft,
@@ -23,8 +23,8 @@ import { RecipeDetailModal } from '@/modules/recipe/components/ui/RecipeDetailMo
 import { validatePrompt, validateIngredients } from '../utils/promptSecurity';
 import { recipeKeys } from '@/modules/recipe/api/queries';
 import type { RecipeListItem } from '@/modules/recipe/types';
-import aiAvatar from '@/assets/images/recipe/ai-avator.png';
-import processingImage from '@/assets/images/shared/processing.png';
+import aiAvatar from '@/assets/images/recipe/ai-avator.webp';
+import processingImage from '@/assets/images/shared/processing.webp';
 
 /** 預設建議標籤（API 不可用時的 fallback） */
 const DEFAULT_SUGGESTION_TAGS = [
@@ -277,12 +277,18 @@ export const AIQueryModal = ({
   const handleCloseRecipeModal = () => {
     setIsRecipeModalOpen(false);
     setTimeout(() => setSelectedRecipe(null), 300);
+
+    // 在 inspiration 模式下，關閉 RecipeDetailModal 時也要關閉 AIQueryModal
+    // 讓用戶直接返回到 FoodDetailModal
+    if (mode === 'inspiration') {
+      handleCloseAnimation();
+    }
   };
 
   // 如果是在靈感模式下且正在 Loading，顯示全版 Loading 畫面
   if (isOpen && mode === 'inspiration' && isLoading && !text) {
     return createPortal(
-      <div className="fixed inset-0 z-100 bg-white flex flex-col items-center justify-center">
+      <div className="fixed inset-0 z-150 bg-white flex flex-col items-center justify-center">
         <div className="w-full max-w-[320px] aspect-square relative mb-8">
           <img
             src={processingImage}
@@ -306,8 +312,13 @@ export const AIQueryModal = ({
       {createPortal(
         <div
           className={cn(
-            'fixed inset-0 z-100 flex flex-col transition-all duration-0',
+            'fixed inset-0 z-150 flex flex-col transition-all duration-0',
             !isOpen && 'invisible pointer-events-none',
+            // 在 inspiration 模式下，當 RecipeDetailModal 開啟時，隱藏 AIQueryModal 主體
+            // 這樣 RecipeDetailModal (z-130) 才能正確顯示在最上層
+            mode === 'inspiration' &&
+              isRecipeModalOpen &&
+              'invisible pointer-events-none',
           )}
         >
           <div

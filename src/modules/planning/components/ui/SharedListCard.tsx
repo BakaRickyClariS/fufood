@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 
 import type { SharedList } from '@/modules/planning/types';
@@ -14,22 +13,24 @@ import { COVER_IMAGES } from '@/modules/planning/constants/coverImages';
 
 type SharedListCardProps = {
   list: SharedList;
+  /** 點擊卡片時的回呼（用於開啟詳細頁 Modal） */
+  onClick?: (list: SharedList) => void;
   onEdit?: (list: SharedList) => void;
   onDelete?: (list: SharedList) => void;
 };
 
 export const SharedListCard = ({
   list,
+  onClick,
   onEdit,
   onDelete,
 }: SharedListCardProps) => {
-  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleCardClick = () => {
-    // 選單開啟時不導航
+    // 選單開啟時不觸發
     if (isMenuOpen) return;
-    navigate(`/planning/list/${list.id}`);
+    onClick?.(list);
   };
 
   const handleEdit = (e: React.MouseEvent) => {

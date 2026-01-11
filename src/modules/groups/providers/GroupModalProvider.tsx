@@ -1,31 +1,15 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  type ReactNode,
-} from 'react';
+import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 import {
   setActiveRefrigeratorId,
   selectActiveRefrigeratorId,
 } from '@/store/slices/refrigeratorSlice';
-import {
-  openModal,
-  closeModal,
-  selectModalStep,
-  selectTargetGroupId,
-} from '@/modules/groups/store/groupModalSlice';
+// import { closeModal } from '@/modules/groups/store/groupModalSlice';
 import type { Group } from '@/modules/groups/types/group.types';
-import { HomeModal } from '@/modules/groups/components/modals/HomeModal';
-import { GroupSettingsModal } from '@/modules/groups/components/modals/GroupSettingsModal';
-import { CreateGroupModal } from '@/modules/groups/components/modals/CreateGroupModal';
-import { EditGroupModal } from '@/modules/groups/components/modals/EditGroupModal';
-import { MembersModal } from '@/modules/groups/components/modals/MembersModal';
-import { InviteFriendModal } from '@/modules/groups/components/modals/InviteFriendModal';
-import { useAuth } from '@/modules/auth';
-import { getUserAvatarUrl } from '@/shared/utils/avatarUtils';
+// import { useAuth } from '@/modules/auth'; // Removed unused
 import { useGroups } from '@/modules/groups/hooks/useGroups';
-import type { AppDispatch, RootState } from '@/store';
+import type { AppDispatch } from '@/store';
 
 type GroupModalContextType = {
   activeGroup: Group | undefined;
@@ -41,6 +25,7 @@ type GroupModalContextType = {
   createGroup: (form: any) => Promise<any>;
   updateGroup: (id: string, form: any) => Promise<any>;
   deleteGroup: (id: string) => Promise<void>;
+  leaveGroup: (groupId: string) => Promise<void>;
   isGroupsLoading: boolean;
 };
 
@@ -53,24 +38,24 @@ type GroupModalProviderProps = {
 };
 
 export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
-  const { user } = useAuth();
-  const userAvatar = getUserAvatarUrl(user);
-  const userName = user?.displayName || user?.name || '使用者';
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // State mgmt
-  const { groups, createGroup, updateGroup, deleteGroup, isLoading } =
-    useGroups();
+  const {
+    groups,
+    createGroup,
+    updateGroup,
+    deleteGroup,
+    leaveGroup,
+    isLoading,
+  } = useGroups();
 
   const dispatch = useDispatch<AppDispatch>();
-  
+
   // Redux: 活動群組 ID
   const reduxActiveId = useSelector(selectActiveRefrigeratorId);
   const activeGroupId =
     reduxActiveId || localStorage.getItem('activeRefrigeratorId') || '1';
-
-  // Redux: Modal 狀態
-  const modalStep = useSelector((state: RootState) => selectModalStep(state));
-  const targetGroupId = useSelector((state: RootState) => selectTargetGroupId(state));
 
   // 處理群組載入後的預設選取邏輯
   useEffect(() => {
@@ -95,46 +80,61 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
     ? groups.find((g) => g.id === activeGroupId) || groups[0]
     : undefined;
 
-  // 根據 targetGroupId 找到選中的群組
-  const selectedGroup = targetGroupId
-    ? groups.find((g) => g.id === targetGroupId) || null
-    : null;
-
-  // Actions
+  // Actions - 使用 URL query params，保留當前路徑
   const switchGroup = (groupId: string) => {
     dispatch(setActiveRefrigeratorId(groupId));
   };
 
   const openHome = () => {
-    dispatch(openModal({ step: 'home' }));
+    const params = new URLSearchParams(searchParams);
+    params.set('modal', 'groups-home');
+    setSearchParams(params);
   };
 
   const openSettings = () => {
-    dispatch(openModal({ step: 'settings' }));
+    const params = new URLSearchParams(searchParams);
+    params.set('modal', 'groups-list');
+    setSearchParams(params);
   };
 
   const openCreate = () => {
-    dispatch(openModal({ step: 'create' }));
+    const params = new URLSearchParams(searchParams);
+    params.set('modal', 'groups-list');
+    params.set('action', 'create');
+    setSearchParams(params);
   };
 
   const openEdit = (group: Group) => {
-    dispatch(openModal({ step: 'edit', targetGroupId: group.id }));
+    const params = new URLSearchParams(searchParams);
+    params.set('modal', 'groups-list');
+    params.set('action', 'edit');
+    params.set('groupId', group.id);
+    setSearchParams(params);
   };
 
   const openMembers = (group: Group) => {
-    dispatch(openModal({ step: 'members', targetGroupId: group.id }));
+    const params = new URLSearchParams(searchParams);
+    params.set('modal', 'groups-members');
+    params.set('id', group.id);
+    setSearchParams(params);
   };
 
   const openInvite = (group: Group) => {
-    dispatch(openModal({ step: 'invite', targetGroupId: group.id }));
+    const params = new URLSearchParams(searchParams);
+    // Don't replace 'modal', just add 'action' to stack it
+    params.set('action', 'invite');
+    params.set('id', group.id);
+    setSearchParams(params);
   };
 
   const closeAll = () => {
-    dispatch(closeModal());
-  };
-
-  const handleBackToSettings = () => {
-    dispatch(openModal({ step: 'settings' }));
+    // 關閉時只清空群組相關的 query params，保留其他參數
+    const params = new URLSearchParams(searchParams);
+    params.delete('modal');
+    params.delete('action');
+    params.delete('groupId');
+    params.delete('id');
+    setSearchParams(params);
   };
 
   return (
@@ -153,61 +153,12 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
         createGroup,
         updateGroup,
         deleteGroup,
+        leaveGroup,
         isGroupsLoading: isLoading,
       }}
     >
       {children}
-
-      {/* Render Modals */}
-      {activeGroup && (
-        <HomeModal
-          isOpen={modalStep === 'home'}
-          onClose={closeAll}
-          currentUser={{
-            name: userName,
-            avatar: userAvatar,
-            role:
-              activeGroup.members?.find((m) => m.id === user?.id)?.role ||
-              'member',
-          }}
-          members={activeGroup.members || []}
-          onEditMembers={() => openMembers(activeGroup)}
-        />
-      )}
-
-      <GroupSettingsModal
-        open={modalStep === 'settings'}
-        onClose={closeAll}
-        onOpenCreateModal={openCreate}
-        onOpenEditModal={openEdit}
-        onOpenMembersModal={openMembers}
-      />
-
-      <CreateGroupModal
-        open={modalStep === 'create'}
-        onClose={closeAll}
-        onBack={handleBackToSettings}
-      />
-
-      <EditGroupModal
-        open={modalStep === 'edit'}
-        onClose={closeAll}
-        group={selectedGroup}
-        onBack={handleBackToSettings}
-      />
-
-      <MembersModal
-        open={modalStep === 'members'}
-        onClose={closeAll}
-        group={selectedGroup}
-        onBack={handleBackToSettings}
-      />
-
-      <InviteFriendModal
-        open={modalStep === 'invite'}
-        onClose={closeAll}
-        group={selectedGroup}
-      />
+      {/* 移除所有 Modal 渲染，改由 Router 處理 */}
     </GroupModalContext.Provider>
   );
 };

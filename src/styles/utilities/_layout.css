@@ -89,7 +89,20 @@
   }
 
   .body-dashboard-bg {
-    background: radial-gradient(circle, #fef3f2 0%, #fde6e3 30%, #fdd0cb 60%);
+    background: linear-gradient(
+      180deg,
+      var(--color-primary-100) 0%,
+      #ffffff 50%,
+      var(--color-primary-100) 100%
+    );
+  }
+  .body-dashboard-card-bg {
+    background: linear-gradient(
+      115deg,
+      var(--color-primary-300) 0%,
+      var(--color-primary-50) 50%,
+      var(--color-primary-300) 100%
+    );
   }
 
   .category-card {

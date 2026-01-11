@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { notificationKeys, useNotificationsQuery } from '../api/queries';
 import { useAuth } from '@/modules/auth';
 import type { NotificationMessage } from '../types';
+import { invalidateQueriesByNotification } from '../utils/invalidation';
 
 type UseNotificationPollingOptions = {
   /** 輪詢間隔（毫秒），預設 30 秒 */
@@ -47,9 +48,9 @@ export const useNotificationPolling = ({
     if (latestItem && !lastNotificationIdRef.current) {
       lastNotificationIdRef.current = latestItem.id;
       lastNotificationDateRef.current = new Date(latestItem.createdAt);
-      console.log('[NotificationPolling]Initialized:', { 
-        id: latestItem.id, 
-        date: latestItem.createdAt 
+      console.log('[NotificationPolling]Initialized:', {
+        id: latestItem.id,
+        date: latestItem.createdAt,
       });
     }
   }, [data?.data?.items]);
@@ -62,40 +63,43 @@ export const useNotificationPolling = ({
   }, [queryClient]);
 
   // 根據通知的 action 決定跳轉目的地
-  const getNavigationPath = useCallback((notification: NotificationMessage): string | null => {
-    const action = notification.action;
-    if (!action) return '/notifications'; // 無 action 則跳轉到通知列表
+  const getNavigationPath = useCallback(
+    (notification: NotificationMessage): string | null => {
+      const action = notification.action;
+      if (!action) return '/notifications'; // 無 action 則跳轉到通知列表
 
-    const payload = action.payload;
-    switch (action.type) {
-      case 'inventory':
-        // 跳轉到庫存頁，如果有 refrigeratorId 可以帶參數
-        if (payload?.refrigeratorId) {
-          return `/inventory?fridgeId=${payload.refrigeratorId}`;
-        }
-        return '/inventory';
-      case 'shopping-list':
-        // 跳轉到購物清單
-        if (payload?.listId) {
-          return `/planning/list/${payload.listId}`;
-        }
-        return '/planning';
-      case 'recipe':
-        // 跳轉到食譜頁
-        if (payload?.recipeId) {
-          return `/recipes/${payload.recipeId}`;
-        }
-        return '/recipes';
-      case 'group':
-        // 跳轉到群組設定
-        return `/settings/groups`;
-      case 'detail':
-        // 跳轉到通知詳情
-        return `/notifications/${notification.id}`;
-      default:
-        return '/notifications';
-    }
-  }, []);
+      const payload = action.payload;
+      switch (action.type) {
+        case 'inventory':
+          // 跳轉到庫存頁，如果有 refrigeratorId 可以帶參數
+          if (payload?.refrigeratorId) {
+            return `/inventory?fridgeId=${payload.refrigeratorId}`;
+          }
+          return '/inventory';
+        case 'shopping-list':
+          // 跳轉到購物清單
+          if (payload?.listId) {
+            return `/planning/list/${payload.listId}`;
+          }
+          return '/planning';
+        case 'recipe':
+          // 跳轉到食譜頁
+          if (payload?.recipeId) {
+            return `/recipes/${payload.recipeId}`;
+          }
+          return '/recipes';
+        case 'group':
+          // 跳轉到群組設定
+          return `/settings/groups`;
+        case 'detail':
+          // 跳轉到通知詳情
+          return `/notifications/${notification.id}`;
+        default:
+          return '/notifications';
+      }
+    },
+    [],
+  );
 
   // 檢查是否有新通知並顯示 Toast
   const checkAndShowNewNotifications = useCallback(() => {
@@ -116,23 +120,21 @@ export const useNotificationPolling = ({
 
       // 找出所有新的未讀通知 (created after last known date)
       const newNotifications = items.filter(
-        (n) =>
-          !n.isRead &&
-          new Date(n.createdAt) > lastDate
+        (n) => !n.isRead && new Date(n.createdAt) > lastDate,
       );
 
       // 過濾掉本人觸發的通知（避免重複提示）
       const notificationsToShow = newNotifications.filter((n) => {
         const actorId = n.actorId || (n as any).actor_id;
         const actorName = n.actorName || (n as any).actor_name;
-        
+
         // 嚴格比對 ID
         if (currentUserId && actorId === currentUserId) return false;
 
         // Fallback: 如果 ID 若有似無，試著比對名稱 (有些後端可能沒存 ID)
         // 注意：這有誤殺風險，但在本人操作當下，名稱通常完全一致
         if (user?.displayName && actorName === user.displayName) return false;
-        
+
         return true;
       });
 
@@ -142,11 +144,16 @@ export const useNotificationPolling = ({
         toast.info(notification.title, {
           description: notification.message,
           duration: 5000,
-          action: path ? {
-            label: '查看',
-            onClick: () => navigate(path),
-          } : undefined,
+          action: path
+            ? {
+                label: '查看',
+                onClick: () => navigate(path),
+              }
+            : undefined,
         });
+
+        // 刷新對應的頁面資料
+        invalidateQueriesByNotification(queryClient, notification);
       });
 
       if (notificationsToShow.length > 0) {
@@ -156,8 +163,8 @@ export const useNotificationPolling = ({
             totalNew: newNotifications.length,
             filtered: newNotifications.length - notificationsToShow.length,
             latestId,
-            lastId: lastNotificationIdRef.current
-          }
+            lastId: lastNotificationIdRef.current,
+          },
         );
       }
     }

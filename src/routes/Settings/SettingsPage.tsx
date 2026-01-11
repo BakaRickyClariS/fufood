@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+﻿import { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/modules/auth';
 import type { UserProfile } from '@/modules/settings/types/settings.types';
 import { getUserAvatarUrl } from '@/shared/utils/avatarUtils';
@@ -7,9 +7,9 @@ import { useFCMContext } from '@/shared/providers/FCMProvider';
 
 // Components
 import ProfileSection from '@/modules/settings/components/ProfileSection';
-import DietaryPreferenceTags from '@/modules/settings/components/DietaryPreferenceTags';
 import QuickActions from '@/modules/settings/components/QuickActions';
 import OtherSettingsList from '@/modules/settings/components/OtherSettingsList';
+import PermissionSettings from '@/modules/settings/components/PermissionSettings';
 import LogoutSection from '@/modules/settings/components/LogoutSection';
 import { GroupApiTest } from '@/modules/groups/components/debug/GroupApiTest';
 
@@ -84,11 +84,34 @@ const FCMStatusButton = () => {
   );
 };
 
+import EditProfile from '@/routes/Settings/EditProfile';
+import EditDietaryPreference from '@/routes/Settings/EditDietaryPreference';
+import Subscription from '@/routes/Settings/Subscription';
+import PurchaseHistory from '@/routes/Settings/PurchaseHistory';
+import HelpCenter from '@/routes/Settings/HelpCenter';
+import ReportProblem from '@/routes/Settings/ReportProblem';
+import AppGuide from '@/routes/Settings/AppGuide';
+import LineBinding from '@/routes/Settings/LineBinding';
+import ConsumptionReason from '@/routes/Settings/ConsumptionReason';
+
+// ...
+
 const SettingsPage = () => {
   const { user, logout } = useAuth();
   const { unregisterToken } = useFCMContext();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const activeModal = searchParams.get('modal');
+
+  const handleNavigate = (key: string) => {
+    setSearchParams({ modal: key });
+  };
+
+  const handleCloseModal = () => {
+    setSearchParams({});
+  };
 
   // Transform auth User to UserProfile type
   const userProfile: UserProfile = {
@@ -115,22 +138,27 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-screen bg-neutral-100 pb-24">
       <div className="max-w-layout-container mx-auto px-4 py-6 space-y-4">
-        <ProfileSection user={userProfile} />
+        <ProfileSection user={userProfile} onNavigate={handleNavigate} />
 
-        <DietaryPreferenceTags preference={userProfile.dietaryPreference} />
+        <QuickActions onNavigate={handleNavigate} />
 
-        <QuickActions />
+        <PermissionSettings />
 
-        <OtherSettingsList />
+        <OtherSettingsList onNavigate={handleNavigate} />
 
-        {/* Pass user email if available in User object, assuming user.email exists */}
+        {/* ... */}
+
         <LogoutSection
           email={user?.email}
           onLogout={handleLogout}
           isLoggingOut={isLoggingOut}
         />
+
+        {/* 測試通知按鈕 - 已透過 restore 恢復 */}
+        {/* ... (keeping existing debug buttons if matched, but here I am targeting line 120-132 mostly) */}
+        {/* Wait, I can't match "..." easily. I should target specific lines. */}
 
         {/* 測試通知按鈕 */}
         <div className="flex flex-col gap-2">
@@ -160,6 +188,39 @@ const SettingsPage = () => {
           {import.meta.env.DEV && <GroupApiTest />}
         </div>
       </div>
+
+      {/* Modals */}
+      <EditProfile
+        isOpen={activeModal === 'profile'}
+        onClose={handleCloseModal}
+      />
+      <EditDietaryPreference
+        isOpen={activeModal === 'dietary-preference'}
+        onClose={handleCloseModal}
+      />
+      <Subscription
+        isOpen={activeModal === 'subscription'}
+        onClose={handleCloseModal}
+        onNavigate={handleNavigate}
+      />
+      <PurchaseHistory
+        isOpen={activeModal === 'purchase-history'}
+        onClose={handleCloseModal}
+      />
+      <HelpCenter isOpen={activeModal === 'help'} onClose={handleCloseModal} />
+      <ReportProblem
+        isOpen={activeModal === 'report'}
+        onClose={handleCloseModal}
+      />
+      <AppGuide isOpen={activeModal === 'guide'} onClose={handleCloseModal} />
+      <LineBinding
+        isOpen={activeModal === 'line-binding'}
+        onClose={handleCloseModal}
+      />
+      <ConsumptionReason
+        isOpen={activeModal === 'consumption-reasons'}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 };

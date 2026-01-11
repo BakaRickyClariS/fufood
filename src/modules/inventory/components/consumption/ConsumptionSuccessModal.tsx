@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { ChevronLeft } from 'lucide-react';
@@ -10,7 +10,7 @@ import type { RecipeListItem } from '@/modules/recipe/types';
 import { RecipeCardCarousel } from '@/shared/components/recipe';
 import { RecipeDetailModal } from '@/modules/recipe/components/ui/RecipeDetailModal';
 import { recipeApi } from '@/modules/recipe/services';
-import successImage from '@/assets/images/recipe/consumption-success.png';
+import successImage from '@/assets/images/recipe/consumption-success.webp';
 
 type ItemWithReason = ConsumptionItem & {
   selectedReasons?: ConsumptionReason[];
@@ -64,18 +64,21 @@ export const ConsumptionSuccessModal: React.FC<
         console.log('正在為以下食材尋找食譜:', ingredientNames);
 
         // 1. 先嘗試從使用者現有的食譜中搜尋
-        // 這裡我們取得所有食譜，前端進行簡單過濾
-        // 注意：這裡不傳 refrigeratorId，這樣能搜尋到使用者所有已儲存的食譜
         const allSavedRecipes = await recipeApi.getRecipes();
 
-        const matchedRecipes = allSavedRecipes.filter((recipe) => {
+        // 確保來源無重複 (根據 ID)
+        const uniqueAllRecipes = Array.from(
+          new Map(allSavedRecipes.map((item) => [item.id, item])).values(),
+        );
+
+        const matchedRecipes = uniqueAllRecipes.filter((recipe) => {
           // 關鍵字比對：食譜名稱包含任何一個消耗的食材
           return ingredientNames.some((ing) => recipe.name.includes(ing));
         });
 
         if (matchedRecipes.length > 0) {
           console.log('找到現有相關食譜:', matchedRecipes);
-          // 根據匹配程度排序可能更好，這裡簡單取前 5 筆
+          // 取前 5 筆
           setRecommendedRecipes(matchedRecipes.slice(0, 5));
           setIsLoadingRecipes(false);
           return;
@@ -83,7 +86,7 @@ export const ConsumptionSuccessModal: React.FC<
 
         // 2. 如果沒有相關食譜，隨機推薦幾道現有食譜
         console.log('無相關食譜，隨機推薦現有食譜...');
-        const shuffled = [...allSavedRecipes].sort(() => 0.5 - Math.random());
+        const shuffled = [...uniqueAllRecipes].sort(() => 0.5 - Math.random());
         setRecommendedRecipes(shuffled.slice(0, 5));
       } catch (error) {
         console.error('載入推薦食譜失敗', error);
@@ -139,7 +142,7 @@ export const ConsumptionSuccessModal: React.FC<
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[120] flex justify-end pointer-events-none">
+    <div className="fixed inset-0 z-120 flex justify-end pointer-events-none">
       <div
         ref={modalRef}
         className="w-full h-full bg-[#f6f6f6] pointer-events-auto overflow-y-auto"

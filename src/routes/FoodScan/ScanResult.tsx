@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { useQueryClient } from '@tanstack/react-query';
 import { ScanResultEditor } from '@/modules/food-scan/components/features/ScanResultEditor';
 import { ScanResultPreview } from '@/modules/food-scan/components/features/ScanResultPreview';
 import { StockInSuccessModal } from '@/modules/food-scan/components/ui/StockInSuccessModal';
@@ -19,15 +20,15 @@ import {
 } from '@/modules/groups/store/groupsSlice';
 import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import { getRefrigeratorId } from '@/modules/inventory/utils/getRefrigeratorId';
-import { useAuth } from '@/modules/auth';
-import { groupsApi } from '@/modules/groups/api';
+import { inventoryKeys } from '@/modules/inventory/api/queries';
+import { useNotificationMetadata } from '@/modules/notifications/hooks/useNotificationMetadata';
 import { useEffect } from 'react';
 
 const ScanResult: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // Redux state for batch scan
   const { items, currentIndex } = useSelector(
@@ -40,6 +41,11 @@ const ScanResult: React.FC = () => {
   // ScanResult doesn't have groupId in URL, so we rely on active or default
   const targetGroupId =
     activeRefrigeratorId || getRefrigeratorId(undefined, groups);
+
+  // 使用統一的 hook 取得通知 metadata（確保一致性）
+  const { groupName, actorName, actorId } = useNotificationMetadata(
+    targetGroupId || undefined,
+  );
 
   useEffect(() => {
     // Ensure groups are loaded so we can get the ID
@@ -130,55 +136,50 @@ const ScanResult: React.FC = () => {
     try {
       // Use edited data if available, otherwise use initial data
       const dataToSubmit = editedData || initialData;
-      await foodScanApi.submitFoodItem(dataToSubmit);
+      const response = await foodScanApi.submitFoodItem(dataToSubmit);
+
+      // 入庫成功後觸發庫存列表更新
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.lists() });
+
       const newSubmittedCount = submittedCount + 1;
       setSubmittedCount(newSubmittedCount);
 
-      // 發送推播通知 (單筆)
+      // 發送推播通知（使用 groupId 發送給群組所有成員，與清單建立一致）
       try {
         const notifyGroupId = dataToSubmit.groupId || targetGroupId;
         if (notifyGroupId) {
-          // 2024-01-01 Fix: 依使用者要求，透過 API 取得成員列表發送通知
-          // 不再依賴前端 groups state 判斷是否為共享群組
-          let targetUserIds: string[] = [];
-          try {
-            const members = await groupsApi.getMembers(notifyGroupId);
-            targetUserIds = members.map(m => m.id);
-          } catch (fetchErr) {
-            console.warn(`Failed to fetch members for group ${notifyGroupId}:`, fetchErr);
-            // 若 API 失敗 (如個人冰箱無法取得成員)，降級為發送給自己
-            if (user?.id) targetUserIds = [user.id];
-          }
+          console.log('🔔 [Stock-In Notification] Metadata:', {
+            groupName,
+            actorName,
+            actorId,
+            groupId: notifyGroupId,
+            itemId: response.data.id,
+          });
 
-          if (targetUserIds.length > 0) {
-            // 取得群組名稱和使用者名稱
-            const currentGroup = groups.find((g) => g.id === notifyGroupId);
-            const groupName = currentGroup?.name || '我的冰箱';
-            const actorName = user?.displayName || user?.email || '使用者';
-
-            import('@/api/services/notification').then(({ notificationService }) => {
-              notificationService.sendNotification({
-                type: 'inventory',
-                subType: 'stockIn', // 新增 subType
-                title: 'AI 辨識完成！食材已入庫',
-                body: '剛買的食材已安全進入庫房，快去看看庫房！',
-                userIds: targetUserIds,
-                // groupId 設為 undefined，避免個人冰箱 ID 被後端視為無效群組 ID 而報錯 (400)
-                // 我們已透過 userIds 指定接收者
-                groupId: undefined,
-                groupName,
-                actorName,
-                group_name: groupName,
-                actor_name: actorName,
-                action: {
-                  type: 'inventory',
-                  payload: {
-                    refrigeratorId: notifyGroupId
-                  }
-                }
-              }).catch(err => console.error('Failed to send notification:', err));
-            });
-          }
+          const { notificationsApiImpl } = await import(
+            '@/modules/notifications/api/notificationsApiImpl'
+          );
+          const itemName = dataToSubmit.productName || '食材';
+          await notificationsApiImpl.sendNotification({
+            groupId: notifyGroupId, // 使用 groupId 發送給群組所有成員
+            type: 'inventory',
+            subType: 'stockIn',
+            title: `${itemName} 新成員報到，入位成功！`,
+            body: `冰箱小隊報告！${itemName} 已安全進入庫房，隨時待命！`,
+            groupName,
+            actorName,
+            actorId,
+            group_name: groupName,
+            actor_name: actorName,
+            actor_id: actorId,
+            action: {
+              type: 'inventory',
+              payload: {
+                refrigeratorId: notifyGroupId,
+                itemId: response.data.id,
+              },
+            },
+          });
         }
       } catch (notifyError) {
         console.error('Notification error:', notifyError);
@@ -288,76 +289,133 @@ const ScanResult: React.FC = () => {
   // Batch confirm all handler
   const handleConfirmAll = async () => {
     setSubmitStatus('submitting');
-    try {
-      // Submit all pending items
-      let successCount = 0;
-      
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        if (item.status === 'pending') {
+
+    // Track results
+    let successCount = 0;
+    const failedIndices: number[] = [];
+    const successIndices: number[] = [];
+
+    // We need to process items one by one
+    // CAUTION: resolving Redux state changes in loop is tricky since indices shift if we delete immediately.
+    // Strategy:
+    // 1. Try to submit all pending items.
+    // 2. record which indices succeeded.
+    // 3. Dispatch remove actions for successful indices (from largest to smallest to maintain index validity) or use a bulk remove if available.
+    // Since we only have removeItem(index), we must be careful.
+
+    // Snapshot current items to avoid index confusion if state updates async (though redux state in var is snapshot)
+    const currentItems = [...items];
+
+    for (let i = 0; i < currentItems.length; i++) {
+      const item = currentItems[i];
+      // Only process pending items
+      if (item.status === 'pending') {
+        try {
           await foodScanApi.submitFoodItem(item.data);
           successCount++;
+          successIndices.push(i);
+        } catch (err) {
+          console.error(`Item ${i} (${item.data.productName}) failed:`, err);
+          failedIndices.push(i);
         }
       }
-      setSubmittedCount(successCount);
+    }
 
-      // 發送推播通知 (批次)
+    // Update submitted count state
+    setSubmittedCount((prev) => prev + successCount);
+
+    if (successCount > 0) {
+      // Invalidate queries to refresh inventory
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.lists() });
+
+      // 發送推播通知 (批次)（使用 groupId 發送給群組所有成員，與清單建立一致）
       try {
-        if (successCount > 0 && targetGroupId) {
-          let targetUserIds: string[] = [];
-          try {
-            const members = await groupsApi.getMembers(targetGroupId);
-            targetUserIds = members.map(m => m.id);
-          } catch (fetchErr) {
-            console.warn(`Failed to fetch members for group ${targetGroupId}:`, fetchErr);
-            if (user?.id) targetUserIds = [user.id];
-          }
+        if (targetGroupId) {
+          // 取得第一個成功的食材名稱
+          const firstSuccessItem = currentItems.find((_, i) =>
+            successIndices.includes(i),
+          );
+          const firstName = firstSuccessItem?.data.productName || '食材';
 
-          if (targetUserIds.length > 0) {
-            // 取得群組名稱和使用者名稱
-            const currentGroup = groups.find((g) => g.id === targetGroupId);
-            const groupName = currentGroup?.name || '我的冰箱';
-            const actorName = user?.displayName || user?.email || '使用者';
+          const title =
+            successCount === 1
+              ? `${firstName} 新成員報到，入位成功！`
+              : `${firstName} 等 ${successCount} 項食材報到，全員入位！`;
+          const body =
+            successCount === 1
+              ? `冰箱小隊報告！${firstName} 已安全進入庫房，隨時待命！`
+              : `冰箱小隊報告！${successCount} 項新成員已入位，整裝待發！`;
 
-            const message = successCount === 1 
-              ? '剛買的食材已安全進入庫房，快去看看庫房！'
-              : `${successCount} 項新食材已安全進入庫房，快去看看庫房！`;
-              
-            import('@/api/services/notification').then(({ notificationService }) => {
-              notificationService.sendNotification({
-                type: 'inventory',
-                subType: 'stockIn', // 新增 subType
-                title: 'AI 辨識完成！食材已入庫',
-                body: message,
-                userIds: targetUserIds,
-                groupId: undefined,
-                groupName,
-                actorName,
-                group_name: groupName,
-                actor_name: actorName,
-                action: {
-                  type: 'inventory',
-                  payload: {
-                    refrigeratorId: targetGroupId
-                  }
-                }
-              }).catch(err => console.error('Failed to send notification:', err));
-            });
-          }
+          console.log('🔔 [Batch Stock-In Notification] Metadata:', {
+            groupName,
+            actorName,
+            actorId,
+            groupId: targetGroupId,
+          });
+
+          const { notificationsApiImpl } = await import(
+            '@/modules/notifications/api/notificationsApiImpl'
+          );
+          await notificationsApiImpl.sendNotification({
+            groupId: targetGroupId, // 使用 groupId 發送給群組所有成員
+            type: 'inventory',
+            subType: 'stockIn',
+            title,
+            body,
+            groupName,
+            actorName,
+            actorId,
+            group_name: groupName,
+            actor_name: actorName,
+            actor_id: actorId,
+            action: {
+              type: 'inventory',
+              payload: {
+                refrigeratorId: targetGroupId,
+              },
+            },
+          });
         }
       } catch (notifyError) {
         console.error('Notification error:', notifyError);
       }
+    }
 
+    // Handle UI updates based on results
+    if (successIndices.length > 0) {
+      // Remove successful items.
+      // To remove multiple items by index without messing up subsequent indices, remove from largest index to smallest.
+      const indicesToRemove = [...successIndices].sort((a, b) => b - a);
+
+      indicesToRemove.forEach((index) => {
+        dispatch(removeItem(index));
+      });
+    }
+
+    setSubmitStatus('idle'); // Always return to idle to allow user to retry failed items or confirm success
+
+    // Decision: What to show?
+    // If ALL succeeded -> Show Success Modal
+    // If PARTIAL succeeded -> Maybe show toast or partial success msg?
+    // Current requirement: "背景通知有跳出入庫完成通知" -> implies success modal might be confusing if shown for partial.
+    // Let's stick to logic: If nothing left (all succeeded), show modal. If some left, user sees them.
+
+    // Check remaining items count AFTER removal
+    const remainingCount = currentItems.length - successCount;
+
+    if (remainingCount === 0) {
       setSubmitStatus('completed');
-
       setTimeout(() => {
-        // Show success modal (don't reset here - let navigation handlers reset)
         setShowSuccessModal(true);
-      }, 800);
-    } catch (error) {
-      console.error('Batch submission failed:', error);
-      setSubmitStatus('idle');
+      }, 500);
+    } else {
+      // Maybe show a toast about failed items?
+      // For now, doing nothing lets user see failed items are still there.
+      if (successCount > 0) {
+        // Optionally show a toast saying "X items added, Y failed"
+        // Using console for now as we don't have a standardized toast handy in this context,
+        // but the remaining items in list is a visual cue.
+      }
     }
   };
 
