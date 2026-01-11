@@ -36,66 +36,101 @@ jobs:
         with:
           node-version: '18'
 
-      # 步驟 1: 掃描所有 dev-vXXX 分支，推敲最新版本號
-      - name: Detect latest version from existing branches
+      # 步驟 1: 掃描所有來源（分支 + 已合併 PR）來偵測最新版本號
+      - name: Detect latest version from branches and merged PRs
         id: version
+        env:
+          GH_TOKEN: ${{ secrets.ACTIONS_PAT }}
         run: |
-          # Fetch all remote branches
-          git fetch origin --all 2>&1 | grep -E "(remote|branch)" | head -5
+          # Fetch all remote branches with prune to remove stale references
+          git fetch origin --all --prune 2>&1 | head -10
 
           echo "📋 Scanning existing dev-v* branches..."
-          git branch -r --format='%(refname:short)' | grep '^origin/dev-v' | sort -V | tail -5
+          git branch -r --format='%(refname:short)' | grep '^origin/dev-v' | sort -V | tail -5 || echo "No dev-v branches found"
+          echo ""
+
+          echo "📋 Scanning merged PRs to main for version history..."
+          # 使用 gh CLI 取得已合併到 main 的 PR 標題
+          MERGED_VERSIONS=$(gh pr list --state merged --base main --limit 50 --json title --jq '.[].title' 2>/dev/null | grep -oP 'Dev v\K[0-9]+' | sort -V | tail -5 || echo "")
+          echo "Found merged versions: $MERGED_VERSIONS"
           echo ""
 
           # 掃描所有 dev-vXXX 分支，提取版本號
           LATEST_VERSION="0.0.0"
-          LATEST_BRANCH=""
+          LATEST_SOURCE="initial"
 
-          # 列出所有 dev-v 開頭的分支（按版本排序）
-          for branch in $(git branch -r --format='%(refname:short)' | grep '^origin/dev-v' | sort -V); do
-            # 提取版本號部分: origin/dev-v020 → 020
-            VERSION_NUM=$(echo "$branch" | sed 's/^origin\/dev-v//')
+          # 函數：將版本號字串轉換為 X.Y.Z 格式
+          parse_version() {
+            local VERSION_NUM=$1
+            local NUM_LEN=${#VERSION_NUM}
+            local MAJOR=0 MINOR=0 PATCH=0
             
-            # 檢查版本號是否有效（只包含數字）
+            if [ $NUM_LEN -eq 1 ]; then
+              PATCH=$VERSION_NUM
+            elif [ $NUM_LEN -eq 2 ]; then
+              MINOR=${VERSION_NUM:0:1}
+              PATCH=${VERSION_NUM:1:1}
+            elif [ $NUM_LEN -ge 3 ]; then
+              # 處理 3 位數以上：取前三位
+              MAJOR=${VERSION_NUM:0:1}
+              MINOR=${VERSION_NUM:1:1}
+              PATCH=${VERSION_NUM:2:1}
+            fi
+            echo "$MAJOR.$MINOR.$PATCH"
+          }
+
+          # 函數：比較兩個版本，回傳 1 如果 $1 > $2
+          version_gt() {
+            local V1_MAJOR=$(echo $1 | cut -d. -f1)
+            local V1_MINOR=$(echo $1 | cut -d. -f2)
+            local V1_PATCH=$(echo $1 | cut -d. -f3)
+            local V2_MAJOR=$(echo $2 | cut -d. -f1)
+            local V2_MINOR=$(echo $2 | cut -d. -f2)
+            local V2_PATCH=$(echo $2 | cut -d. -f3)
+            
+            if [ $V1_MAJOR -gt $V2_MAJOR ]; then return 0; fi
+            if [ $V1_MAJOR -eq $V2_MAJOR ] && [ $V1_MINOR -gt $V2_MINOR ]; then return 0; fi
+            if [ $V1_MAJOR -eq $V2_MAJOR ] && [ $V1_MINOR -eq $V2_MINOR ] && [ $V1_PATCH -gt $V2_PATCH ]; then return 0; fi
+            return 1
+          }
+
+          # 來源 1: 掃描現有的遠端分支
+          echo "🔍 Source 1: Scanning remote branches..."
+          for branch in $(git branch -r --format='%(refname:short)' | grep '^origin/dev-v' | sort -V 2>/dev/null || echo ""); do
+            VERSION_NUM=$(echo "$branch" | sed 's/^origin\/dev-v//')
             if [[ $VERSION_NUM =~ ^[0-9]+$ ]]; then
-              # 轉換: 020 → 0.2.0, 001 → 0.0.1, 100 → 1.0.0
-              NUM_LEN=${#VERSION_NUM}
-              
-              if [ $NUM_LEN -eq 1 ]; then
-                MAJOR=0
-                MINOR=0
-                PATCH=$VERSION_NUM
-              elif [ $NUM_LEN -eq 2 ]; then
-                MAJOR=0
-                MINOR=${VERSION_NUM:0:1}
-                PATCH=${VERSION_NUM:1:1}
-              elif [ $NUM_LEN -eq 3 ]; then
-                MAJOR=${VERSION_NUM:0:1}
-                MINOR=${VERSION_NUM:1:1}
-                PATCH=${VERSION_NUM:2:1}
-              else
-                MAJOR=${VERSION_NUM:0:1}
-                MINOR=${VERSION_NUM:1:1}
-                PATCH=${VERSION_NUM:2:1}
-              fi
-              
-              DETECTED_VERSION="$MAJOR.$MINOR.$PATCH"
-              
-              # 比較版本（簡單的數值比較）
-              LATEST_MAJOR=$(echo $LATEST_VERSION | cut -d. -f1)
-              LATEST_MINOR=$(echo $LATEST_VERSION | cut -d. -f2)
-              LATEST_PATCH=$(echo $LATEST_VERSION | cut -d. -f3)
-              
-              if [ $MAJOR -gt $LATEST_MAJOR ] || \
-                 ([ $MAJOR -eq $LATEST_MAJOR ] && [ $MINOR -gt $LATEST_MINOR ]) || \
-                 ([ $MAJOR -eq $LATEST_MAJOR ] && [ $MINOR -eq $LATEST_MINOR ] && [ $PATCH -gt $LATEST_PATCH ]); then
-                LATEST_VERSION=$DETECTED_VERSION
-                LATEST_BRANCH=$branch
+              DETECTED=$(parse_version $VERSION_NUM)
+              if version_gt "$DETECTED" "$LATEST_VERSION"; then
+                LATEST_VERSION=$DETECTED
+                LATEST_SOURCE="branch: $branch"
               fi
             fi
           done
 
-          echo "🎯 Latest version detected: v$LATEST_VERSION (from $LATEST_BRANCH)"
+          # 來源 2: 掃描已合併到 main 的 PR 標題（抓取歷史版本）
+          echo "🔍 Source 2: Scanning merged PR titles..."
+          for VERSION_NUM in $(gh pr list --state merged --base main --limit 100 --json title --jq '.[].title' 2>/dev/null | grep -oP 'Dev v\K[0-9]+' || echo ""); do
+            if [[ $VERSION_NUM =~ ^[0-9]+$ ]]; then
+              DETECTED=$(parse_version $VERSION_NUM)
+              if version_gt "$DETECTED" "$LATEST_VERSION"; then
+                LATEST_VERSION=$DETECTED
+                LATEST_SOURCE="merged PR: Dev v$VERSION_NUM"
+              fi
+            fi
+          done
+
+          # 來源 3: 掃描 package.json 中的版本（作為備用）
+          echo "🔍 Source 3: Checking package.json..."
+          if [ -f package.json ]; then
+            PKG_VERSION=$(node -p "require('./package.json').version" 2>/dev/null || echo "0.0.0")
+            if version_gt "$PKG_VERSION" "$LATEST_VERSION"; then
+              LATEST_VERSION=$PKG_VERSION
+              LATEST_SOURCE="package.json"
+            fi
+          fi
+
+          echo ""
+          echo "🎯 Latest version detected: v$LATEST_VERSION (from $LATEST_SOURCE)"
           echo "current=$LATEST_VERSION" >> $GITHUB_OUTPUT
 
           # 計算初始新版本
@@ -114,11 +149,12 @@ jobs:
 
           echo "next=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      # 步驟 2: 檢查計算的版本分支是否存在，如果存在則自動進位
+      # 步驟 2: 檢查計算的版本分支是否存在（多重來源驗證），如果存在則自動進位
       - name: Check and auto-increment version if conflict
         id: check_version
         env:
           INITIAL_VERSION: ${{ steps.version.outputs.next }}
+          GH_TOKEN: ${{ secrets.ACTIONS_PAT }}
         run: |
           CURRENT_VERSION=$INITIAL_VERSION
           ATTEMPT=0
@@ -126,18 +162,47 @@ jobs:
 
           echo "🔍 Checking if branch dev-v$(echo $CURRENT_VERSION | sed 's/\.//g') exists..."
 
+          # 函數：檢查分支或相關 PR 是否已存在
+          branch_or_pr_exists() {
+            local BRANCH_NAME=$1
+            local VERSION_NUM=$(echo "$BRANCH_NAME" | sed 's/dev-v//')
+            
+            # 檢查 1: 遠端分支是否存在
+            if git ls-remote --heads origin "$BRANCH_NAME" | grep -q "$BRANCH_NAME"; then
+              echo "remote-branch"
+              return 0
+            fi
+            
+            # 檢查 2: 是否有 open 的 PR 使用這個版本
+            if gh pr list --state open --json title --jq '.[].title' 2>/dev/null | grep -q "Dev v$VERSION_NUM"; then
+              echo "open-pr"
+              return 0
+            fi
+            
+            # 檢查 3: 是否有已合併的 PR 使用這個版本
+            if gh pr list --state merged --base main --limit 100 --json title --jq '.[].title' 2>/dev/null | grep -q "Dev v$VERSION_NUM"; then
+              echo "merged-pr"
+              return 0
+            fi
+            
+            echo "not-found"
+            return 1
+          }
+
           while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
             BRANCH_SUFFIX=$(echo "$CURRENT_VERSION" | sed 's/\.//g')
             BRANCH_NAME="dev-v${BRANCH_SUFFIX}"
             
-            # 檢查分支是否存在
-            if ! git rev-parse --verify "origin/$BRANCH_NAME" >/dev/null 2>&1; then
-              echo "✅ Branch $BRANCH_NAME is available!"
+            # 多重來源檢查
+            EXISTENCE_CHECK=$(branch_or_pr_exists "$BRANCH_NAME")
+            
+            if [ "$EXISTENCE_CHECK" = "not-found" ]; then
+              echo "✅ Branch $BRANCH_NAME is available (no conflicts found)!"
               echo "final_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
               echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
               break
             else
-              echo "⚠️ Branch $BRANCH_NAME already exists, auto-incrementing..."
+              echo "⚠️ Conflict detected for $BRANCH_NAME (source: $EXISTENCE_CHECK), auto-incrementing..."
               
               # 進位 patch 版本
               IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
@@ -155,7 +220,7 @@ jobs:
           if [ "$CURRENT_VERSION" != "$INITIAL_VERSION" ]; then
             echo ""
             echo "🔄 Version auto-incremented:"
-            echo "   Initial: v$INITIAL_VERSION → dev-v$(echo $INITIAL_VERSION | sed 's/\.//g') (already exists)"
+            echo "   Initial: v$INITIAL_VERSION → dev-v$(echo $INITIAL_VERSION | sed 's/\.//g') (conflict)"
             echo "   Final:   v$CURRENT_VERSION → dev-v$(echo $CURRENT_VERSION | sed 's/\.//g') (using this)"
           fi
 
