@@ -8,14 +8,14 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
   deployments: write
 
 jobs:
   deploy-production:
     if: github.event.pull_request.merged && contains(github.event.pull_request.title, 'Dev v')
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout main branch
         uses: actions/checkout@v4
@@ -29,7 +29,7 @@ jobs:
           TITLE="${{ github.event.pull_request.title }}"
           # 提取 vXXX 格式
           VERSION_NUM=$(echo "$TITLE" | grep -oP 'v\K[0-9]+' | head -1)
-          
+
           if [ -z "$VERSION_NUM" ]; then
             VERSION="0.0.1"
           else
@@ -45,7 +45,7 @@ jobs:
             
             VERSION="$MAJOR.$MINOR.$PATCH"
           fi
-          
+
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "🔖 Extracted version: v$VERSION"
 
@@ -55,7 +55,7 @@ jobs:
       # 待環境就緒時，請啟用以下步驟
       # ================================================================
 
-      - name: "[TEMPLATE] Setup Node.js"
+      - name: '[TEMPLATE] Setup Node.js'
         run: |
           echo "⏸️  Production deployment is not yet configured."
           echo "📋 Template steps:"
@@ -130,3 +130,31 @@ jobs:
               issue_number: context.payload.pull_request.number,
               body: `⏸️ Production deployment v${{ steps.extract.outputs.version }} - Template ready\n\n📋 Status: Production environment not yet configured\n\n✅ Once production environment is ready, enable the deployment steps in the workflow.`
             });
+
+      # ================================================================
+      # 建立 GitHub Release
+      # ================================================================
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.extract.outputs.version }}
+          name: Release v${{ steps.extract.outputs.version }}
+          body: |
+            ## 🚀 Release v${{ steps.extract.outputs.version }}
+
+            **PR**: #${{ github.event.pull_request.number }}
+            **Merged by**: @${{ github.event.pull_request.merged_by.login }}
+
+            ---
+
+            ${{ github.event.pull_request.body }}
+          generate_release_notes: true
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_PAT }}
+
+      - name: Log Release Created
+        run: |
+          echo "✅ GitHub Release created!"
+          echo "🔖 Tag: v${{ steps.extract.outputs.version }}"
+          echo "📦 Release URL: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.extract.outputs.version }}"
