@@ -372,6 +372,11 @@ jobs:
 
           echo "📝 Creating PR: $BRANCH_NAME -> main"
 
+          # 先確保 label 存在（如果不存在就建立）
+          echo "🏷️ Ensuring labels exist..."
+          gh label create "release" --color "0E8A16" --description "Release PR" 2>/dev/null || echo "Label 'release' already exists"
+          gh label create "automation" --color "1D76DB" --description "Automated PR" 2>/dev/null || echo "Label 'automation' already exists"
+
           # 建立 PR
           PR_URL=$(gh pr create \
             --base main \
