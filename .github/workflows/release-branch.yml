@@ -307,34 +307,42 @@ jobs:
             exit 1
           fi
 
-      # 步驟 6: 取得已 merge 到 dev 的所有副分支
-      - name: Get all merged feature branches
+      # 步驟 6: 取得最近已 merge 到 dev 的 PR 列表
+      - name: Get merged PRs to dev
         id: branches_list
+        env:
+          GH_TOKEN: ${{ secrets.ACTIONS_PAT }}
         run: |
-          BRANCHES=""
+          echo "🔍 Fetching recently merged PRs to dev..."
 
-          # 獲取所有遠端分支
-          for branch in $(git branch -r --format='%(refname:short)' | grep '^origin/' | grep -v '^origin/HEAD' | grep -v '^origin/main$' | grep -v '^origin/dev$' | grep -v '^origin/qa$' | grep -v '^origin/dev-v'); do
-            CLEAN_BRANCH=$(echo "$branch" | sed 's/^origin\///')
-            
-            if [[ "$CLEAN_BRANCH" =~ ^(Feature|Fix|Update|Hotfix)- ]]; then
-              # 檢查這個分支是否已經 merge 進 dev
-              if git merge-base --is-ancestor "$branch" origin/dev 2>/dev/null; then
-                BRANCHES="$BRANCHES- $CLEAN_BRANCH"$'\n'
-              fi
-            fi
-          done
+          # 取得最近 30 天內合併到 dev 的 PR（排除 release PR）
+          MERGED_PRS=$(gh pr list \
+            --state merged \
+            --base dev \
+            --limit 50 \
+            --json number,title,headRefName,mergedAt \
+            --jq '.[] | select(.title | test("^Dev v[0-9]") | not) | "- \(.headRefName) #\(.number)"' \
+            2>/dev/null | head -20 || echo "")
 
-          # 如果沒有副分支，就列出主要分支
-          if [ -z "$BRANCHES" ]; then
-            BRANCHES="- dev"$'\n'"- qa"
-          else
-            # 移除末尾的新行
-            BRANCHES=$(echo "$BRANCHES" | sed '$ s/.$//')
+          if [ -z "$MERGED_PRS" ]; then
+            echo "⚠️ No recently merged PRs found, checking git log..."
+            # 備用方案：從 git log 取得最近 merge 的分支
+            MERGED_PRS=$(git log origin/dev --merges --oneline -20 \
+              | grep -oP "Merge pull request #\d+ from [^/]+/\K[^\s]+" \
+              | grep -E "^(Feature|Fix|Update|Hotfix)-" \
+              | head -10 \
+              | sed 's/^/- /' || echo "")
           fi
 
+          if [ -z "$MERGED_PRS" ]; then
+            MERGED_PRS="- (無最近合併的 PR)"
+          fi
+
+          echo "📋 Found merged PRs:"
+          echo "$MERGED_PRS"
+
           echo "branches<<EOF" >> $GITHUB_OUTPUT
-          echo "$BRANCHES" >> $GITHUB_OUTPUT
+          echo "$MERGED_PRS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       # 步驟 7: 產生 PR 描述
