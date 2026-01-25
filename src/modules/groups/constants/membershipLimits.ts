@@ -6,8 +6,7 @@ import type { MembershipTier } from '@/modules/auth/types/auth.types';
  */
 export const GROUP_LIMITS: Record<MembershipTier, number> = {
   free: 20,
-  premium: 20,
-  vip: 20,
+  pro: 20,
 };
 
 /**

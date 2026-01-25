@@ -16,22 +16,46 @@ const CategoryStatsBar: React.FC<CategoryStatsBarProps> = ({
 }) => {
   const barRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(true);
+  const isVisibleRef = useRef(isVisible);
+
+  // 同步 ref 與 state
+  useEffect(() => {
+    isVisibleRef.current = isVisible;
+  }, [isVisible]);
 
   useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
+    // 輪詢檢查 container 是否已掛載（解決 SlideModalLayout 動態掛載 ref 的時序問題）
+    let container = scrollContainerRef.current;
+    let pollAttempts = 0;
+    const maxAttempts = 20;
 
-    const handleScroll = () => {
-      if (container.scrollTop > 50) {
-        if (isVisible) setIsVisible(false);
-      } else {
-        if (!isVisible) setIsVisible(true);
+    const tryAttachListener = () => {
+      container = scrollContainerRef.current;
+      if (container) {
+        const handleScroll = () => {
+          const shouldHide = container!.scrollTop > 50;
+          if (shouldHide && isVisibleRef.current) {
+            setIsVisible(false);
+          } else if (!shouldHide && !isVisibleRef.current) {
+            setIsVisible(true);
+          }
+        };
+
+        container.addEventListener('scroll', handleScroll);
+        return () => container!.removeEventListener('scroll', handleScroll);
+      } else if (pollAttempts < maxAttempts) {
+        pollAttempts++;
+        const timeoutId = setTimeout(tryAttachListener, 100);
+        return () => clearTimeout(timeoutId);
       }
+      return undefined;
     };
 
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, [scrollContainerRef, isVisible]);
+    const cleanup = tryAttachListener();
+    return () => {
+      cleanup?.();
+    };
+  }, [scrollContainerRef]);
 
   useEffect(() => {
     if (isVisible) {

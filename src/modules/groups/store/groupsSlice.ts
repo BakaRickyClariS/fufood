@@ -180,7 +180,22 @@ const groupsSlice = createSlice({
       state.isLoading = false;
       const index = state.items.findIndex((g) => g.id === action.payload.id);
       if (index !== -1) {
-        state.items[index] = action.payload;
+        const existingGroup = state.items[index];
+        const updatedData = action.payload;
+
+        // 智能合併：只更新有有效值的欄位，保護 members 不被空值覆蓋
+        state.items[index] = {
+          ...existingGroup,
+          // 只更新基本欄位（後端會回傳的）
+          name: updatedData.name ?? existingGroup.name,
+          updatedAt: updatedData.updatedAt ?? existingGroup.updatedAt,
+          // 保護重要欄位：只有當 API 明確回傳非空陣列時才更新
+          members:
+            updatedData.members && updatedData.members.length > 0
+              ? updatedData.members
+              : existingGroup.members,
+          admin: updatedData.admin ?? existingGroup.admin,
+        };
       }
     });
     builder.addCase(updateGroup.rejected, (state, action) => {

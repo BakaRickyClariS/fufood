@@ -15,25 +15,25 @@ import { categories } from '@/modules/inventory/constants/categories';
 // 支援多種可能的欄位命名（camelCase 和 snake_case）
 type RawScanResponsePayload = {
   productName?: string;
-  product_name?: string;  // snake_case 備援
+  product_name?: string; // snake_case 備援
   name?: string;
   category?: string;
   attributes?: string;
   purchaseQuantity?: number | string;
-  purchase_quantity?: number | string;  // snake_case 備援
+  purchase_quantity?: number | string; // snake_case 備援
   unit?: string;
   purchaseDate?: string;
-  purchase_date?: string;  // snake_case 備援
+  purchase_date?: string; // snake_case 備援
   expiryDate?: string;
-  expiry_date?: string;  // snake_case 備援
-  expected_expiry_date?: string;  // 另一種可能的命名
+  expiry_date?: string; // snake_case 備援
+  expected_expiry_date?: string; // 另一種可能的命名
   lowStockAlert?: boolean;
-  low_stock_alert?: boolean;  // snake_case 備援
+  low_stock_alert?: boolean; // snake_case 備援
   lowStockThreshold?: number | string;
-  low_stock_threshold?: number | string;  // snake_case 備援
+  low_stock_threshold?: number | string; // snake_case 備援
   notes?: string;
   imageUrl?: string;
-  image_url?: string;  // snake_case 備援
+  image_url?: string; // snake_case 備援
 };
 
 type RawScanResponse = RawScanResponsePayload & {
@@ -130,7 +130,8 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     // 同時支援 camelCase 和 snake_case 欄位命名
     const today = new Date().toISOString().slice(0, 10);
     const mapped: FoodItemInput = {
-      productName: payload.productName ?? payload.product_name ?? payload.name ?? '',
+      productName:
+        payload.productName ?? payload.product_name ?? payload.name ?? '',
       category: finalCategory as FoodItemInput['category'],
       attributes: finalAttributes
         ? finalAttributes
@@ -138,12 +139,20 @@ export const createRealFoodScanApi = (): FoodScanApi => {
             .map((attr) => attr.trim())
             .filter(Boolean)
         : [],
-      purchaseQuantity: Number(payload.purchaseQuantity ?? payload.purchase_quantity ?? 1),
+      purchaseQuantity: Number(
+        payload.purchaseQuantity ?? payload.purchase_quantity ?? 1,
+      ),
       unit: (payload.unit ?? '份') as FoodItemInput['unit'],
       purchaseDate: payload.purchaseDate ?? payload.purchase_date ?? today,
-      expiryDate: payload.expiryDate ?? payload.expiry_date ?? payload.expected_expiry_date ?? '',
+      expiryDate:
+        payload.expiryDate ??
+        payload.expiry_date ??
+        payload.expected_expiry_date ??
+        '',
       lowStockAlert: payload.lowStockAlert ?? payload.low_stock_alert ?? true,
-      lowStockThreshold: Number(payload.lowStockThreshold ?? payload.low_stock_threshold ?? 2),
+      lowStockThreshold: Number(
+        payload.lowStockThreshold ?? payload.low_stock_threshold ?? 2,
+      ),
       notes: payload.notes ?? '',
       imageUrl: payload.imageUrl ?? payload.image_url ?? '',
     };
@@ -208,12 +217,12 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     const apiPayload = {
       name: data.productName, // productName → name
       category: data.category,
-      quantity: data.purchaseQuantity, // purchaseQuantity → quantity
+      quantity: Number(data.purchaseQuantity) || 1, // purchaseQuantity → quantity, ensure number
       unit: data.unit,
       purchaseDate: data.purchaseDate,
-      expiryDate: data.expiryDate || undefined,
+      expiryDate: data.expiryDate ? data.expiryDate : undefined, // empty string -> undefined
       lowStockAlert: data.lowStockAlert,
-      lowStockThreshold: data.lowStockThreshold,
+      lowStockThreshold: Number(data.lowStockThreshold) || 2,
       notes: data.notes,
       imageUrl: data.imageUrl,
       attributes: Array.isArray(data.attributes)

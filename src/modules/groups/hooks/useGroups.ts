@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { identity } from '@/shared/utils/identity';
 import type { AppDispatch, RootState } from '@/store';
 import {
   fetchGroups as fetchGroupsAction,
@@ -10,6 +11,7 @@ import {
   selectGroupsLoading,
   selectGroupsError,
 } from '../store/groupsSlice';
+import { groupsApi } from '../api/groupsApi';
 import type { CreateGroupForm, UpdateGroupForm } from '../types/group.types';
 
 /**
@@ -35,6 +37,8 @@ export const useGroups = () => {
     try {
       const resultAction = await dispatch(createGroupAction(form));
       if (createGroupAction.fulfilled.match(resultAction)) {
+        // 建立成功後重新載入群組列表，以取得完整成員資料（包含大頭貼）
+        fetchGroups();
         return resultAction.payload;
       } else {
         throw new Error(resultAction.payload as string);
@@ -72,11 +76,22 @@ export const useGroups = () => {
     }
   };
 
+  const leaveGroup = async (groupId: string) => {
+    try {
+      await groupsApi.leaveGroup(groupId);
+      // 離開成功後重新載入群組列表
+      fetchGroups();
+    } catch (err) {
+      throw err;
+    }
+  };
+
   // Initial fetch on mount
-  // 注意：這會導致每個使用此 Hook 的組件都觸發一次 fetch
-  // 但目前主要由 GroupModalProvider 使用，作為 Singleton 存在
+  // 使用共用模組檢查是否可以發送認證請求
   useEffect(() => {
-    fetchGroups();
+    if (identity.canMakeAuthenticatedRequest()) {
+      fetchGroups();
+    }
   }, [fetchGroups]);
 
   return {
@@ -86,6 +101,7 @@ export const useGroups = () => {
     createGroup,
     updateGroup,
     deleteGroup,
+    leaveGroup,
     refetch: fetchGroups,
   };
 };

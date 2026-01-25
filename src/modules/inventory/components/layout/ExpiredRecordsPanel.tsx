@@ -8,7 +8,6 @@ import {
 import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import CommonItemCard from '@/modules/inventory/components/ui/card/CommonItemCard';
 import { useInventoryExtras } from '@/modules/inventory/hooks';
-import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
 import useFadeInAnimation from '@/shared/hooks/useFadeInAnimation';
 import { useInventorySettingsQuery } from '@/modules/inventory/api/queries';
 import { categories as defaultCategories } from '@/modules/inventory/constants/categories';
@@ -51,44 +50,25 @@ const FilterButton = ({ isActive, onClick, children }: FilterButtonProps) => (
   </button>
 );
 
-const ExpiredRecordsPanel: React.FC = () => {
+type ExpiredRecordsPanelProps = {
+  /** 開啟食物詳情 Modal 的回呼 */
+  onOpenItem?: (itemId: string) => void;
+};
+
+const ExpiredRecordsPanel: React.FC<ExpiredRecordsPanelProps> = ({
+  onOpenItem,
+}) => {
   const { expiredItems, isLoading, fetchExpiredItems } = useInventoryExtras();
-  const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const [filter, setFilter] = useState<'expired' | 'completed'>('expired');
   const [isContentLoading, setIsContentLoading] = useState(false);
   const { groupId } = useParams<{ groupId: string }>();
   const dispatch = useDispatch();
 
   // 使用共用的淡入動畫 hook
-  const {
-    ref: contentRef,
-    resetAnimation,
-    isAnimationComplete,
-  } = useFadeInAnimation<HTMLDivElement>({
-    isLoading: isLoading || isContentLoading,
-  });
-
-  // Restore usage of Session Storage for memory
-  useEffect(() => {
-    // Wait for loading to finish AND animation to complete
-    if (isLoading || isContentLoading || !isAnimationComplete) return;
-
-    const savedId = sessionStorage.getItem('active_food_id');
-    if (savedId && !selectedItem && expiredItems.length > 0) {
-      // Add a noticeable delay after animation completes
-      const timer = setTimeout(() => {
-        const found = expiredItems.find((item) => item.id === savedId);
-        if (found) setSelectedItem(found);
-      }, 800); // Increased to 0.8s
-      return () => clearTimeout(timer);
-    }
-  }, [
-    expiredItems,
-    selectedItem,
-    isLoading,
-    isContentLoading,
-    isAnimationComplete,
-  ]);
+  const { ref: contentRef, resetAnimation } =
+    useFadeInAnimation<HTMLDivElement>({
+      isLoading: isLoading || isContentLoading,
+    });
 
   const groups = useSelector(selectAllGroups);
   const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
@@ -138,11 +118,14 @@ const ExpiredRecordsPanel: React.FC = () => {
       if (targetGroupId) {
         fetchExpiredItems(newFilter, 1, 20, targetGroupId);
       }
-
-      // 模擬載入完成（實際上 isLoading 會由 hook 控制）
-      // 這裡需要等待實際的 isLoading 變化
     },
-    [filter, isContentLoading, fetchExpiredItems, resetAnimation],
+    [
+      filter,
+      isContentLoading,
+      fetchExpiredItems,
+      resetAnimation,
+      targetGroupId,
+    ],
   );
 
   // 監聽 isLoading 變化，當載入完成時關閉 isContentLoading
@@ -170,77 +153,57 @@ const ExpiredRecordsPanel: React.FC = () => {
   const showLoading = isLoading || isContentLoading;
 
   return (
-    <>
-      <div className="pb-24 space-y-6">
-        <div className="flex items-center gap-3">
-          <FilterButton
-            isActive={filter === 'expired'}
-            onClick={() => handleFilterChange('expired')}
-          >
-            已過期
-          </FilterButton>
-          <FilterButton
-            isActive={filter === 'completed'}
-            onClick={() => handleFilterChange('completed')}
-          >
-            已完成
-          </FilterButton>
-        </div>
-
-        {showLoading ? (
-          <div className="p-4 text-center text-neutral-400">Loading...</div>
-        ) : (
-          <div ref={contentRef}>
-            {expiredGroups.length === 0 ? (
-              <div className="text-center py-10 text-neutral-400">
-                目前沒有{filter === 'expired' ? '過期' : '完成'}紀錄
-              </div>
-            ) : (
-              expiredGroups.map((group) => (
-                <div key={group.category} className="mb-6">
-                  <div className="flex items-center gap-2 mb-3 px-1">
-                    <div className="w-1 h-4 bg-[#7F9F3F] rounded-full" />
-                    <h3 className="text-base font-bold text-neutral-600">
-                      {categoryNameMap[group.category] || group.category}
-                    </h3>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {group.items.map((item) => (
-                      <CommonItemCard
-                        key={item.id}
-                        name={item.name}
-                        image={item.imageUrl || ''}
-                        value={item.lastPurchaseQuantity || item.quantity || 1}
-                        label="上次購買數量"
-                        onClick={() => {
-                          setSelectedItem(item);
-                          sessionStorage.setItem('active_food_id', item.id);
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
+    <div className="pb-24 space-y-6">
+      <div className="flex items-center gap-3">
+        <FilterButton
+          isActive={filter === 'expired'}
+          onClick={() => handleFilterChange('expired')}
+        >
+          已過期
+        </FilterButton>
+        <FilterButton
+          isActive={filter === 'completed'}
+          onClick={() => handleFilterChange('completed')}
+        >
+          已完成
+        </FilterButton>
       </div>
 
-      {selectedItem && (
-        <FoodDetailModal
-          item={selectedItem}
-          isOpen={!!selectedItem}
-          onClose={() => {
-            setSelectedItem(null);
-            sessionStorage.removeItem('active_food_id');
-          }}
-          isCompleted={filter === 'completed'}
-          onItemUpdate={() => {
-            if (targetGroupId) fetchExpiredItems(filter, 1, 20, targetGroupId);
-          }}
-        />
+      {showLoading ? (
+        <div className="p-4 text-center text-neutral-400">Loading...</div>
+      ) : (
+        <div ref={contentRef}>
+          {expiredGroups.length === 0 ? (
+            <div className="text-center py-10 text-neutral-400">
+              目前沒有{filter === 'expired' ? '過期' : '完成'}紀錄
+            </div>
+          ) : (
+            expiredGroups.map((group) => (
+              <div key={group.category} className="mb-6">
+                <div className="flex items-center gap-2 mb-3 px-1">
+                  <div className="w-1 h-4 bg-[#7F9F3F] rounded-full" />
+                  <h3 className="text-base font-bold text-neutral-600">
+                    {categoryNameMap[group.category] || group.category}
+                  </h3>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {group.items.map((item) => (
+                    <CommonItemCard
+                      key={item.id}
+                      name={item.name}
+                      image={item.imageUrl || ''}
+                      value={item.lastPurchaseQuantity || item.quantity || 1}
+                      label="上次購買數量"
+                      onClick={() => onOpenItem?.(item.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       )}
-    </>
+    </div>
   );
 };
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {
@@ -8,15 +8,18 @@ import {
 import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
 import CommonItemCard from '@/modules/inventory/components/ui/card/CommonItemCard';
 import { useInventoryExtras } from '@/modules/inventory/hooks';
-import FoodDetailModal from '@/modules/inventory/components/ui/modal/FoodDetailModal';
 import useFadeInAnimation from '@/shared/hooks/useFadeInAnimation';
 import { useInventorySettingsQuery } from '@/modules/inventory/api/queries';
 import { categories as defaultCategories } from '@/modules/inventory/constants/categories';
 import type { FoodItem } from '@/modules/inventory/types';
 
-const CommonItemsPanel: React.FC = () => {
+type CommonItemsPanelProps = {
+  /** 開啟食物詳情 Modal 的回呼 */
+  onOpenItem?: (itemId: string) => void;
+};
+
+const CommonItemsPanel: React.FC<CommonItemsPanelProps> = ({ onOpenItem }) => {
   const { frequentItems, isLoading, fetchFrequentItems } = useInventoryExtras();
-  const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const { ref: contentRef } = useFadeInAnimation<HTMLDivElement>({ isLoading });
 
   const { groupId } = useParams<{ groupId: string }>();
@@ -71,7 +74,15 @@ const CommonItemsPanel: React.FC = () => {
     });
 
     // 使用英文 id 排序（與 categories.ts 一致）
-    const categoryOrder = ['fruit', 'bake', 'frozen', 'milk', 'seafood', 'meat', 'others'];
+    const categoryOrder = [
+      'fruit',
+      'bake',
+      'frozen',
+      'milk',
+      'seafood',
+      'meat',
+      'others',
+    ];
 
     return categoryOrder
       .map((categoryId) => ({
@@ -89,59 +100,44 @@ const CommonItemsPanel: React.FC = () => {
   }
 
   return (
-    <>
-      <div ref={contentRef} className="pb-24 space-y-6">
-        {groupedItems.length === 0 ? (
-          <div className="text-center py-10 text-neutral-400">
-            目前沒有常買項目紀錄
-          </div>
-        ) : (
-          groupedItems.map((group) => (
-            <div key={group.categoryId}>
-              <div className="flex items-center justify-between mb-3 px-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-4 bg-[#7F9F3F] rounded-full" />
-                  <h3 className="text-base font-bold text-neutral-600">
-                    {group.categoryName}
-                  </h3>
-                </div>
-                <div className="flex items-baseline gap-1 text-lg font-bold">
-                  <span className="text-neutral-900">{group.items.length}</span>
-                  <span className="text-neutral-500">/</span>
-                  <span className="text-neutral-500">{4}</span>
-                </div>
+    <div ref={contentRef} className="pb-24 space-y-6">
+      {groupedItems.length === 0 ? (
+        <div className="text-center py-10 text-neutral-400">
+          目前沒有常買項目紀錄
+        </div>
+      ) : (
+        groupedItems.map((group) => (
+          <div key={group.categoryId}>
+            <div className="flex items-center justify-between mb-3 px-1">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-4 bg-[#7F9F3F] rounded-full" />
+                <h3 className="text-base font-bold text-neutral-600">
+                  {group.categoryName}
+                </h3>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                {group.items.map((item) => (
-                  <CommonItemCard
-                    key={item.id}
-                    name={item.name}
-                    image={item.imageUrl || ''}
-                    value={item.lastPurchaseQuantity || 1}
-                    label="上次購買數量"
-                    onClick={() => setSelectedItem(item)}
-                  />
-                ))}
+              <div className="flex items-baseline gap-1 text-lg font-bold">
+                <span className="text-neutral-900">{group.items.length}</span>
+                <span className="text-neutral-500">/</span>
+                <span className="text-neutral-500">{4}</span>
               </div>
             </div>
-          ))
-        )}
-      </div>
-
-      {selectedItem && (
-        <FoodDetailModal
-          item={selectedItem}
-          isOpen={!!selectedItem}
-          onClose={() => setSelectedItem(null)}
-          isCompleted={selectedItem.quantity <= 0}
-          onItemUpdate={() => {
-            if (targetGroupId) fetchFrequentItems(10, targetGroupId);
-          }}
-        />
+            <div className="grid grid-cols-2 gap-2">
+              {group.items.map((item) => (
+                <CommonItemCard
+                  key={item.id}
+                  name={item.name}
+                  image={item.imageUrl || ''}
+                  value={item.lastPurchaseQuantity || 1}
+                  label="上次購買數量"
+                  onClick={() => onOpenItem?.(item.id)}
+                />
+              ))}
+            </div>
+          </div>
+        ))
       )}
-    </>
+    </div>
   );
 };
 
 export default CommonItemsPanel;
-

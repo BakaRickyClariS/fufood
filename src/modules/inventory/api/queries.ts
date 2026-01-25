@@ -36,6 +36,7 @@ export const useInventoryQuery = (params?: GetInventoryRequest) => {
   return useQuery({
     queryKey: inventoryKeys.list(params),
     queryFn: () => inventoryApi.getInventory(params),
+    enabled: !!params?.refrigeratorId, // 確保有 ID 才查詢
     staleTime: 1000 * 60 * 5, // 5 分鐘
   });
 };
@@ -47,7 +48,7 @@ export const useInventoryItemQuery = (id: string, refrigeratorId?: string) => {
   return useQuery({
     queryKey: inventoryKeys.detail(id, refrigeratorId),
     queryFn: () => inventoryApi.getItem(id, refrigeratorId),
-    enabled: !!id,
+    enabled: !!id && !!refrigeratorId, // 確保有 ID 才查詢
   });
 };
 
@@ -58,6 +59,7 @@ export const useInventorySummaryQuery = (refrigeratorId?: string) => {
   return useQuery({
     queryKey: inventoryKeys.summary(refrigeratorId),
     queryFn: () => inventoryApi.getSummary(refrigeratorId),
+    enabled: !!refrigeratorId, // 確保有 ID 才查詢
     staleTime: 1000 * 60 * 5,
   });
 };
@@ -69,6 +71,7 @@ export const useInventoryCategoriesQuery = (refrigeratorId?: string) => {
   return useQuery({
     queryKey: inventoryKeys.categories(refrigeratorId),
     queryFn: () => inventoryApi.getCategories(refrigeratorId),
+    enabled: !!refrigeratorId, // 確保有 ID 才查詢
     staleTime: 1000 * 60 * 30, // 30 分鐘（類別不常變動）
   });
 };
@@ -80,6 +83,7 @@ export const useInventorySettingsQuery = (refrigeratorId?: string) => {
   return useQuery({
     queryKey: inventoryKeys.settings(refrigeratorId),
     queryFn: () => inventoryApi.getSettings(refrigeratorId),
+    enabled: !!refrigeratorId, // 確保有 ID 才查詢
   });
 };
 

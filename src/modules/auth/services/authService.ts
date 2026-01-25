@@ -148,4 +148,30 @@ export const authService = {
     await authApi.logout();
     authService.clearAllAppData();
   },
+  /**
+   * 更新使用者個人資料
+   */
+  updateProfile: async (data: any) => {
+    const response = await authApi.updateProfile(data);
+
+    // 更新本地儲存的使用者資料
+    const currentUser = authService.getUser();
+    if (currentUser && response.data) {
+      const updatedUser = {
+        ...currentUser,
+        // 更新相關欄位
+        name: response.data.name,
+        // 注意：後端回傳的 profilePictureUrl 可能就是 avatar ID
+        avatar:
+          response.data.profilePictureUrl ||
+          response.data.avatar ||
+          currentUser.avatar,
+        // 其他可能更新的欄位
+      };
+
+      authService.saveUser(updatedUser);
+    }
+
+    return response;
+  },
 };

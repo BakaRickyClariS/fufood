@@ -1,8 +1,6 @@
-import { useState } from 'react';
 import { RecipeCardCarousel } from '@/shared/components/recipe';
 import { useRecipesQuery } from '@/modules/recipe/api/queries';
-import { RecipeDetailModal } from '@/modules/recipe/components/ui/RecipeDetailModal';
-import type { RecipeListItem } from '@/modules/recipe/types';
+import { useRecipeModal } from '@/modules/recipe/providers/RecipeModalProvider';
 import AiRecommendCard from './AiRecommendCard';
 
 import { useSelector } from 'react-redux';
@@ -15,23 +13,13 @@ const RecipeSection = () => {
   });
   const recipes = data?.slice(0, 6) ?? []; // 首頁最多顯示 6 筆
 
-  const [selectedRecipe, setSelectedRecipe] = useState<RecipeListItem | null>(
-    null,
-  );
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { openRecipeModal } = useRecipeModal();
 
   const handleRecipeClick = (id: string) => {
     const recipe = recipes.find((r) => r.id === id);
     if (recipe) {
-      setSelectedRecipe(recipe);
-      setIsModalOpen(true);
+      openRecipeModal(recipe);
     }
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    // 等待動畫結束後清除選中的食譜，避免閃爍 (Modal 內部有動畫時間 300ms)
-    setTimeout(() => setSelectedRecipe(null), 300);
   };
 
   // 若發生錯誤或非載入中且無資料，顯示空狀態或錯誤訊息
@@ -58,12 +46,6 @@ const RecipeSection = () => {
         )}
       </div>
       <AiRecommendCard />
-
-      <RecipeDetailModal
-        recipe={selectedRecipe}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-      />
     </section>
   );
 };
