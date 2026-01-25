@@ -1,10 +1,22 @@
 # FuFood 智慧食材管理系統（前端）
 
-一個以 **React 19 + TypeScript + Vite 7** 建構的智慧食材管理 PWA 應用，透過 AI 影像辨識技術自動識別食材、追蹤庫存與到期日，並整合 LINE 登入與 FCM 推播通知，提供個人化食譜推薦。
+<p align="center">
+  <img src="./public/og-image.webp" alt="FuFood 智慧食材管理系統" width="600" />
+</p>
 
 <p align="center">
-  <img src="./src/assets/logos/pwa-192x192.png" alt="FuFood Logo" width="80" />
+  <a href="https://fufood.jocelynh.me">🌐 Demo 網站</a> ｜
+  <a href="#">📊 簡報介紹</a> ｜
+  <a href="https://github.com/BakaRickyClariS/fufood-backend">🔧 後端 Repo</a> ｜
+  <a href="https://github.com/BakaRickyClariS/fufood-ai-service">🤖 AI 微服務 Repo</a>
 </p>
+
+<p align="center">
+  <a href="https://api.fufood.jocelynh.me/swagger/index.html">📄 Swagger API 文件</a> ｜
+  <a href="./docs/api/">📋 API 規格文件</a>
+</p>
+
+一個以 **React 19 + TypeScript + Vite 7** 建構的智慧食材管理 PWA 應用，透過 AI 影像辨識技術自動識別食材、追蹤庫存與到期日，並整合 LINE 登入與 FCM 推播通知，提供個人化食譜推薦。
 
 ---
 
@@ -12,9 +24,9 @@
 
 - [專案簡介](#-專案簡介)
 - [功能亮點](#-功能亮點)
-- [Demo & 預覽](#-demo--預覽)
-- [技術棧](#-技術棧)
-- [系統架構](#-系統架構)
+- [前端技術](#-前端技術)
+- [後端技術](#️-後端技術)
+- [系統架構](#️-系統架構)
 - [專案結構](#-專案結構)
 - [功能模組](#-功能模組)
 - [快速開始](#-快速開始)
@@ -59,30 +71,79 @@ FuFood 是一款智慧冰箱管理 App，核心功能包括：
 
 ---
 
-## 🎬 Demo & 預覽
+## 💻 前端技術
 
-> 🚧 Demo 網站籌備中
+![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Redux](https://img.shields.io/badge/Redux-764ABC?style=for-the-badge&logo=redux&logoColor=white)
+![React Query](https://img.shields.io/badge/TanStack_Query-FF4154?style=for-the-badge&logo=react-query&logoColor=white)
+![React Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white)
+![GSAP](https://img.shields.io/badge/GSAP-88CE02?style=for-the-badge&logo=greensock&logoColor=black)
+![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+![LINE](https://img.shields.io/badge/LINE-00C300?style=for-the-badge&logo=line&logoColor=white)
+![Radix UI](https://img.shields.io/badge/Radix_UI-161618?style=for-the-badge&logo=radix-ui&logoColor=white)
+![ESLint](https://img.shields.io/badge/ESLint-4B32C3?style=for-the-badge&logo=eslint&logoColor=white)
+![Prettier](https://img.shields.io/badge/Prettier-F7B93E?style=for-the-badge&logo=prettier&logoColor=black)
+
+### 技術說明：
+
+- **[ 環境 ]**：Vite 7
+  - 使用 Vite 作為建置工具，提供快速的 HMR 熱更新與優化的生產建置，開發體驗極佳。
+
+- **[ 框架 ]**：React 19
+  - 使用 React 19 進行前端開發，透過 React 生態系快速開發高品質 Web 應用，並運用最新的 Hooks、Suspense 等特性優化效能與開發體驗。
+
+- **[ 語言 ]**：TypeScript
+  - 使用 TypeScript 進行開發，透過嚴格的型別檢查，減少協作時產生的錯誤，提升程式碼可維護性。
+
+- **[ 樣式 ]**：Tailwind CSS 4 + Radix UI
+  - 使用 Tailwind CSS 4 進行原子化 CSS 開發，搭配 Radix UI 無障礙元件庫，快速建構一致且可存取的使用者介面。
+
+- **[ 狀態管理 ]**：Redux Toolkit + TanStack Query
+  - 採用客戶端/伺服器狀態分離架構，Redux 管理 UI 狀態，TanStack Query 處理伺服器狀態與快取。
+
+- **[ 動畫 ]**：GSAP
+  - 使用 GSAP 打造流暢的 UI 動畫效果，提升使用者互動體驗。
+
+- **[ PWA ]**：Vite PWA Plugin + Workbox
+  - 支援 PWA 安裝、離線快取、背景推播通知，提供原生 App 般的使用體驗。
+
+- **[ 部署平台 ]**：Vercel
+  - 使用 Vercel 進行自動化部署，透過 GitHub Actions CI/CD 流程，實現快速迭代與持續交付。
 
 ---
 
-## 🔹 技術棧
+## ⌨️ 後端技術
 
-| 項目          | 技術                           | 版本/說明                   |
-| ------------- | ------------------------------ | --------------------------- |
-| **主框架**    | React + TypeScript + Vite      | React 19 / Vite 7           |
-| **樣式系統**  | Tailwind CSS + Radix UI        | Tailwind CSS 4 / 無障礙元件 |
-| **狀態管理**  | Redux Toolkit + TanStack Query | 客戶端/伺服器狀態分離       |
-| **表單驗證**  | React Hook Form                | 表單狀態管理                |
-| **路由**      | React Router                   | v7 宣告式路由               |
-| **動畫**      | GSAP                           | 流暢 UI 動畫                |
-| **API 通訊**  | Fetch + HttpOnly Cookie        | 安全認證                    |
-| **登入系統**  | LINE OAuth 2.0                 | 社群登入                    |
-| **拖放功能**  | dnd-kit                        | 拖拉排序                    |
-| **圖示**      | lucide-react                   | 圖示庫                      |
-| **通知**      | sonner                         | Toast 通知                  |
-| **推播通知**  | Firebase Cloud Messaging       | FCM 整合                    |
-| **PWA**       | Vite PWA Plugin + Workbox      | 離線支援、可安裝            |
-| **AI Review** | Gemini Code Assist             | 自動 Code Review            |
+![.NET](https://img.shields.io/badge/.NET-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
+![C#](https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=c-sharp&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)
+![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white)
+![Google AI](https://img.shields.io/badge/Google_AI-4285F4?style=for-the-badge&logo=google&logoColor=white)
+
+### 技術說明：
+
+- **[ 主 API ]**：ASP.NET Core Web API
+  - 使用 .NET 8 建構主要後端 API，處理認證、庫存管理、群組管理、通知推播等核心功能。
+
+- **[ AI 微服務 ]**：Node.js + Express
+  - 使用 Node.js 建構 AI 微服務，整合 Google Gemini API 進行食材影像辨識與食譜生成，支援 Streaming 即時回應。
+
+- **[ 資料庫 ]**：Supabase (PostgreSQL)
+  - 使用 Supabase 作為 BaaS 平台，提供 PostgreSQL 資料庫、即時訂閱、Row Level Security 等功能。
+
+- **[ 媒體存儲 ]**：Cloudinary
+  - 使用 Cloudinary 進行圖片上傳、壓縮、CDN 快取，優化媒體資源載入效能。
+
+- **[ 推播服務 ]**：Firebase Cloud Messaging
+  - 整合 FCM 進行跨平台推播通知，支援食材到期提醒、共享群組通知等場景。
 
 ---
 
@@ -426,6 +487,6 @@ refactor: 重構通知模組 API 呼叫
 
 ---
 
-**最後更新**: 2026-01-04  
+**最後更新**: 2026-01-26  
 **版本**: v0.3.0  
 **狀態**: 開發中 🚀
