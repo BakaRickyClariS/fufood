@@ -1,7 +1,6 @@
-# FuFood 智慧食材管理系統（前端）
-
 <p align="center">
-  <img src="./public/logos/horizontal-zh.svg" alt="FuFood 智慧食材管理系統" width="200" />
+  <img src="./public/logos/horizontal-zh.svg" alt="FuFood 冰箱庫存管理 logo" width="200" />
+  <h1 align="center" style="font-weight: 700">FuFood 冰箱庫存管理</h1>
 </p>
 
 <p align="center">
@@ -17,7 +16,7 @@
 </p>
 
 一個以 **React 19 + TypeScript + Vite 7** 建構的智慧食材管理 PWA 應用，透過 AI 影像辨識技術自動識別食材、追蹤庫存與到期日，並整合 LINE 登入與 FCM 推播通知，提供個人化食譜推薦。
-<img src="./public/og-image.webp" alt="FuFood 智慧食材管理系統" width="100%" />
+<img src="./public/og-image.webp" alt="FuFood  冰箱庫存管理 og image" width="100%" />
 
 ---
 
