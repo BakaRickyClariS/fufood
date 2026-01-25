@@ -1,0 +1,486 @@
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { ChevronLeft, Bell, BellRing } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { selectConsumptionContextId } from '@/modules/inventory/store/consumptionSlice';
+import gsap from 'gsap';
+import { createPortal } from 'react-dom';
+import { InfoTooltip } from '@/shared/components/feedback/InfoTooltip';
+import { useGSAP } from '@gsap/react';
+import type { FoodItem } from '@/modules/inventory/types';
+import { useExpiryCheck } from '@/modules/inventory/hooks';
+import { inventoryApi } from '@/modules/inventory/api';
+// import { aiRecipeApi } from '@/modules/ai/api/aiRecipeApi';
+import { AIQueryModal } from '@/modules/ai/components/AIQueryModal';
+import { recipeApi } from '@/modules/recipe/services';
+import type { RecipeListItem } from '@/modules/recipe/types';
+import { ConsumptionModal } from '@/modules/inventory/components/consumption';
+import { useInventorySettingsQuery } from '@/modules/inventory/api/queries';
+import { categories as defaultCategories } from '@/modules/inventory/constants/categories';
+import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
+import { useDispatch } from 'react-redux';
+import { clearConsumption } from '@/modules/inventory/store/consumptionSlice';
+
+type FoodDetailModalProps = {
+  item: FoodItem;
+  isOpen: boolean;
+  onClose: () => void;
+  onItemUpdate?: () => void;
+  isCompleted?: boolean; // 已完成(已消耗)的項目不可再消耗
+};
+
+const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
+  item,
+  isOpen,
+  onClose,
+  onItemUpdate,
+  isCompleted = false,
+}) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const dispatch = useDispatch();
+
+  // 消耗 Modal 狀態
+  const [showConsumptionModal, setShowConsumptionModal] = useState(false);
+
+  // 通知設定狀態
+  const [lowStockAlertEnabled, setLowStockAlertEnabled] = useState(
+    item.lowStockAlert ?? false,
+  );
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [aiModalProps, setAIModalProps] = useState<{
+    initialQuery?: string;
+    initialSelectedIngredients?: string[];
+    initialRecipes?: RecipeListItem[];
+    autoGenerate?: boolean;
+    mode?: 'default' | 'inspiration';
+  }>({});
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const { status, daysUntilExpiry } = useExpiryCheck(item);
+
+  // 取得設定資料以獲取分類中文名稱
+  const { data: settingsData } = useInventorySettingsQuery(item.groupId);
+
+  // 檢查是否有未完成的消耗流程 (Redux)
+  const consumptionContextId = useSelector(selectConsumptionContextId);
+
+  // 如果有未完成的流程且 ID 匹配，自動開啟消耗 Modal
+  useEffect(() => {
+    if (consumptionContextId === item.id) {
+      setShowConsumptionModal(true);
+    }
+  }, [consumptionContextId, item.id]);
+
+  // 建立 category ID → 中文名稱的映射
+  const categoryNameMap = useMemo(() => {
+    // 先建立預設對照表
+    const map: Record<string, string> = {};
+    defaultCategories.forEach((c) => {
+      map[c.id] = c.title;
+    });
+
+    // 如果有後端設定，合併更新
+    const categories = settingsData?.data?.settings?.categories || [];
+    categories.forEach((cat) => {
+      map[cat.id] = cat.title;
+    });
+
+    return map;
+  }, [settingsData]);
+
+  // 日期格式化工具函數
+  const formatDate = (dateString: string): string => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}/${month}/${day}`;
+  };
+
+  // 同步 item 狀態
+  useEffect(() => {
+    setLowStockAlertEnabled(item.lowStockAlert ?? false);
+  }, [item.lowStockAlert]);
+
+  // GSAP 進場/退場動畫
+  useGSAP(
+    () => {
+      if (isOpen) {
+        gsap.fromTo(
+          modalRef.current,
+          { x: '100%' },
+          { x: '0%', duration: 0.6, ease: 'power3.out' },
+        );
+      }
+    },
+    { scope: modalRef, dependencies: [isOpen] },
+  );
+
+  const { contextSafe } = useGSAP({ scope: modalRef });
+
+  const handleClose = contextSafe(() => {
+    // 如果使用者手動關閉 Modal，且當前有此食材的消耗流程，則清除流程狀態
+    if (consumptionContextId === item.id) {
+      dispatch(clearConsumption());
+    }
+
+    // 向右滑出
+    gsap.to(modalRef.current, {
+      x: '100%',
+      duration: 0.3,
+      ease: 'power3.in',
+      onComplete: onClose,
+    });
+  });
+
+  const handleToggleAlert = async () => {
+    if (isUpdating) return;
+    const newValue = !lowStockAlertEnabled;
+    setLowStockAlertEnabled(newValue);
+    setIsUpdating(true);
+
+    try {
+      await inventoryApi.updateItem(
+        item.id,
+        {
+          lowStockAlert: newValue,
+        },
+        item.groupId,
+      );
+      onItemUpdate?.();
+    } catch (error) {
+      setLowStockAlertEnabled(!newValue);
+      console.error('更新低庫存通知失敗:', error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // 處理食譜靈感 (AI 生成)
+  const handleRecipeInspiration = async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    // 1. 先嘗試從現有食譜搜尋
+    try {
+      // 這裡簡單抓取所有食譜並過濾 (若資料量大應改為後端 API 支援)
+      // 注意：這裡不傳 refrigeratorId 以搜尋所有已儲存食譜
+      const allSavedRecipes = await recipeApi.getRecipes(); // 需要 import recipeApi
+
+      const matchedRecipes = allSavedRecipes.filter((r) =>
+        r.name.includes(item.name),
+      );
+
+      if (matchedRecipes.length > 0) {
+        // 有現有食譜：直接開啟 AIQueryModal 顯示結果，不觸發 AI
+        setAIModalProps({
+          initialQuery: `使用 ${item.name} 製作料理`,
+          initialSelectedIngredients: [item.name],
+          initialRecipes: matchedRecipes,
+          autoGenerate: false,
+          mode: 'default',
+        });
+      } else {
+        // 無現有食譜：開啟 AIQueryModal 並自動觸發 AI 生成 (靈感模式)
+        setAIModalProps({
+          initialQuery: `使用 ${item.name} 製作料理`,
+          initialSelectedIngredients: [item.name],
+          initialRecipes: [],
+          autoGenerate: true,
+          mode: 'inspiration', // 啟用靈感模式：單一結果、自動開啟、Loading 圖示
+        });
+      }
+      setShowAIModal(true);
+    } catch (error) {
+      console.error('Check existing recipes failed', error);
+      // 發生錯誤則 Fallback 到原本邏輯 (直接 AI)
+      setAIModalProps({
+        initialQuery: `使用 ${item.name} 製作料理`,
+        initialSelectedIngredients: [item.name],
+        initialRecipes: [],
+        autoGenerate: true,
+        mode: 'inspiration',
+      });
+      setShowAIModal(true);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const getStatusBadge = () => {
+    let bgClass = 'bg-success-500';
+    let text = '有庫存';
+
+    switch (status) {
+      case 'expired':
+        bgClass = 'bg-danger-500';
+        text = '已過期';
+        break;
+      case 'expiring-soon':
+        bgClass = 'bg-warning-500';
+        text = '即將過期';
+        break;
+      case 'low-stock':
+        bgClass = 'bg-primary-400';
+        text = '低庫存';
+        break;
+      default:
+        bgClass = 'bg-success-500';
+        text = '有庫存';
+        break;
+    }
+
+    return (
+      <span
+        className={`px-3 py-1 ${bgClass} text-white text-sm font-bold rounded-full`}
+      >
+        {text}
+      </span>
+    );
+  };
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div ref={modalRef} className="fixed inset-0 z-100 bg-white flex flex-col">
+      {/* Consumpion Modal */}
+      <ConsumptionModal
+        isOpen={showConsumptionModal}
+        onClose={() => setShowConsumptionModal(false)}
+        singleItem={{
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit || '個',
+          expiryDate: item.expiryDate,
+        }}
+        refrigeratorId={item.groupId || activeRefrigeratorId || ''}
+        onConfirm={() => {
+          // 消耗完成後只關閉 ConsumptionModal
+          // 不自動關閉食材詳細頁面，讓用戶決定是否返回
+          setShowConsumptionModal(false);
+          onItemUpdate?.(); // 刷新數據
+        }}
+        onCloseAll={(onParentClosed) => {
+          // 返回庫房時：先播放食材詳細頁的離場動畫，然後徹底關閉
+          if (modalRef.current) {
+            gsap.to(modalRef.current, {
+              x: '100%',
+              duration: 0.3,
+              ease: 'power3.in',
+              onComplete: () => {
+                // 動畫完成後呼叫 callback 並關閉 Modal
+                onParentClosed();
+                onClose(); // 確保 FoodDetailModal 被真正關閉
+              },
+            });
+          } else {
+            onParentClosed();
+            onClose();
+          }
+        }}
+      />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-10 px-4 py-3 flex items-center justify-between bg-black/20">
+        <button
+          onClick={handleClose}
+          className="p-1 -ml-1 rounded-full text-white hover:bg-black/10 transition-colors"
+        >
+          <ChevronLeft className="w-6 h-6 drop-shadow-md" />
+        </button>
+        {/* Helper layout for centering */}
+        <div className="absolute left-1/2 -translate-x-1/2 text-base font-bold text-white drop-shadow-md">
+          {categoryNameMap[item.category] || item.category}
+        </div>
+        <div className="w-6" /> {/* Spacer */}
+      </div>
+
+      {/* Main Content (Scrollable) */}
+      <div className="flex-1 overflow-y-auto w-full h-full bg-white pb-10">
+        <div className="min-h-full flex flex-col">
+          {/* Image & Banner */}
+          <div className="relative h-64 w-full shrink-0">
+            <img
+              src={item.imageUrl}
+              alt={item.name}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+          </div>
+          <div className="relative z-10 -mt-6 bg-white rounded-t-xl p-6 space-y-6 flex-1">
+            {/* Title & Alert Row */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-neutral-900">
+                {item.name}
+              </h2>
+              <button
+                onClick={handleToggleAlert}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold transition-colors ${
+                  lowStockAlertEnabled
+                    ? 'bg-primary-50 text-primary-500'
+                    : 'bg-gray-100 text-neutral-500 hover:bg-gray-200'
+                }`}
+              >
+                {lowStockAlertEnabled ? (
+                  <>
+                    <BellRing className="w-4 h-4 fill-current" />
+                    開啟低庫存通知
+                  </>
+                ) : (
+                  <>
+                    <Bell className="w-4 h-4" />
+                    開啟低庫存通知
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="w-full h-px bg-neutral-200" />
+
+            {/* Details List */}
+            <div className="space-y-4">
+              {/* Status */}
+              <div className="flex items-center justify-between">
+                <span className="text-lg text-neutral-500 font-medium flex items-center gap-1">
+                  食材狀態
+                  <InfoTooltip content="庫存狀態說明..." />
+                </span>
+                {getStatusBadge()}
+              </div>
+
+              {/* Category */}
+              <div className="flex items-center justify-between">
+                <span className="text-lg text-neutral-500 font-medium">
+                  產品分類
+                </span>
+                <span className="text-lg text-neutral-900 font-medium">
+                  {categoryNameMap[item.category] || item.category || '未分類'}
+                </span>
+              </div>
+
+              {/* Attributes */}
+              <div className="flex items-center justify-between">
+                <span className="text-lg text-neutral-500 font-medium">
+                  產品屬性
+                </span>
+                <span className="text-lg text-neutral-900 font-medium">
+                  {item.attributes?.join('、') || '葉菜根莖類'}
+                </span>
+              </div>
+
+              {/* Quantity */}
+              <div className="flex items-center justify-between">
+                <span className="text-lg text-neutral-500 font-medium flex items-center gap-1">
+                  單位數量 <InfoTooltip content="數量說明..." />
+                </span>
+                <span className="text-lg text-neutral-900 font-bold">
+                  {item.quantity} / {item.unit || '個'}
+                </span>
+              </div>
+
+              <div className="w-full h-px bg-neutral-200 my-2" />
+
+              {/* Dates */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-lg text-neutral-500 font-medium">
+                    入庫日期
+                  </span>
+                  <span className="text-lg text-neutral-900 font-medium">
+                    {formatDate(item.purchaseDate)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-lg text-neutral-500 font-medium">
+                    保存期限
+                  </span>
+                  <span
+                    className={`text-lg font-medium ${
+                      isNaN(daysUntilExpiry) || daysUntilExpiry < 0
+                        ? 'text-neutral-900'
+                        : 'text-neutral-900'
+                    } ${daysUntilExpiry < 0 && !isNaN(daysUntilExpiry) ? 'text-red-500' : ''}`}
+                  >
+                    {isNaN(daysUntilExpiry)
+                      ? '-'
+                      : daysUntilExpiry < 0
+                        ? `已過期`
+                        : `約${daysUntilExpiry}天`}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-lg text-neutral-500 font-medium">
+                    過期日期
+                  </span>
+                  <span className="text-lg text-neutral-900 font-medium">
+                    {formatDate(item.expiryDate)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="w-full h-px bg-neutral-200 my-2" />
+
+              {/* Notes */}
+              <div className="flex items-start justify-between">
+                <span className="text-lg text-neutral-500 font-medium flex items-center gap-1">
+                  備註 <InfoTooltip content="備註..." />
+                </span>
+                <span className="text-lg text-neutral-900 font-medium text-right max-w-[60%]">
+                  {item.notes || '好市多購入，季節限定'}
+                </span>
+              </div>
+            </div>
+
+            {/* Bottom Buttons (Not fixed, flow with content) */}
+            <div className="flex items-center gap-3">
+              <button
+                className={`flex-1 py-3 border rounded-lg text-base font-bold active:scale-95 transition-transform ${
+                  isCompleted
+                    ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed active:scale-100'
+                    : 'bg-white border-neutral-300 text-neutral-900'
+                }`}
+                onClick={() => !isCompleted && setShowConsumptionModal(true)}
+                disabled={isCompleted}
+              >
+                {isCompleted ? '已消耗完畢' : '消耗食材'}
+              </button>
+              <button
+                className="flex-1 py-3 bg-primary-400 text-white rounded-lg text-base font-bold active:scale-95 transition-transform shadow-md shadow-orange-100"
+                onClick={handleRecipeInspiration}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    處理中...
+                  </span>
+                ) : (
+                  '食譜靈感'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* AI Query Modal */}
+      <AIQueryModal
+        isOpen={showAIModal}
+        onClose={() => setShowAIModal(false)}
+        initialQuery={aiModalProps.initialQuery || `使用 ${item.name} 製作料理`}
+        initialSelectedIngredients={
+          aiModalProps.initialSelectedIngredients || [item.name]
+        }
+        initialRecipes={aiModalProps.initialRecipes}
+        autoGenerate={aiModalProps.autoGenerate}
+        mode={aiModalProps.mode}
+        useStreaming={false}
+      />
+    </div>,
+    document.body,
+  );
+};
+
+export default FoodDetailModal;

@@ -1,0 +1,191 @@
+import React from 'react';
+import { toast } from 'sonner';
+import { Clock, Users, ChefHat, Heart, Loader2 } from 'lucide-react';
+import type { Recipe, ConsumptionItem } from '@/modules/recipe/types';
+import { recipeApi } from '@/modules/recipe/services';
+import { IngredientList } from '@/modules/recipe/components/ui/IngredientList';
+
+import { ConsumptionModal } from '@/modules/inventory/components/consumption';
+import { TOAST_MESSAGES } from '@/constants/messages';
+import { CookingStepsModal } from '@/modules/recipe/components/modals/CookingStepsModal';
+
+type RecipeDetailContentProps = {
+  recipe: Recipe;
+  consumptionItems: ConsumptionItem[];
+  showConsumptionModal: boolean;
+  onShowConsumptionModal: (show: boolean) => void;
+  onRecipeUpdate?: (recipe: Recipe) => void;
+  onConfirmConsumption?: (success: boolean) => void;
+  // 消耗 Modal 配置
+  showShoppingListButton?: boolean;
+  onAddToShoppingList?: () => void;
+  isLoading?: boolean;
+  // Parent visibility controls
+  onHideParent?: () => void;
+  onShowParent?: () => void;
+  refrigeratorId?: string;
+};
+
+/**
+ * 共用的食譜詳細內容元件
+ * 用於 RecipeDetailView (頁面) 和 RecipeDetailModal (Modal) 共用相同的 UI
+ */
+export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
+  recipe,
+  consumptionItems,
+  showConsumptionModal,
+  onShowConsumptionModal,
+  onRecipeUpdate,
+  onConfirmConsumption,
+  showShoppingListButton = false,
+  onAddToShoppingList,
+  isLoading = false,
+  onHideParent,
+  onShowParent,
+  refrigeratorId,
+}) => {
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    // 檢查是否為 Mock 資料
+    if (recipe.id.startsWith('ai-mock-')) {
+      toast.error(TOAST_MESSAGES.ERROR.DEMO_RECIPE);
+      return;
+    }
+
+    try {
+      const { isFavorite } = await recipeApi.toggleFavorite(
+        recipe.id,
+        !recipe.isFavorite,
+      );
+      onRecipeUpdate?.({ ...recipe, isFavorite });
+      toast.success(
+        isFavorite
+          ? TOAST_MESSAGES.SUCCESS.ADD_FAVORITE
+          : TOAST_MESSAGES.SUCCESS.REMOVE_FAVORITE,
+      );
+    } catch (error) {
+      // 針對 404 錯誤提供更清晰的提示
+      const is404 =
+        error instanceof Error &&
+        (error.message.includes('404') ||
+          ('status' in error && (error as any).status === 404));
+
+      if (is404) {
+        toast.error('此食譜尚未儲存完成，請稍後再試');
+      } else {
+        toast.error(TOAST_MESSAGES.ERROR.GENERIC);
+      }
+    }
+  };
+
+  const [showCookingSteps, setShowCookingSteps] = React.useState(false);
+
+  return (
+    <>
+      {/* 消耗 Modal */}
+      <ConsumptionModal
+        isOpen={showConsumptionModal}
+        onClose={() => onShowConsumptionModal(false)}
+        items={consumptionItems}
+        showShoppingListButton={showShoppingListButton}
+        onAddToShoppingList={onAddToShoppingList}
+        defaultReasons={['recipe_consumption']}
+        onHideParent={onHideParent}
+        onShowParent={onShowParent}
+        refrigeratorId={refrigeratorId}
+        onConfirm={(success) => {
+          onShowConsumptionModal(false);
+          onConfirmConsumption?.(success);
+        }}
+      />
+
+      {/* 烹煮方式 Modal */}
+      <CookingStepsModal
+        isOpen={showCookingSteps}
+        onClose={() => setShowCookingSteps(false)}
+        steps={recipe.steps}
+      />
+
+      {/* 圖片區域 */}
+      <div className="relative aspect-square md:aspect-21/9 md:h-auto overflow-hidden bg-neutral-100">
+        <img
+          src={recipe.imageUrl || 'https://placehold.co/600x400?text=No+Image'}
+          alt={recipe.name}
+          className="w-full h-full object-cover"
+        />
+
+        {/* 我的最愛按鈕 */}
+        <button
+          onClick={handleToggleFavorite}
+          className="absolute top-20 right-4 z-50 p-2.5 bg-white/30 rounded-full backdrop-blur-[2px] transition-transform active:scale-95"
+        >
+          <Heart
+            className={`w-6 h-6 transition-colors ${
+              recipe.isFavorite ? 'fill-white text-white' : 'text-white'
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* 內容區域 */}
+      <div className="relative -mt-10 bg-white rounded-t-3xl min-h-screen px-4 py-6">
+        <div className="flex items-center justify-between mb-4 gap-2">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-[20px] font-bold text-gray-900 tracking-tight mb-3 truncate">
+              {recipe.name}
+            </h1>
+
+            <div className="flex items-center gap-2 text-sm flex-wrap">
+              <span className="px-2 py-1 bg-primary-500 text-white rounded-sm font-medium text-[10px] shrink-0">
+                {recipe.category?.slice(0, 2) || '料理'}
+              </span>
+
+              <div className="flex items-center gap-1 text-primary-500 font-medium text-[16px] shrink-0">
+                <Users className="w-4 h-4" />
+                <span>{recipe.servings}人份</span>
+              </div>
+              <div className="flex items-center gap-1 text-primary-500 font-medium text-[16px] shrink-0">
+                <Clock className="w-4 h-4" />
+                <span>{recipe.cookTime}分鐘</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 烹煮方式按鈕 */}
+          <button
+            onClick={() => setShowCookingSteps(true)}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 px-6 py-3 bg-white border-2 border-neutral-300 rounded-sm hover:bg-gray-50 transition-colors shrink-0 disabled:opacity-50"
+          >
+            <ChefHat className="w-5 h-5 text-gray-700" />
+            <span className="font-bold text-gray-900 text-sm">烹煮方式</span>
+          </button>
+        </div>
+
+        {/* 食材列表 */}
+        {isLoading ? (
+          <div className="py-8 text-center text-gray-400 flex flex-col items-center gap-2">
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span className="text-sm">載入食材與詳細資訊...</span>
+          </div>
+        ) : (
+          <>
+            <IngredientList ingredients={recipe.ingredients} />
+
+            {/* 確認消耗按鈕 */}
+            <div className="mt-8 mb-6">
+              <button
+                disabled={consumptionItems.length === 0}
+                onClick={() => onShowConsumptionModal(true)}
+                className="w-full py-3.5 bg-[#F5655D] text-white rounded-xl font-bold hover:bg-[#E5554D] transition-colors shadow-lg shadow-red-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+              >
+                {consumptionItems.length === 0 ? '無可消耗食材' : '確認消耗'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </>
+  );
+};

@@ -1,0 +1,5 @@
+export const RECIPE_CONFIG = {
+  ITEMS_PER_PAGE: 10,
+  DEFAULT_SERVINGS: 2,
+  MAX_FAVORITES: 50,
+};

@@ -1,0 +1,101 @@
+/* ==========================================================================
+   COLOR TOKENS - 色彩系統
+   三層架構：原始色 → 語義色 → 元件色
+   ========================================================================== */
+
+@theme {
+  /* ==================== PRIMARY - 主要品牌色 ==================== */
+  --color-primary-50: #fef3f2;
+  --color-primary-100: #fde6e3;
+  --color-primary-200: #fdd0cb;
+  --color-primary-300: #fab0a7;
+  --color-primary-400: #f58274;
+  --color-primary-500: #ec5b4a;
+  --color-primary-600: #d93b29;
+  --color-primary-700: #d93b29;
+  --color-primary-800: #972a1d;
+  --color-primary-900: #801c1c;
+
+  /* ==================== SUCCESS - 成功狀態 ==================== */
+  --color-success-50: #cbebd6;
+  --color-success-100: #95d4a5;
+  --color-success-200: #69be7a;
+  --color-success-300: #58a968;
+  --color-success-400: #4a9b5b;
+  --color-success-500: #4a8857;
+  --color-success-600: #387244;
+  --color-success-700: #006b4b;
+  --color-success-800: #0d523d;
+  --color-success-900: #164839;
+
+  /* ==================== DANGER - 危險/錯誤 ==================== */
+  --color-danger-100: #fef2f2;
+  --color-danger-200: #ffc9c9;
+  --color-danger-300: #fda4a4;
+  --color-danger-400: #fa6f6f;
+  --color-danger-500: #f14242;
+  --color-danger-600: #de2424;
+  --color-danger-700: #bd0c0c;
+  --color-danger-800: #9b1919;
+  --color-danger-900: #801c1c;
+
+  /* ==================== WARNING - 警告 ==================== */
+  --color-warning-50: #fff5d5;
+  --color-warning-100: #fff0bb;
+  --color-warning-200: #ffe99c;
+  --color-warning-300: #ffdd69;
+  --color-warning-400: #fdd139;
+  --color-warning-500: #fcc814;
+  --color-warning-600: #e3b000;
+  --color-warning-700: #be9404;
+  --color-warning-800: #9b7800;
+  --color-warning-900: #634f0b;
+
+  /* ==================== NEUTRAL - 中性色 ==================== */
+  --color-neutral-0: #ffffff;
+  --color-neutral-100: #f0f0f0;
+  --color-neutral-200: #e4e4e4;
+  --color-neutral-300: #dddddd;
+  --color-neutral-400: #bbbbbb;
+  --color-neutral-500: #848484;
+  --color-neutral-600: #484848;
+  --color-neutral-700: #212121;
+  --color-neutral-800: #111111;
+
+  /* ================= Alias Color System 顏色別名系統 ================= */
+  /* PRIMARY */
+  --color-primary-light: var(--color-primary-50);
+  --color-primary-default: var(--color-primary-400);
+  --color-primary-dark: var(--color-primary-600);
+  /* SUCCESS */
+  --color-success-light: var(--color-success-50);
+  --color-success-dark: var(--color-success-300);
+  /* WARNING */
+  --color-warning-light: var(--color-warning-50);
+  --color-warning-dark: var(--color-warning-400);
+  /* DANGER */
+  --color-danger-light: var(--color-danger-100);
+  --color-danger-dark: var(--color-danger-400);
+
+  /* ==================== SEMANTIC TOKENS - 語義色 ==================== */
+  /* 背景 */
+  --color-bg-default: var(--color-neutral-0);
+  --color-bg-secondary: var(--color-neutral-100);
+  --color-bg-tertiary: var(--color-neutral-200);
+
+  /* 文字 */
+  --color-text-primary: var(--color-neutral-700);
+  --color-text-secondary: var(--color-neutral-600);
+  --color-text-tertiary: var(--color-neutral-500);
+  --color-text-inverse: var(--color-neutral-0);
+
+  /* 邊框 */
+  --color-border-default: var(--color-neutral-200);
+  --color-border-strong: var(--color-neutral-300);
+
+  /* 互動 */
+  --color-interactive: var(--color-primary-600);
+  --color-interactive-hover: var(--color-primary-700);
+  --color-interactive-active: var(--color-primary-800);
+  --color-interactive-disabled: var(--color-neutral-400);
+}

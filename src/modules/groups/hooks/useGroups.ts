@@ -1,0 +1,107 @@
+import { useEffect, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { identity } from '@/shared/utils/identity';
+import type { AppDispatch, RootState } from '@/store';
+import {
+  fetchGroups as fetchGroupsAction,
+  createGroup as createGroupAction,
+  updateGroup as updateGroupAction,
+  deleteGroup as deleteGroupAction,
+  selectAllGroups,
+  selectGroupsLoading,
+  selectGroupsError,
+} from '../store/groupsSlice';
+import { groupsApi } from '../api/groupsApi';
+import type { CreateGroupForm, UpdateGroupForm } from '../types/group.types';
+
+/**
+ * 群組資料管理 Hook (Redux Version)
+ *
+ * 整合 Redux 全域狀態管理，確保所有群組資料的變更都能即時同步到所有組件。
+ */
+export const useGroups = () => {
+  const dispatch = useDispatch<AppDispatch>();
+
+  // Select state from Redux
+  const groups = useSelector((state: RootState) => selectAllGroups(state));
+  const isLoading = useSelector((state: RootState) =>
+    selectGroupsLoading(state),
+  );
+  const errorMsg = useSelector((state: RootState) => selectGroupsError(state));
+
+  const fetchGroups = useCallback(() => {
+    dispatch(fetchGroupsAction());
+  }, [dispatch]);
+
+  const createGroup = async (form: CreateGroupForm) => {
+    try {
+      const resultAction = await dispatch(createGroupAction(form));
+      if (createGroupAction.fulfilled.match(resultAction)) {
+        // 建立成功後重新載入群組列表，以取得完整成員資料（包含大頭貼）
+        fetchGroups();
+        return resultAction.payload;
+      } else {
+        throw new Error(resultAction.payload as string);
+      }
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  const updateGroup = async (id: string, form: UpdateGroupForm) => {
+    try {
+      const resultAction = await dispatch(
+        updateGroupAction({ id, data: form }),
+      );
+      if (updateGroupAction.fulfilled.match(resultAction)) {
+        return resultAction.payload;
+      } else {
+        throw new Error(resultAction.payload as string);
+      }
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  const deleteGroup = async (id: string) => {
+    try {
+      const resultAction = await dispatch(deleteGroupAction(id));
+      if (deleteGroupAction.fulfilled.match(resultAction)) {
+        return;
+      } else {
+        throw new Error(resultAction.payload as string);
+      }
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  const leaveGroup = async (groupId: string) => {
+    try {
+      await groupsApi.leaveGroup(groupId);
+      // 離開成功後重新載入群組列表
+      fetchGroups();
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  // Initial fetch on mount
+  // 使用共用模組檢查是否可以發送認證請求
+  useEffect(() => {
+    if (identity.canMakeAuthenticatedRequest()) {
+      fetchGroups();
+    }
+  }, [fetchGroups]);
+
+  return {
+    groups,
+    isLoading,
+    error: errorMsg ? new Error(errorMsg) : null,
+    createGroup,
+    updateGroup,
+    deleteGroup,
+    leaveGroup,
+    refetch: fetchGroups,
+  };
+};

@@ -1,0 +1,506 @@
+import type { Recipe, RecipeListItem } from '@/modules/recipe/types';
+
+// 使用 public 資料夾的固定路徑，避免 Vite hash 導致部署後路徑失效
+const RECIPE_IMAGE_BASE = '/images/recipe';
+
+export const MOCK_RECIPES: Recipe[] = [
+  // Dashboard 推薦食譜
+  // 原有食譜
+  {
+    id: 'recipe-001',
+    name: '涼拌小黃瓜',
+    category: '中式料理',
+    series: '慢火煮系列',
+    imageUrl: `${RECIPE_IMAGE_BASE}/Spicy-cucumber-salad.webp`,
+    servings: 2,
+    cookTime: 30,
+    difficulty: '簡單',
+    ingredients: [
+      { name: '小黃瓜', quantity: '3-4條', category: '準備材料' },
+      { name: '蒜頭', quantity: '4-5顆', category: '準備材料' },
+      { name: '辣椒', quantity: '1-2根', category: '準備材料' },
+      { name: '鹽', quantity: '1/2茶匙', category: '調味料' },
+      { name: '醬油', quantity: '1.5大匙', category: '調味料' },
+      { name: '黑醋或白醋', quantity: '1大匙', category: '調味料' },
+      { name: '砂糖', quantity: '1/2茶匙', category: '調味料' },
+      { name: '麻油/香油', quantity: '1/2大匙', category: '調味料' },
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        description:
+          '將小黃瓜拍扁後切段，用 S1/2S 茶匙鹽抓勻，靜置 15-20分鐘瀝出水。',
+        time: '15-20分鐘',
+      },
+      {
+        stepNumber: 2,
+        description: '倒掉瀝出的水分，準備蒜末、辣椒圈。',
+      },
+      {
+        stepNumber: 3,
+        description: '混合醬油、醋、砂糖、麻油/香油（可加花椒油）。',
+      },
+      {
+        stepNumber: 4,
+        description: '將瀝乾的黃瓜、蒜末、辣椒圈與醬汁充分拌勻。',
+      },
+      {
+        stepNumber: 5,
+        description: '放入冰箱冷藏 30-60分鐘 冰鎮入味。',
+        time: '30-60分鐘',
+      },
+      {
+        stepNumber: 6,
+        description: '擺盤即可享用。',
+      },
+    ],
+    isFavorite: false,
+    createdAt: '2025-01-01T00:00:00Z',
+  },
+  {
+    id: 'recipe-002',
+    name: '鐵鍋煎餃',
+    category: '日式料理',
+    imageUrl: `${RECIPE_IMAGE_BASE}/Pan-fried-dumplings.webp`,
+    servings: 2,
+    cookTime: 20,
+    difficulty: '簡單',
+    ingredients: [
+      { name: '水餃', quantity: '15顆', category: '準備材料' },
+      { name: '水', quantity: '100ml', category: '準備材料' },
+      { name: '油', quantity: '2大匙', category: '調味料' },
+      { name: '白芝麻', quantity: '少許', category: '調味料' },
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        description: '熱鍋加油，排入水餃煎至底部金黃。',
+        time: '3分鐘',
+      },
+      {
+        stepNumber: 2,
+        description: '加入水，蓋上鍋蓋燜煮至水份收乾。',
+        time: '10分鐘',
+      },
+      {
+        stepNumber: 3,
+        description: '撒上白芝麻，即可起鍋。',
+      },
+    ],
+    isFavorite: false,
+    createdAt: '2025-01-02T00:00:00Z',
+  },
+  {
+    id: 'recipe-003',
+    name: '青醬義大利麵蛤蠣',
+    category: '義式料理',
+    imageUrl: `${RECIPE_IMAGE_BASE}/Pesto-spaghetti-clams.webp`,
+    servings: 2,
+    cookTime: 25,
+    difficulty: '中等',
+    ingredients: [
+      { name: '義大利麵', quantity: '200g', category: '準備材料' },
+      { name: '蛤蠣', quantity: '300g', category: '準備材料' },
+      { name: '青醬醬', quantity: '3大匙', category: '調味料' },
+      { name: '大蒜', quantity: '3瓣', category: '調味料' },
+      { name: '白酒', quantity: '50ml', category: '調味料' },
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        description: '義大利麵煮熟，撈起備用。',
+        time: '8-10分鐘',
+      },
+      {
+        stepNumber: 2,
+        description: '熱鍋爆香蒜末，加入蛤蠣和白酒。',
+      },
+      {
+        stepNumber: 3,
+        description: '蛤蠣開口後，加入義大利麵和青醬醬拌炒均勻。',
+      },
+    ],
+    isFavorite: true,
+    createdAt: '2025-01-03T00:00:00Z',
+  },
+  {
+    id: 'recipe-004',
+    name: '雞絲飯',
+    category: '韓式料理',
+    imageUrl: `${RECIPE_IMAGE_BASE}/Shredded-chicken-rice.webp`,
+    servings: 2,
+    cookTime: 30,
+    difficulty: '簡單',
+    ingredients: [
+      { name: '雞胸肉', quantity: '200g', category: '準備材料' },
+      { name: '白飯', quantity: '2碗', category: '準備材料' },
+      { name: '小黃瓜', quantity: '1根', category: '準備材料' },
+      { name: '醬油膏', quantity: '2大匙', category: '調味料' },
+      { name: '麻油', quantity: '1大匙', category: '調味料' },
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        description: '雞胸肉汆燙至熟，撕成絲。',
+        time: '15分鐘',
+      },
+      {
+        stepNumber: 2,
+        description: '小黃瓜切絲，與雞絲混合醬油膏、麻油。',
+      },
+      {
+        stepNumber: 3,
+        description: '舖在白飯上，即可享用。',
+      },
+    ],
+    isFavorite: false,
+    createdAt: '2025-01-04T00:00:00Z',
+  },
+  {
+    id: 'recipe-005',
+    name: '乾炒鮮蝦麵',
+    category: '中式料理',
+    imageUrl: `${RECIPE_IMAGE_BASE}/Stir-fried-shrimp-noodles.webp`,
+    servings: 2,
+    cookTime: 15,
+    difficulty: '簡單',
+    ingredients: [
+      { name: '油麵', quantity: '200g', category: '準備材料' },
+      { name: '鮮蝦', quantity: '150g', category: '準備材料' },
+      { name: '豆芽菜', quantity: '100g', category: '準備材料' },
+      { name: '醬油', quantity: '2大匙', category: '調味料' },
+      { name: '蠔油', quantity: '1大匙', category: '調味料' },
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        description: '鮮蝦去殼去腸泥，熟豆芽菜燙熟。',
+      },
+      {
+        stepNumber: 2,
+        description: '熱鍋爆香蝦仁，加入油麵、豆芽菜同炒。',
+        time: '8分鐘',
+      },
+      {
+        stepNumber: 3,
+        description: '加入醬油、蠔油調味，大火快炒均勻。',
+      },
+    ],
+    isFavorite: false,
+    createdAt: '2025-01-05T00:00:00Z',
+  },
+  // 新增更多與常見食材相關的食譜
+  {
+    id: 'recipe-006',
+    name: '番茄炒蛋',
+    category: '中式料理',
+    imageUrl:
+      'https://images.unsplash.com/photo-1482049016530-d79f5b5a7f8b?w=400&h=400&fit=crop',
+    servings: 2,
+    cookTime: 10,
+    difficulty: '簡單',
+    ingredients: [
+      { name: '雞蛋', quantity: '3顆', category: '準備材料' },
+      { name: '番茄', quantity: '2顆', category: '準備材料' },
+      { name: '蔥', quantity: '2根', category: '準備材料' },
+      { name: '鹽', quantity: '適量', category: '調味料' },
+      { name: '糖', quantity: '1/2茶匙', category: '調味料' },
+      { name: '油', quantity: '2大匙', category: '調味料' },
+    ],
+    steps: [
+      { stepNumber: 1, description: '番茄切塊，蔥切段，雞蛋打散備用。' },
+      {
+        stepNumber: 2,
+        description: '熱鍋下油，倒入蛋液炒至半熟撈起。',
+        time: '1分鐘',
+      },
+      {
+        stepNumber: 3,
+        description: '同鍋爆香蔥白，加入番茄翻炒至軟。',
+        time: '3分鐘',
+      },
+      { stepNumber: 4, description: '加入炒好的蛋，調味後拌勻即可。' },
+    ],
+    isFavorite: false,
+    createdAt: '2025-01-06T00:00:00Z',
+  },
+  {
+    id: 'recipe-007',
+    name: '蔥爆豬肉片',
+    category: '中式料理',
+    imageUrl:
+      'https://images.unsplash.com/photo-1432139509613-5c4255815697?w=400&h=400&fit=crop',
+    servings: 3,
+    cookTime: 15,
+    difficulty: '簡單',
+    ingredients: [
+      { name: '豬肉片', quantity: '300g', category: '準備材料' },
+      { name: '蔥', quantity: '4根', category: '準備材料' },
+      { name: '蒜頭', quantity: '3顆', category: '準備材料' },
+      { name: '辣椒', quantity: '1根', category: '準備材料' },
+      { name: '醬油', quantity: '2大匙', category: '調味料' },
+      { name: '米酒', quantity: '1大匙', category: '調味料' },
+      { name: '太白粉', quantity: '1茶匙', category: '調味料' },
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        description: '豬肉片加醬油、米酒、太白粉醃製10分鐘。',
+        time: '10分鐘',
+      },
+      { stepNumber: 2, description: '蔥切段（蔥白蔥綠分開），蒜頭切片。' },
+      { stepNumber: 3, description: '熱鍋下油，爆香蒜片和蔥白。' },
+      {
+        stepNumber: 4,
+        description: '加入肉片快炒至變色，加入蔥綠翻炒即可。',
+        time: '3分鐘',
+      },
+    ],
+    isFavorite: false,
+    createdAt: '2025-01-07T00:00:00Z',
+  },
+  {
+    id: 'recipe-008',
+    name: '三杯雞',
+    category: '中式料理',
+    imageUrl:
+      'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400&h=400&fit=crop',
+    servings: 4,
+    cookTime: 30,
+    difficulty: '中等',
+    ingredients: [
+      { name: '雞腿肉', quantity: '600g', category: '準備材料' },
+      { name: '九層塔', quantity: '1把', category: '準備材料' },
+      { name: '薑', quantity: '1塊', category: '準備材料' },
+      { name: '蒜頭', quantity: '6顆', category: '準備材料' },
+      { name: '辣椒', quantity: '2根', category: '準備材料' },
+      { name: '麻油', quantity: '3大匙', category: '調味料' },
+      { name: '醬油', quantity: '3大匙', category: '調味料' },
+      { name: '米酒', quantity: '3大匙', category: '調味料' },
+      { name: '冰糖', quantity: '1大匙', category: '調味料' },
+    ],
+    steps: [
+      { stepNumber: 1, description: '雞腿肉切塊，薑切片，蒜頭拍扁。' },
+      {
+        stepNumber: 2,
+        description: '冷鍋倒入麻油，小火爆香薑片至邊緣微捲。',
+        time: '3分鐘',
+      },
+      {
+        stepNumber: 3,
+        description: '加入雞肉煎至表面金黃，加入蒜頭、辣椒。',
+        time: '5分鐘',
+      },
+      {
+        stepNumber: 4,
+        description: '加入醬油、米酒、冰糖，蓋鍋燜煮。',
+        time: '15分鐘',
+      },
+      { stepNumber: 5, description: '收汁後加入九層塔拌勻即可。' },
+    ],
+    isFavorite: true,
+    createdAt: '2025-01-08T00:00:00Z',
+  },
+  {
+    id: 'recipe-009',
+    name: '紅燒牛腩',
+    category: '中式料理',
+    imageUrl:
+      'https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=400&h=400&fit=crop',
+    servings: 4,
+    cookTime: 90,
+    difficulty: '困難',
+    ingredients: [
+      { name: '牛腩', quantity: '800g', category: '準備材料' },
+      { name: '紅蘿蔔', quantity: '2根', category: '準備材料' },
+      { name: '洋蔥', quantity: '1顆', category: '準備材料' },
+      { name: '薑', quantity: '1塊', category: '準備材料' },
+      { name: '蔥', quantity: '3根', category: '準備材料' },
+      { name: '八角', quantity: '2顆', category: '調味料' },
+      { name: '醬油', quantity: '4大匙', category: '調味料' },
+      { name: '米酒', quantity: '2大匙', category: '調味料' },
+      { name: '冰糖', quantity: '2大匙', category: '調味料' },
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        description: '牛腩切塊，汆燙去血水後撈起。',
+        time: '5分鐘',
+      },
+      {
+        stepNumber: 2,
+        description: '熱鍋爆香薑片、蔥段，加入牛腩煎至表面微焦。',
+        time: '5分鐘',
+      },
+      { stepNumber: 3, description: '加入醬油、米酒、冰糖、八角炒勻。' },
+      {
+        stepNumber: 4,
+        description: '加水蓋過食材，大火煮滾後轉小火燉煮1小時。',
+        time: '60分鐘',
+      },
+      {
+        stepNumber: 5,
+        description: '加入紅蘿蔔、洋蔥續煮20分鐘即可。',
+        time: '20分鐘',
+      },
+    ],
+    isFavorite: false,
+    createdAt: '2025-01-09T00:00:00Z',
+  },
+  {
+    id: 'recipe-010',
+    name: '蒜蓉蝦',
+    category: '中式料理',
+    imageUrl:
+      'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=400&h=400&fit=crop',
+    servings: 2,
+    cookTime: 15,
+    difficulty: '簡單',
+    ingredients: [
+      { name: '鮮蝦', quantity: '300g', category: '準備材料' },
+      { name: '蒜頭', quantity: '8顆', category: '準備材料' },
+      { name: '蔥', quantity: '2根', category: '準備材料' },
+      { name: '辣椒', quantity: '1根', category: '準備材料' },
+      { name: '鹽', quantity: '適量', category: '調味料' },
+      { name: '米酒', quantity: '1大匙', category: '調味料' },
+      { name: '油', quantity: '3大匙', category: '調味料' },
+    ],
+    steps: [
+      { stepNumber: 1, description: '鮮蝦去腸泥，蒜頭切末，蔥切花。' },
+      {
+        stepNumber: 2,
+        description: '熱鍋下油，放入蒜末小火爆香至金黃。',
+        time: '2分鐘',
+      },
+      {
+        stepNumber: 3,
+        description: '加入鮮蝦翻炒至變色，淋上米酒。',
+        time: '3分鐘',
+      },
+      { stepNumber: 4, description: '調味後撒上蔥花即可。' },
+    ],
+    isFavorite: false,
+    createdAt: '2025-01-10T00:00:00Z',
+  },
+  // 青江菜相關食譜
+  {
+    id: 'recipe-011',
+    name: '蒜炒青江菜',
+    category: '中式料理',
+    imageUrl:
+      'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=400&fit=crop',
+    servings: 2,
+    cookTime: 8,
+    difficulty: '簡單',
+    ingredients: [
+      { name: '青江菜', quantity: '300g', category: '準備材料' },
+      { name: '蒜頭', quantity: '4顆', category: '準備材料' },
+      { name: '辣椒', quantity: '1根', category: '準備材料' },
+      { name: '鹽', quantity: '適量', category: '調味料' },
+      { name: '油', quantity: '2大匙', category: '調味料' },
+    ],
+    steps: [
+      { stepNumber: 1, description: '青江菜洗淨切段，蒜頭切片，辣椒切圈。' },
+      {
+        stepNumber: 2,
+        description: '熱鍋下油，爆香蒜片和辣椒。',
+        time: '1分鐘',
+      },
+      {
+        stepNumber: 3,
+        description: '加入青江菜大火快炒，加鹽調味即可。',
+        time: '2分鐘',
+      },
+    ],
+    isFavorite: false,
+    createdAt: '2025-01-11T00:00:00Z',
+  },
+  {
+    id: 'recipe-012',
+    name: '青江菜肉絲',
+    category: '中式料理',
+    imageUrl:
+      'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&h=400&fit=crop',
+    servings: 3,
+    cookTime: 15,
+    difficulty: '簡單',
+    ingredients: [
+      { name: '青江菜', quantity: '400g', category: '準備材料' },
+      { name: '豬肉絲', quantity: '150g', category: '準備材料' },
+      { name: '蒜頭', quantity: '3顆', category: '準備材料' },
+      { name: '薑', quantity: '3片', category: '準備材料' },
+      { name: '醬油', quantity: '1大匙', category: '調味料' },
+      { name: '米酒', quantity: '1大匙', category: '調味料' },
+      { name: '太白粉', quantity: '1茶匙', category: '調味料' },
+      { name: '鹽', quantity: '適量', category: '調味料' },
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        description: '豬肉絲加醬油、米酒、太白粉醃製10分鐘。',
+        time: '10分鐘',
+      },
+      { stepNumber: 2, description: '青江菜洗淨切段，蒜頭切片，薑切絲。' },
+      {
+        stepNumber: 3,
+        description: '熱鍋下油，爆香薑蒜，加入肉絲炒至變色。',
+        time: '2分鐘',
+      },
+      {
+        stepNumber: 4,
+        description: '加入青江菜快炒，調味後即可上桌。',
+        time: '2分鐘',
+      },
+    ],
+    isFavorite: false,
+    createdAt: '2025-01-12T00:00:00Z',
+  },
+  {
+    id: 'recipe-013',
+    name: '香菇青江菜',
+    category: '中式料理',
+    imageUrl:
+      'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?w=400&h=400&fit=crop',
+    servings: 2,
+    cookTime: 12,
+    difficulty: '簡單',
+    ingredients: [
+      { name: '青江菜', quantity: '300g', category: '準備材料' },
+      { name: '香菇', quantity: '6朵', category: '準備材料' },
+      { name: '蒜頭', quantity: '3顆', category: '準備材料' },
+      { name: '蠔油', quantity: '1大匙', category: '調味料' },
+      { name: '鹽', quantity: '適量', category: '調味料' },
+      { name: '油', quantity: '2大匙', category: '調味料' },
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        description: '香菇泡軟切片，青江菜洗淨對切，蒜頭切末。',
+      },
+      {
+        stepNumber: 2,
+        description: '熱鍋下油，爆香蒜末，加入香菇炒香。',
+        time: '2分鐘',
+      },
+      {
+        stepNumber: 3,
+        description: '加入青江菜翻炒，淋上蠔油調味即可。',
+        time: '3分鐘',
+      },
+    ],
+    isFavorite: true,
+    createdAt: '2025-01-13T00:00:00Z',
+  },
+];
+
+export const MOCK_RECIPE_LIST: RecipeListItem[] = MOCK_RECIPES.map(
+  (recipe) => ({
+    id: recipe.id,
+    name: recipe.name,
+    category: recipe.category,
+    imageUrl: recipe.imageUrl,
+    servings: recipe.servings,
+    cookTime: recipe.cookTime,
+    isFavorite: recipe.isFavorite,
+  }),
+);
