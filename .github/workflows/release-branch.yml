@@ -319,7 +319,7 @@ jobs:
           echo "📋 Method 1: Analyzing merge commits between main and dev..."
 
           # 取得 dev 相對於 main 的所有 merge commit
-          MERGE_COMMITS=$(git log origin/main..origin/dev --merges --oneline 2>/dev/null || echo "")
+          MERGE_COMMITS=$(git log origin/main..origin/dev --merges --oneline --reverse 2>/dev/null || echo "")
 
           if [ -n "$MERGE_COMMITS" ]; then
             echo "Found merge commits:"
@@ -331,7 +331,7 @@ jobs:
           # 格式: "Merge pull request #XX from user/branch-name"
           BRANCHES_FROM_MERGES=$(echo "$MERGE_COMMITS" \
             | grep -oP "Merge pull request #\d+ from [^/]+/\K\S+" \
-            | sort -u \
+            | awk '!seen[$0]++' \
             | grep -E "^(Feature|Fix|Update|Hotfix)-" \
             | sed 's/^/- /' || echo "")
 
@@ -374,9 +374,9 @@ jobs:
             ALL_BRANCHES="$BRANCHES_FROM_MERGES"
           fi
 
-          # 去除重複並排序
+          # 去除重複（保持順序）
           if [ -n "$ALL_BRANCHES" ]; then
-            ALL_BRANCHES=$(echo "$ALL_BRANCHES" | grep -v '^$' | sort -u)
+            ALL_BRANCHES=$(echo "$ALL_BRANCHES" | grep -v '^$' | awk '!seen[$0]++')
           fi
 
           # 如果還是空的，顯示提示訊息
