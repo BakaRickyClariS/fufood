@@ -4,9 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: '輸入要建立 PR 的分支名稱（排除 main, dev, qa）'
-        required: true
+        description: '分支名稱（留空則使用當前分支，排除 main, dev, qa）'
+        required: false
         type: string
+        default: ''
 
 permissions:
   contents: read
@@ -35,7 +36,13 @@ jobs:
           github-token: ${{ secrets.ACTIONS_PAT }}
           script: |
             const { execSync } = require('child_process');
-            const branch = '${{ github.event.inputs.branch }}'.trim();
+            // 如果沒有輸入分支名稱，使用當前觸發 workflow 的分支
+            const inputBranch = '${{ github.event.inputs.branch }}'.trim();
+            const refBranch = '${{ github.ref_name }}';
+            const branch = inputBranch || refBranch;
+
+            console.log(`📌 使用分支: ${branch}${inputBranch ? ' (手動輸入)' : ' (當前分支)'}`);
+
 
             // 驗證不是保護分支
             if (['main', 'dev', 'qa'].includes(branch)) {

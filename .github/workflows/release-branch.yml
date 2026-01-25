@@ -168,25 +168,28 @@ jobs:
             local VERSION_NUM=$(echo "$BRANCH_NAME" | sed 's/dev-v//')
             
             # 檢查 1: 遠端分支是否存在
-            if git ls-remote --heads origin "$BRANCH_NAME" | grep -q "$BRANCH_NAME"; then
+            if git ls-remote --heads origin "$BRANCH_NAME" 2>/dev/null | grep -q "$BRANCH_NAME"; then
               echo "remote-branch"
               return 0
             fi
             
             # 檢查 2: 是否有 open 的 PR 使用這個版本
-            if gh pr list --state open --json title --jq '.[].title' 2>/dev/null | grep -q "Dev v$VERSION_NUM"; then
+            # 使用 || true 確保 gh 指令失敗時不會中斷腳本
+            OPEN_PRS=$(gh pr list --state open --json title --jq '.[].title' 2>/dev/null || echo "")
+            if echo "$OPEN_PRS" | grep -q "Dev v$VERSION_NUM" 2>/dev/null; then
               echo "open-pr"
               return 0
             fi
             
             # 檢查 3: 是否有已合併的 PR 使用這個版本
-            if gh pr list --state merged --base main --limit 100 --json title --jq '.[].title' 2>/dev/null | grep -q "Dev v$VERSION_NUM"; then
+            MERGED_PRS=$(gh pr list --state merged --base main --limit 100 --json title --jq '.[].title' 2>/dev/null || echo "")
+            if echo "$MERGED_PRS" | grep -q "Dev v$VERSION_NUM" 2>/dev/null; then
               echo "merged-pr"
               return 0
             fi
             
             echo "not-found"
-            return 1
+            return 0
           }
 
           while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
