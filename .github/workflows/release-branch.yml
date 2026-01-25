@@ -359,21 +359,42 @@ jobs:
           echo "$BODY" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      # 步驟 8: 建立 Release PR
+      # 步驟 8: 建立 Release PR（使用 gh CLI）
       - name: Create Release PR to main
         id: create_pr
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.ACTIONS_PAT }}
-          commit-message: 'chore(release): v${{ steps.check_version.outputs.final_version }}'
-          title: 'Dev v${{ steps.check_version.outputs.final_version }}'
-          body: ${{ steps.pr_body.outputs.body }}
-          branch: ${{ steps.check_version.outputs.branch_name }}
-          base: main
-          labels: 'release,automation'
-          assignees: ${{ github.actor }}
-          draft: false
-          delete-branch: false
+        env:
+          GH_TOKEN: ${{ secrets.ACTIONS_PAT }}
+          BRANCH_NAME: ${{ steps.check_version.outputs.branch_name }}
+          NEW_VERSION: ${{ steps.check_version.outputs.final_version }}
+          PR_BODY: ${{ steps.pr_body.outputs.body }}
+        run: |
+          VERSION_NUM=$(echo "$NEW_VERSION" | sed 's/\.//g')
+
+          echo "📝 Creating PR: $BRANCH_NAME -> main"
+
+          # 建立 PR
+          PR_URL=$(gh pr create \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --title "Dev v$VERSION_NUM" \
+            --body "$PR_BODY" \
+            --label "release,automation" \
+            --assignee "${{ github.actor }}" \
+            2>&1) || true
+
+          if [[ "$PR_URL" == *"already exists"* ]]; then
+            echo "⚠️ PR already exists for $BRANCH_NAME"
+            PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --base main --json number --jq '.[0].number')
+          elif [[ "$PR_URL" == http* ]]; then
+            echo "✅ PR created: $PR_URL"
+            PR_NUMBER=$(echo "$PR_URL" | grep -oP '\d+$')
+          else
+            echo "❌ Failed to create PR: $PR_URL"
+            exit 1
+          fi
+
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "✅ PR #$PR_NUMBER created successfully!"
 
       - name: Notify workflow completion
         env:
@@ -381,7 +402,7 @@ jobs:
           FINAL_VERSION: ${{ steps.check_version.outputs.final_version }}
           OLD_VERSION: ${{ steps.version.outputs.current }}
           BRANCH_NAME: ${{ steps.check_version.outputs.branch_name }}
-          PR_NUMBER: ${{ steps.create_pr.outputs.pull-request-number }}
+          PR_NUMBER: ${{ steps.create_pr.outputs.pr_number }}
         run: |
           echo ""
           echo "════════════════════════════════════════════════════════════"
