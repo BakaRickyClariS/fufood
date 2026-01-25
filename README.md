@@ -5,14 +5,14 @@
 
 <p align="center">
   <a href="https://fufood.jocelynh.me">🌐 Demo 網站</a> ｜
-  <a href="#">📊 簡報介紹</a> ｜
-  <a href="https://github.com/BakaRickyClariS/fufood-backend">🔧 後端 Repo</a> ｜
-  <a href="https://github.com/BakaRickyClariS/fufood-ai-service">🤖 AI 微服務 Repo</a>
+  <a href="https://www.figma.com/slides/jHSTBRXtUIvCTm41Mn7ucp/FuFood?node-id=0-1&p=f">📊 簡報介紹</a> ｜
+  <a href="https://github.com/FuFoodTW/FuFoodAPI">🔧 後端 Repo</a> ｜
+  <a href="https://github.com/BakaRickyClariS/gemini-ai-recipe-gen-mvp">🤖 AI 微服務 Repo</a>
 </p>
 
 <p align="center">
-  <a href="https://api.fufood.jocelynh.me/swagger/index.html">📄 Swagger API 文件</a> ｜
-  <a href="./docs/api/">📋 API 規格文件</a>
+  <a href="https://api.fufood.jocelynh.me/swagger/index.html">📄 後端 API 文件</a> ｜
+  <a href="https://gemini-ai-recipe-gen-mvp.vercel.app/docs-cdn/">📄 AI 微服務 API 文件</a> ｜
 </p>
 
 一個以 **React 19 + TypeScript + Vite 7** 建構的智慧食材管理 PWA 應用，透過 AI 影像辨識技術自動識別食材、追蹤庫存與到期日，並整合 LINE 登入與 FCM 推播通知，提供個人化食譜推薦。
