@@ -53,7 +53,7 @@ FuFood 是一款智慧冰箱管理 App，核心功能包括：
 - **共享規劃**：協作購物清單與貼文牆
 - **FCM 推播通知**：食材到期提醒、共享清單通知
 
-採用 **雙 API 架構**（後端 API + AI 微服務），支援 LINE OAuth 登入與 PWA 安裝。
+採用**後端 API + AI 微服務**架構，支援 LINE OAuth 登入與 PWA 安裝。
 
 ---
 
@@ -91,25 +91,25 @@ FuFood 是一款智慧冰箱管理 App，核心功能包括：
 
 ### 技術說明：
 
-- **[ 環境 ]**：Vite 7
+- **[ 環境 ]**：Vite 7.0
   - 使用 Vite 作為建置工具，提供快速的 HMR 熱更新與優化的生產建置，開發體驗極佳。
 
-- **[ 框架 ]**：React 19
+- **[ 框架 ]**：React 19.0
   - 使用 React 19 進行前端開發，透過 React 生態系快速開發高品質 Web 應用，並運用最新的 Hooks、Suspense 等特性優化效能與開發體驗。
 
-- **[ 語言 ]**：TypeScript
-  - 使用 TypeScript 進行開發，透過嚴格的型別檢查，減少協作時產生的錯誤，提升程式碼可維護性。
+- **[ 語言 ]**：TypeScript 5.7
+  - 採用 TypeScript 進行開發，透過嚴格的型別定義與編譯時期檢查，大幅減少團隊協作時的型別錯誤，讓重構與維護更有信心。
 
-- **[ 樣式 ]**：Tailwind CSS 4 + Radix UI
+- **[ 樣式 ]**：Tailwind CSS 4.0 + Radix UI
   - 使用 Tailwind CSS 4 進行原子化 CSS 開發，搭配 Radix UI 無障礙元件庫，快速建構一致且可存取的使用者介面。
 
-- **[ 狀態管理 ]**：Redux Toolkit + TanStack Query
-  - 採用客戶端/伺服器狀態分離架構，Redux 管理 UI 狀態，TanStack Query 處理伺服器狀態與快取。
+- **[ 狀態管理 ]**：Redux Toolkit 2.5 + TanStack Query 5.66
+  - 採用雙軌狀態管理架構處理複雜的應用狀態：Redux 負責全域 UI 狀態（如 Modal、Toast），TanStack Query 則專注於資料快取與非同步請求。
 
-- **[ 動畫 ]**：GSAP
-  - 使用 GSAP 打造流暢的 UI 動畫效果，提升使用者互動體驗。
+- **[ 動畫 ]**：GSAP 3.12
+  - 使用 GSAP 為頁面注入生動的過場動畫與微互動，讓整體使用體驗更加流暢自然。
 
-- **[ PWA ]**：Vite PWA Plugin + Workbox
+- **[ PWA ]**：Vite PWA Plugin 1.0 + Workbox
   - 支援 PWA 安裝、離線快取、背景推播通知，提供原生 App 般的使用體驗。
 
 - **[ 部署平台 ]**：Vercel
@@ -146,8 +146,15 @@ FuFood 是一款智慧冰箱管理 App，核心功能包括：
 - **[ 媒體存儲 ]**：Cloudinary
   - 使用 Cloudinary 進行圖片上傳、壓縮、CDN 快取，優化媒體資源載入效能。
 
-- **[ 部署平台 ]**：Vercel
+- **[ 部署平台 ]**：Vercel Serverless
   - 使用 Vercel Serverless Functions 部署，提供全球 Edge Network 低延遲存取。
+
+- **[ 🔒 資安架構 ]**：多層 AI 安全防護
+  - **Prompt Validator**：攻擊詞過濾與注入檢測，防範 Prompt Injection
+  - **Output Filter**：AI 回應內容檢查，過濾不當內容與拒絕回應處理
+  - **Rate Limiting**：請求頻率限制，防止 DDoS 與濫用
+  - **Multi API Key Fallback**：多組 API Key 輪替與自動切換，確保服務穩定性
+  - **Security Logger**：可疑請求日誌紀錄，便於審計與異常追蹤
 
 ---
 
@@ -224,7 +231,7 @@ graph TB
     SW --> FCM
 ```
 
-### 雙 API 架構
+### 後端 API + AI 微服務
 
 | API             | 用途                             | 環境變數                    |
 | --------------- | -------------------------------- | --------------------------- |
@@ -302,7 +309,7 @@ fufood/
 | **settings**      | 設定        | 個人檔案、飲食偏好、推播設定、會員方案               |
 | **media**         | 媒體上傳    | Cloudinary 整合、圖片壓縮、上傳進度                  |
 
-> 每個模組皆有獨立 README，詳見 `src/modules/{module}/README.md`
+> 每個模組皆有獨立規格書，詳見 `src/modules/{module}/spec.md`
 
 ### 模組架構
 
@@ -320,7 +327,7 @@ fufood/
 ├── utils/        # 模組工具函式
 ├── contexts/     # Context Provider (選用)
 ├── providers/    # Provider 元件 (選用)
-└── README.md     # 模組說明文件
+└── spec.md       # 模組規格書
 ```
 
 ---
@@ -354,48 +361,6 @@ npm run build
 # 產生 PWA 資源
 npm run generate-pwa-assets
 ```
-
----
-
-## 🔧 環境變數
-
-複製 `.env.example` 為 `.env` 並填入設定：
-
-```bash
-# API 設定
-VITE_BACKEND_API_BASE_URL=https://api.fufood.jocelynh.me
-VITE_AI_API_BASE_URL=https://ai-api.vercel.app/api/v1
-
-# Cloudinary（媒體上傳）
-VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
-VITE_CLOUDINARY_UPLOAD_PRESET=your_preset
-
-# LINE 登入
-VITE_LINE_LOGIN_MODE=auto  # popup | redirect | auto
-
-# Firebase (FCM 推播)
-VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-VITE_FIREBASE_VAPID_KEY=your_vapid_key
-
-# 開發模式
-VITE_USE_MOCK_API=false
-```
-
-### 環境變數說明
-
-| 變數                        | 必要 | 說明                              |
-| --------------------------- | ---- | --------------------------------- |
-| `VITE_BACKEND_API_BASE_URL` | ✅   | 後端 API 網址（認證、庫存、群組） |
-| `VITE_AI_API_BASE_URL`      | ✅   | AI API 網址（影像辨識、食譜生成） |
-| `VITE_CLOUDINARY_*`         | ⚠️   | 媒體上傳（可選，Mock 模式不需要） |
-| `VITE_LINE_LOGIN_MODE`      | ❌   | LINE 登入模式，預設 `auto`        |
-| `VITE_FIREBASE_*`           | ⚠️   | FCM 推播通知（可選）              |
-| `VITE_USE_MOCK_API`         | ❌   | 啟用 Mock API，預設 `false`       |
 
 ---
 
@@ -446,25 +411,29 @@ refactor: 重構通知模組 API 呼叫
 
 ## 📊 開發流程圖
 
-```
-【開發階段】
-├─ 從 dev 建立功能分支
-│  └─ Feature-xxx / Fix-xxx
-├─ 開發並提交 commit
-│  └─ git push origin Feature-xxx
+```mermaid
+flowchart TD
+    subgraph DEV["🛠️ 開發階段"]
+        A[從 dev 建立功能分支] --> B["Feature-xxx / Fix-xxx"]
+        B --> C[開發並提交 commit]
+        C --> D["git push origin Feature-xxx"]
+    end
 
-【QA 測試】
-├─ 直接 merge 進 qa 分支
-├─ QA 團隊測試
-│  └─ 使用 /gemini review 進行 AI Code Review
+    subgraph QA["🧪 QA 測試"]
+        E[merge 進 qa 分支] --> F[QA 團隊測試]
+    end
 
-【整合發佈】
-├─ 觸發 Auto PR to Dev 工作流
-├─ Code Review 後 merge 至 dev
-├─ 觸發 Create Release Branch
-│  └─ 自動更新版本號與 CHANGELOG
-├─ 最終 merge 至 main
-└─ ✅ 部署上線
+    subgraph RELEASE["🚀 整合發佈"]
+        H["觸發 Auto PR to Dev"] --> G["/gemini review<br/>AI Code Review"]
+        G --> J[merge 至 dev]
+        J --> K["觸發 Create Release Branch"]
+        K --> L["自動更新版本號<br/>& CHANGELOG"]
+        L --> M[merge 至 main]
+        M --> N["✅ 部署上線"]
+    end
+
+    DEV --> QA
+    QA --> RELEASE
 ```
 
 ---
@@ -487,6 +456,18 @@ refactor: 重構通知模組 API 呼叫
 
 整合 Gemini Code Assist 進行自動化 AI Code Review：
 
+### 為什麼使用 AI Code Review？
+
+- **節省人力**：自動化審查重複性問題，讓團隊成員專注於架構與邏輯討論
+- **一致性**：確保每個 PR 都經過相同標準的檢查，避免遺漏
+- **即時回饋**：開發者推送後立即收到改善建議，縮短迭代週期
+
+### 實作方式
+
+1. **GitHub App 整合**：透過 Gemini Code Assist GitHub App 連接 Repository
+2. **觸發時機**：在 Auto PR 建立後，透過 PR 評論指令觸發 AI 審查
+3. **審查範圍**：程式碼風格、潛在 Bug、效能建議、安全性檢查
+
 ### 使用方式
 
 在 PR 評論中使用指令：
@@ -503,27 +484,8 @@ refactor: 重構通知模組 API 呼叫
 
 ---
 
-## 🔗 相關連結
-
-- **後端 API 文件**: `docs/backend/`
-- **功能規劃文件**: `docs/features/`
-- **Gemini Code Assist**: https://developers.google.com/gemini-code-assist
-- **Vite 官方文件**: https://vitejs.dev/
-- **React 官方文件**: https://react.dev/
-- **TanStack Query**: https://tanstack.com/query
-- **Tailwind CSS**: https://tailwindcss.com/
-- **Radix UI**: https://www.radix-ui.com/
-- **Redux Toolkit**: https://redux-toolkit.js.org/
-- **Firebase Cloud Messaging**: https://firebase.google.com/docs/cloud-messaging
-
----
-
 ## 📄 授權
 
-此專案採用 MIT License。
+此專案採用 [MIT License](./LICENSE)。
 
 ---
-
-**最後更新**: 2026-01-26  
-**版本**: v0.3.0  
-**狀態**: 開發中 🚀
