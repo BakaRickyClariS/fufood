@@ -251,12 +251,8 @@ fufood/
 │   ├── release-branch.yml      # Release 分支管理
 │   └── release-notify.yml      # Release 通知
 ├── docs/                       # 專案文件
-│   ├── api/                    # API 規格
-│   ├── backend/                # 後端 API 文件
-│   ├── features/               # 功能規劃文件
-│   ├── fixes/                  # 問題修復紀錄
-│   ├── optimizations/          # 優化文件
-│   └── refactor/               # 重構文件
+│   ├── spec/                   # 規格與參考資料 (API 總表)
+│   └── sdd/                    # 軟體設計文件 (Backend, Frontend, Features...)
 ├── src/
 │   ├── api/                    # 共用 API 設定 (aiApi, backendApi)
 │   ├── assets/                 # 靜態資源 (logos, icons, images)
