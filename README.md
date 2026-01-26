@@ -25,6 +25,7 @@
 - [專案簡介](#-專案簡介)
 - [功能亮點](#-功能亮點)
 - [前端技術](#-前端技術)
+- [AI 微服務技術](#-ai-微服務技術)
 - [後端技術](#️-後端技術)
 - [系統架構](#️-系統架構)
 - [專案結構](#-專案結構)
@@ -73,20 +74,20 @@ FuFood 是一款智慧冰箱管理 App，核心功能包括：
 
 ## 💻 前端技術
 
-![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Redux](https://img.shields.io/badge/Redux-764ABC?style=for-the-badge&logo=redux&logoColor=white)
-![React Query](https://img.shields.io/badge/TanStack_Query-FF4154?style=for-the-badge&logo=react-query&logoColor=white)
-![React Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white)
-![GSAP](https://img.shields.io/badge/GSAP-88CE02?style=for-the-badge&logo=greensock&logoColor=black)
-![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)
-![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
-![LINE](https://img.shields.io/badge/LINE-00C300?style=for-the-badge&logo=line&logoColor=white)
-![Radix UI](https://img.shields.io/badge/Radix_UI-161618?style=for-the-badge&logo=radix-ui&logoColor=white)
-![ESLint](https://img.shields.io/badge/ESLint-4B32C3?style=for-the-badge&logo=eslint&logoColor=white)
-![Prettier](https://img.shields.io/badge/Prettier-F7B93E?style=for-the-badge&logo=prettier&logoColor=black)
+<a href="https://react.dev" target="_blank"><img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" /></a>
+<a href="https://www.typescriptlang.org" target="_blank"><img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" /></a>
+<a href="https://vitejs.dev" target="_blank"><img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" /></a>
+<a href="https://tailwindcss.com" target="_blank"><img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" /></a>
+<a href="https://redux-toolkit.js.org" target="_blank"><img src="https://img.shields.io/badge/Redux-764ABC?style=for-the-badge&logo=redux&logoColor=white" alt="Redux" /></a>
+<a href="https://tanstack.com/query" target="_blank"><img src="https://img.shields.io/badge/TanStack_Query-FF4154?style=for-the-badge&logo=react-query&logoColor=white" alt="TanStack Query" /></a>
+<a href="https://reactrouter.com" target="_blank"><img src="https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white" alt="React Router" /></a>
+<a href="https://gsap.com" target="_blank"><img src="https://img.shields.io/badge/GSAP-88CE02?style=for-the-badge&logo=greensock&logoColor=black" alt="GSAP" /></a>
+<a href="https://web.dev/progressive-web-apps" target="_blank"><img src="https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA" /></a>
+<a href="https://firebase.google.com" target="_blank"><img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase" /></a>
+<a href="https://developers.line.biz" target="_blank"><img src="https://img.shields.io/badge/LINE-00C300?style=for-the-badge&logo=line&logoColor=white" alt="LINE" /></a>
+<a href="https://www.radix-ui.com" target="_blank"><img src="https://img.shields.io/badge/Radix_UI-161618?style=for-the-badge&logo=radix-ui&logoColor=white" alt="Radix UI" /></a>
+<a href="https://eslint.org" target="_blank"><img src="https://img.shields.io/badge/ESLint-4B32C3?style=for-the-badge&logo=eslint&logoColor=white" alt="ESLint" /></a>
+<a href="https://prettier.io" target="_blank"><img src="https://img.shields.io/badge/Prettier-F7B93E?style=for-the-badge&logo=prettier&logoColor=black" alt="Prettier" /></a>
 
 ### 技術說明：
 
@@ -116,34 +117,68 @@ FuFood 是一款智慧冰箱管理 App，核心功能包括：
 
 ---
 
-## ⌨️ 後端技術
+## 🤖 AI 微服務技術
 
-![.NET](https://img.shields.io/badge/.NET-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
-![C#](https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=c-sharp&logoColor=white)
-![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)
-![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)
-![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)
-![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white)
-![Google AI](https://img.shields.io/badge/Google_AI-4285F4?style=for-the-badge&logo=google&logoColor=white)
+<a href="https://nodejs.org" target="_blank"><img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" /></a>
+<a href="https://expressjs.com" target="_blank"><img src="https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" /></a>
+<a href="https://ai.google.dev" target="_blank"><img src="https://img.shields.io/badge/Google_Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Google Gemini" /></a>
+<a href="https://supabase.com" target="_blank"><img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" /></a>
+<a href="https://www.postgresql.org" target="_blank"><img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" /></a>
+<a href="https://firebase.google.com" target="_blank"><img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase" /></a>
+<a href="https://cloudinary.com" target="_blank"><img src="https://img.shields.io/badge/Cloudinary-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white" alt="Cloudinary" /></a>
+<a href="https://swagger.io" target="_blank"><img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black" alt="Swagger" /></a>
+<a href="https://vercel.com" target="_blank"><img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" /></a>
 
 ### 技術說明：
 
-- **[ 主 API ]**：ASP.NET Core Web API
-  - 使用 .NET 8 建構主要後端 API，處理認證、庫存管理、群組管理、通知推播等核心功能。
+- **[ 框架 ]**：Node.js + Express
+  - 使用 Node.js 建構 AI 微服務，提供 RESTful API 與 Server-Sent Events (SSE) 支援 Streaming 即時回應。
 
-- **[ AI 微服務 ]**：Node.js + Express
-  - 使用 Node.js 建構 AI 微服務，整合 Google Gemini API 進行食材影像辨識與食譜生成，支援 Streaming 即時回應。
+- **[ AI 模型 ]**：Google Gemini API
+  - 整合 Google Gemini 2.0 Flash 進行食材影像辨識與食譜生成，支援多模態輸入（圖片+文字）。
 
 - **[ 資料庫 ]**：Supabase (PostgreSQL)
   - 使用 Supabase 作為 BaaS 平台，提供 PostgreSQL 資料庫、即時訂閱、Row Level Security 等功能。
 
+- **[ 推播服務 ]**：Firebase Cloud Messaging
+  - 整合 FCM 進行跨平台推播通知，支援食材到期提醒、共享群組通知等場景。
+
 - **[ 媒體存儲 ]**：Cloudinary
   - 使用 Cloudinary 進行圖片上傳、壓縮、CDN 快取，優化媒體資源載入效能。
 
-- **[ 推播服務 ]**：Firebase Cloud Messaging
-  - 整合 FCM 進行跨平台推播通知，支援食材到期提醒、共享群組通知等場景。
+- **[ 部署平台 ]**：Vercel
+  - 使用 Vercel Serverless Functions 部署，提供全球 Edge Network 低延遲存取。
+
+---
+
+## ⌨️ 後端技術
+
+<a href="https://aws.amazon.com" target="_blank"><img src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white" alt="AWS" /></a>
+<a href="https://www.postgresql.org" target="_blank"><img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" /></a>
+<a href="https://dotnet.microsoft.com" target="_blank"><img src="https://img.shields.io/badge/.NET-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET" /></a>
+<a href="https://learn.microsoft.com/dotnet/csharp" target="_blank"><img src="https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=c-sharp&logoColor=white" alt="C#" /></a>
+<a href="https://www.docker.com" target="_blank"><img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" /></a>
+<a href="https://caddyserver.com" target="_blank"><img src="https://img.shields.io/badge/Caddy-1F88C0?style=for-the-badge&logo=caddy&logoColor=white" alt="Caddy" /></a>
+<a href="https://swagger.io" target="_blank"><img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black" alt="Swagger" /></a>
+<a href="https://github.com/features/actions" target="_blank"><img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white" alt="GitHub Actions" /></a>
+<a href="https://developers.line.biz" target="_blank"><img src="https://img.shields.io/badge/LINE-00C300?style=for-the-badge&logo=line&logoColor=white" alt="LINE" /></a>
+
+### 技術說明：
+
+- **[ 框架 ]**：ASP.NET Core Web API
+  - 使用 .NET 8 建構主要後端 API，處理認證、庫存管理、群組管理等核心功能。
+
+- **[ 資料庫 ]**：PostgreSQL
+  - 使用 PostgreSQL 關聯式資料庫儲存使用者、庫存、群組等核心資料。
+
+- **[ 部署 ]**：AWS + Docker Compose
+  - 使用 Docker Compose 容器化部署於 AWS EC2，搭配 Caddy 作為反向代理與自動 HTTPS。
+
+- **[ CI/CD ]**：GitHub Actions
+  - 整合 GitHub Actions 進行自動化建置、測試與部署。
+
+- **[ 安全認證 ]**：LINE OAuth 2.0 + JWT
+  - 整合 LINE 社群登入，使用 JWT Token、CSRF Protection、Token Revocation 等安全機制。
 
 ---
 
@@ -154,27 +189,38 @@ graph TB
     subgraph Frontend["Frontend (React PWA)"]
         UI[UI Components]
         Store[Redux + Query]
-        Modules[Feature Modules]
         SW[Service Worker]
+        Modules[Feature Modules]
     end
 
-    subgraph Backend["Backend APIs"]
-        Main[".NET Main API<br/>(Auth/Inventory/Groups)"]
-        AI["Node.js AI API<br/>(Image Analysis/Recipe)"]
+    subgraph AIAPI["AI API (Node.js)"]
+        AI["Node.js + Express<br/>(Image Analysis/Recipe)"]
+        Supabase[Supabase DB]
+        Vercel[Vercel]
     end
 
     subgraph External["External Services"]
         LINE[LINE OAuth]
-        Cloudinary[Cloudinary CDN]
         FCM[Firebase Cloud Messaging]
-        Supabase[Supabase DB]
+        Cloudinary[Cloudinary CDN]
+    end
+
+    subgraph MainAPI["Main API (.NET)"]
+        Main[".NET Core 10<br/>(Auth/Inventory/Groups)"]
+        PostgreSQL[PostgreSQL 18]
+        Docker[Docker]
+        AWS[AWS EC2]
     end
 
     Frontend --> Main
     Frontend --> AI
-    Frontend --> LINE
+    Main --> PostgreSQL
+    Main --> Docker
+    Main --> LINE
+    Docker --> AWS
+    AI --> Supabase
     AI --> Cloudinary
-    Main --> Supabase
+    AI --> Vercel
     SW --> FCM
 ```
 
@@ -290,7 +336,7 @@ fufood/
 
 ```bash
 # 複製專案
-git clone https://github.com/your-username/fufood.git
+git clone https://github.com/BakaRickyClariS/fufood.git
 cd fufood
 
 # 安裝依賴
@@ -304,15 +350,6 @@ npm run dev
 
 # 建置正式版
 npm run build
-
-# 預覽建置結果
-npm run preview
-
-# ESLint 檢查
-npm run lint
-
-# 自動修正
-npm run lint:fix
 
 # 產生 PWA 資源
 npm run generate-pwa-assets
