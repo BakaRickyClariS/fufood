@@ -90,6 +90,9 @@ export default defineConfig({
     target: 'es2015',
     minify: 'esbuild',
   },
+  esbuild: {
+    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+  },
   server: {
     proxy: {
       '/api': {
