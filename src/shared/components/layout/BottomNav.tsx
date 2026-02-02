@@ -80,8 +80,8 @@ const MobileBottomNav = ({
 
   return (
     <div className="bottom-nav-wrapper fixed bottom-0 left-0 right-0 z-40">
-      {/* 外層容器：陰影 + 圓角只在上方 + 裁切 */}
-      <div className="rounded-t-3xl overflow-hidden shadow-[0_-1px_12px_rgba(0,0,0,0.25)]">
+      {/* 外層容器：陰影 + 圓角只在上方 + 裁切 + RWD 置中 */}
+      <div className="rounded-t-3xl overflow-hidden shadow-[0_-1px_12px_rgba(0,0,0,0.25)] max-w-layout-container mx-auto">
         <div className="bg-white dark:bg-neutral-900">
           <Tabs
             value={activeTab}

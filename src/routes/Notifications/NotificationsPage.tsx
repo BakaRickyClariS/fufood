@@ -259,7 +259,7 @@ const NotificationsPage = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24 bg-neutral-100">
+    <div className="min-h-screen pb-24 bg-neutral-100 max-w-layout-container mx-auto">
       {/* Tab Navigation header */}
       <div className="sticky top-0 z-30 bg-neutral-100 pt-6 pb-4 px-4">
         <Tabs
