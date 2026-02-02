@@ -18,7 +18,7 @@ const LoginCarousel: React.FC = () => {
 
   // GSAP utility for wrapping index
   const wrap = gsap.utils.wrap(0, HERO_IMAGES.length);
-  
+
   // useGSAP for scoped animations and initialization
   const { contextSafe } = useGSAP(
     () => {
@@ -29,7 +29,7 @@ const LoginCarousel: React.FC = () => {
       gsap.set(slides, { xPercent: 0, opacity: 0, scale: 0.95 });
       gsap.set(slides[0], { opacity: 1, scale: 1 });
     },
-    { scope: containerRef, dependencies: [] }
+    { scope: containerRef, dependencies: [] },
   );
 
   // Animation function using contextSafe
@@ -157,7 +157,7 @@ const LoginCarousel: React.FC = () => {
       <div
         ref={containerRef}
         className="relative w-full rounded-xl overflow-hidden mb-4"
-        style={{ aspectRatio: '1416/2052' }}
+        style={{ height: 'clamp(280px, calc(100vh - 320px), 550px)' }}
       >
         {/* Slides - 使用絕對定位堆疊 */}
         {HERO_IMAGES.map((image, index) => (
@@ -171,9 +171,8 @@ const LoginCarousel: React.FC = () => {
             <img
               src={image}
               alt={`Hero Slide ${index + 1}`}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-cover object-top"
             />
-
           </div>
         ))}
       </div>
