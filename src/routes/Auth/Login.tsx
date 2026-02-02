@@ -173,6 +173,11 @@ const Login = () => {
     }
   }, [isLoading]);
 
+  // 跳轉到電子郵件登入頁面
+  const handleEmailLogin = useCallback(() => {
+    navigate('/login/email');
+  }, [navigate]);
+
   const handleLineLogin = useCallback(() => {
     setLineLoginLoading(true);
     setLoginError(null);
@@ -281,15 +286,18 @@ const Login = () => {
   const displayError = loginError || authError;
 
   return (
-    <div ref={containerRef} className="flex flex-col min-h-screen px-5 my-8">
+    <div
+      ref={containerRef}
+      className="flex flex-col min-h-screen px-5 py-8 max-w-layout-container mx-auto w-full"
+    >
       {/* 學生專題作品提示框 */}
       {showProjectNotice ? (
-        <div className="mb-[18px] p-4 bg-warning-50 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className="mb-3 p-3 bg-warning-50 rounded-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
           {/* 左側 Icon */}
-          <Bot className="w-6 h-6 text-neutral-600 shrink-0" />
+          <Bot className="w-5 h-5 text-neutral-600 shrink-0" />
 
           {/* 中間文字 */}
-          <p className="flex-1 text-neutral-600 text-sm font-semibold leading-relaxed">
+          <p className="flex-1 text-neutral-600 text-xs font-semibold leading-relaxed">
             此產品為學生專題作品，僅學習與展示用，並沒有提供任何服務及商業行為。
           </p>
 
@@ -298,7 +306,7 @@ const Login = () => {
             onClick={() => setShowProjectNotice(false)}
             className="text-neutral-700 hover:text-neutral-900 font-bold transition-colors shrink-0"
           >
-            <X size={20} />
+            <X size={16} />
           </button>
         </div>
       ) : (
@@ -323,7 +331,7 @@ const Login = () => {
           {lineLoginLoading ? '登入中...' : '使用LINE應用程式登入'}
         </Button>
 
-        {/* <Button
+        <Button
           variant="outline"
           className="w-full border-neutral-200 text-neutral-700 h-12 text-base rounded-lg hover:bg-neutral-50"
           onClick={handleEmailLogin}
@@ -336,7 +344,7 @@ const Login = () => {
           <button className="text-sm text-neutral-500 font-medium hover:text-neutral-800 transition-colors">
             忘記密碼？
           </button>
-        </div> */}
+        </div>
       </div>
     </div>
   );
