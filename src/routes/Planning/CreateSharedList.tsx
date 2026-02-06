@@ -72,7 +72,10 @@ const CreateSharedList = () => {
   };
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-neutral-100">
+    <div
+      ref={containerRef}
+      className="min-h-screen bg-neutral-100 max-w-layout-container mx-auto"
+    >
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white px-4 py-3 flex items-center gap-3 border-b border-neutral-100 shadow-sm">
         <button onClick={handleBack} className="p-1">

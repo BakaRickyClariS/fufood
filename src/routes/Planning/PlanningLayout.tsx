@@ -13,14 +13,15 @@ export const PlanningLayout = () => {
   const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
 
   // 以 Redux 的 activeId 為主，若無則 fallback 到第一個 group (或空字串)
-  const currentRefrigeratorId = activeRefrigeratorId || (groups.length > 0 ? groups[0].id : '');
+  const currentRefrigeratorId =
+    activeRefrigeratorId || (groups.length > 0 ? groups[0].id : '');
 
   // 在 Layout 層級管理 SharedLists 狀態，避免路由切換時 refetch 導致閃爍
   const sharedListsState = useSharedLists(currentRefrigeratorId);
 
   return (
     <SharedListsProvider value={sharedListsState}>
-      <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="min-h-screen bg-neutral-50">
         <Outlet />
       </div>
     </SharedListsProvider>
