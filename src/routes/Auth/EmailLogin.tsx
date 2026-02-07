@@ -139,6 +139,7 @@ const EmailLogin = () => {
         <div className="flex justify-end">
           <button
             type="button"
+            onClick={() => navigate('/forgot-password')}
             className="text-sm text-neutral-500 font-medium hover:text-neutral-800 transition-colors"
           >
             忘記密碼？
