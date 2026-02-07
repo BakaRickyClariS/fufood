@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 
-export const ScanFrame: React.FC = () => {
+type ScanFrameProps = {
+  image?: string;
+};
+
+export const ScanFrame: React.FC<ScanFrameProps> = ({ image }) => {
   const [frameSize, setFrameSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
@@ -36,7 +40,7 @@ export const ScanFrame: React.FC = () => {
   return (
     <div className="absolute inset-0 z-10 pointer-events-none flex justify-center pt-26 overflow-hidden">
       <div
-        className="relative rounded-[32px] transition-all duration-300 ease-out"
+        className="relative rounded-[32px] transition-all duration-300 ease-out overflow-hidden"
         style={{
           width: frameSize.width,
           height: frameSize.height,
@@ -44,15 +48,23 @@ export const ScanFrame: React.FC = () => {
           boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)',
         }}
       >
+        {image && (
+          <img
+            src={image}
+            alt="Preview"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
+
         {/* Corner Indicators */}
         {/* Top Left */}
-        <div className="absolute top-0 left-0 w-8 h-8 border-t-[4px] border-l-[4px] border-white rounded-tl-[24px]" />
+        <div className="absolute top-0 left-0 w-8 h-8 border-t-[4px] border-l-[4px] border-white rounded-tl-[24px] z-10" />
         {/* Top Right */}
-        <div className="absolute top-0 right-0 w-8 h-8 border-t-[4px] border-r-[4px] border-white rounded-tr-[24px]" />
+        <div className="absolute top-0 right-0 w-8 h-8 border-t-[4px] border-r-[4px] border-white rounded-tr-[24px] z-10" />
         {/* Bottom Left */}
-        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-[4px] border-l-[4px] border-white rounded-bl-[24px]" />
+        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-[4px] border-l-[4px] border-white rounded-bl-[24px] z-10" />
         {/* Bottom Right */}
-        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-[4px] border-r-[4px] border-white rounded-br-[24px]" />
+        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-[4px] border-r-[4px] border-white rounded-br-[24px] z-10" />
       </div>
     </div>
   );

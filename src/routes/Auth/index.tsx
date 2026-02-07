@@ -2,11 +2,20 @@ import Login from './Login';
 import Register from './Register';
 import AvatarSelection from './AvatarSelection';
 import LineLoginCallback from './LineLoginCallback';
+import EmailLogin from './EmailLogin';
 
 const AuthRoutes = [
   {
     path: 'login',
     element: <Login />,
+    handle: {
+      headerVariant: 'simple',
+      footer: false,
+    },
+  },
+  {
+    path: 'login/email',
+    element: <EmailLogin />,
     handle: {
       headerVariant: 'simple',
       footer: false,

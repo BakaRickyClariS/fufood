@@ -120,7 +120,7 @@ export const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
   return createPortal(
     <div
       ref={modalRef}
-      className={`fixed inset-0 z-130 bg-white flex flex-col overflow-hidden ${isHidden ? 'invisible' : 'visible'}`}
+      className={`fixed top-0 bottom-0 left-0 right-0 max-w-layout-container mx-auto z-130 bg-white flex flex-col overflow-hidden ${isHidden ? 'invisible' : 'visible'}`}
     >
       <RecipeHeader onBack={handleClose} />
 

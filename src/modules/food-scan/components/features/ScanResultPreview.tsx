@@ -190,7 +190,7 @@ export const ScanResultPreview: React.FC<ScanResultPreviewProps> = ({
   }, [submitStatus, isBatchMode]);
 
   return (
-    <div className="min-h-screen bg-gray-50 relative overflow-hidden">
+    <div className="min-h-screen bg-gray-50 relative overflow-hidden max-w-layout-container mx-auto">
       {/* Header with Back Button */}
       <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center">
         {onBack && (

@@ -26,7 +26,7 @@ const NotificationDetailPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-neutral-100 pb-24">
+      <div className="min-h-screen bg-neutral-100 pb-24 max-w-layout-container mx-auto">
         {/* Header Skeleton */}
         <div className="sticky top-0 z-30 bg-white border-b border-gray-200">
           <div className="flex items-center gap-3 px-4 py-3">
@@ -57,7 +57,7 @@ const NotificationDetailPage = () => {
 
   if (error || !data?.data?.item) {
     return (
-      <div className="min-h-screen bg-neutral-100 flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-neutral-100 flex flex-col items-center justify-center p-4 max-w-layout-container mx-auto">
         <p className="text-gray-500 mb-4">找不到此通知</p>
         <Button variant="link" onClick={handleBack}>
           返回
@@ -85,7 +85,7 @@ const NotificationDetailPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-neutral-100 pb-24">
+    <div className="min-h-screen bg-neutral-100 pb-24 max-w-layout-container mx-auto">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-white border-b border-gray-200">
         <div className="flex items-center gap-3 px-4 py-3">

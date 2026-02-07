@@ -244,7 +244,10 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
   if (!isOpen) return null;
 
   return createPortal(
-    <div ref={modalRef} className="fixed inset-0 z-100 bg-white flex flex-col">
+    <div
+      ref={modalRef}
+      className="fixed top-0 bottom-0 left-0 right-0 max-w-layout-container mx-auto z-100 bg-white flex flex-col"
+    >
       {/* Consumpion Modal */}
       <ConsumptionModal
         isOpen={showConsumptionModal}
@@ -284,7 +287,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
       />
 
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-10 px-4 py-3 flex items-center justify-between bg-black/20">
+      <div className="fixed top-0 left-0 right-0 max-w-layout-container mx-auto z-10 px-4 py-3 flex items-center justify-between bg-black/20">
         <button
           onClick={handleClose}
           className="p-1 -ml-1 rounded-full text-white hover:bg-black/10 transition-colors"
