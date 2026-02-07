@@ -35,9 +35,9 @@ jobs:
               else if (branch.startsWith('Fix-')) labels = ['bug', 'fix'];
               else if (branch.startsWith('Update-')) labels = ['documentation', 'update'];
               else if (branch.startsWith('Hotfix-')) labels = ['hotfix', 'urgent'];
-              // FETCH remote branch and update refs to avoid ambiguous argument error
-              execSync(`git fetch origin ${branch}:${branch}`);
-              const commits = execSync(`git log origin/dev..${branch} --pretty=format:"- %s" --reverse`)
+              // FETCH remote branch refs (don't create local branch to avoid conflict with checked out branch)
+              execSync(`git fetch origin ${branch}`);
+              const commits = execSync(`git log origin/dev..origin/${branch} --pretty=format:"- %s" --reverse`)
                 .toString()
                 .trim();
               const prBody = `## Commits\n\n${commits || 'No commit messages available'}`;
