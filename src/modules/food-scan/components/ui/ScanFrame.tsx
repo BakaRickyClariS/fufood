@@ -40,7 +40,7 @@ export const ScanFrame: React.FC<ScanFrameProps> = ({ image }) => {
   return (
     <div className="absolute inset-0 z-10 pointer-events-none flex justify-center pt-26 overflow-hidden">
       <div
-        className="relative rounded-[32px] transition-all duration-300 ease-out overflow-hidden"
+        className="relative rounded-[24px] transition-all duration-300 ease-out overflow-hidden"
         style={{
           width: frameSize.width,
           height: frameSize.height,
