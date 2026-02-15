@@ -128,7 +128,7 @@ export const GroupPageLayout = forwardRef<
         {/* Modal 主體 */}
         <div
           ref={modalRef}
-          className="fixed inset-0 bg-neutral-100 flex flex-col"
+          className="fixed top-0 bottom-0 left-0 right-0 max-w-layout-container mx-auto bg-neutral-100 flex flex-col"
           style={{ zIndex }}
         >
           {/* Header */}
