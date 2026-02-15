@@ -288,7 +288,7 @@ export const AIQueryModal = ({
   // 如果是在靈感模式下且正在 Loading，顯示全版 Loading 畫面
   if (isOpen && mode === 'inspiration' && isLoading && !text) {
     return createPortal(
-      <div className="fixed inset-0 z-150 bg-white flex flex-col items-center justify-center">
+      <div className="fixed top-0 bottom-0 left-0 right-0 max-w-layout-container mx-auto z-150 bg-white flex flex-col items-center justify-center">
         <div className="w-full max-w-[320px] aspect-square relative mb-8">
           <img
             src={processingImage}
@@ -323,7 +323,7 @@ export const AIQueryModal = ({
         >
           <div
             ref={containerRef}
-            className="absolute inset-0 bg-white flex flex-col shadow-xl"
+            className="absolute top-0 bottom-0 left-0 right-0 max-w-layout-container mx-auto bg-white flex flex-col shadow-xl"
             style={{ transform: 'translate(100%, 0)' }}
           >
             {/* Header */}
@@ -501,7 +501,7 @@ export const AIQueryModal = ({
             />
 
             {/* Footer Input Area */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-400 rounded-t-2xl p-4 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-101">
+            <div className="fixed bottom-0 left-0 right-0 max-w-layout-container mx-auto bg-white border-t border-neutral-400 rounded-t-2xl p-4 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-101">
               <div className="max-w-layout-container mx-auto space-y-3">
                 <div className="relative">
                   {/* Input Field */}

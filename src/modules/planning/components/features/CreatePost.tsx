@@ -486,7 +486,7 @@ export const PostFormFeature = ({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-100 bg-neutral-100 flex flex-col"
+      className="fixed top-0 bottom-0 left-0 right-0 max-w-layout-container mx-auto z-100 bg-neutral-100 flex flex-col"
     >
       {/* Header */}
       <header className="bg-white px-4 py-3 flex items-center gap-3 border-b border-neutral-100 shadow-sm shrink-0">
@@ -623,7 +623,7 @@ export const PostFormFeature = ({
       />
 
       {/* Fixed Footer */}
-      <div className="fixed bottom-0 left-0 right-0 px-4 py-6 bg-white rounded-t-3xl shadow-[0_-4px_10px_rgba(0,0,0,0.1)] z-50">
+      <div className="fixed bottom-0 left-0 right-0 max-w-layout-container mx-auto px-4 py-6 bg-white rounded-t-3xl shadow-[0_-4px_10px_rgba(0,0,0,0.1)] z-50">
         <button
           onClick={handleSubmit}
           disabled={isSubmitting || items.length === 0}
