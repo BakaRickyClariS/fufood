@@ -128,7 +128,7 @@ export const CreateSharedListDrawer = ({
       {/* Drawer */}
       <div
         ref={drawerRef}
-        className="absolute top-0 right-0 h-full w-full bg-neutral-100 shadow-2xl overflow-y-auto"
+        className="absolute top-0 left-0 right-0 h-full w-full max-w-layout-container mx-auto bg-neutral-100 shadow-2xl overflow-y-auto"
         style={{ transform: 'translateX(100%)' }}
       >
         {/* Header */}

@@ -24,8 +24,8 @@
 ## 📌 目錄
 
 - [功能介紹](#-功能介紹)
-- [建議體驗流程](#-建議體驗流程)
 - [功能亮點](#-功能亮點)
+- [建議體驗流程](#-建議體驗流程)
 - [前端技術](#-前端技術)
 - [AI 微服務技術](#-ai-微服務技術)
 - [後端技術](#️-後端技術)
@@ -34,11 +34,7 @@
 - [功能模組](#-功能模組)
 - [快速開始](#-快速開始)
 - [環境變數](#-環境變數)
-- [Git Flow 規範](#-git-flow-規範)
-- [Commit 規範](#-commit-規範)
-- [開發流程圖](#-開發流程圖)
-- [CI/CD 流程](#-cicd-流程)
-- [Gemini Code Assist](#-gemini-code-assist)
+- [開發規範](#-開發規範)
 - [相關連結](#-相關連結)
 - [授權](#-授權)
 
@@ -52,6 +48,23 @@
 - **群組共享協作**：邀請家人朋友加入冰箱群組，共同管理食材與購物清單。
 - **App 推播通知**：食材過期前自動發送推播通知，避免浪費。
 - **PWA 安裝體驗**：支援手機桌面安裝，提供接近原生 App 的流暢體驗。
+
+---
+
+## ✨ 功能亮點
+
+| 功能                | 描述                                                |
+| ------------------- | --------------------------------------------------- |
+| 🤖 **AI 影像辨識**  | 支援單張/多張食材辨識，自動填寫名稱、分類、保存期限 |
+| 🍳 **AI 食譜生成**  | 根據庫存食材自動推薦食譜，支援 Streaming 即時生成   |
+| 📦 **智慧庫存管理** | 7 大分類、過期追蹤、低庫存警示、消耗紀錄            |
+| 👨‍👩‍👧‍👦 **群組共享**     | 多人共用冰箱、成員權限管理、邀請碼加入              |
+| 🛒 **共享購物清單** | 協作購物、貼文牆分享、圖片上傳                      |
+| 🔔 **推播通知**     | Firebase Cloud Messaging 整合，食材到期/共享提醒    |
+| 📱 **PWA 支援**     | 可安裝至桌面、離線快取、背景通知                    |
+| 🔐 **LINE 登入**    | OAuth 2.0 整合、HttpOnly Cookie 安全認證            |
+
+---
 
 ## 🏄 建議體驗流程
 
@@ -113,21 +126,6 @@ npm run generate-pwa-assets
 
 ---
 
-## ✨ 功能亮點
-
-| 功能                | 描述                                                |
-| ------------------- | --------------------------------------------------- |
-| 🤖 **AI 影像辨識**  | 支援單張/多張食材辨識，自動填寫名稱、分類、保存期限 |
-| 🍳 **AI 食譜生成**  | 根據庫存食材自動推薦食譜，支援 Streaming 即時生成   |
-| 📦 **智慧庫存管理** | 7 大分類、過期追蹤、低庫存警示、消耗紀錄            |
-| 👨‍👩‍👧‍👦 **群組共享**     | 多人共用冰箱、成員權限管理、邀請碼加入              |
-| 🛒 **共享購物清單** | 協作購物、貼文牆分享、圖片上傳                      |
-| 🔔 **推播通知**     | Firebase Cloud Messaging 整合，食材到期/共享提醒    |
-| 📱 **PWA 支援**     | 可安裝至桌面、離線快取、背景通知                    |
-| 🔐 **LINE 登入**    | OAuth 2.0 整合、HttpOnly Cookie 安全認證            |
-
----
-
 ## 💻 前端技術
 
 <a href="https://react.dev" target="_blank"><img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" /></a>
@@ -147,28 +145,28 @@ npm run generate-pwa-assets
 
 ### 技術說明：
 
-- **[ 環境 ]**：Vite 7.0
-  - 使用 Vite 作為建置工具，提供快速的 HMR 熱更新與優化的生產建置，開發體驗極佳。
+- **[ Vite ]**：
+  - 使用 Vite 作為建置工具，提供快速的 HMR 熱更新與優化的生產建置。
 
-- **[ 框架 ]**：React 19.0
-  - 使用 React 19 進行前端開發，透過 React 生態系快速開發高品質 Web 應用，並運用最新的 Hooks、Suspense 等特性優化效能與開發體驗。
+- **[ React ]**：
+  - 使用 React 進行前端開發，並運用最新的 Hooks、Suspense 等特性優化效能。
 
-- **[ 語言 ]**：TypeScript 5.7
-  - 採用 TypeScript 進行開發，透過嚴格的型別定義與編譯時期檢查，大幅減少團隊協作時的型別錯誤，讓重構與維護更有信心。
+- **[ TypeScript ]**：
+  - 採用 TypeScript 進行開發，透過嚴格的型別定義與編譯時期檢查，大幅減少製作時的型別錯誤。
 
-- **[ 樣式 ]**：Tailwind CSS 4.0 + Radix UI
-  - 使用 Tailwind CSS 4 進行原子化 CSS 開發，搭配 Radix UI 無障礙元件庫，快速建構一致且可存取的使用者介面。
+- **[ Tailwind CSS + Radix UI ]**：
+  - 使用 Tailwind CSS 進行原子化 CSS 開發，搭配 Radix UI 無障礙元件庫。
 
-- **[ 狀態管理 ]**：Redux Toolkit 2.5 + TanStack Query 5.66
+- **[ Redux Toolkit + TanStack Query ]**：
   - 採用雙軌狀態管理架構處理複雜的應用狀態：Redux 負責全域 UI 狀態（如 Modal、Toast），TanStack Query 則專注於資料快取與非同步請求。
 
-- **[ 動畫 ]**：GSAP 3.12
-  - 使用 GSAP 為頁面注入生動的過場動畫與微互動，讓整體使用體驗更加流暢自然。
+- **[ GSAP ]**：
+  - 使用 GSAP 為頁面注入生動的過場動畫與微互動。
 
-- **[ PWA ]**：Vite PWA Plugin 1.0 + Workbox
-  - 支援 PWA 安裝、離線快取、背景推播通知，提供原生 App 般的使用體驗。
+- **[ Vite PWA Plugin + Workbox ]**：
+  - 支援 PWA 安裝、離線快取、背景推播通知。
 
-- **[ 部署平台 ]**：Vercel
+- **[ Vercel ]**：
   - 使用 Vercel 進行自動化部署，透過 GitHub Actions CI/CD 流程，實現快速迭代與持續交付。
 
 ---
@@ -187,22 +185,22 @@ npm run generate-pwa-assets
 
 ### 技術說明：
 
-- **[ 框架 ]**：Node.js + Express
-  - 使用 Node.js 建構 AI 微服務，提供 RESTful API 與 Server-Sent Events (SSE) 支援 Streaming 即時回應。
+- **[ Node.js + Express ]**：
+  - 使用 Node.js 建構 AI 微服務，提供 RESTful API。
 
-- **[ AI 模型 ]**：Google Gemini API
+- **[ Google Gemini API ]**：
   - 整合 Google Gemini 2.0 Flash 進行食材影像辨識與食譜生成，支援多模態輸入（圖片+文字）。
 
-- **[ 資料庫 ]**：Supabase (PostgreSQL)
+- **[ Supabase (PostgreSQL) ]**：
   - 使用 Supabase 作為 BaaS 平台，提供 PostgreSQL 資料庫、即時訂閱、Row Level Security 等功能。
 
-- **[ 推播服務 ]**：Firebase Cloud Messaging
+- **[ Firebase Cloud Messaging ]**：
   - 整合 FCM 進行跨平台推播通知，支援食材到期提醒、共享群組通知等場景。
 
-- **[ 媒體存儲 ]**：Cloudinary
+- **[ Cloudinary ]**：
   - 使用 Cloudinary 進行圖片上傳、壓縮、CDN 快取，優化媒體資源載入效能。
 
-- **[ 部署平台 ]**：Vercel Serverless
+- **[ Vercel Serverless ]**：
   - 使用 Vercel Serverless Functions 部署，提供全球 Edge Network 低延遲存取。
 
 - **[ 🔒 資安架構 ]**：多層 AI 安全防護
@@ -214,38 +212,9 @@ npm run generate-pwa-assets
 
 ---
 
-## ⌨️ 後端技術
-
-<a href="https://aws.amazon.com" target="_blank"><img src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white" alt="AWS" /></a>
-<a href="https://www.postgresql.org" target="_blank"><img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" /></a>
-<a href="https://dotnet.microsoft.com" target="_blank"><img src="https://img.shields.io/badge/.NET-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET" /></a>
-<a href="https://learn.microsoft.com/dotnet/csharp" target="_blank"><img src="https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=c-sharp&logoColor=white" alt="C#" /></a>
-<a href="https://www.docker.com" target="_blank"><img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" /></a>
-<a href="https://caddyserver.com" target="_blank"><img src="https://img.shields.io/badge/Caddy-1F88C0?style=for-the-badge&logo=caddy&logoColor=white" alt="Caddy" /></a>
-<a href="https://swagger.io" target="_blank"><img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black" alt="Swagger" /></a>
-<a href="https://github.com/features/actions" target="_blank"><img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white" alt="GitHub Actions" /></a>
-<a href="https://developers.line.biz" target="_blank"><img src="https://img.shields.io/badge/LINE-00C300?style=for-the-badge&logo=line&logoColor=white" alt="LINE" /></a>
-
-### 技術說明：
-
-- **[ 框架 ]**：ASP.NET Core Web API
-  - 使用 .NET 8 建構主要後端 API，處理認證、庫存管理、群組管理等核心功能。
-
-- **[ 資料庫 ]**：PostgreSQL
-  - 使用 PostgreSQL 關聯式資料庫儲存使用者、庫存、群組等核心資料。
-
-- **[ 部署 ]**：AWS + Docker Compose
-  - 使用 Docker Compose 容器化部署於 AWS EC2，搭配 Caddy 作為反向代理與自動 HTTPS。
-
-- **[ CI/CD ]**：GitHub Actions
-  - 整合 GitHub Actions 進行自動化建置、測試與部署。
-
-- **[ 安全認證 ]**：LINE OAuth 2.0 + JWT
-  - 整合 LINE 社群登入，使用 JWT Token、CSRF Protection、Token Revocation 等安全機制。
-
----
-
 ## 🏗️ 系統架構
+
+此專案的系統架構：描述 Frontend (React PWA)、AI API (Node.js)、Main API (.NET) 與 External Services 之間的整體架構關係。
 
 ```mermaid
 graph TB
@@ -384,125 +353,9 @@ fufood/
 
 ---
 
-## 🌱 Git Flow 規範
+## 📋 開發規範
 
-### 主分支
-
-| 分支     | 用途     | 部署環境    |
-| -------- | -------- | ----------- |
-| **main** | 正式版本 | 生產環境    |
-| **qa**   | 測試版本 | Vercel 預覽 |
-| **dev**  | 開發整合 | 本地開發    |
-
-### 功能分支
-
-| 分支前綴   | 用途          | 命名範例           |
-| ---------- | ------------- | ------------------ |
-| `Feature-` | 新功能開發    | `Feature-ai-scan`  |
-| `Fix-`     | 錯誤修正      | `Fix-login-bug`    |
-| `Update-`  | 文件/設定更新 | `Update-readme`    |
-| `Hotfix-`  | 緊急修正      | `Hotfix-api-error` |
-
----
-
-## 📝 Commit 規範
-
-| 前綴        | 用途             |
-| ----------- | ---------------- |
-| `feat:`     | 新增功能         |
-| `fix:`      | 修正 bug         |
-| `style:`    | 樣式調整         |
-| `docs:`     | 文件更新         |
-| `refactor:` | 重構程式碼       |
-| `chore:`    | 設定檔、依賴更新 |
-| `perf:`     | 效能優化         |
-| `test:`     | 測試相關         |
-
-**範例：**
-
-```bash
-feat: 新增 AI 多品項辨識功能
-fix: 修正庫存過期計算錯誤
-docs: 更新 inventory 模組 README
-refactor: 重構通知模組 API 呼叫
-```
-
----
-
-## 📊 開發流程圖
-
-```mermaid
-flowchart TD
-    subgraph DEV["🛠️ 開發階段"]
-        A[從 dev 建立功能分支] --> B["Feature-xxx / Fix-xxx"]
-        B --> C[開發並提交 commit]
-        C --> D["git push origin Feature-xxx"]
-    end
-
-    subgraph QA["🧪 QA 測試"]
-        E[merge 進 qa 分支] --> F[QA 團隊測試]
-    end
-
-    subgraph RELEASE["🚀 整合發佈"]
-        H["觸發 Auto PR to Dev"] --> G["/gemini review<br/>AI Code Review"]
-        G --> J[merge 至 dev]
-        J --> K["觸發 Create Release Branch"]
-        K --> L["自動更新版本號<br/>& CHANGELOG"]
-        L --> M[merge 至 main]
-        M --> N["✅ 部署上線"]
-    end
-
-    DEV --> QA
-    QA --> RELEASE
-```
-
----
-
-## 🔄 CI/CD 流程
-
-專案使用 GitHub Actions 進行自動化 CI/CD：
-
-| 工作流程             | 觸發條件        | 說明                                    |
-| -------------------- | --------------- | --------------------------------------- |
-| `auto-pr.yml`        | Push 到功能分支 | 自動建立 PR 至目標分支                  |
-| `auto-pr-select.yml` | PR 合併         | 選擇性觸發建立 PR 至目標分支            |
-| `release-branch.yml` | dev 分支更新    | 建立 Release 分支並更新版本號           |
-| `release-notify.yml` | 版本發布通知    | 呼叫 AI 後端 API 發布系統公告 (QA/Prod) |
-| `deploy-prod.yml`    | PR 合併至 main  | 部署至生產環境                          |
-
----
-
-## 🤖 Gemini Code Assist
-
-整合 Gemini Code Assist 進行自動化 AI Code Review：
-
-### 為什麼使用 AI Code Review？
-
-- **節省人力**：自動化審查重複性問題，讓開發者專注於架構與邏輯討論
-- **一致性**：確保每個 PR 都經過相同標準的檢查，避免遺漏
-- **即時回饋**：開發者推送後立即收到改善建議，縮短迭代週期
-
-### 實作方式
-
-1. **GitHub App 整合**：透過 Gemini Code Assist GitHub App 連接 Repository
-2. **觸發時機**：在 Auto PR 建立後，透過 PR 評論指令觸發 AI 審查
-3. **審查範圍**：程式碼風格、潛在 Bug、效能建議、安全性檢查
-
-### 使用方式
-
-在 PR 評論中使用指令：
-
-| 指令              | 說明             |
-| ----------------- | ---------------- |
-| `/gemini summary` | 產生 PR 變更摘要 |
-| `/gemini review`  | 詳細程式碼審查   |
-| `/gemini help`    | 查看所有指令     |
-
-### 設定檔
-
-專案根目錄 `.gemini-code-review.json` 定義審查規則。
-
----
+詳細的 Git Flow、Commit 規範、CI/CD 流程與 Gemini Code Assist 使用方式，請參閱 [開發規格文件](./docs/spec/development-guidelines.md)。
 
 ## 📄 授權
 

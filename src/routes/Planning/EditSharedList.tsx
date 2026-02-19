@@ -1,7 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ChevronLeft, Camera, CalendarDays, CalendarCheck, Loader2 } from 'lucide-react';
+import {
+  ChevronLeft,
+  Camera,
+  CalendarDays,
+  CalendarCheck,
+  Loader2,
+} from 'lucide-react';
 import { sharedListApi } from '@/modules/planning/services/api/sharedListApi';
 import { CoverImagePicker } from '@/modules/planning/components/ui/CoverImagePicker';
 import { COVER_IMAGES } from '@/modules/planning/constants/coverImages';
@@ -107,7 +113,10 @@ const EditSharedList = () => {
   }
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-neutral-100">
+    <div
+      ref={containerRef}
+      className="min-h-screen bg-neutral-100 max-w-layout-container mx-auto"
+    >
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white px-4 py-3 flex items-center gap-3 border-b border-neutral-100 shadow-sm">
         <button onClick={handleBack} className="p-1">
