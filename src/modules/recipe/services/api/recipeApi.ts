@@ -8,8 +8,9 @@ import type {
   ConsumptionConfirmation,
   MealPlanInput,
 } from '@/modules/recipe/types';
-import { backendApi } from '@/api/client';
+import { api } from '@/api/client';
 import { aiRecipeApi } from '@/modules/ai/api/aiRecipeApi';
+import { ENDPOINTS } from '@/api/endpoints';
 
 export type RecipeApi = {
   getRecipes(params?: {
@@ -194,8 +195,7 @@ export class RealRecipeApi implements RecipeApi {
       }));
   };
 
-  // --- 以下維持原樣 (或是也需要 Mock/Pending) ---
-
+  // 根據食材名稱推薦相關食譜
   getRecommendedRecipes = async (
     ingredientNames: string[],
   ): Promise<RecipeListItem[]> => {
@@ -203,27 +203,20 @@ export class RealRecipeApi implements RecipeApi {
     const query = ingredientNames
       .map((name) => `ingredients=${encodeURIComponent(name)}`)
       .join('&');
-    return backendApi
-      .get<RecipeListItem[]>(`/api/v1/recipes/recommended?${query}`)
+    return api
+      .get<RecipeListItem[]>(`${ENDPOINTS.RECIPES.RECOMMENDED}?${query}`)
       .catch(() => []); // 避免錯誤阻擋 UI
   };
 
   confirmCook = async (
     data: ConsumptionConfirmation,
   ): Promise<{ success: boolean; message: string }> => {
-    // 消耗食材通常涉及主後端的庫存，所以這裡應該還是打主後端
-    // 但因為食譜來源是 AI Backend，ID 無法對應。
-    // 這是一個整合斷點。
-    // 暫時假設：消耗食材只扣庫存，不依賴後端食譜 ID 驗證 (或後端會忽略無效 ID)
-
-    // 如果主後端需要有效的 Recipe ID，這裡會失敗。
-    // 但目前需求是「消耗時推薦的食譜需要與庫存相關」，這可能指 getRecommendedRecipes。
-    // confirmCook 暫時先維持呼叫主後端，若失敗則僅 log
     try {
-      const response = await backendApi.patch<{
+      const response = await api.patch<{
         success?: boolean;
         message?: string;
-      }>(`/api/v1/recipes/${data.recipeId}`, {
+      }>(ENDPOINTS.RECIPES.BY_ID(data.recipeId), {
+        // Note: using BY_ID for base path
         status: 'cooked',
         consumption: data,
       });
@@ -241,21 +234,21 @@ export class RealRecipeApi implements RecipeApi {
   };
 
   addMealPlan = async (data: MealPlanInput): Promise<MealPlan> => {
-    return backendApi.post<MealPlan>('/api/v1/recipes/plan', data);
+    return api.post<MealPlan>(ENDPOINTS.RECIPES.MEAL_PLANS, data);
   };
 
   getMealPlans = async (): Promise<MealPlan[]> => {
     // 避免 404
     try {
-      return await backendApi.get<MealPlan[]>('/api/v1/recipes/plan');
+      return await api.get<MealPlan[]>(ENDPOINTS.RECIPES.MEAL_PLANS);
     } catch {
       return [];
     }
   };
 
   deleteMealPlan = async (planId: string): Promise<{ success: boolean }> => {
-    return backendApi.delete<{ success: boolean }>(
-      `/api/v1/recipes/plan/${planId}`,
+    return api.delete<{ success: boolean }>(
+      ENDPOINTS.RECIPES.MEAL_PLAN(planId),
     );
   };
 }
