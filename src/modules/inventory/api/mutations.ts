@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
-import { backendApi } from '@/api/client';
+import { api } from '@/api/client';
+import { ENDPOINTS } from '@/api/endpoints';
 import type { UUID } from '@/api/types';
 import type {
   InventoryTransaction,
@@ -12,8 +13,8 @@ interface InventoryTransactionMutationResponse {
 }
 
 export function createInventoryTransaction(refrigeratorId: UUID) {
-  return backendApi.post<InventoryTransactionMutationResponse>(
-    `/api/v1/refrigerators/${refrigeratorId}/inventory_transactions`,
+  return api.post<InventoryTransactionMutationResponse>(
+    ENDPOINTS.INVENTORY.TRANSACTIONS.CREATE(refrigeratorId),
   );
 }
 
@@ -24,8 +25,8 @@ export function useCreateInventoryTransactionMutation() {
 }
 
 export function commitInventoryTransaction(transactionId: UUID) {
-  return backendApi.post<InventoryTransactionMutationResponse>(
-    `/api/v1/inventory_transactions/${transactionId}/commit`,
+  return api.post<InventoryTransactionMutationResponse>(
+    ENDPOINTS.INVENTORY.TRANSACTIONS.COMMIT(transactionId),
   );
 }
 
@@ -48,9 +49,9 @@ export function createInventoryTransactionItem({
   transactionId,
   params,
 }: CreateInventoryTransactionItemRequest) {
-  return backendApi.post<CreateInventoryTransactionItemResponse>(
-    `/api/v1/inventory_transactions/${transactionId}/items`,
-    { body: params },
+  return api.post<CreateInventoryTransactionItemResponse>(
+    ENDPOINTS.INVENTORY.TRANSACTIONS.ITEMS(transactionId),
+    params,
   );
 }
 

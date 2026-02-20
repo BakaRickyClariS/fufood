@@ -1,4 +1,6 @@
-import { aiApi, backendApi } from '@/api/client';
+import { aiApi, backendApi, api } from '@/api/client';
+import { ENDPOINTS } from '@/api/endpoints';
+
 import type {
   FoodScanApi,
   ScanResult,
@@ -164,10 +166,12 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     };
   };
 
+  /* ... */
+
   const recognizeImage = async (imageUrl: string): Promise<ScanResult> => {
     try {
       // Updated endpoint to match v2.1 spec
-      const data = await aiApi.post<RawScanResponse>('/ai/analyze-image', {
+      const data = await api.post<RawScanResponse>(ENDPOINTS.AI.ANALYZE_IMAGE, {
         imageUrl,
       });
       return transformScanResult(data);
@@ -193,8 +197,8 @@ export const createRealFoodScanApi = (): FoodScanApi => {
       formData.append('maxIngredients', String(maxIngredients));
 
       // Updated endpoint to match v2.1 spec
-      const response = await aiApi.post<MultipleScanResult>(
-        '/ai/analyze-image/multiple',
+      const response = await api.post<MultipleScanResult>(
+        ENDPOINTS.AI.ANALYZE_MULTIPLE,
         formData,
         {
           headers: {
@@ -232,38 +236,50 @@ export const createRealFoodScanApi = (): FoodScanApi => {
           : [],
     };
 
-    // 庫存 API 在 AI 後端上 (/refrigerators/{id}/inventory)
-    if (data.groupId) {
-      return aiApi.post<FoodItemResponse>(
-        `/refrigerators/${data.groupId}/inventory`,
-        apiPayload,
-      );
-    }
-
-    // 如果沒有 groupId，嘗試從 localStorage 取得
-    const cachedId = localStorage.getItem('activeRefrigeratorId');
-    if (cachedId) {
-      return aiApi.post<FoodItemResponse>(
-        `/refrigerators/${cachedId}/inventory`,
-        apiPayload,
-      );
-    }
-
-    // 最後 fallback：拋出錯誤提示使用者需要選擇冰箱
-    throw new Error('無法入庫：請先選擇一個冰箱群組');
+    // 這裡使用 api (原 backendApi) 呼叫標準後端 API
+    return api.post<FoodItemResponse>(ENDPOINTS.INVENTORY.BASE, apiPayload);
   };
 
+  /**
+   * 更新庫存品項 (修正與確認)
+   */
   const updateFoodItem = async (
     id: string,
     data: Partial<FoodItemInput>,
   ): Promise<FoodItemResponse> => {
-    // 庫存 API 已遷移至主後端
-    return backendApi.put<FoodItemResponse>(`/api/v1/inventory/${id}`, data);
+    return api.put<FoodItemResponse>(ENDPOINTS.INVENTORY.BY_ID(id), data);
   };
 
+  /**
+   * 刪除/撤銷辨識結果 (如果已儲存)
+   */
   const deleteFoodItem = async (id: string): Promise<{ success: boolean }> => {
-    // 庫存 API 已遷移至主後端
-    return backendApi.delete<{ success: boolean }>(`/api/v1/inventory/${id}`);
+    return api.delete<{ success: boolean }>(ENDPOINTS.INVENTORY.BY_ID(id));
+  };
+
+  /**
+   * 取得特定庫存項目的詳細資訊 (用於 verify)
+   */
+  const getInventoryItem = async (id: string): Promise<FoodItem> => {
+    const response = await api.get<{ data: FoodItem }>(
+      ENDPOINTS.INVENTORY.BY_ID(id),
+    );
+    return response.data || (response as unknown as FoodItem);
+  };
+
+  /**
+   * 取得最近的辨識/新增紀錄
+   */
+  const getRecentItems = async (limit = 10): Promise<FoodItem[]> => {
+    const refrigeratorId = identity.getRefrigeratorId();
+    if (!refrigeratorId) return [];
+
+    const response = await api.get<{ items: FoodItem[] }>(
+      `${ENDPOINTS.INVENTORY.GROUP_INVENTORY(refrigeratorId)}?limit=${limit}&sort=created_at&order=desc`,
+    );
+    // Handle response structure check
+    if (Array.isArray(response)) return response;
+    return response.items || (response as any).data || [];
   };
 
   const getFoodItems = async (
@@ -274,11 +290,12 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     if (filters?.category) params.category = filters.category;
     if (filters?.status) params.status = filters.status;
 
-    const response = await backendApi.get<{ items: FoodItem[] }>(
-      '/api/v1/inventory',
-      params,
+    const response = await api.get<{ items: FoodItem[] }>(
+      ENDPOINTS.INVENTORY.BASE,
+      params as any, // Cast or fix type issue if needed
     );
-    return response.items;
+    if (Array.isArray(response)) return response;
+    return response.items || [];
   };
 
   return {
@@ -288,5 +305,7 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     updateFoodItem,
     deleteFoodItem,
     getFoodItems,
+    getInventoryItem,
+    getRecentItems,
   };
 };
