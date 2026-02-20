@@ -7,7 +7,7 @@ import type {
   MembershipTier,
 } from '../types';
 import { Gender } from '../types';
-import { backendApi } from '@/api/client';
+import { api } from '@/api/client';
 import { MOCK_USERS } from './mock/authMockData';
 import { parsePreferences } from '@/modules/settings/utils/dietaryUtils';
 
@@ -49,7 +49,7 @@ export async function getUserProfile(): Promise<User | null> {
   const userStr = localStorage.getItem('user');
 
   try {
-    const result = await backendApi.get<ProfileResponse>('/api/v1/profile');
+    const result = await api.get<ProfileResponse>('/api/v2/profile');
 
     // 將 API 回傳的 ProfileData (可能含字串 enum) 轉換為 User 格式 (數值 enum)
     const backendData = result.data as any; // 使用 any 繞過 TS 檢查，因為後端回傳型別與文件不符

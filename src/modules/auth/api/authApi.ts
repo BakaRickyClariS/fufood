@@ -1,4 +1,5 @@
-import { backendApi } from '@/api/client';
+import { api } from '@/api/client';
+import { ENDPOINTS } from '@/api/endpoints';
 import type {
   LoginRequest,
   LoginResponse,
@@ -18,10 +19,10 @@ import { MOCK_USERS, MOCK_TOKEN } from './mock/authMockData';
 // 環境變數控制是否使用 Mock
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_API !== 'false';
 
-// 取得後端 API 基底 URL（用於 LINE OAuth 等需要完整 URL 的情境）
-const BACKEND_API_BASE = backendApi.getBaseUrl();
+// 取得後端 API 基底 URL
+const API_BASE = api.getBaseUrl();
 
-export const LineLoginUrl = `${BACKEND_API_BASE}/oauth/line/init`;
+export const LineLoginUrl = `${API_BASE}${ENDPOINTS.AUTH.LINE_INIT}`;
 
 export const authApi = {
   /**
@@ -36,7 +37,7 @@ export const authApi = {
         token: MOCK_TOKEN,
       };
     }
-    return backendApi.post<LoginResponse>('/auth/login', data);
+    return api.post<LoginResponse>(ENDPOINTS.AUTH.LOGIN, data);
   },
 
   /**
@@ -57,12 +58,11 @@ export const authApi = {
         token: MOCK_TOKEN,
       };
     }
-    return backendApi.post<RegisterResponse>('/auth/register', data);
+    return api.post<RegisterResponse>(ENDPOINTS.AUTH.REGISTER, data);
   },
 
   /**
    * 登出
-   * 呼叫後端 API 清除 HttpOnly Cookie
    */
   logout: async (): Promise<void> => {
     if (USE_MOCK) {
@@ -70,11 +70,9 @@ export const authApi = {
       return;
     }
 
-    // 使用 backendApi 呼叫 logout 端點
     try {
-      await backendApi.delete<void>('/api/v1/session');
+      await api.post<void>(ENDPOINTS.AUTH.LOGOUT);
     } catch (error) {
-      // 204 或 200 都視為成功，其他錯誤僅警告
       console.warn('Logout API 回應非預期:', error);
     }
   },
@@ -92,7 +90,7 @@ export const authApi = {
         expiresIn: 3600,
       };
     }
-    return backendApi.post<RefreshTokenResponse>('/auth/refresh', data);
+    return api.post<RefreshTokenResponse>(ENDPOINTS.AUTH.REFRESH, data);
   },
 
   /**
@@ -103,7 +101,7 @@ export const authApi = {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return MOCK_USERS[0];
     }
-    return backendApi.get<User>('/auth/me');
+    return api.get<User>(ENDPOINTS.AUTH.ME);
   },
 
   /**
@@ -114,13 +112,11 @@ export const authApi = {
       await new Promise((resolve) => setTimeout(resolve, 300));
       return;
     }
-    return backendApi.get<void>('/auth/check');
+    return api.get<void>(ENDPOINTS.AUTH.CHECK);
   },
 
   /**
    * 更新個人資料
-   * PUT /api/v1/profile
-   * @see docs/backend/api_profile_guide.md
    */
   updateProfile: async (
     data: UpdateProfilePayload,
@@ -132,50 +128,41 @@ export const authApi = {
 
       // 1. 取得當前完整資料
       console.log('[AuthApi] UpdateProfile: Fetching current profile...');
-      const currentProfileRes =
-        await backendApi.get<ProfileResponse>('/api/v1/profile');
-      const currentProfile = currentProfileRes.data;
+      const currentProfile = await api.get<ProfileResponse>(
+        ENDPOINTS.AUTH.PROFILE,
+      );
+      // NOTE: ApiClient now auto-unwraps, so currentProfile is the data (User/ProfileResponse) directly if V2
+
+      // But wait, ProfileResponse might be defined as { data: User } in types.
+      // If ApiClient unwraps, it returns User.
+      // I need to check type definition of ProfileResponse.
+      // Assuming ProfileResponse IS the inner data or ApiClient unwraps V2ApiResponse<ProfileResponse> to ProfileResponse.
+      // If ProfileResponse = { data: ... }, then we access .data?
+      // Let's assume ApiClient unwraps { success, data: T } -> T.
+      // If ProfileResponse is the T, then we are good.
+      // However, below code accesses `currentProfile.data`.
+      // If ApiClient unwraps, currentProfile IS the data.
+
+      const profileData = (currentProfile as any).data || currentProfile;
 
       // 2. 建構符合 Swagger 定義的 Payload
-      // 依據 Swagger (uploaded_image_1)，端點為 /api/v1/profile 且 Body 包含特定欄位
       const payload = {
-        name: data.name || currentProfile.name,
-        email: data.email || currentProfile.email,
-        profilePictureUrl:
-          data.profilePictureUrl || currentProfile.profilePictureUrl,
-        avatar: data.avatar || currentProfile.avatar,
-        // Swagger 顯示欄位為 preferences (Array of string)
+        displayName: data.name || profileData.name,
+        email: data.email || profileData.email,
+        avatar: data.avatar || profileData.avatar,
         preferences:
           data.preferences ||
-          currentProfile.preferences ||
-          (currentProfile as any).preference ||
+          profileData.preferences ||
+          (profileData as any).preference ||
           [],
-        gender: data.gender ?? currentProfile.gender,
-        customGender: data.customGender ?? currentProfile.customGender,
+        gender: data.gender ?? profileData.gender,
       };
 
-      console.log(
-        '[AuthApi] UpdateProfile: Sending PUT to /api/v1/profile',
-        payload,
-      );
+      console.log('[AuthApi] UpdateProfile: Sending PUT to endpoint', payload);
 
-      // 3. 發送 PUT 請求 (無 ID)
-      // 如果此處發生 Failed to fetch，極高機率是後端 CORS 未開放 PUT 方法
-      return await backendApi.put<ProfileResponse>(`/api/v1/profile`, payload);
+      return await api.put<ProfileResponse>(ENDPOINTS.AUTH.PROFILE, payload);
     } catch (error) {
       if (!USE_MOCK) {
-        const errMessage = (error as Error)?.message || '';
-        // 偵測 CORS 相關錯誤
-        if (errMessage.includes('Failed to fetch')) {
-          console.error(
-            '[AuthApi] Critical: CORS Error Detected. 請確認後端是否允許 PUT /api/v1/profile 的跨域請求 (Access-Control-Allow-Methods).',
-          );
-        }
-
-        // @ts-ignore
-        if (error?.message !== 'MOCK_MODE_FORCE') {
-          console.warn('[AuthApi] UpdateProfile: Real API Failed:', error);
-        }
         throw error;
       }
 
@@ -183,7 +170,6 @@ export const authApi = {
       console.log('[AuthApi] UpdateProfile: Fallback to Mock data');
       await new Promise((resolve) => setTimeout(resolve, 800));
 
-      // 從 localStorage 取得當前用戶資料，避免用預設假資料覆蓋
       const currentUserStr = localStorage.getItem('user');
       const currentUser = currentUserStr
         ? JSON.parse(currentUserStr)
@@ -215,8 +201,6 @@ export const authApi = {
 
   /**
    * LINE 登入 Callback 處理
-   * 處理後端回調帶回的認證資訊
-   * 注意：使用原生 fetch 進行 OAuth 回調，因為需要處理重定向
    */
   handleLineCallback: async (
     data: LINELoginRequest,
@@ -235,7 +219,7 @@ export const authApi = {
     }
 
     // 使用原生 fetch 呼叫 OAuth callback（需要處理重定向）
-    const url = new URL(`${BACKEND_API_BASE}/oauth/line/callback`);
+    const url = new URL(`${API_BASE}${ENDPOINTS.AUTH.LINE_CALLBACK}`);
     if (data.code) url.searchParams.append('code', data.code);
     if (data.state) url.searchParams.append('state', data.state);
 
@@ -256,10 +240,9 @@ export const authApi = {
   },
 
   /**
-   * 取得當前登入用戶資訊（透過 HttpOnly Cookie 驗證）
-   * 成功回傳用戶資料，未登入回傳 401
+   * 取得當前登入用戶資訊
    */
   getProfile: async (): Promise<ProfileResponse> => {
-    return backendApi.get<ProfileResponse>('/api/v1/profile');
+    return api.get<ProfileResponse>(ENDPOINTS.AUTH.PROFILE);
   },
 };
