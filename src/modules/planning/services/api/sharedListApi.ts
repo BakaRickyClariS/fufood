@@ -4,7 +4,7 @@ import type {
   CreateSharedListInput,
   CreateSharedListItemInput,
 } from '@/modules/planning/types/sharedList';
-import { backendApi } from '@/api/client';
+import { api } from '@/api/client';
 
 export type SharedListApi = {
   // Lists
@@ -37,50 +37,53 @@ export type SharedListApi = {
 export class RealSharedListApi implements SharedListApi {
   // List Operations
   async getSharedLists(refrigeratorId: string): Promise<SharedList[]> {
-    const response = await backendApi.get<{ data: SharedList[] }>(
-      `/api/v1/refrigerators/${refrigeratorId}/shopping_lists`,
+    const response = await api.get<{ data: SharedList[] }>(
+      `/api/v2/groups/${refrigeratorId}/shopping-lists`,
     );
+    // V2 return format standard check: might be response.data or response is array
+    if (Array.isArray(response)) return response;
     return response.data || [];
   }
 
   async getSharedListById(id: string): Promise<SharedList> {
-    const response = await backendApi.get<{ data: SharedList }>(
-      `/api/v1/shopping_lists/${id}`,
+    const response = await api.get<{ data: SharedList }>(
+      `/api/v2/shopping-lists/${id}`,
     );
-    return response.data;
+    return response.data || (response as unknown as SharedList);
   }
 
   async createSharedList(
     refrigeratorId: string,
     input: CreateSharedListInput,
   ): Promise<SharedList> {
-    const response = await backendApi.post<{ data: SharedList }>(
-      `/api/v1/refrigerators/${refrigeratorId}/shopping_lists`,
+    const response = await api.post<{ data: SharedList }>(
+      `/api/v2/groups/${refrigeratorId}/shopping-lists`,
       input,
     );
-    return response.data;
+    return response.data || (response as unknown as SharedList);
   }
 
   async updateSharedList(
     id: string,
     input: Partial<CreateSharedListInput>,
   ): Promise<SharedList> {
-    const response = await backendApi.put<{ data: SharedList }>(
-      `/api/v1/shopping_lists/${id}`,
+    const response = await api.put<{ data: SharedList }>(
+      `/api/v2/shopping-lists/${id}`,
       input,
     );
-    return response.data;
+    return response.data || (response as unknown as SharedList);
   }
 
   async deleteSharedList(id: string): Promise<void> {
-    return backendApi.delete<void>(`/api/v1/shopping_lists/${id}`);
+    return api.delete<void>(`/api/v2/shopping-lists/${id}`);
   }
 
   // Item Operations
   async getSharedListItems(listId: string): Promise<SharedListItem[]> {
-    const response = await backendApi.get<{ data: SharedListItem[] }>(
-      `/api/v1/shopping_lists/${listId}/items`,
+    const response = await api.get<{ data: SharedListItem[] }>(
+      `/api/v2/shopping-lists/${listId}/items`,
     );
+    if (Array.isArray(response)) return response;
     return response.data || [];
   }
 
@@ -88,25 +91,25 @@ export class RealSharedListApi implements SharedListApi {
     listId: string,
     input: CreateSharedListItemInput,
   ): Promise<SharedListItem> {
-    const response = await backendApi.post<{ data: SharedListItem }>(
-      `/api/v1/shopping_lists/${listId}/items`,
+    const response = await api.post<{ data: SharedListItem }>(
+      `/api/v2/shopping-lists/${listId}/items`,
       input,
     );
-    return response.data;
+    return response.data || (response as unknown as SharedListItem);
   }
 
   async updateSharedListItem(
     itemId: string,
     input: Partial<CreateSharedListItemInput>,
   ): Promise<void> {
-    return backendApi.put<void>(
-      `/api/v1/shopping_list_items/${itemId}`,
-      input,
-    );
+    // V2 doesn't have explicit shopping-list-items endpoint detailed in doc I read (only create/get in list),
+    // but typically it's PUT /api/v2/shopping-list-items/:id
+    // Checking doc snippet for item update: "PUT /shopping-list-items/:itemId"
+    return api.put<void>(`/api/v2/shopping-list-items/${itemId}`, input);
   }
 
   async deleteSharedListItem(itemId: string): Promise<void> {
-    return backendApi.delete<void>(`/api/v1/shopping_list_items/${itemId}`);
+    return api.delete<void>(`/api/v2/shopping-list-items/${itemId}`);
   }
 }
 
