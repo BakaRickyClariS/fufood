@@ -1,32 +1,17 @@
 /**
  * Fufood 統一 API 客戶端
  *
- * 提供兩個 API 實例：
- * - aiApi: AI 服務（OCR、食譜生成、媒體上傳）
- * - backendApi: 後端服務（認證、庫存、群組、食譜等）
- *
- * @example
- * // AI 服務呼叫
- * import { aiApi } from '@/api/client';
- * const result = await aiApi.post('/api/v1/ai/analyze-image', formData);
- *
- * // 後端服務呼叫
- * import { backendApi } from '@/api/client';
- * const user = await backendApi.get('/api/v1/profile');
+ * 目前已整合為單一後端 (AI API)，所有請求皆透過此客戶端發送。
+ * Base URL: VITE_AI_API_BASE_URL (預設 /api/v1 -> 將逐漸遷移至 /api/v2)
  */
 
 import { identity } from '@/shared/utils/identity';
 
-// API 類型定義
-type ApiType = 'ai' | 'backend';
+// API 類型定義 (已整合，保留 interface 供擴充)
+// type ApiType = 'unified';
 
 // API 基底 URL 配置
-const API_BASES: Record<ApiType, string> = {
-  ai: import.meta.env.VITE_AI_API_BASE_URL || '/api/v1',
-  backend:
-    import.meta.env.VITE_BACKEND_API_BASE_URL ||
-    'https://api.fufood.jocelynh.me',
-};
+const API_BASE_URL = import.meta.env.VITE_AI_API_BASE_URL || '/api';
 
 type ApiBody = BodyInit | Record<string, unknown> | null | undefined;
 
@@ -51,15 +36,31 @@ export class ApiError extends Error {
 
 /**
  * 統一 API 客戶端
- * 支援 AI API 和後端 API 兩種類型
+ */
+
+// V2 API Response Wrapper
+interface V2ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  code?: string;
+}
+
+// Type guard for V2 response
+function isV2Response<T>(data: any): data is V2ApiResponse<T> {
+  return (
+    data && typeof data === 'object' && 'success' in data && 'data' in data
+  );
+}
+
+/**
+ * 統一 API 客戶端
  */
 class ApiClient {
   private readonly baseUrl: string;
-  private readonly apiType: ApiType;
 
-  constructor(apiType: ApiType) {
-    this.apiType = apiType;
-    this.baseUrl = API_BASES[apiType];
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl;
   }
 
   private async request<T>(
@@ -80,33 +81,16 @@ class ApiClient {
       }
     }
 
-    // let token: string | null = '';
-    let userId: string | null = '';
-
-    // Access tokens and user IDs are only used in the AI API. The backend API relies on HTTP-only cookies.
-    if (this.apiType === 'ai') {
-      // 使用統一的 identity 模組取得認證資訊
-      // token = identity.getAuthToken(); // 移除：改用 HttpOnly Cookie (Dual Session)
-      userId = identity.getUserId();
-
-      if (!userId) {
-        // Debug: 僅在 AI API 且缺少必要資訊時警告
-        console.warn(
-          '[AI API] No user ID found, AI backend may reject this request',
-        );
-      }
-    }
+    const userId = identity.getUserId();
 
     let resolvedHeaders: HeadersInit = {
       'Content-Type': 'application/json',
-      // ...(token ? { Authorization: `Bearer ${token}` } : {}), // 移除 Header 注入
-      // 嘗試為所有 API 都帶上 X-User-Id (若有)，以防後端某些 middleware 需要
+      // X-User-Id 用於識別當前操作的冰箱/群組 context (AI Backend 需求)
       ...(userId ? { 'X-User-Id': userId } : {}),
       ...headers,
     };
 
     // 如果 body 是 FormData，不要合併自訂 headers 中的 Content-Type
-    // 讓瀏覽器自動設定正確的 multipart/form-data boundary
     if (body instanceof FormData) {
       resolvedHeaders = Object.fromEntries(
         Object.entries(resolvedHeaders).filter(
@@ -149,21 +133,33 @@ class ApiClient {
         return {} as T;
       }
 
-      // 嘗試解析 JSON，若失敗則回傳空物件
+      // 嘗試解析 JSON
       const text = await response.text();
       if (!text || text.trim() === '') {
         return {} as T;
       }
 
+      let json: any;
       try {
-        return JSON.parse(text);
+        json = JSON.parse(text);
       } catch {
-        // JSON 解析失敗，可能是空回應或非 JSON 格式
+        // JSON 解析失敗，回傳空物件
         return {} as T;
       }
+
+      // Auto-unwrap V2 response
+      // Strategy: certain endpoints are V2 and wrapped in { success, data }.
+      // We automatically unwrap 'data' if strictly matches V2 structure.
+      // This allows api.get<User> to return User, even if backend sent { success:true, data: User }
+      if (isV2Response<T>(json)) {
+        return json.data;
+      }
+
+      // For V1 or non-conforming responses (e.g. { items: [] } or just Array), return as is.
+      return json as T;
     } catch (error) {
       console.error(
-        `[${this.apiType.toUpperCase()} API] Request Failed:`,
+        `[API] Request Failed: ${config.method} ${url.toString()}`,
         error,
       );
       throw error;
@@ -219,19 +215,23 @@ class ApiClient {
 // ============================================================
 
 /**
- * AI API 客戶端
- * 用於：OCR 辨識、AI 食譜生成、媒體上傳
+ * 主要 API 客戶端
  */
-export const aiApi = new ApiClient('ai');
+export const api = new ApiClient(API_BASE_URL);
 
 /**
- * 後端 API 客戶端
- * 用於：認證、庫存管理、群組管理、食譜查詢、購物清單等
+ * @deprecated 請改用 import { api } from '@/api/client'
+ * 相容性別名：指向同一實例
  */
-export const backendApi = new ApiClient('backend');
+export const aiApi = api;
 
 /**
- * @deprecated 請使用 aiApi 或 backendApi
- * 為了向後相容保留，預設為 AI API
+ * @deprecated 請改用 import { api } from '@/api/client'
+ * 相容性別名：指向同一實例 (已移除舊版 C# Backend 客戶端)
  */
-export const apiClient = aiApi;
+export const backendApi = api;
+
+/**
+ * @deprecated 請改用 api
+ */
+export const apiClient = api;
