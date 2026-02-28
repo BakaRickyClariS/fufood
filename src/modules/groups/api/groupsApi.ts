@@ -8,12 +8,10 @@ import type {
   InviteMemberForm,
   JoinGroupForm,
 } from '../types/group.types';
-import { mockGroups, mockMembers } from '../mocks/mockData';
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_API !== 'false';
 
-// API 基底路徑
-const API_BASE = '/api/v2/groups';
+// API 已統一定義在 @/api/endpoints.ts
 
 // ============================================================
 // 錯誤處理工具
@@ -178,7 +176,7 @@ export const groupsApi = {
   /**
    * 建立新群組
    */
-  create: async (data: CreateGroupRequest): Promise<Group> => {
+  create: async (data: CreateGroupForm): Promise<Group> => {
     return tryRealApiWithMockFallback(
       'POST',
       ENDPOINTS.GROUPS.BASE,
@@ -189,7 +187,6 @@ export const groupsApi = {
         return {
           id: `group-${Date.now()}`,
           name: data.name,
-          description: data.description,
           ownerId: 'user-1',
           members: [],
           createdAt: new Date().toISOString(),
@@ -202,7 +199,7 @@ export const groupsApi = {
   /**
    * 更新群組資訊
    */
-  update: async (id: string, data: UpdateGroupRequest): Promise<Group> => {
+  update: async (id: string, data: UpdateGroupForm): Promise<Group> => {
     return tryRealApiWithMockFallback(
       'PUT',
       ENDPOINTS.GROUPS.BY_ID(id),
@@ -213,7 +210,6 @@ export const groupsApi = {
         return {
           id,
           name: data.name || 'Updated Group',
-          description: data.description,
           ownerId: 'user-1',
           members: [],
           createdAt: new Date().toISOString(),
@@ -227,18 +223,43 @@ export const groupsApi = {
    * 刪除群組
    */
   delete: async (id: string): Promise<void> => {
-    const endpoint = `${API_BASE}/${id}`;
+    const endpoint = ENDPOINTS.GROUPS.BY_ID(id);
     console.log(' [Groups API] 刪除群組:', id);
 
     return tryRealApiWithMockFallback(
       'DELETE',
       endpoint,
       // 真實 API 呼叫
-      () => api.delete<void>(endpoint),
+      () => api.delete<void>(ENDPOINTS.GROUPS.BY_ID(id)),
       // Mock fallback
       async () => {
         await new Promise((resolve) => setTimeout(resolve, 500));
         return;
+      },
+    );
+  },
+
+  /**
+   * 取得群組成員列表
+   * V2 API: 取得群組詳情內會包含成員列表，沒有獨立的 /members GET 端點
+   */
+  getMembers: async (groupId: string): Promise<GroupMember[]> => {
+    return tryRealApiWithMockFallback(
+      'GET',
+      ENDPOINTS.GROUPS.BY_ID(groupId),
+      async () => {
+        const group = await groupsApi.getById(groupId);
+        return group.members || [];
+      },
+      async () => {
+        return [
+          {
+            id: 'user-1',
+            name: 'Mock User',
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mock',
+            role: 'owner' as const,
+          },
+        ];
       },
     );
   },
@@ -277,7 +298,7 @@ export const groupsApi = {
     // Or if this method is deprecated in favor of `createInvitation`.
     // Let's assume for now we might deprecate this or map it to createInvitation if data is empty.
 
-    const endpoint = `${API_BASE}/${groupId}/invitations`;
+    const endpoint = ENDPOINTS.GROUPS.INVITATIONS(groupId);
     console.log(' [Groups API] 建立邀請 (原 inviteMember):', {
       groupId,
       data,
@@ -303,7 +324,7 @@ export const groupsApi = {
    */
   join: async (_groupId: string, data: JoinGroupForm): Promise<void> => {
     // V2 endpoint: /api/v2/groups/join
-    const endpoint = `/api/v2/groups/join`;
+    const endpoint = ENDPOINTS.GROUPS.JOIN;
     console.log(' [Groups API] 加入群組:', { data });
 
     return tryRealApiWithMockFallback(
@@ -324,7 +345,7 @@ export const groupsApi = {
    * DELETE /api/v2/groups/{groupId}/leave
    */
   leaveGroup: async (groupId: string): Promise<void> => {
-    const endpoint = `/api/v2/groups/${groupId}/leave`;
+    const endpoint = ENDPOINTS.GROUPS.LEAVE(groupId);
     console.log('🚪 [Groups API] 退出群組:', groupId);
 
     return tryRealApiWithMockFallback(
@@ -362,7 +383,7 @@ export const groupsApi = {
    * 注意：只有冰箱擁有者可以移除成員
    */
   removeMember: async (groupId: string, memberId: string): Promise<void> => {
-    const endpoint = `/api/v2/groups/${groupId}/members/${memberId}`;
+    const endpoint = ENDPOINTS.GROUPS.MEMBER(groupId, memberId);
     console.log('❌ [Groups API] 移除成員:', { groupId, memberId });
 
     return tryRealApiWithMockFallback(
@@ -389,7 +410,7 @@ export const groupsApi = {
     memberId: string,
     role: GroupMember['role'],
   ): Promise<void> => {
-    const endpoint = `${API_BASE}/${groupId}/members/${memberId}`;
+    const endpoint = ENDPOINTS.GROUPS.MEMBER(groupId, memberId);
     console.log(' [Groups API] 更新成員權限:', { groupId, memberId, role });
 
     return tryRealApiWithMockFallback(
@@ -468,7 +489,7 @@ export const groupsApi = {
   createInvitation: async (
     groupId: string,
   ): Promise<import('../types/group.types').InviteCodeResponse> => {
-    const endpoint = `${API_BASE}/${groupId}/invitations`;
+    const endpoint = ENDPOINTS.GROUPS.INVITATIONS(groupId);
 
     return tryRealApiWithMockFallback(
       'POST',
@@ -515,7 +536,7 @@ export const groupsApi = {
   getInvitation: async (
     token: string,
   ): Promise<import('../types/group.types').InvitationResponse> => {
-    const endpoint = `/api/v2/invitations/${token}`;
+    const endpoint = ENDPOINTS.GROUPS.INVITATION_INFO(token);
 
     return wrapApiCall('GET', endpoint, async () => {
       const response = await api.get<{
