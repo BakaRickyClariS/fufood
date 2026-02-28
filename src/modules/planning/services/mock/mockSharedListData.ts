@@ -14,7 +14,7 @@ export const MOCK_SHARED_LISTS: SharedList[] = [
     status: 'in-progress',
     enableNotifications: true,
     createdAt: NOW,
-    refrigeratorId: 'group_001',
+    groupId: 'group_001',
   },
   {
     id: 'list_dec_002',
@@ -24,7 +24,7 @@ export const MOCK_SHARED_LISTS: SharedList[] = [
     status: 'in-progress',
     enableNotifications: true,
     createdAt: NOW,
-    refrigeratorId: 'group_001',
+    groupId: 'group_001',
   },
   {
     id: 'list_dec_003',
@@ -34,7 +34,7 @@ export const MOCK_SHARED_LISTS: SharedList[] = [
     status: 'in-progress', // pending -> in-progress as it is future
     enableNotifications: false,
     createdAt: NOW,
-    refrigeratorId: 'group_001',
+    groupId: 'group_001',
   },
   // 2026年1月
   {
@@ -45,7 +45,7 @@ export const MOCK_SHARED_LISTS: SharedList[] = [
     status: 'in-progress',
     enableNotifications: true,
     createdAt: NOW,
-    refrigeratorId: 'group_001',
+    groupId: 'group_001',
   },
   {
     id: 'list_002',
@@ -55,7 +55,7 @@ export const MOCK_SHARED_LISTS: SharedList[] = [
     status: 'in-progress',
     enableNotifications: false,
     createdAt: NOW,
-    refrigeratorId: 'group_001',
+    groupId: 'group_001',
   },
   // 2025年11月（過去）
   {
@@ -66,7 +66,7 @@ export const MOCK_SHARED_LISTS: SharedList[] = [
     status: 'completed',
     enableNotifications: true,
     createdAt: NOW,
-    refrigeratorId: 'group_001',
+    groupId: 'group_001',
   },
 ];
 

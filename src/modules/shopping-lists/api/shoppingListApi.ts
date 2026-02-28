@@ -1,4 +1,5 @@
 import { api } from '@/api/client';
+import { ENDPOINTS } from '@/api/endpoints';
 import { identity } from '@/shared/utils/identity';
 
 export type ShoppingList = {
@@ -21,7 +22,7 @@ export const shoppingListApi = {
    * GET /api/v2/groups/{groupId}/shopping-lists
    */
   getLists: (groupId?: string) => {
-    const targetGroupId = groupId || identity.getRefrigeratorId();
+    const targetGroupId = groupId || identity.getCachedGroupId();
     if (!targetGroupId) {
       console.warn('Get shopping lists requires a valid groupId.');
       return Promise.resolve([]);
@@ -36,7 +37,7 @@ export const shoppingListApi = {
    * POST /api/v2/groups/{groupId}/shopping-lists
    */
   createList: (data: { name: string }, groupId?: string) => {
-    const targetGroupId = groupId || identity.getRefrigeratorId();
+    const targetGroupId = groupId || identity.getCachedGroupId();
     if (!targetGroupId) {
       throw new Error('Create shopping list requires a valid groupId.');
     }
@@ -69,10 +70,41 @@ export const shoppingListApi = {
 
   /**
    * 標記為已購買
-   * PATCH /api/v2/shopping-lists/{id} ? No specific endpoint in docs, assuming updateList logic
+   * PATCH /api/v2/shopping-lists/id ? No specific endpoint in docs, assuming updateList logic
    */
   markPurchased: (id: string) =>
-    api.put<ShoppingList>(`/api/v2/shopping-lists/${id}`, {
+    api.put<ShoppingList>(ENDPOINTS.SHOPPING_LISTS.BY_ID(id), {
       status: 'purchased',
     }),
+
+  // ============================================================
+  // 🛍️ Shopping List Items
+  // ============================================================
+
+  /**
+   * 取得清單項目
+   */
+  getItems: (listId: string) =>
+    api.get<ShoppingListItem[]>(ENDPOINTS.SHOPPING_LISTS.ITEMS(listId)),
+
+  /**
+   * 新增清單項目
+   */
+  addItem: (listId: string, data: { name: string; quantity: number }) =>
+    api.post<ShoppingListItem>(ENDPOINTS.SHOPPING_LISTS.ITEMS(listId), data),
+
+  /**
+   * 更新清單項目
+   */
+  updateItem: (itemId: string, data: Partial<ShoppingListItem>) =>
+    api.put<ShoppingListItem>(
+      ENDPOINTS.SHOPPING_LISTS.ITEM_BY_ID(itemId),
+      data,
+    ),
+
+  /**
+   * 刪除清單項目
+   */
+  deleteItem: (itemId: string) =>
+    api.delete<void>(ENDPOINTS.SHOPPING_LISTS.ITEM_BY_ID(itemId)),
 };

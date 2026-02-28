@@ -87,11 +87,11 @@ const savePosts = (posts: Record<string, SharedListPost[]>) => {
 };
 
 export class MockSharedListApi implements SharedListApi {
-  async getSharedLists(refrigeratorId: string): Promise<SharedList[]> {
+  async getSharedLists(groupId: string): Promise<SharedList[]> {
     await delay(500);
     const lists = getLists();
-    // 依 refrigeratorId 篩選
-    return lists.filter((list) => list.refrigeratorId === refrigeratorId);
+    // 依 groupId 篩選
+    return lists.filter((list) => list.groupId === groupId);
   }
 
   async getSharedListById(id: string): Promise<SharedList> {
@@ -103,7 +103,7 @@ export class MockSharedListApi implements SharedListApi {
   }
 
   async createSharedList(
-    refrigeratorId: string,
+    groupId: string,
     input: CreateSharedListInput,
   ): Promise<SharedList> {
     await delay(800);
@@ -113,7 +113,7 @@ export class MockSharedListApi implements SharedListApi {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status: 'in-progress',
-      refrigeratorId,
+      groupId,
       coverPhotoPath: input.coverPhotoPath || null,
       enableNotifications: input.enableNotifications ?? true,
       ...input,

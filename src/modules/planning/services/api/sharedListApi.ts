@@ -8,10 +8,10 @@ import { api } from '@/api/client';
 
 export type SharedListApi = {
   // Lists
-  getSharedLists(refrigeratorId: string): Promise<SharedList[]>;
+  getSharedLists(groupId: string): Promise<SharedList[]>;
   getSharedListById(id: string): Promise<SharedList>;
   createSharedList(
-    refrigeratorId: string,
+    groupId: string,
     input: CreateSharedListInput,
   ): Promise<SharedList>;
   updateSharedList(
@@ -36,9 +36,9 @@ export type SharedListApi = {
 // 真實 API 實作
 export class RealSharedListApi implements SharedListApi {
   // List Operations
-  async getSharedLists(refrigeratorId: string): Promise<SharedList[]> {
+  async getSharedLists(groupId: string): Promise<SharedList[]> {
     const response = await api.get<{ data: SharedList[] }>(
-      `/api/v2/groups/${refrigeratorId}/shopping-lists`,
+      `/api/v2/groups/${groupId}/shopping-lists`,
     );
     // V2 return format standard check: might be response.data or response is array
     if (Array.isArray(response)) return response;
@@ -53,11 +53,11 @@ export class RealSharedListApi implements SharedListApi {
   }
 
   async createSharedList(
-    refrigeratorId: string,
+    groupId: string,
     input: CreateSharedListInput,
   ): Promise<SharedList> {
     const response = await api.post<{ data: SharedList }>(
-      `/api/v2/groups/${refrigeratorId}/shopping-lists`,
+      `/api/v2/groups/${groupId}/shopping-lists`,
       input,
     );
     return response.data || (response as unknown as SharedList);
@@ -80,11 +80,20 @@ export class RealSharedListApi implements SharedListApi {
 
   // Item Operations
   async getSharedListItems(listId: string): Promise<SharedListItem[]> {
-    const response = await api.get<{ data: SharedListItem[] }>(
+    const response = await api.get<{ data: any[] }>(
       `/api/v2/shopping-lists/${listId}/items`,
     );
-    if (Array.isArray(response)) return response;
-    return response.data || [];
+    const rawItems = Array.isArray(response) ? response : response.data || [];
+
+    // Map snake_case from DB to camelCase for frontend
+    return rawItems.map((item: any) => ({
+      ...item,
+      creatorId: item.creator_id || item.creatorId,
+      photoPath: item.photo_path || item.photoPath,
+      shoppingListId: item.shopping_list_id || item.shoppingListId,
+      // If there's a nested creator object, make sure it's accessible
+      creator: item.creator || undefined,
+    }));
   }
 
   async createSharedListItem(
@@ -102,9 +111,6 @@ export class RealSharedListApi implements SharedListApi {
     itemId: string,
     input: Partial<CreateSharedListItemInput>,
   ): Promise<void> {
-    // V2 doesn't have explicit shopping-list-items endpoint detailed in doc I read (only create/get in list),
-    // but typically it's PUT /api/v2/shopping-list-items/:id
-    // Checking doc snippet for item update: "PUT /shopping-list-items/:itemId"
     return api.put<void>(`/api/v2/shopping-list-items/${itemId}`, input);
   }
 

@@ -38,9 +38,9 @@ export const SharedListDetail = ({
     items,
     isLoading: itemsLoading,
     deleteItem,
-  } = useSharedListItems(listId || undefined, list?.refrigeratorId);
+  } = useSharedListItems(listId || undefined);
   const { members } = useGroupMembers(
-    list?.refrigeratorId || '',
+    list?.groupId || (list as any)?.group_id || '',
     currentUser
       ? {
           name: currentUser.displayName || 'Me',
@@ -77,14 +77,27 @@ export const SharedListDetail = ({
         let authorName = 'Unknown User';
         let authorAvatar = '';
 
-        const creator = members.find((m) => m.id === item.creatorId);
+        const actualCreatorId = item.creatorId || (item as any).userId;
+        const creator = actualCreatorId
+          ? members.find(
+              (m) =>
+                m.id === actualCreatorId ||
+                (m as any).userId === actualCreatorId,
+            )
+          : undefined;
 
         if (creator) {
-          authorName = creator.name;
-          authorAvatar = creator.avatar;
-        } else if (currentUser && item.creatorId === currentUser.id) {
-          authorName = currentUser.displayName || 'Me';
-          authorAvatar = currentUser.avatar || '';
+          authorName = creator.name || 'Unknown User';
+          authorAvatar = creator.avatar || creator.profilePictureUrl || '';
+        } else if (currentUser && actualCreatorId === currentUser.id) {
+          authorName = currentUser.displayName || currentUser.name || 'Me';
+          authorAvatar = currentUser.pictureUrl || currentUser.avatar || '';
+        } else if ((item as any).creator?.name) {
+          authorName = (item as any).creator.name;
+          authorAvatar =
+            (item as any).creator.avatar ||
+            (item as any).creator.profilePictureUrl ||
+            '';
         }
 
         currentCreatorId = item.creatorId;
@@ -224,6 +237,30 @@ export const SharedListDetail = ({
         <>
           {/* Posts Feed */}
           <div className="px-4 space-y-4">
+            {/* 臨時 Debug 區塊 */}
+            <div className="bg-red-50 text-red-900 border border-red-300 p-3 rounded-xl mb-4 text-xs font-mono overflow-auto max-h-60">
+              <p className="font-bold border-b border-red-300 mb-2 pb-1">
+                🔍 查修 Unknown User (請截這塊圖給我看或是複製內容給我)
+              </p>
+              <p>1. list url id: {list?.id}</p>
+              <p>2. list.groupId: {list?.groupId || 'undefined'}</p>
+              <p>3. members 總數: {members.length}</p>
+              <p>
+                4. 第一筆 member keys:{' '}
+                {members[0] ? Object.keys(members[0]).join(', ') : 'none'}
+              </p>
+              <p>
+                {' '}
+                第一筆 member id:{' '}
+                {members[0]?.id || (members[0] as any)?.userId || 'none'}
+              </p>
+              <p>5. items 總數: {items?.length}</p>
+              <p>
+                6. 第一筆 item 完整資料:{' '}
+                {items?.[0] ? JSON.stringify(items[0]) : 'none'}
+              </p>
+            </div>
+
             {itemsLoading ? (
               <div className="text-center py-8 text-neutral-400">
                 載入項目中...
@@ -275,8 +312,6 @@ export const SharedListDetail = ({
               initialData={editingItem}
               initialItems={editingItems}
               onClose={handleCloseForm}
-              refrigeratorId={list?.refrigeratorId}
-              listName={list?.title}
             />
           )}
         </>
