@@ -22,53 +22,48 @@ export type InventoryApi = {
   // 取得單筆食材
   getItem: (
     id: string,
-    refrigeratorId?: string,
+    groupId?: string,
   ) => Promise<ApiSuccess<{ item: FoodItem }>>;
 
   // 新增食材
   addItem: (
     data: AddFoodItemRequest,
-    refrigeratorId?: string,
+    groupId?: string,
   ) => Promise<AddFoodItemResponse>;
 
   // 更新食材
   updateItem: (
     id: string,
     data: UpdateFoodItemRequest,
-    refrigeratorId?: string,
+    groupId?: string,
   ) => Promise<UpdateFoodItemResponse>;
 
   // 刪除食材
-  deleteItem: (
-    id: string,
-    refrigeratorId?: string,
-  ) => Promise<DeleteFoodItemResponse>;
+  deleteItem: (id: string, groupId?: string) => Promise<DeleteFoodItemResponse>;
 
   // 批次刪除（可選）
   batchDelete: (
     data: BatchDeleteInventoryRequest,
-    refrigeratorId?: string,
+    groupId?: string,
   ) => Promise<ApiSuccess<Record<string, never>>>;
 
   // 庫存概要（可選，若已用 include 可不呼叫）
-  getSummary: (refrigeratorId?: string) => Promise<InventorySummaryResponse>;
+  getSummary: (groupId?: string) => Promise<InventorySummaryResponse>;
 
   // 類別列表
-  getCategories: (
-    refrigeratorId?: string,
-  ) => Promise<InventoryCategoriesResponse>;
+  getCategories: (groupId?: string) => Promise<InventoryCategoriesResponse>;
 
   // 庫存設定
-  getSettings: (refrigeratorId?: string) => Promise<InventorySettingsResponse>;
+  getSettings: (groupId?: string) => Promise<InventorySettingsResponse>;
   updateSettings: (
     data: UpdateInventorySettingsRequest,
-    refrigeratorId?: string,
+    groupId?: string,
   ) => Promise<InventorySettingsResponse>;
 
   // 消耗食材
   consumeItem: (
     id: string,
     data: { quantity: number; reasons: string[]; customReason?: string },
-    refrigeratorId?: string,
+    groupId?: string,
   ) => Promise<ApiSuccess<{ id: string; remainingQuantity: number }>>;
 };

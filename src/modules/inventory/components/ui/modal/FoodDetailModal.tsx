@@ -16,7 +16,7 @@ import type { RecipeListItem } from '@/modules/recipe/types';
 import { ConsumptionModal } from '@/modules/inventory/components/consumption';
 import { useInventorySettingsQuery } from '@/modules/inventory/api/queries';
 import { categories as defaultCategories } from '@/modules/inventory/constants/categories';
-import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
+import { selectActiveGroupId } from '@/store/slices/activeGroupSlice';
 import { useDispatch } from 'react-redux';
 import { clearConsumption } from '@/modules/inventory/store/consumptionSlice';
 
@@ -36,7 +36,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
   isCompleted = false,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
-  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const activeGroupId = useSelector(selectActiveGroupId);
   const dispatch = useDispatch();
 
   // 消耗 Modal 狀態
@@ -81,8 +81,11 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
     });
 
     // 如果有後端設定，合併更新
-    const categories = settingsData?.data?.settings?.categories || [];
-    categories.forEach((cat) => {
+    const categories =
+      (settingsData as any)?.data?.settings?.categories ||
+      (settingsData as any)?.settings?.categories ||
+      [];
+    categories.forEach((cat: any) => {
       map[cat.id] = cat.title;
     });
 
@@ -166,7 +169,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
     // 1. 先嘗試從現有食譜搜尋
     try {
       // 這裡簡單抓取所有食譜並過濾 (若資料量大應改為後端 API 支援)
-      // 注意：這裡不傳 refrigeratorId 以搜尋所有已儲存食譜
+      // 注意：這裡不傳 groupId 以搜尋所有已儲存食譜
       const allSavedRecipes = await recipeApi.getRecipes(); // 需要 import recipeApi
 
       const matchedRecipes = allSavedRecipes.filter((r) =>
@@ -259,7 +262,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
           unit: item.unit || '個',
           expiryDate: item.expiryDate,
         }}
-        refrigeratorId={item.groupId || activeRefrigeratorId || ''}
+        groupId={item.groupId || activeGroupId || ''}
         onConfirm={() => {
           // 消耗完成後只關閉 ConsumptionModal
           // 不自動關閉食材詳細頁面，讓用戶決定是否返回

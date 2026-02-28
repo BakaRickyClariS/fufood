@@ -14,8 +14,8 @@ import {
   selectAllGroups,
   fetchGroups,
 } from '@/modules/groups/store/groupsSlice';
-import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
-import { getRefrigeratorId } from '@/modules/inventory/utils/getRefrigeratorId';
+import { selectActiveGroupId } from '@/store/slices/activeGroupSlice';
+import { identity } from '@/shared/utils/identity';
 import {
   SlideModalLayout,
   type SlideModalLayoutRef,
@@ -46,11 +46,11 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
   const layoutRef = useRef<SlideModalLayoutRef>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // 取得 groups 並計算 refrigeratorId
+  // 取得 groups 並計算 groupId
   const groups = useSelector(selectAllGroups);
-  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
-  const refrigeratorId =
-    activeRefrigeratorId || getRefrigeratorId(urlGroupId, groups);
+  const activeGroupId = useSelector(selectActiveGroupId);
+  const targetGroupId =
+    activeGroupId || identity.getGroupId(urlGroupId, groups);
 
   // 確保 groups 載入
   useEffect(() => {
@@ -61,11 +61,12 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
   }, [dispatch, groups.length]);
 
   const { data: inventoryData, isLoading } = useInventoryQuery({
-    refrigeratorId: refrigeratorId || undefined,
+    groupId: targetGroupId || undefined,
   });
 
   // 從 query 結果中取得 items
-  const allItems = inventoryData?.data?.items ?? [];
+  const allItems =
+    (inventoryData as any)?.data?.items || (inventoryData as any)?.items || [];
 
   const category = useMemo(
     () => categories.find((c) => c.id === categoryId),
@@ -75,7 +76,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
   // Filter items by category first
   const categoryItems = useMemo(() => {
     if (!category) return [];
-    return allItems.filter((item) => item.category === categoryId);
+    return allItems.filter((item: any) => item.category === categoryId);
   }, [allItems, category, categoryId]);
 
   const {
@@ -130,7 +131,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
     let expired = 0;
     let expiring = 0;
 
-    categoryItems.forEach((item) => {
+    categoryItems.forEach((item: any) => {
       const expiry = new Date(item.expiryDate);
       expiry.setHours(0, 0, 0, 0);
 
