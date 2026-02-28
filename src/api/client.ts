@@ -2,16 +2,15 @@
  * Fufood 統一 API 客戶端
  *
  * 目前已整合為單一後端 (AI API)，所有請求皆透過此客戶端發送。
- * Base URL: VITE_AI_API_BASE_URL (預設 /api/v1 -> 將逐漸遷移至 /api/v2)
+ * Base URL: VITE_API_BASE_URL (e.g. http://localhost:3000 for local, https://api.fufood.jocelynh.me for prod)
  */
-
 import { identity } from '@/shared/utils/identity';
 
 // API 類型定義 (已整合，保留 interface 供擴充)
 // type ApiType = 'unified';
 
-// API 基底 URL 配置
-const API_BASE_URL = import.meta.env.VITE_AI_API_BASE_URL || '/api';
+// API 基底 URL 配置（後端 host，不含路徑；空字串代表走 Vite proxy）
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 type ApiBody = BodyInit | Record<string, unknown> | null | undefined;
 
@@ -56,11 +55,50 @@ function isV2Response<T>(data: any): data is V2ApiResponse<T> {
 /**
  * 統一 API 客戶端
  */
+// CSRF Token in-memory cache
+let csrfTokenCache: string | null = null;
+let isFetchingCsrf = false;
+let csrfQueue: Array<() => void> = [];
+
 class ApiClient {
   private readonly baseUrl: string;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
+  }
+
+  /**
+   * 確保 CSRF Token 存在，如果不存在則呼叫後端取得
+   */
+  private async ensureCsrfToken(): Promise<void> {
+    if (csrfTokenCache) return;
+
+    if (isFetchingCsrf) {
+      return new Promise((resolve) => {
+        csrfQueue.push(resolve);
+      });
+    }
+
+    isFetchingCsrf = true;
+    try {
+      const resp = await fetch(`${this.baseUrl}/api/v2/auth/csrf-token`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      if (resp.ok) {
+        const result = await resp.json();
+        // 依照後端規格調整取值，通常是 result.data.csrfToken 或 result.csrfToken
+        csrfTokenCache = result.data?.csrfToken || result.csrfToken || null;
+        console.log('[ApiClient] CSRF Token fetched successfully.');
+      }
+    } catch (e) {
+      console.warn('[ApiClient] Failed to fetch CSRF token:', e);
+    } finally {
+      isFetchingCsrf = false;
+      csrfQueue.forEach((cb) => cb());
+      csrfQueue = [];
+    }
   }
 
   private async request<T>(
@@ -70,24 +108,24 @@ class ApiClient {
     const { params, headers, body, ...customConfig } = options;
 
     // Build URL with query params
-    const url = new URL(`${this.baseUrl}${endpoint}`);
+    let urlString = `${this.baseUrl}${endpoint}`;
 
     if (params) {
       const filteredParams = Object.fromEntries(
         Object.entries(params).filter(([, value]) => value !== undefined),
       ) as Record<string, string>;
-      if (Object.keys(filteredParams).length > 0) {
-        url.search = new URLSearchParams(filteredParams).toString();
+
+      const searchParams = new URLSearchParams(filteredParams).toString();
+      if (searchParams) {
+        urlString += (urlString.includes('?') ? '&' : '?') + searchParams;
       }
     }
 
-    const userId = identity.getUserId();
+    const url = urlString;
 
-    let resolvedHeaders: HeadersInit = {
+    let resolvedHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
-      // X-User-Id 用於識別當前操作的冰箱/群組 context (AI Backend 需求)
-      ...(userId ? { 'X-User-Id': userId } : {}),
-      ...headers,
+      ...(headers as Record<string, string>),
     };
 
     // 如果 body 是 FormData，不要合併自訂 headers 中的 Content-Type
@@ -99,24 +137,66 @@ class ApiClient {
       );
     }
 
+    // 定義不需要攜帶 Token 的 public endpoints 和 CSRF 獲取端點
+    const publicEndpoints = [
+      '/api/v2/auth/login',
+      '/api/v2/auth/register',
+      '/api/v2/auth/line/init',
+      '/api/v2/auth/line/callback',
+      '/api/v2/auth/csrf-token',
+    ];
+
+    const isPublicEndpoint = publicEndpoints.some((e) => endpoint.includes(e));
+
+    // 注入 JWT 認證（v2 規範）
+    const token = identity.getAuthToken();
+    if (token && !isPublicEndpoint) {
+      resolvedHeaders = {
+        ...resolvedHeaders,
+        Authorization: `Bearer ${token}`,
+      };
+    }
+
+    // 判斷是否為會改變狀態的請求方法
+    const methodStr = customConfig.method?.toUpperCase() || 'GET';
+    const requiresCsrf = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(methodStr);
+
+    // [重要] 如果是 mutating request 且不是打 CSRF endpoints 本身或公開路由，確保 CSRF Token 存在並加上
+    if (requiresCsrf && !isPublicEndpoint) {
+      await this.ensureCsrfToken();
+      if (csrfTokenCache) {
+        resolvedHeaders['x-csrf-token'] = csrfTokenCache;
+      } else {
+        console.warn(
+          '[ApiClient] 正在送出 POST 請求，但尚未準備好 CSRF Token！',
+        );
+      }
+    }
+
     const config: RequestInit = {
       ...customConfig,
-      credentials: 'include', // 允許攜帶 HttpOnly Cookie
+      credentials: 'include', // 允許攜帶 HttpOnly Cookie (備援 v1)
       headers: resolvedHeaders,
     };
 
     // Don't stringify FormData
-    if (body && !(body instanceof FormData) && config.method !== 'GET') {
-      config.body = JSON.stringify(body);
-    } else if (body) {
-      config.body = body as BodyInit;
+    if (body !== undefined && body !== null) {
+      if (body instanceof FormData) {
+        config.body = body;
+      } else if (config.method !== 'GET') {
+        config.body =
+          typeof body === 'object' ? JSON.stringify(body) : (body as BodyInit);
+      } else {
+        config.body = body as BodyInit;
+      }
     }
 
     try {
-      const response = await fetch(url.toString(), config);
+      const response = await fetch(url, config);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('API Error Details (422 info):', errorData);
         throw new ApiError(
           errorData.message || `API Error: ${response.status}`,
           response.status,
@@ -158,10 +238,7 @@ class ApiClient {
       // For V1 or non-conforming responses (e.g. { items: [] } or just Array), return as is.
       return json as T;
     } catch (error) {
-      console.error(
-        `[API] Request Failed: ${config.method} ${url.toString()}`,
-        error,
-      );
+      console.error(`[API] Request Failed: ${config.method} ${url}`, error);
       throw error;
     }
   }
