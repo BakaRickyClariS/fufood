@@ -1,5 +1,4 @@
 import { authApi } from '../api';
-import { aiApi } from '@/api/client';
 import { identity } from '@/shared/utils/identity';
 import type { LoginCredentials, RegisterData, User } from '../types';
 
@@ -70,27 +69,41 @@ export const authService = {
     // 登入成功後，立即獲取完整的使用者個人資料並儲存
     // 這確保了 localStorage 中包含完整的 User ID 和其他資訊
     try {
-      const profile = await authApi.getProfile();
-      // 將 ProfileData 轉換為 User 格式 (或直接儲存 profile.data)
-      // 假設 ProfileData 包含 id, email 等必要欄位
-      if (profile && profile.data) {
+      const profile: any = await authApi.getProfile();
+      // 將 ProfileData 轉換為 User 格式 (或直接儲存 profileData)
+      const profileData = profile?.data ?? profile;
+
+      if (profileData && profileData.id) {
         // 合併 login response 雖然可能已經包含部分資訊，但 getProfile 更完整
         const fullUser = {
           ...response.user,
-          ...profile.data,
+          ...profileData,
+          name:
+            profileData.name ||
+            profileData.displayName ||
+            profileData.display_name ||
+            response.user?.name ||
+            'Guest',
+          avatar:
+            profileData.avatar ||
+            profileData.picture_url ||
+            profileData.picture ||
+            profileData.profilePictureUrl ||
+            response.user?.avatar ||
+            '',
           // 修正類型不匹配：將 null 轉換為 undefined
-          email: profile.data.email || undefined,
+          email: profileData.email || undefined,
           // 若有其他可能為 null 的欄位也需處理
-          profilePictureUrl: profile.data.profilePictureUrl || undefined,
+          profilePictureUrl: profileData.profilePictureUrl || undefined,
           // 轉換日期字串為 Date 物件
           createdAt:
-            typeof profile.data.createdAt === 'string'
-              ? new Date(profile.data.createdAt)
-              : profile.data.createdAt,
+            typeof profileData.createdAt === 'string'
+              ? new Date(profileData.createdAt)
+              : profileData.createdAt,
           updatedAt:
-            typeof profile.data.updatedAt === 'string'
-              ? new Date(profile.data.updatedAt)
-              : profile.data.updatedAt,
+            typeof profileData.updatedAt === 'string'
+              ? new Date(profileData.updatedAt)
+              : profileData.updatedAt,
         };
         authService.saveUser(fullUser);
       } else {
@@ -105,18 +118,6 @@ export const authService = {
       authService.saveUser(response.user);
     }
 
-    if (response.token?.accessToken) {
-      try {
-        await aiApi.post('/auth/sync-session', {
-          token: response.token.accessToken,
-        });
-      } catch (error) {
-        console.warn(
-          '[AuthService] Failed to sync session with AI Backend (Expected if backend not updated):',
-          error,
-        );
-      }
-    }
     return response;
   },
 
@@ -126,18 +127,6 @@ export const authService = {
   register: async (data: RegisterData) => {
     const response = await authApi.register(data);
     authService.saveUser(response.user);
-    if (response.token?.accessToken) {
-      try {
-        await aiApi.post('/auth/sync-session', {
-          token: response.token.accessToken,
-        });
-      } catch (error) {
-        console.warn(
-          '[AuthService] Failed to sync session with AI Backend (Expected if backend not updated):',
-          error,
-        );
-      }
-    }
     return response;
   },
 

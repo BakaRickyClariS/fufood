@@ -67,23 +67,25 @@ const LineLoginCallback = () => {
         identity.onLoginSuccess();
 
         // 呼叫 Profile API 確認 Cookie 已設定
-        const response = await authApi.getProfile();
+        const response: any = await authApi.getProfile();
+        // 因 api/client 會自動解開 V2 API，response 可能已經是 data 本身
+        const profileData = response.data ?? response;
 
         // 將 API 回傳的資料轉換為 User 格式並儲存
         const userData = {
-          id: response.data.id,
-          lineId: response.data.lineId,
-          name: response.data.name,
-          displayName: response.data.name,
-          avatar: response.data.profilePictureUrl ?? '',
-          pictureUrl: response.data.profilePictureUrl ?? undefined,
+          id: profileData.id,
+          lineId: profileData.lineId,
+          name: profileData.name,
+          displayName: profileData.name,
+          avatar: profileData.profilePictureUrl ?? '',
+          pictureUrl: profileData.profilePictureUrl ?? undefined,
           createdAt: new Date(),
           updatedAt: new Date(),
-          gender: response.data.gender,
-          customGender: response.data.customGender,
-          email: response.data.email || undefined,
-          dietaryPreference: response.data.preferences
-            ? parsePreferences(response.data.preferences)
+          gender: profileData.gender,
+          customGender: profileData.customGender,
+          email: profileData.email || undefined,
+          dietaryPreference: profileData.preferences
+            ? parsePreferences(profileData.preferences)
             : undefined,
         };
 

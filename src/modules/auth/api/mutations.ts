@@ -17,7 +17,7 @@ export const useSignOutMutation = () => {
 
       // 清除 localStorage 中的用戶資料（無論是 Mock 還是真實 API 模式）
       localStorage.removeItem('user');
-      localStorage.removeItem('activeRefrigeratorId');
+      localStorage.removeItem('activeGroupId');
 
       // Mock 模式：額外清除假 token 資料
       if (USE_MOCK) {

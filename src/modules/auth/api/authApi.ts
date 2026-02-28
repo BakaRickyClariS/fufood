@@ -19,10 +19,10 @@ import { MOCK_USERS, MOCK_TOKEN } from './mock/authMockData';
 // 環境變數控制是否使用 Mock
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_API !== 'false';
 
-// 取得後端 API 基底 URL
-const API_BASE = api.getBaseUrl();
-
-export const LineLoginUrl = `${API_BASE}${ENDPOINTS.AUTH.LINE_INIT}`;
+// LINE 登入 URL 需直接走瀏覽器跳轉（不走 api client），
+// 使用 window.location.origin 讓 vite proxy 正確路由到後端，
+// 避免 VITE_AI_API_BASE_URL 內含的 /api/v1 造成路徑重複。
+export const LineLoginUrl = `${window.location.origin}${ENDPOINTS.AUTH.LINE_INIT}`;
 
 export const authApi = {
   /**
@@ -112,7 +112,7 @@ export const authApi = {
       await new Promise((resolve) => setTimeout(resolve, 300));
       return;
     }
-    return api.get<void>(ENDPOINTS.AUTH.CHECK);
+    return api.get<void>(ENDPOINTS.AUTH.ME);
   },
 
   /**
@@ -129,7 +129,7 @@ export const authApi = {
       // 1. 取得當前完整資料
       console.log('[AuthApi] UpdateProfile: Fetching current profile...');
       const currentProfile = await api.get<ProfileResponse>(
-        ENDPOINTS.AUTH.PROFILE,
+        ENDPOINTS.PROFILE.BASE,
       );
       // NOTE: ApiClient now auto-unwraps, so currentProfile is the data (User/ProfileResponse) directly if V2
 
@@ -160,7 +160,7 @@ export const authApi = {
 
       console.log('[AuthApi] UpdateProfile: Sending PUT to endpoint', payload);
 
-      return await api.put<ProfileResponse>(ENDPOINTS.AUTH.PROFILE, payload);
+      return await api.put<ProfileResponse>(ENDPOINTS.PROFILE.BASE, payload);
     } catch (error) {
       if (!USE_MOCK) {
         throw error;
@@ -200,6 +200,13 @@ export const authApi = {
   },
 
   /**
+   * 取得 LINE OAuth 授權 URL
+   */
+  lineInit: async (): Promise<{ authUrl: string }> => {
+    return api.post<{ authUrl: string }>(ENDPOINTS.AUTH.LINE_INIT);
+  },
+
+  /**
    * LINE 登入 Callback 處理
    */
   handleLineCallback: async (
@@ -219,7 +226,9 @@ export const authApi = {
     }
 
     // 使用原生 fetch 呼叫 OAuth callback（需要處理重定向）
-    const url = new URL(`${API_BASE}${ENDPOINTS.AUTH.LINE_CALLBACK}`);
+    const url = new URL(
+      `${window.location.origin}${ENDPOINTS.AUTH.LINE_CALLBACK}`,
+    );
     if (data.code) url.searchParams.append('code', data.code);
     if (data.state) url.searchParams.append('state', data.state);
 
@@ -243,6 +252,6 @@ export const authApi = {
    * 取得當前登入用戶資訊
    */
   getProfile: async (): Promise<ProfileResponse> => {
-    return api.get<ProfileResponse>(ENDPOINTS.AUTH.PROFILE);
+    return api.get<ProfileResponse>(ENDPOINTS.PROFILE.BASE);
   },
 };

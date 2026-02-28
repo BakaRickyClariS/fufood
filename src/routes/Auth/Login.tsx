@@ -4,7 +4,7 @@ import { useGSAP } from '@gsap/react';
 import { Button } from '@/shared/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { LineLoginUrl, useAuth, authService } from '@/modules/auth';
+import { useAuth, authService, authApi } from '@/modules/auth';
 import { identity } from '@/shared/utils/identity';
 import { groupsApi } from '@/modules/groups/api/groupsApi';
 import LoginCarousel from './LoginCarousel';
@@ -77,21 +77,21 @@ const Login = () => {
           // 直接設定 TanStack Query 快取，讓 useAuth 立即取得用戶資料
           queryClient.setQueryData(['GET_USER_PROFILE'], e.data.user);
 
-          // [新增] 初始化 activeRefrigeratorId：
+          // [新增] 初始化 activeGroupId：
           // 為了避免 Dashboard 載入時因為沒有群組 ID 而導致 API 失敗，
           // 我們在登入當下就先抓取群組列表，並設定預設 ID。
           try {
             console.log(
-              '[Login] 正在預先抓取群組資料以初始化 activeRefrigeratorId...',
+              '[Login] 正在預先抓取群組資料以初始化 activeGroupId...',
             );
             const groups = await groupsApi.getAll();
             if (groups && groups.length > 0) {
               const defaultGroupId = groups[0].id;
               console.log(
-                '[Login] 設定預設 activeRefrigeratorId:',
+                '[Login] 設定預設 activeGroupId:',
                 defaultGroupId,
               );
-              localStorage.setItem('activeRefrigeratorId', defaultGroupId);
+              localStorage.setItem('activeGroupId', defaultGroupId);
             } else {
               console.log('[Login] 用戶沒有群組，無法設定預設 ID');
             }
@@ -175,15 +175,33 @@ const Login = () => {
 
   // 跳轉到電子郵件登入頁面
   const handleEmailLogin = useCallback(() => {
-    navigate('/login/email');
+    navigate('/auth/login/email');
   }, [navigate]);
 
-  const handleLineLogin = useCallback(() => {
+  const getLineRedirectUrl = useCallback(async (): Promise<string | null> => {
+    try {
+      const { authUrl } = await authApi.lineInit();
+      return authUrl ?? null;
+    } catch (err) {
+      console.error('[LINE Login] 取得 authUrl 失敗:', err);
+      return null;
+    }
+  }, []);
+
+  const handleLineLogin = useCallback(async () => {
     setLineLoginLoading(true);
     setLoginError(null);
 
     // 清除登出標記（準備登入）
     sessionStorage.removeItem('logged_out');
+
+    // POST /api/v2/auth/line/init 取得 LINE OAuth redirectUrl
+    const authUrl = await getLineRedirectUrl();
+    if (!authUrl) {
+      setLoginError('無法取得 LINE 登入連結，請稍後再試');
+      setLineLoginLoading(false);
+      return;
+    }
 
     // 取得登入模式設定：popup | redirect | auto
     const loginMode = import.meta.env.VITE_LINE_LOGIN_MODE || 'auto';
@@ -201,18 +219,14 @@ const Login = () => {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     // 判斷是否使用 redirect 模式
-    // 1. 環境變數強制指定 redirect
-    // 2. auto 模式下：
-    //    - iOS PWA：使用 popup（redirect 在 iOS PWA 會有問題）
-    //    - 其他 PWA standalone 或移動裝置：使用 redirect
     const isIOSPWA = isIOS && isPWAStandalone;
     const useRedirect =
       loginMode === 'redirect' ||
       (loginMode === 'auto' && !isIOSPWA && (isPWAStandalone || isMobile));
 
-    // 除錯訊息（可在瀏覽器 Console 查看）
     console.log('[LINE Login]', {
       loginMode,
+      authUrl,
       isPWAStandalone,
       isIOS,
       isIOSPWA,
@@ -220,24 +234,20 @@ const Login = () => {
       useRedirect,
     });
 
-    // Redirect 模式：使用直接跳轉（適合 PWA standalone 和移動裝置）
+    // Redirect 模式：直接跳轉 LINE OAuth 頁面
     if (useRedirect) {
-      window.location.href = LineLoginUrl;
+      window.location.href = authUrl;
       return;
     }
 
-    // 瀏覽器模式：使用 popup 視窗
+    // Popup 模式
     const width = 500;
     const height = 600;
     const left = window.screenX + (window.innerWidth - width) / 2;
     const top = window.screenY + (window.innerHeight - height) / 2;
 
-    // Popup 模式：使用後端預設 callback URL (Production)
-    // Production 的 LineLoginCallback 會透過 postMessage 通知父視窗登入結果
-    // 注意：不要嘗試覆寫 callback URL 到 localhost，因為後端 Cookie domain 設為 fufood.jocelynh.me
-    // localhost 無法接收該 Cookie，會導致 Profile API 401
     const popup = window.open(
-      LineLoginUrl,
+      authUrl,
       'lineLogin',
       `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`,
     );
@@ -250,38 +260,30 @@ const Login = () => {
 
     popupWindowRef.current = popup;
 
-    // 監聽 popup 關閉（當用戶手動關閉或登入完成時）
     checkIntervalRef.current = window.setInterval(() => {
       if (popup.closed) {
         if (checkIntervalRef.current) {
           clearInterval(checkIntervalRef.current);
           checkIntervalRef.current = null;
         }
-
-        // Popup 被關閉，重新取得用戶資料
         refetch().finally(() => {
           setLineLoginLoading(false);
         });
       }
     }, 500);
 
-    // Popup 登入超時備援（30 秒）
-    // 當後端 callback 沒有正確重定向到前端時，popup 不會自動關閉
-    // 此時需要超時備援來停止 loading 狀態
     popupTimeoutRef.current = window.setTimeout(() => {
-      // 如果 30 秒後還在等待，檢查登入狀態
       if (checkIntervalRef.current) {
         console.warn('[LINE Login] Popup 登入超時，正在檢查登入狀態...');
         refetch().finally(() => {
           setLineLoginLoading(false);
-          // 如果 popup 還開著，可能是後端 callback 設定問題
           if (!popup.closed) {
             setLoginError('登入逾時，請手動關閉登入視窗後重試');
           }
         });
       }
     }, 30000);
-  }, [refetch]);
+  }, [getLineRedirectUrl, refetch]);
 
   const displayError = loginError || authError;
 
@@ -341,7 +343,10 @@ const Login = () => {
         </Button>
 
         <div className="flex justify-center">
-          <button onClick={() => navigate('/forgot-password')} className="text-sm text-neutral-500 font-medium hover:text-neutral-800 transition-colors">
+          <button
+            onClick={() => navigate('/forgot-password')}
+            className="text-sm text-neutral-500 font-medium hover:text-neutral-800 transition-colors"
+          >
             忘記密碼？
           </button>
         </div>

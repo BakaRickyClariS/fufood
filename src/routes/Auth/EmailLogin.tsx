@@ -50,7 +50,7 @@ const EmailLogin = () => {
   };
 
   const handleBack = () => {
-    navigate('/login');
+    navigate('/auth/login');
   };
 
   return (
