@@ -4,10 +4,7 @@ import { recipeApi } from '@/modules/recipe/services';
 import { useSelector } from 'react-redux';
 import { selectRecipeLastUpdated } from '@/modules/recipe/store/recipeSlice';
 
-export const useRecipes = (
-  category?: RecipeCategory,
-  refrigeratorId?: string,
-) => {
+export const useRecipes = (category?: RecipeCategory, groupId?: string) => {
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +14,7 @@ export const useRecipes = (
     setIsLoading(true);
     setError(null);
     try {
-      const data = await recipeApi.getRecipes({ category, refrigeratorId });
+      const data = await recipeApi.getRecipes({ category, groupId });
       setRecipes(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : '載入食譜失敗');
@@ -28,7 +25,7 @@ export const useRecipes = (
 
   useEffect(() => {
     fetchRecipes();
-  }, [category, refrigeratorId, lastUpdated]);
+  }, [category, groupId, lastUpdated]);
 
   return { recipes, isLoading, error, refetch: fetchRecipes };
 };

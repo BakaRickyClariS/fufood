@@ -16,7 +16,7 @@ export type RecipeApi = {
   getRecipes(params?: {
     category?: RecipeCategory;
     favorite?: boolean;
-    refrigeratorId?: string;
+    groupId?: string;
   }): Promise<RecipeListItem[]>;
   getRecipeById(id: string): Promise<Recipe>;
   toggleFavorite(
@@ -46,25 +46,19 @@ export class RealRecipeApi implements RecipeApi {
   getRecipes = async (params?: {
     category?: RecipeCategory;
     favorite?: boolean;
-    refrigeratorId?: string;
+    groupId?: string;
   }): Promise<RecipeListItem[]> => {
     // 從 AI API 取得所有食譜
-    let savedRecipes = await aiRecipeApi.getSavedRecipes(
-      params?.refrigeratorId,
-    );
+    let savedRecipes = await aiRecipeApi.getSavedRecipes(params?.groupId);
 
     // 若列表為空且未在 seeding 中，自動儲存預設食譜
     if (savedRecipes.length === 0 && !this._isSeeding) {
       this._isSeeding = true;
       try {
-        const seeded = await aiRecipeApi.seedDefaultRecipes(
-          params?.refrigeratorId,
-        );
+        const seeded = await aiRecipeApi.seedDefaultRecipes(params?.groupId);
         if (seeded) {
           // 重新取得食譜列表
-          savedRecipes = await aiRecipeApi.getSavedRecipes(
-            params?.refrigeratorId,
-          );
+          savedRecipes = await aiRecipeApi.getSavedRecipes(params?.groupId);
         }
       } finally {
         this._isSeeding = false;
@@ -195,17 +189,11 @@ export class RealRecipeApi implements RecipeApi {
       }));
   };
 
-  // 根據食材名稱推薦相關食譜
   getRecommendedRecipes = async (
-    ingredientNames: string[],
+    _ingredientNames: string[],
   ): Promise<RecipeListItem[]> => {
-    // 這部分暫時維持呼叫主後端，或是 Mock
-    const query = ingredientNames
-      .map((name) => `ingredients=${encodeURIComponent(name)}`)
-      .join('&');
-    return api
-      .get<RecipeListItem[]>(`${ENDPOINTS.RECIPES.RECOMMENDED}?${query}`)
-      .catch(() => []); // 避免錯誤阻擋 UI
+    // V2 doesn't have an endpoint for recommendations yet, using empty array or mock
+    return [];
   };
 
   confirmCook = async (
@@ -233,22 +221,19 @@ export class RealRecipeApi implements RecipeApi {
     }
   };
 
-  addMealPlan = async (data: MealPlanInput): Promise<MealPlan> => {
-    return api.post<MealPlan>(ENDPOINTS.RECIPES.MEAL_PLANS, data);
+  addMealPlan = async (_data: MealPlanInput): Promise<MealPlan> => {
+    return Promise.reject(
+      new Error('Meal plans not implemented in v2 endpoints'),
+    );
   };
 
   getMealPlans = async (): Promise<MealPlan[]> => {
-    // 避免 404
-    try {
-      return await api.get<MealPlan[]>(ENDPOINTS.RECIPES.MEAL_PLANS);
-    } catch {
-      return [];
-    }
+    return [];
   };
 
-  deleteMealPlan = async (planId: string): Promise<{ success: boolean }> => {
-    return api.delete<{ success: boolean }>(
-      ENDPOINTS.RECIPES.MEAL_PLAN(planId),
+  deleteMealPlan = async (_planId: string): Promise<{ success: boolean }> => {
+    return Promise.reject(
+      new Error('Meal plans not implemented in v2 endpoints'),
     );
   };
 }

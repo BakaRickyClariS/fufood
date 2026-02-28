@@ -14,7 +14,7 @@ export const recipeKeys = {
   list: (params?: {
     category?: RecipeCategory;
     favorite?: boolean;
-    refrigeratorId?: string;
+    groupId?: string;
   }) => [...recipeKeys.lists(), params] as const,
   details: () => [...recipeKeys.all, 'detail'] as const,
   detail: (id: string) => [...recipeKeys.details(), id] as const,
@@ -28,7 +28,7 @@ export const recipeKeys = {
 export const useRecipesQuery = (params?: {
   category?: RecipeCategory;
   favorite?: boolean;
-  refrigeratorId?: string;
+  groupId?: string;
 }) => {
   return useQuery({
     queryKey: recipeKeys.list(params),

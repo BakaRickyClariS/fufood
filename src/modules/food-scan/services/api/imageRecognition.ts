@@ -1,5 +1,6 @@
-import { aiApi, backendApi, api } from '@/api/client';
+import { api } from '@/api/client';
 import { ENDPOINTS } from '@/api/endpoints';
+import { identity } from '@/shared/utils/identity';
 
 import type {
   FoodScanApi,
@@ -218,13 +219,18 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     data: FoodItemInput,
   ): Promise<FoodItemResponse> => {
     // 將前端 FoodItemInput 格式轉換為 API 預期的 FoodItem 格式
+    const groupId = identity.getCachedGroupId();
+    if (!groupId) throw new Error('無效的群組');
+
     const apiPayload = {
       name: data.productName, // productName → name
       category: data.category,
       quantity: Number(data.purchaseQuantity) || 1, // purchaseQuantity → quantity, ensure number
       unit: data.unit,
       purchaseDate: data.purchaseDate,
-      expiryDate: data.expiryDate ? data.expiryDate : undefined, // empty string -> undefined
+      purchase_date: data.purchaseDate, // fallback for backend v2
+      expiryDate: data.expiryDate ? data.expiryDate : undefined,
+      expiry_date: data.expiryDate ? data.expiryDate : undefined, // fallback for backend v2
       lowStockAlert: data.lowStockAlert,
       lowStockThreshold: Number(data.lowStockThreshold) || 2,
       notes: data.notes,
@@ -237,7 +243,10 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     };
 
     // 這裡使用 api (原 backendApi) 呼叫標準後端 API
-    return api.post<FoodItemResponse>(ENDPOINTS.INVENTORY.BASE, apiPayload);
+    return api.post<FoodItemResponse>(
+      ENDPOINTS.INVENTORY.LIST(groupId),
+      apiPayload,
+    );
   };
 
   /**
@@ -247,35 +256,46 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     id: string,
     data: Partial<FoodItemInput>,
   ): Promise<FoodItemResponse> => {
-    return api.put<FoodItemResponse>(ENDPOINTS.INVENTORY.BY_ID(id), data);
+    const groupId = identity.getCachedGroupId();
+    if (!groupId) throw new Error('無效的群組');
+    return api.put<FoodItemResponse>(
+      ENDPOINTS.INVENTORY.BY_ID(groupId, id),
+      data,
+    );
   };
 
   /**
    * 刪除/撤銷辨識結果 (如果已儲存)
    */
   const deleteFoodItem = async (id: string): Promise<{ success: boolean }> => {
-    return api.delete<{ success: boolean }>(ENDPOINTS.INVENTORY.BY_ID(id));
+    const groupId = identity.getCachedGroupId();
+    if (!groupId) throw new Error('無效的群組');
+    return api.delete<{ success: boolean }>(
+      ENDPOINTS.INVENTORY.BY_ID(groupId, id),
+    );
   };
 
   /**
    * 取得特定庫存項目的詳細資訊 (用於 verify)
    */
-  const getInventoryItem = async (id: string): Promise<FoodItem> => {
-    const response = await api.get<{ data: FoodItem }>(
-      ENDPOINTS.INVENTORY.BY_ID(id),
-    );
-    return response.data || (response as unknown as FoodItem);
-  };
+  // const getInventoryItem = async (id: string): Promise<FoodItem> => {
+  //   const groupId = identity.getCachedGroupId();
+  //   if (!groupId) throw new Error("無效的冰箱群組");
+  //   const response = await api.get<{ data: FoodItem }>(
+  //     ENDPOINTS.INVENTORY.BY_ID(groupId, id),
+  //   );
+  //   return response.data || (response as unknown as FoodItem);
+  // };
 
   /**
    * 取得最近的辨識/新增紀錄
    */
   const getRecentItems = async (limit = 10): Promise<FoodItem[]> => {
-    const refrigeratorId = identity.getRefrigeratorId();
-    if (!refrigeratorId) return [];
+    const groupId = identity.getCachedGroupId();
+    if (!groupId) return [];
 
     const response = await api.get<{ items: FoodItem[] }>(
-      `${ENDPOINTS.INVENTORY.GROUP_INVENTORY(refrigeratorId)}?limit=${limit}&sort=created_at&order=desc`,
+      `${ENDPOINTS.INVENTORY.LIST(groupId)}?limit=${limit}&sort=created_at&order=desc`,
     );
     // Handle response structure check
     if (Array.isArray(response)) return response;
@@ -285,13 +305,16 @@ export const createRealFoodScanApi = (): FoodScanApi => {
   const getFoodItems = async (
     filters?: FoodItemFilters,
   ): Promise<FoodItem[]> => {
+    const groupId = identity.getCachedGroupId();
+    if (!groupId) return [];
+
     // 庫存 API 已遷移至主後端
     const params: Record<string, string | number | boolean | undefined> = {};
     if (filters?.category) params.category = filters.category;
     if (filters?.status) params.status = filters.status;
 
     const response = await api.get<{ items: FoodItem[] }>(
-      ENDPOINTS.INVENTORY.BASE,
+      ENDPOINTS.INVENTORY.LIST(groupId),
       params as any, // Cast or fix type issue if needed
     );
     if (Array.isArray(response)) return response;
@@ -305,7 +328,6 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     updateFoodItem,
     deleteFoodItem,
     getFoodItems,
-    getInventoryItem,
     getRecentItems,
   };
 };
