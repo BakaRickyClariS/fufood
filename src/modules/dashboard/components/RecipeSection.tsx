@@ -4,12 +4,12 @@ import { useRecipeModal } from '@/modules/recipe/providers/RecipeModalProvider';
 import AiRecommendCard from './AiRecommendCard';
 
 import { useSelector } from 'react-redux';
-import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
+import { selectActiveGroupId } from '@/store/slices/activeGroupSlice';
 
 const RecipeSection = () => {
-  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const activeGroupId = useSelector(selectActiveGroupId);
   const { data, isLoading, isError } = useRecipesQuery({
-    refrigeratorId: activeRefrigeratorId || undefined,
+    groupId: activeGroupId || undefined,
   });
   const recipes = data?.slice(0, 6) ?? []; // 首頁最多顯示 6 筆
 

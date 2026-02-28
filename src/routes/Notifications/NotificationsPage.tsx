@@ -99,9 +99,11 @@ const NotificationsPage = () => {
 
   // 將通知按日期分組
   const groupedData = useMemo(() => {
-    if (!data?.data.items) return [];
-    return groupNotificationsByDate(data.data.items);
-  }, [data?.data.items]);
+    // Check if data is already unwrapped (has items) or is the array itself
+    const items = data?.items || (Array.isArray(data) ? data : undefined);
+    if (!items) return [];
+    return groupNotificationsByDate(items);
+  }, [data]);
 
   // 處理通知點擊
   const handleNotificationClick = (notification: NotificationMessage) => {
@@ -153,8 +155,9 @@ const NotificationsPage = () => {
 
   // 處理全選
   const handleSelectAll = () => {
-    if (!data?.data.items) return;
-    const allIds = data.data.items.map((item) => item.id);
+    const items = data?.items || (Array.isArray(data) ? data : undefined);
+    if (!items) return;
+    const allIds = items.map((item) => item.id);
     enterEditMode();
     selectAll(allIds);
   };

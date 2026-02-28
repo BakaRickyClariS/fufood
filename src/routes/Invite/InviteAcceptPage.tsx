@@ -6,7 +6,7 @@ import {
   fetchGroups,
   selectAllGroups,
 } from '@/modules/groups/store/groupsSlice';
-import { setActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
+import { setActiveGroupId } from '@/store/slices/activeGroupSlice';
 import { useAuth } from '@/modules/auth';
 import { getGroupLimit } from '@/modules/groups/constants/membershipLimits';
 import { Button } from '@/shared/components/ui/button';
@@ -90,12 +90,12 @@ const InviteAcceptPage = () => {
 
         // 檢查是否已經是該群組成員（後端 LINE callback 可能已自動加入）
         const isAlreadyMember = currentGroups.some(
-          (g) => g.id === data.refrigeratorId,
+          (g) => g.id === data.groupId,
         );
 
         if (isAlreadyMember) {
           // 已經是成員，設定活動冰箱並直接跳轉首頁
-          dispatch(setActiveRefrigeratorId(data.refrigeratorId));
+          dispatch(setActiveGroupId(data.groupId));
           setStatus('success');
           setTimeout(() => {
             navigate('/');
@@ -142,7 +142,7 @@ const InviteAcceptPage = () => {
               // 有新群組加入！使用第一個新群組
               const newGroup = newGroups[0];
               console.log('找到新加入的群組:', newGroup.name);
-              dispatch(setActiveRefrigeratorId(newGroup.id));
+              dispatch(setActiveGroupId(newGroup.id));
               setStatus('success');
               setTimeout(() => navigate('/'), 2500);
               return;
@@ -161,7 +161,7 @@ const InviteAcceptPage = () => {
             });
             const latestGroup = sortedGroups[0];
             if (latestGroup) {
-              dispatch(setActiveRefrigeratorId(latestGroup.id));
+              dispatch(setActiveGroupId(latestGroup.id));
               setStatus('success');
               setTimeout(() => navigate('/'), 2500);
               return;
@@ -181,14 +181,14 @@ const InviteAcceptPage = () => {
 
   // 處理加入群組
   const handleJoin = async () => {
-    if (!invitation?.refrigeratorId || !token) return;
+    if (!invitation?.groupId || !token) return;
 
     // 檢查群組數量限制
     const limit = getGroupLimit(user?.membershipTier);
     if (currentGroups.length >= limit) {
       // 檢查是否已經是成員（避免重複加入被擋）
       const isAlreadyMember = currentGroups.some(
-        (g) => g.id === invitation.refrigeratorId,
+        (g) => g.id === invitation.groupId,
       );
       if (!isAlreadyMember) {
         setStatus('error');
@@ -202,50 +202,19 @@ const InviteAcceptPage = () => {
     setStatus('joining');
 
     try {
-      await groupsApi.join(invitation.refrigeratorId, {
+      await groupsApi.join(invitation.groupId, {
         invitationToken: token,
       });
 
       // ✅ 1. 設定活動冰箱為新加入的群組
-      dispatch(setActiveRefrigeratorId(invitation.refrigeratorId));
+      dispatch(setActiveGroupId(invitation.groupId));
 
       // ✅ 2. 刷新群組列表
       dispatch(fetchGroups());
 
       setStatus('success');
 
-      // 發送推播通知 (通知群組其他成員)
-      try {
-        const joinerName = user?.displayName || user?.name || '新成員';
-        const groupName = invitation.refrigeratorName || '我的冰箱';
-        import('@/api/services/notification').then(
-          ({ notificationService }) => {
-            notificationService
-              .sendNotification({
-                type: 'group',
-                subType: 'member',
-                title: '群組成員變動',
-                body: `${joinerName} 已加入群組`,
-                groupId: invitation.refrigeratorId,
-                // 補上操作者資訊
-                group_name: groupName,
-                actor_name: joinerName,
-                actor_id: user?.id,
-                action: {
-                  type: 'detail',
-                  payload: {
-                    refrigeratorId: invitation.refrigeratorId,
-                  },
-                },
-              })
-              .catch((err) =>
-                console.error('Failed to send join notification:', err),
-              );
-          },
-        );
-      } catch (notifyError) {
-        console.error('Notification error:', notifyError);
-      }
+      // 通知由後端在 API 完成時自動觸發，前端不再手動發送
 
       // 成功後導向首頁
       setTimeout(() => {
@@ -263,7 +232,7 @@ const InviteAcceptPage = () => {
 
       if (isAlreadyMemberError) {
         // 已經是成員，視為成功
-        dispatch(setActiveRefrigeratorId(invitation.refrigeratorId));
+        dispatch(setActiveGroupId(invitation.groupId));
         dispatch(fetchGroups());
         setStatus('success');
         setTimeout(() => navigate('/'), 2500);
@@ -312,7 +281,7 @@ const InviteAcceptPage = () => {
 
               <div className="text-center space-y-1">
                 <p className="text-lg font-semibold text-neutral-800">
-                  {invitation.refrigeratorName || '我的冰箱'}
+                  {invitation.groupName || '我的冰箱'}
                 </p>
                 {invitation.inviterName && (
                   <p className="text-sm text-neutral-500">

@@ -43,6 +43,7 @@ export const MemberAvatars = ({
                   src={member.avatar}
                   alt={member.name}
                   className="w-full h-full object-cover scale-150 translate-y-1"
+                  referrerPolicy="no-referrer"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-primary-100 text-primary-700 text-sm font-medium">
