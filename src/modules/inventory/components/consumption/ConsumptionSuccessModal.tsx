@@ -145,7 +145,7 @@ export const ConsumptionSuccessModal: React.FC<
     <div className="fixed inset-0 z-120 flex justify-end pointer-events-none">
       <div
         ref={modalRef}
-        className="w-full h-full bg-[#f6f6f6] pointer-events-auto overflow-y-auto"
+        className="w-full h-full max-w-layout-container mx-auto bg-[#f6f6f6] pointer-events-auto overflow-y-auto"
       >
         {/* Header */}
         <div className="sticky top-0 z-10 bg-white px-4 py-3 flex items-center justify-between shadow-sm">

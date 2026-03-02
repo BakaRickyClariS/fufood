@@ -60,7 +60,7 @@ export const ScanResultEditor: React.FC<ScanResultEditorProps> = ({
   const submitButtonText = isBatchMode && !isLastItem ? '確認並繼續' : '確認';
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 pb-20 max-w-layout-container mx-auto">
       {/* Header */}
       <div className="bg-white p-4 shadow-sm flex items-center sticky top-0 z-10">
         <button onClick={onBack} className="text-gray-600 mr-4">

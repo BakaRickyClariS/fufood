@@ -83,7 +83,7 @@ export const EditConsumptionReasonModal: React.FC<
     <div className="fixed inset-0 z-150 flex justify-end pointer-events-none">
       <div
         ref={modalRef}
-        className="w-full h-full bg-[#f6f6f6] pointer-events-auto flex flex-col"
+        className="w-full h-full max-w-layout-container mx-auto bg-[#f6f6f6] pointer-events-auto flex flex-col"
       >
         {/* Header */}
         <div className="shrink-0 bg-white px-4 py-3 flex items-center justify-between shadow-sm z-10">
@@ -129,11 +129,15 @@ export const EditConsumptionReasonModal: React.FC<
                       </span>
                       {item.expiryDate ? (
                         <span className="text-primary-500 text-sm font-medium">
-                          {new Date(item.expiryDate).toLocaleDateString('zh-TW', {
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit',
-                          })} 過期
+                          {new Date(item.expiryDate).toLocaleDateString(
+                            'zh-TW',
+                            {
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                            },
+                          )}{' '}
+                          過期
                         </span>
                       ) : (
                         <span className="text-neutral-400 text-base">

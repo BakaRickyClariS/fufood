@@ -144,7 +144,10 @@ export const SlideModalLayout = forwardRef<
         {/* Modal 主體 */}
         <div
           ref={modalRef}
-          className={cn('fixed inset-0 flex flex-col', bgClassName)}
+          className={cn(
+            'fixed top-0 bottom-0 left-0 right-0 max-w-layout-container mx-auto flex flex-col',
+            bgClassName,
+          )}
           style={{ zIndex }}
         >
           {/* Header */}

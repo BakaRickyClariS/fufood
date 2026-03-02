@@ -194,59 +194,65 @@ export const CameraCapture: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full h-full bg-black">
-      {isCapturing ? (
-        <Webcam
-          ref={webcamRef}
-          audio={false}
-          screenshotFormat="image/jpeg"
-          screenshotQuality={0.92}
-          videoConstraints={videoConstraints}
-          playsInline
-          onUserMediaError={(e) => {
-            console.error('Webcam error', e);
-          }}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      ) : (
-        img && (
+    <div className="relative w-full h-full bg-black overflow-hidden bg-neutral-900">
+      {/* 全螢幕模糊背景（僅在預覽且有圖時） */}
+      {!isCapturing && img && (
+        <div className="absolute inset-0 z-0 overflow-hidden">
           <img
             src={img}
-            alt="Captured"
+            alt=""
+            className="w-full h-full object-cover blur-2xl opacity-50 scale-110"
+          />
+        </div>
+      )}
+
+      {/* RWD 限制容器 */}
+      <div className="relative z-10 w-full h-full max-w-layout-container mx-auto">
+        {isCapturing && (
+          <Webcam
+            ref={webcamRef}
+            audio={false}
+            screenshotFormat="image/jpeg"
+            screenshotQuality={0.92}
+            videoConstraints={videoConstraints}
+            playsInline
+            onUserMediaError={(e) => {
+              console.error('Webcam error', e);
+            }}
             className="absolute inset-0 w-full h-full object-cover"
           />
-        )
-      )}
+        )}
 
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept="image/*"
-        className="hidden"
-      />
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept="image/*"
+          className="hidden"
+        />
 
-      {/* Dev Only: Test Image Button */}
-      {import.meta.env.DEV && isCapturing && (
-        <button
-          onClick={handleLoadTestImage}
-          className="absolute top-24 right-4 z-50 bg-blue-500 text-white px-3 py-1 rounded text-xs opacity-70 hover:opacity-100"
-        >
-          載入測試圖片
-        </button>
-      )}
+        {/* Dev Only: Test Image Button */}
+        {import.meta.env.DEV && isCapturing && (
+          <button
+            onClick={handleLoadTestImage}
+            className="absolute top-24 right-4 z-50 bg-blue-500 text-white px-3 py-1 rounded text-xs opacity-70 hover:opacity-100"
+          >
+            載入測試圖片
+          </button>
+        )}
 
-      <ScanFrame />
+        <ScanFrame image={!isCapturing && img ? img : undefined} />
 
-      <CameraOverlay
-        status={getStatus()}
-        onCapture={capture}
-        onRetake={retake}
-        onGallerySelect={handleGallerySelect}
-        onConfirm={handleConfirm}
-        onClose={() => navigate('/')}
-        errorMessage={scanError || undefined}
-      />
+        <CameraOverlay
+          status={getStatus()}
+          onCapture={capture}
+          onRetake={retake}
+          onGallerySelect={handleGallerySelect}
+          onConfirm={handleConfirm}
+          onClose={() => navigate('/')}
+          errorMessage={scanError || undefined}
+        />
+      </div>
     </div>
   );
 };
