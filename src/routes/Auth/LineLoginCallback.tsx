@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { authApi, authService } from '@/modules/auth';
 import { identity } from '@/shared/utils/identity';
+import { mapBackendGenderToEnum } from '@/modules/auth/api/queries';
 
 /**
  * 檢測是否在 Popup 視窗中
@@ -75,13 +76,22 @@ const LineLoginCallback = () => {
         const userData = {
           id: profileData.id,
           lineId: profileData.lineId,
-          name: profileData.name,
-          displayName: profileData.name,
-          avatar: profileData.profilePictureUrl ?? '',
-          pictureUrl: profileData.profilePictureUrl ?? undefined,
+          name:
+            profileData.name ||
+            profileData.displayName ||
+            profileData.display_name ||
+            '',
+          displayName:
+            profileData.displayName ||
+            profileData.name ||
+            profileData.display_name ||
+            '',
+          avatar: profileData.profilePictureUrl || profileData.avatar || '',
+          pictureUrl:
+            profileData.profilePictureUrl || profileData.avatar || undefined,
           createdAt: new Date(),
           updatedAt: new Date(),
-          gender: profileData.gender,
+          gender: mapBackendGenderToEnum(profileData.gender),
           customGender: profileData.customGender,
           email: profileData.email || undefined,
           dietaryPreference: profileData.preferences
@@ -124,12 +134,9 @@ const LineLoginCallback = () => {
 
           // 稍微延遲讓用戶看到成功訊息
           setTimeout(() => {
-            // 使用 window.location.href 強制刷新頁面是刻意設計：
-            // 1. 確保 HttpOnly Cookie（由後端設定）完全同步
-            // 2. 讓瀏覽器重新初始化所有狀態，避免殘留的登出狀態干擾
-            // 3. TanStack Query 快取已在上方同步更新，刷新不會造成資料遺失
-            // 註：若改用 navigate('/', { replace: true })，可能因 Cookie 未同步導致 API 401
-            window.location.href = '/';
+            // 使用 window.location.href 強制跳轉，
+            // 讓後端新核發的 Cookie 完全同步生效，並且讓 /auth/success 負責恢復意圖
+            window.location.href = '/auth/success';
           }, 800);
         }
       } catch (err) {
