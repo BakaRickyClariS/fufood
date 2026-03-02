@@ -12,7 +12,7 @@ import { MOCK_USERS } from './mock/authMockData';
 import { parsePreferences } from '@/modules/settings/utils/dietaryUtils';
 
 // Gender 字串轉數值對應表
-const mapBackendGenderToEnum = (
+export const mapBackendGenderToEnum = (
   genderStr: string | number | undefined | null,
 ): GenderValue => {
   if (typeof genderStr === 'number') return genderStr as GenderValue;
