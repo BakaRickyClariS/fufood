@@ -68,7 +68,7 @@ const NotificationsPage = () => {
   const [openItemId, setOpenItemId] = useState<string | null>(null);
   const [openRecipeId, setOpenRecipeId] = useState<string | null>(null);
 
-  // 使用 API 取得通知 (Production Mode)
+  // 使用 API 取得通知 (Production Mode)，交由後端進行分頁與正確分類
   const { data, isLoading } = useNotificationsByCategoryQuery(activeTab);
 
   const markAsRead = useMarkAsReadMutation();
@@ -102,6 +102,8 @@ const NotificationsPage = () => {
     // Check if data is already unwrapped (has items) or is the array itself
     const items = data?.items || (Array.isArray(data) ? data : undefined);
     if (!items) return [];
+
+    // 後端已修正邏輯，直接使用後端回傳的 items 即可
     return groupNotificationsByDate(items);
   }, [data]);
 

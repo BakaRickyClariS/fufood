@@ -50,11 +50,21 @@ export const useGroupMembers = (
       // 注入當前使用者（如果不在清單中）
       // 這通常發生在剛建立群組或後端 API 未回傳擁有者時
       if (user && user.name) {
-        const userAlreadyInList = memberList.some(
+        const userIndex = memberList.findIndex(
           (m) => m.name === user.name || (m.id && user.id && m.id === user.id),
         );
 
-        if (!userAlreadyInList) {
+        if (userIndex !== -1) {
+          // 當前使用者已在名單中，但後端可能沒有回傳完整的 LINE 頭像 (僅有字串 "1")
+          // 因此利用傳入的 currentUser 覆蓋
+          finalMembers[userIndex] = {
+            ...finalMembers[userIndex],
+            avatar:
+              finalMembers[userIndex].profilePictureUrl ||
+              user.avatar ||
+              finalMembers[userIndex].avatar,
+          };
+        } else {
           const currentUserMember: GroupMember = {
             id: user.id || 'current-user',
             name: user.name,
