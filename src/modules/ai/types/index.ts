@@ -235,7 +235,7 @@ export type SaveRecipeInput = {
   seasonings?: { name: string; quantity: string; unit: string }[];
   steps: { step: number; description: string }[];
   originalPrompt?: string;
-  refrigeratorId?: string;
+  groupId?: string;
 };
 
 /** 已儲存的食譜 (完整) */

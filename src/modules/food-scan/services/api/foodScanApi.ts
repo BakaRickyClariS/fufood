@@ -42,4 +42,14 @@ export type FoodScanApi = {
    * 取得食材項目列表
    */
   getFoodItems: (filters?: FoodItemFilters) => Promise<FoodItem[]>;
+
+  /**
+   * 取得特定庫存項目的詳細資訊
+   */
+  getInventoryItem?: (id: string) => Promise<FoodItem>;
+
+  /**
+   * 取得最近的辨識/新增紀錄
+   */
+  getRecentItems?: (limit?: number) => Promise<FoodItem[]>;
 };

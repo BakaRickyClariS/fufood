@@ -17,7 +17,9 @@ export const useInventoryExtras = () => {
           limit,
           groupId,
         });
-        setFrequentItems(response.data.items);
+        setFrequentItems(
+          (response as any)?.data?.items || (response as any)?.items || [],
+        );
       } catch (err) {
         setError(
           err instanceof Error
@@ -46,7 +48,9 @@ export const useInventoryExtras = () => {
           limit,
           groupId,
         });
-        setExpiredItems(response.data.items);
+        setExpiredItems(
+          (response as any)?.data?.items || (response as any)?.items || [],
+        );
       } catch (err) {
         setError(
           err instanceof Error ? err : new Error('Failed to fetch items'),

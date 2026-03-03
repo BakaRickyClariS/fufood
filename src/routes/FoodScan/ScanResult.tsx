@@ -18,10 +18,9 @@ import {
   selectAllGroups,
   fetchGroups,
 } from '@/modules/groups/store/groupsSlice';
-import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
-import { getRefrigeratorId } from '@/modules/inventory/utils/getRefrigeratorId';
+import { selectActiveGroupId } from '@/store/slices/activeGroupSlice';
+import { identity } from '@/shared/utils/identity';
 import { inventoryKeys } from '@/modules/inventory/api/queries';
-import { useNotificationMetadata } from '@/modules/notifications/hooks/useNotificationMetadata';
 import { useEffect } from 'react';
 
 const ScanResult: React.FC = () => {
@@ -37,15 +36,10 @@ const ScanResult: React.FC = () => {
 
   // Groups and Refrigerator ID logic
   const groups = useSelector(selectAllGroups);
-  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const activeGroupId = useSelector(selectActiveGroupId);
   // ScanResult doesn't have groupId in URL, so we rely on active or default
   const targetGroupId =
-    activeRefrigeratorId || getRefrigeratorId(undefined, groups);
-
-  // 使用統一的 hook 取得通知 metadata（確保一致性）
-  const { groupName, actorName, actorId } = useNotificationMetadata(
-    targetGroupId || undefined,
-  );
+    activeGroupId || identity.getGroupId(undefined, groups);
 
   useEffect(() => {
     // Ensure groups are loaded so we can get the ID
@@ -136,7 +130,7 @@ const ScanResult: React.FC = () => {
     try {
       // Use edited data if available, otherwise use initial data
       const dataToSubmit = editedData || initialData;
-      const response = await foodScanApi.submitFoodItem(dataToSubmit);
+      await foodScanApi.submitFoodItem(dataToSubmit);
 
       // 入庫成功後觸發庫存列表更新
       queryClient.invalidateQueries({ queryKey: inventoryKeys.lists() });
@@ -144,46 +138,7 @@ const ScanResult: React.FC = () => {
       const newSubmittedCount = submittedCount + 1;
       setSubmittedCount(newSubmittedCount);
 
-      // 發送推播通知（使用 groupId 發送給群組所有成員，與清單建立一致）
-      try {
-        const notifyGroupId = dataToSubmit.groupId || targetGroupId;
-        if (notifyGroupId) {
-          console.log('🔔 [Stock-In Notification] Metadata:', {
-            groupName,
-            actorName,
-            actorId,
-            groupId: notifyGroupId,
-            itemId: response.data.id,
-          });
-
-          const { notificationsApiImpl } = await import(
-            '@/modules/notifications/api/notificationsApiImpl'
-          );
-          const itemName = dataToSubmit.productName || '食材';
-          await notificationsApiImpl.sendNotification({
-            groupId: notifyGroupId, // 使用 groupId 發送給群組所有成員
-            type: 'inventory',
-            subType: 'stockIn',
-            title: `${itemName} 新成員報到，入位成功！`,
-            body: `冰箱小隊報告！${itemName} 已安全進入庫房，隨時待命！`,
-            groupName,
-            actorName,
-            actorId,
-            group_name: groupName,
-            actor_name: actorName,
-            actor_id: actorId,
-            action: {
-              type: 'inventory',
-              payload: {
-                refrigeratorId: notifyGroupId,
-                itemId: response.data.id,
-              },
-            },
-          });
-        }
-      } catch (notifyError) {
-        console.error('Notification error:', notifyError);
-      }
+      // 通知由後端在 API 完成時自動觸發，前端不再手動發送
 
       // Show completed state
       setSubmitStatus('completed');
@@ -328,57 +283,7 @@ const ScanResult: React.FC = () => {
       // Invalidate queries to refresh inventory
       queryClient.invalidateQueries({ queryKey: inventoryKeys.lists() });
 
-      // 發送推播通知 (批次)（使用 groupId 發送給群組所有成員，與清單建立一致）
-      try {
-        if (targetGroupId) {
-          // 取得第一個成功的食材名稱
-          const firstSuccessItem = currentItems.find((_, i) =>
-            successIndices.includes(i),
-          );
-          const firstName = firstSuccessItem?.data.productName || '食材';
-
-          const title =
-            successCount === 1
-              ? `${firstName} 新成員報到，入位成功！`
-              : `${firstName} 等 ${successCount} 項食材報到，全員入位！`;
-          const body =
-            successCount === 1
-              ? `冰箱小隊報告！${firstName} 已安全進入庫房，隨時待命！`
-              : `冰箱小隊報告！${successCount} 項新成員已入位，整裝待發！`;
-
-          console.log('🔔 [Batch Stock-In Notification] Metadata:', {
-            groupName,
-            actorName,
-            actorId,
-            groupId: targetGroupId,
-          });
-
-          const { notificationsApiImpl } = await import(
-            '@/modules/notifications/api/notificationsApiImpl'
-          );
-          await notificationsApiImpl.sendNotification({
-            groupId: targetGroupId, // 使用 groupId 發送給群組所有成員
-            type: 'inventory',
-            subType: 'stockIn',
-            title,
-            body,
-            groupName,
-            actorName,
-            actorId,
-            group_name: groupName,
-            actor_name: actorName,
-            actor_id: actorId,
-            action: {
-              type: 'inventory',
-              payload: {
-                refrigeratorId: targetGroupId,
-              },
-            },
-          });
-        }
-      } catch (notifyError) {
-        console.error('Notification error:', notifyError);
-      }
+      // 通知由後端在 API 完成時自動觸發，前端不再手動發送
     }
 
     // Handle UI updates based on results

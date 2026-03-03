@@ -31,7 +31,12 @@ const MemberAvatar: React.FC<MemberAvatarProps> = ({
         </div>
       ) : (
         <div className="w-full h-full rounded-full aspect-square overflow-hidden border border-neutral-500">
-          <img src={img} alt={name} className="w-full h-full  object-cover" />
+          <img
+            src={img}
+            alt={name}
+            className="w-full h-full  object-cover"
+            referrerPolicy="no-referrer"
+          />
         </div>
       )}
     </div>

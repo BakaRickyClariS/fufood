@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { authApi, authService } from '@/modules/auth';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 
@@ -9,6 +11,7 @@ import gsap from 'gsap';
 
 const EmailLogin = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [email, setEmail] = useState('');
@@ -41,16 +44,34 @@ const EmailLogin = () => {
 
     setIsLoading(true);
 
-    // TODO: 實作電子郵件登入 API
-    // 目前顯示功能尚未開放提示
-    setTimeout(() => {
-      setError('此功能尚未開放，請使用 LINE 登入');
+    try {
+      const response = await authApi.login({ email, password });
+
+      if (response && response.user) {
+        // 更新快取與 localStorage
+        authService.saveUser(response.user);
+        queryClient.setQueryData(['GET_USER_PROFILE'], response.user);
+
+        // 導向成功過渡頁
+        navigate('/auth/success', { replace: true });
+      } else {
+        setError('登入回傳資料異常');
+        setIsLoading(false);
+      }
+    } catch (err: any) {
+      console.error('[EmailLogin] 登入失敗:', err);
+      // 若後端有提供 error.response.data.message 可從那邊抓
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          '登入失敗，請檢查信箱或密碼是否正確',
+      );
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleBack = () => {
-    navigate('/login');
+    navigate('/auth/login');
   };
 
   return (

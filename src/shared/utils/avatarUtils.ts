@@ -61,6 +61,11 @@ export const getUserAvatarUrl = (
     return userInfo.avatarUrl;
   }
 
+  // 接續使用後端 Group API 提供的完整 URL
+  if (isValidRemoteUrl(userInfo.profilePictureUrl)) {
+    return userInfo.profilePictureUrl;
+  }
+
   // 其次使用第三方登入提供的 URL
   if (isValidRemoteUrl(userInfo.pictureUrl)) {
     return userInfo.pictureUrl;

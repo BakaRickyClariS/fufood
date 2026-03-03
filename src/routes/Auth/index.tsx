@@ -3,6 +3,8 @@ import Register from './Register';
 import AvatarSelection from './AvatarSelection';
 import LineLoginCallback from './LineLoginCallback';
 import EmailLogin from './EmailLogin';
+import AuthSelect from './AuthSelect';
+import AuthSuccess from './AuthSuccess';
 
 const AuthRoutes = [
   {
@@ -40,6 +42,22 @@ const AuthRoutes = [
   {
     path: 'line/callback',
     element: <LineLoginCallback />,
+    handle: {
+      headerVariant: 'simple',
+      footer: false,
+    },
+  },
+  {
+    path: 'select',
+    element: <AuthSelect />,
+    handle: {
+      headerVariant: 'simple',
+      footer: false,
+    },
+  },
+  {
+    path: 'success',
+    element: <AuthSuccess />,
     handle: {
       headerVariant: 'simple',
       footer: false,

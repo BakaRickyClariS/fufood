@@ -89,6 +89,7 @@ const TopNav = () => {
                 src={userAvatar}
                 alt={userName}
                 className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
               />
             </div>
             {/* Restore MembershipBadge */}

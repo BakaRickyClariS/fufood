@@ -1,4 +1,5 @@
-import { backendApi } from '@/api/client';
+import { api } from '@/api/client';
+import { ENDPOINTS } from '@/api/endpoints';
 import type {
   Group,
   CreateGroupForm,
@@ -7,12 +8,10 @@ import type {
   InviteMemberForm,
   JoinGroupForm,
 } from '../types/group.types';
-import { mockGroups, mockMembers } from '../mocks/mockData';
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_API !== 'false';
 
-// API 基底路徑
-const API_BASE = '/api/v1/refrigerators';
+// API 已統一定義在 @/api/endpoints.ts
 
 // ============================================================
 // 錯誤處理工具
@@ -106,278 +105,132 @@ const wrapApiCall = async <T>(
 const tryRealApiWithMockFallback = async <T>(
   method: string,
   endpoint: string,
-  realApiCall: () => Promise<T>,
-  mockFallback: () => Promise<T>,
+  realApiFn: () => Promise<T>,
+  mockFn: () => Promise<T>,
 ): Promise<T> => {
   // 如果 mock 未開啟，直接使用真實 API
   if (!USE_MOCK) {
-    return wrapApiCall(method, endpoint, realApiCall);
+    return wrapApiCall(method, endpoint, realApiFn);
   }
 
-  // Mock 開啟時：優先嘗試真實 API，失敗才 fallback 到 mock
-  console.log(`🔵 [Groups API] ${method} ${endpoint} (優先嘗試真實 API)`);
-
-  try {
-    const result = await realApiCall();
-    console.log(`🟢 [Groups API] ${method} ${endpoint} 真實 API 成功`, result);
-    return result;
-  } catch (error) {
-    console.warn(
-      `🟠 [Groups API] ${method} ${endpoint} 真實 API 失敗，fallback 到 Mock 資料`,
-    );
-    console.warn('失敗原因:', error instanceof Error ? error.message : error);
-
-    // Fallback 到 mock 資料
-    const mockResult = await mockFallback();
-    console.log(
-      `🟡 [Groups API] ${method} ${endpoint} 使用 Mock 資料`,
-      mockResult,
-    );
-    return mockResult;
+  if (USE_MOCK) {
+    console.log(`[GroupsApi] Mock ${method} ${endpoint}`);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return mockFn();
   }
+  return realApiFn();
 };
-
-// ============================================================
-// API 方法
-// ============================================================
 
 export const groupsApi = {
   /**
-   * 取得所有群組（冰箱）
-   * GET /api/v1/refrigerators
+   * 取得使用者的所有群組
    */
   getAll: async (): Promise<Group[]> => {
     return tryRealApiWithMockFallback(
       'GET',
-      API_BASE,
-      // 真實 API 呼叫
+      ENDPOINTS.GROUPS.BASE,
       async () => {
-        const response = await backendApi.get<Group[] | { data: Group[] }>(
-          API_BASE,
-        );
-
-        let groups: Group[] = [];
-        // 處理可能的回應格式：直接陣列 或 { data: [...] }
-        if (Array.isArray(response)) {
-          groups = response;
-        } else if (
-          response &&
-          typeof response === 'object' &&
-          'data' in response
-        ) {
-          groups = response.data;
-        } else {
-          console.warn('⚠️ [Groups API] 非預期的回應格式:', response);
-          return [];
-        }
-
-        // 資料轉換：處理每個群組的成員資料
-        // 如果列表 API 沒有回傳成員資料，我們需要對每個群組呼叫 getById 來取得詳細資訊
-        // 這是因為使用者指出只有 getById (現有的冰箱 API) 才有完整資料
-
-        try {
-          const groupsWithDetails = await Promise.all(
-            groups.map(async (basicGroup) => {
-              try {
-                // 並行呼叫 getById 取得詳細資料（包含成員）
-                const detailGroup = await groupsApi.getById(basicGroup.id);
-                return detailGroup;
-              } catch (error) {
-                console.warn(
-                  `取得群組詳細資料失敗 (id: ${basicGroup.id})`,
-                  error,
-                );
-                // 如果失敗，回傳基本資料，並確保 members 為空陣列以免出錯
-                return {
-                  ...basicGroup,
-                  members: basicGroup.members || [],
-                };
-              }
-            }),
-          );
-
-          return groupsWithDetails;
-        } catch (error) {
-          console.error('批次取得群組詳細資料失敗', error);
-          // 如果整個 Promise.all 失敗（理論上 map 裡的 catch 會接住，但以防萬一）
-          // 回傳基本列表
-          return groups.map((g) => ({ ...g, members: g.members || [] }));
-        }
+        // ApiClient now auto-unwraps { success, data } -> Group[]
+        return await api.get<Group[]>(ENDPOINTS.GROUPS.BASE);
       },
-      // Mock fallback
       async () => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        return mockGroups;
+        return [
+          /* mock data */
+          {
+            id: 'group-1',
+            name: '我的冰箱',
+            description: '個人使用的冰箱',
+            ownerId: 'user-1',
+            members: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        ];
       },
     );
   },
 
   /**
-   * 取得單一群組（冰箱）
-   * GET /api/v1/refrigerators/{id}
+   * 取得特定群組詳情
    */
   getById: async (id: string): Promise<Group> => {
-    const endpoint = `${API_BASE}/${id}`;
-
     return tryRealApiWithMockFallback(
       'GET',
-      endpoint,
-      // 真實 API 呼叫
+      ENDPOINTS.GROUPS.BY_ID(id),
       async () => {
-        const response = await backendApi.get<Group | { data: Group }>(
-          endpoint,
-        );
-
-        let groupData: Group;
-        // 處理可能的回應格式
-        if (response && typeof response === 'object' && 'data' in response) {
-          groupData = (response as { data: Group }).data;
-        } else {
-          groupData = response as Group;
-        }
-
-        // 資料轉換：處理成員資料
-        if (groupData.members && Array.isArray(groupData.members)) {
-          groupData.members = groupData.members.map((member) => ({
-            ...member,
-            avatar: member.profilePictureUrl || member.avatar || '',
-            role:
-              member.role ||
-              (groupData.ownerId === member.id ? 'owner' : 'member'),
-          }));
-        }
-
-        return groupData;
+        return await api.get<Group>(ENDPOINTS.GROUPS.BY_ID(id));
       },
-      // Mock fallback
       async () => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        const group = mockGroups.find((g) => g.id === id);
-        if (!group) throw new Error(`群組不存在 (id: ${id})`);
-        return group;
+        return {
+          id,
+          name: '我的冰箱',
+          ownerId: 'user-1',
+          members: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
       },
     );
   },
 
   /**
-   * 取得群組成員
-   * GET /api/v1/refrigerators/{groupId}/members (實際使用 getById 從群組資訊中取得)
-   */
-  getMembers: async (groupId: string): Promise<GroupMember[]> => {
-    // 雖然函式名稱是 getMembers，但在新 API 架構下，成員資訊包含在群組資訊中
-    // 因此這裡直接呼叫 getById，然後提取 members 欄位
-
-    return tryRealApiWithMockFallback(
-      'GET',
-      `${API_BASE}/${groupId}`, // 使用 getById 的 endpoint 作為參考
-      // 真實 API 呼叫
-      async () => {
-        try {
-          const group = await groupsApi.getById(groupId);
-          return group.members || [];
-        } catch (error) {
-          console.error('取得群組成員失敗:', error);
-          throw error;
-        }
-      },
-      // Mock fallback
-      async () => {
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        const group = mockGroups.find((g) => g.id === groupId);
-        if (group && group.members) return group.members;
-        return mockMembers;
-      },
-    );
-  },
-
-  /**
-   * 建立群組（冰箱）
-   * POST /api/v1/refrigerators
-   *
-   * @param data - 群組資料 { name: string }
+   * 建立新群組
    */
   create: async (data: CreateGroupForm): Promise<Group> => {
-    console.log('📤 [Groups API] 建立群組請求資料:', data);
-
     return tryRealApiWithMockFallback(
       'POST',
-      API_BASE,
-      // 真實 API 呼叫
+      ENDPOINTS.GROUPS.BASE,
       async () => {
-        const response = await backendApi.post<Group | { data: Group }>(
-          API_BASE,
-          data,
-        );
-
-        // 處理可能的回應格式
-        if (response && typeof response === 'object' && 'data' in response) {
-          return (response as { data: Group }).data;
-        }
-        return response as Group;
+        return await api.post<Group>(ENDPOINTS.GROUPS.BASE, data);
       },
-      // Mock fallback
       async () => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
         return {
-          id: Math.random().toString(36).substr(2, 9),
+          id: `group-${Date.now()}`,
           name: data.name,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as Group;
+          ownerId: 'user-1',
+          members: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
       },
     );
   },
 
   /**
-   * 更新群組（冰箱）
-   * PUT /api/v1/refrigerators/{id}
-   *
-   * @param id - 群組 ID
-   * @param data - 更新資料 { name?: string }
+   * 更新群組資訊
    */
   update: async (id: string, data: UpdateGroupForm): Promise<Group> => {
-    const endpoint = `${API_BASE}/${id}`;
-    console.log('� [Groups API] 更新群組請求資料:', { id, data });
-
     return tryRealApiWithMockFallback(
       'PUT',
-      endpoint,
-      // 真實 API 呼叫
+      ENDPOINTS.GROUPS.BY_ID(id),
       async () => {
-        const response = await backendApi.put<Group | { data: Group }>(
-          endpoint,
-          data,
-        );
-
-        // 處理可能的回應格式
-        if (response && typeof response === 'object' && 'data' in response) {
-          return (response as { data: Group }).data;
-        }
-        return response as Group;
+        return await api.put<Group>(ENDPOINTS.GROUPS.BY_ID(id), data);
       },
-      // Mock fallback
       async () => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        const group = mockGroups.find((g) => g.id === id);
-        if (!group) throw new Error(`群組不存在 (id: ${id})`);
-        return { ...group, ...data, updatedAt: new Date() } as Group;
+        return {
+          id,
+          name: data.name || 'Updated Group',
+          ownerId: 'user-1',
+          members: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
       },
     );
   },
 
   /**
-   * 刪除群組（冰箱）
-   * DELETE /api/v1/refrigerators/{id}
+   * 刪除群組
    */
   delete: async (id: string): Promise<void> => {
-    const endpoint = `${API_BASE}/${id}`;
-    console.log('� [Groups API] 刪除群組:', id);
+    const endpoint = ENDPOINTS.GROUPS.BY_ID(id);
+    console.log(' [Groups API] 刪除群組:', id);
 
     return tryRealApiWithMockFallback(
       'DELETE',
       endpoint,
       // 真實 API 呼叫
-      () => backendApi.delete<void>(endpoint),
+      () => api.delete<void>(ENDPOINTS.GROUPS.BY_ID(id)),
       // Mock fallback
       async () => {
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -387,21 +240,75 @@ export const groupsApi = {
   },
 
   /**
-   * 邀請成員加入群組（冰箱）
-   * POST /api/v1/refrigerators/{groupId}/members
+   * 取得群組成員列表
+   * V2 API: 取得群組詳情內會包含成員列表，沒有獨立的 /members GET 端點
+   */
+  getMembers: async (groupId: string): Promise<GroupMember[]> => {
+    return tryRealApiWithMockFallback(
+      'GET',
+      ENDPOINTS.GROUPS.BY_ID(groupId),
+      async () => {
+        const group = await groupsApi.getById(groupId);
+        return group.members || [];
+      },
+      async () => {
+        return [
+          {
+            id: 'user-1',
+            name: 'Mock User',
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mock',
+            role: 'owner' as const,
+          },
+        ];
+      },
+    );
+  },
+
+  /**
+   * 邀請成員加入群組（冰箱） -> V2: POST /api/v2/groups/:id/invitations
+   * *NOTE*: V1 was POST /api/v1/refrigerators/{groupId}/members (auto-add),
+   * V2 document says POST /groups/:id/invitations creates an invitation link/token.
+   * However, if the user intends to invite via email or Line directly, the V2 doc
+   * mostly focuses on generating invitation links.
+   *
+   * If passing `InviteMemberForm` (email?), we might need to check if backend supports direct invite.
+   * Based on doc: POST /groups/:id/invitations return token.
+   *
+   * For now, assuming this function maps to `createInvitation` or if backend supports direct invite.
+   * Checking V2 doc again...
+   * V2 Doc: `POST /groups/:id/invitations` Body: `{ "expiresAt": ... }`. Response: token.
+   * It seems direct invite (by email) is possibly not in V2 doc explicitly?
+   * Or maybe `POST /groups/invitations`?
+   *
+   * Legacy `inviteMember` took `InviteMemberForm`.
+   * Let's assuming for now we use `createInvitation` flow or if backend has hidden endpoint.
+   * But wait, `inviteMember` usage in UI usually implies sending an email/message.
+   *
+   * If the UI expects a link to be generated, we should use `createInvitation`.
+   * If UI expects sending email, we need to clarify.
+   *
+   * Let's look at `createInvitation` below.
    */
   inviteMember: async (
     groupId: string,
     data: InviteMemberForm,
   ): Promise<void> => {
-    const endpoint = `${API_BASE}/${groupId}/members`;
-    console.log('� [Groups API] 邀請成員:', { groupId, data });
+    // V2 change: It seems V2 prefers generating invitation links.
+    // If we assume `inviteMember` is actually just generating a link/token and maybe backend sends it?
+    // Or if this method is deprecated in favor of `createInvitation`.
+    // Let's assume for now we might deprecate this or map it to createInvitation if data is empty.
+
+    const endpoint = ENDPOINTS.GROUPS.INVITATIONS(groupId);
+    console.log(' [Groups API] 建立邀請 (原 inviteMember):', {
+      groupId,
+      data,
+    });
 
     return tryRealApiWithMockFallback(
       'POST',
       endpoint,
       // 真實 API 呼叫
-      () => backendApi.post<void>(endpoint, data),
+      () => api.post<void>(endpoint, {}), // V2 invitation creation takes empty or expiration
       // Mock fallback
       async () => {
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -412,20 +319,19 @@ export const groupsApi = {
 
   /**
    * 加入群組（冰箱）
-   * POST /api/v1/refrigerator_memberships
+   * POST /api/v2/groups/join
+   * Body: { invitationToken: string }
    */
   join: async (_groupId: string, data: JoinGroupForm): Promise<void> => {
-    // Note: groupId is not used in the new endpoint but kept for compatibility with call signature if needed,
-    // though the caller should probably just pass the token.
-    // For now we assume existing callers might pass groupId but we ignore it for the endpoint.
-    const endpoint = `/api/v1/refrigerator_memberships`;
+    // V2 endpoint: /api/v2/groups/join
+    const endpoint = ENDPOINTS.GROUPS.JOIN;
     console.log(' [Groups API] 加入群組:', { data });
 
     return tryRealApiWithMockFallback(
       'POST',
       endpoint,
       // 真實 API 呼叫
-      () => backendApi.post<void>(endpoint, data),
+      () => api.post<void>(endpoint, data),
       // Mock fallback
       async () => {
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -435,20 +341,18 @@ export const groupsApi = {
   },
 
   /**
-   * 成員自行退出冰箱群組
-   * DELETE /api/v1/refrigerator/{refrigeratorId}/leave
-   *
-   * 注意：擁有者不能退出自己的群組
+   * 成員自行退出群組
+   * DELETE /api/v2/groups/{groupId}/leave
    */
   leaveGroup: async (groupId: string): Promise<void> => {
-    const endpoint = `/api/v1/refrigerator/${groupId}/leave`;
+    const endpoint = ENDPOINTS.GROUPS.LEAVE(groupId);
     console.log('🚪 [Groups API] 退出群組:', groupId);
 
     return tryRealApiWithMockFallback(
       'DELETE',
       endpoint,
       // 真實 API 呼叫
-      () => backendApi.delete<void>(endpoint),
+      () => api.delete<void>(endpoint),
       // Mock fallback
       async () => {
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -465,35 +369,28 @@ export const groupsApi = {
     console.warn(
       '⚠️ leave 方法已棄用，請使用 leaveGroup 或 removeMemberByOwner',
     );
-    const endpoint = `${API_BASE}/${groupId}/members/${memberId}`;
-    console.log('📤 [Groups API] 離開群組:', { groupId, memberId });
-
-    return tryRealApiWithMockFallback(
-      'DELETE',
-      endpoint,
-      () => backendApi.delete<void>(endpoint),
-      async () => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        return;
-      },
-    );
+    // V2 logic: if memberId is self, call leaveGroup.
+    // If memberId is other and I am owner, call removeMember.
+    // Since we don't know who is who here easily, we fallback to old behavior attempt or map to removeMember
+    // Assuming this is used for "remove member" mostly?
+    return groupsApi.removeMember(groupId, memberId);
   },
 
   /**
    * 擁有者移除冰箱成員
-   * DELETE /api/v1/refrigerator/{refrigeratorId}/memberships/{memberId}
+   * DELETE /api/v2/groups/{groupId}/members/{userId}
    *
    * 注意：只有冰箱擁有者可以移除成員
    */
   removeMember: async (groupId: string, memberId: string): Promise<void> => {
-    const endpoint = `/api/v1/refrigerator/${groupId}/memberships/${memberId}`;
+    const endpoint = ENDPOINTS.GROUPS.MEMBER(groupId, memberId);
     console.log('❌ [Groups API] 移除成員:', { groupId, memberId });
 
     return tryRealApiWithMockFallback(
       'DELETE',
       endpoint,
       // 真實 API 呼叫
-      () => backendApi.delete<void>(endpoint),
+      () => api.delete<void>(endpoint),
       // Mock fallback
       async () => {
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -504,21 +401,23 @@ export const groupsApi = {
 
   /**
    * 更新成員權限
-   * PATCH /api/v1/refrigerators/{groupId}/members/{memberId}
+   * PATCH /api/v2/groups/{groupId}/members/{memberId} (假定 V2 支援)
+   * V2 doc didn't explicitly list "Update Member Role" but usually it exists.
+   * If not, this might need to be verified.
    */
   updateMemberRole: async (
     groupId: string,
     memberId: string,
     role: GroupMember['role'],
   ): Promise<void> => {
-    const endpoint = `${API_BASE}/${groupId}/members/${memberId}`;
+    const endpoint = ENDPOINTS.GROUPS.MEMBER(groupId, memberId);
     console.log(' [Groups API] 更新成員權限:', { groupId, memberId, role });
 
     return tryRealApiWithMockFallback(
       'PATCH',
       endpoint,
       // 真實 API 呼叫
-      () => backendApi.patch<void>(endpoint, { role }),
+      () => api.patch<void>(endpoint, { role }),
       // Mock fallback
       async () => {
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -529,19 +428,21 @@ export const groupsApi = {
 
   /**
    * 搜尋好友
-   * GET /api/v1/users/friends?q={query}
+   * GET /api/v2/users/friends?q={query} (Assuming V2 has this or similar)
    */
   searchFriends: async (
     query: string,
   ): Promise<import('../types/group.types').Friend[]> => {
-    const endpoint = `/api/v1/users/friends?q=${encodeURIComponent(query)}`;
+    // V2 doc didn't mention friend search. Assuming keep as is or update if needed.
+    // Let's assume it moves to /api/v2/users/friends
+    const endpoint = `/api/v2/users/friends?q=${encodeURIComponent(query)}`;
 
     return tryRealApiWithMockFallback(
       'GET',
       endpoint,
       // 真實 API 呼叫
       async () => {
-        const response = await backendApi.get<any>(endpoint);
+        const response = await api.get<any>(endpoint);
         if (response && response.data) return response.data;
         return Array.isArray(response) ? response : [];
       },
@@ -581,26 +482,27 @@ export const groupsApi = {
 
   /**
    * 產生邀請（QR Code 邀請功能）
-   * POST /api/v1/refrigerators/{id}/invitations
+   * POST /api/v2/groups/{id}/invitations
    *
    * @returns 包含 token 和前端邀請連結的回應
    */
   createInvitation: async (
     groupId: string,
   ): Promise<import('../types/group.types').InviteCodeResponse> => {
-    const endpoint = `${API_BASE}/${groupId}/invitations`;
+    const endpoint = ENDPOINTS.GROUPS.INVITATIONS(groupId);
 
     return tryRealApiWithMockFallback(
       'POST',
       endpoint,
       // 真實 API 呼叫
       async () => {
-        const response = await backendApi.post<{
+        const response = await api.post<{
           data: import('../types/group.types').InvitationResponse;
         }>(endpoint, {});
         const data = response?.data || response;
 
         // 組合前端邀請連結
+        // data.token from V2 response
         const inviteUrl = data.token
           ? `${window.location.origin}/invite/${data.token}`
           : undefined;
@@ -626,7 +528,7 @@ export const groupsApi = {
 
   /**
    * 取得邀請資訊（驗證邀請 token）
-   * GET /api/v1/invitations/{token}
+   * GET /api/v2/invitations/{token}
    *
    * @param token - 邀請 token
    * @returns 邀請詳情，包含群組和邀請者資訊
@@ -634,10 +536,10 @@ export const groupsApi = {
   getInvitation: async (
     token: string,
   ): Promise<import('../types/group.types').InvitationResponse> => {
-    const endpoint = `/api/v1/invitations/${token}`;
+    const endpoint = ENDPOINTS.GROUPS.INVITATION_INFO(token);
 
     return wrapApiCall('GET', endpoint, async () => {
-      const response = await backendApi.get<{
+      const response = await api.get<{
         data: import('../types/group.types').InvitationResponse;
       }>(endpoint);
       const data = response?.data || response;

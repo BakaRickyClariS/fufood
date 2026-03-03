@@ -55,7 +55,8 @@ const NotificationDetailPage = () => {
     );
   }
 
-  if (error || !data?.data?.item) {
+  // If `data` represents the unwrapped response, check its shape
+  if (error || !data) {
     return (
       <div className="min-h-screen bg-neutral-100 flex flex-col items-center justify-center p-4 max-w-layout-container mx-auto">
         <p className="text-gray-500 mb-4">找不到此通知</p>
@@ -66,7 +67,8 @@ const NotificationDetailPage = () => {
     );
   }
 
-  const notification = data.data.item;
+  // Adjust for auto-unwrapping if the payload itself is returned
+  const notification = (data as any).item || data;
   const isOfficial = notification.type === 'system';
   const displayGroupName = isOfficial
     ? 'FuFood Official'

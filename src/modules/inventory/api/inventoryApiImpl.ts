@@ -1,4 +1,5 @@
 import { aiApi } from '@/api/client';
+import { ENDPOINTS } from '@/api/endpoints';
 import type {
   FoodItem,
   GetInventoryRequest,
@@ -28,19 +29,16 @@ export const createInventoryApi = (): InventoryApi => {
     getInventory: async (
       params?: GetInventoryRequest,
     ): Promise<GetInventoryResponse> => {
-      const refrigeratorId = params?.refrigeratorId || params?.groupId;
-      if (!refrigeratorId) {
-        throw new Error('Refrigerator ID is required for getInventory');
+      const groupId = params?.groupId;
+      if (!groupId) {
+        throw new Error('Group ID is required for getInventory');
       }
 
-      // 移除 params 傳遞，避免將 groupId 當作 query param 發送導致後端 500 錯誤
-      // 因為 refrigeratorId 已經在路徑中了
       const { ...queryParams } = params || {};
-      delete queryParams.refrigeratorId;
       delete queryParams.groupId;
 
       return aiApi.get<GetInventoryResponse>(
-        `/refrigerators/${refrigeratorId}/inventory`,
+        ENDPOINTS.INVENTORY.LIST(groupId),
         queryParams,
       );
     },
@@ -50,13 +48,13 @@ export const createInventoryApi = (): InventoryApi => {
      */
     getItem: async (
       id: string,
-      refrigeratorId?: string,
+      groupId?: string,
     ): Promise<ApiSuccess<{ item: FoodItem }>> => {
-      if (!refrigeratorId) {
-        throw new Error('Refrigerator ID is required for getItem');
+      if (!groupId) {
+        throw new Error('Group ID is required for getItem');
       }
       return aiApi.get<ApiSuccess<{ item: FoodItem }>>(
-        `/refrigerators/${refrigeratorId}/inventory/${id}`,
+        ENDPOINTS.INVENTORY.BY_ID(groupId, id),
       );
     },
 
@@ -65,14 +63,14 @@ export const createInventoryApi = (): InventoryApi => {
      */
     addItem: async (
       data: AddFoodItemRequest,
-      refrigeratorId?: string,
+      groupId?: string,
     ): Promise<AddFoodItemResponse> => {
-      const targetId = refrigeratorId || data.groupId;
+      const targetId = groupId || data.groupId;
       if (!targetId) {
-        throw new Error('Refrigerator ID is required for addItem');
+        throw new Error('Group ID is required for addItem');
       }
       return aiApi.post<AddFoodItemResponse>(
-        `/refrigerators/${targetId}/inventory`,
+        ENDPOINTS.INVENTORY.LIST(targetId),
         data,
       );
     },
@@ -83,13 +81,13 @@ export const createInventoryApi = (): InventoryApi => {
     updateItem: async (
       id: string,
       data: UpdateFoodItemRequest,
-      refrigeratorId?: string,
+      groupId?: string,
     ): Promise<UpdateFoodItemResponse> => {
-      if (!refrigeratorId) {
-        throw new Error('Refrigerator ID is required for updateItem');
+      if (!groupId) {
+        throw new Error('Group ID is required for updateItem');
       }
       return aiApi.put<UpdateFoodItemResponse>(
-        `/refrigerators/${refrigeratorId}/inventory/${id}`,
+        ENDPOINTS.INVENTORY.BY_ID(groupId, id),
         data,
       );
     },
@@ -99,13 +97,13 @@ export const createInventoryApi = (): InventoryApi => {
      */
     deleteItem: async (
       id: string,
-      refrigeratorId?: string,
+      groupId?: string,
     ): Promise<DeleteFoodItemResponse> => {
-      if (!refrigeratorId) {
-        throw new Error('Refrigerator ID is required for deleteItem');
+      if (!groupId) {
+        throw new Error('Group ID is required for deleteItem');
       }
       return aiApi.delete<DeleteFoodItemResponse>(
-        `/refrigerators/${refrigeratorId}/inventory/${id}`,
+        ENDPOINTS.INVENTORY.BY_ID(groupId, id),
       );
     },
 
@@ -114,13 +112,13 @@ export const createInventoryApi = (): InventoryApi => {
      */
     batchDelete: async (
       data: BatchDeleteInventoryRequest,
-      refrigeratorId?: string,
+      groupId?: string,
     ): Promise<ApiSuccess<Record<string, never>>> => {
-      if (!refrigeratorId) {
-        throw new Error('Refrigerator ID is required for batchDelete');
+      if (!groupId) {
+        throw new Error('Group ID is required for batchDelete');
       }
       return aiApi.delete<ApiSuccess<Record<string, never>>>(
-        `/refrigerators/${refrigeratorId}/inventory/batch`,
+        `${ENDPOINTS.INVENTORY.LIST(groupId)}/batch`,
         {
           body: data,
         },
@@ -130,14 +128,12 @@ export const createInventoryApi = (): InventoryApi => {
     /**
      * 庫存概要（可選）
      */
-    getSummary: async (
-      refrigeratorId?: string,
-    ): Promise<InventorySummaryResponse> => {
-      if (!refrigeratorId) {
-        throw new Error('Refrigerator ID is required for getSummary');
+    getSummary: async (groupId?: string): Promise<InventorySummaryResponse> => {
+      if (!groupId) {
+        throw new Error('Group ID is required for getSummary');
       }
       return aiApi.get<InventorySummaryResponse>(
-        `/refrigerators/${refrigeratorId}/inventory/summary`,
+        ENDPOINTS.INVENTORY.SUMMARY(groupId),
       );
     },
 
@@ -145,13 +141,13 @@ export const createInventoryApi = (): InventoryApi => {
      * 類別列表
      */
     getCategories: async (
-      refrigeratorId?: string,
+      groupId?: string,
     ): Promise<InventoryCategoriesResponse> => {
-      if (!refrigeratorId) {
-        throw new Error('Refrigerator ID is required for getCategories');
+      if (!groupId) {
+        throw new Error('Group ID is required for getCategories');
       }
       return aiApi.get<InventoryCategoriesResponse>(
-        `/refrigerators/${refrigeratorId}/inventory/categories`,
+        ENDPOINTS.INVENTORY.CATEGORIES(groupId),
       );
     },
 
@@ -159,15 +155,13 @@ export const createInventoryApi = (): InventoryApi => {
      * 庫存設定
      */
     getSettings: async (
-      refrigeratorId?: string,
+      groupId?: string,
     ): Promise<InventorySettingsResponse> => {
-      if (!refrigeratorId) {
-        // Fallback or Error? Doc says path is required.
-        // But SettingsPanel loads it from params.
-        throw new Error('Refrigerator ID is required for getSettings');
+      if (!groupId) {
+        throw new Error('Group ID is required for getSettings');
       }
       return aiApi.get<InventorySettingsResponse>(
-        `/refrigerators/${refrigeratorId}/inventory/settings`,
+        ENDPOINTS.INVENTORY.SETTINGS(groupId),
       );
     },
 
@@ -176,13 +170,13 @@ export const createInventoryApi = (): InventoryApi => {
      */
     updateSettings: async (
       data: UpdateInventorySettingsRequest,
-      refrigeratorId?: string,
+      groupId?: string,
     ): Promise<InventorySettingsResponse> => {
-      if (!refrigeratorId) {
-        throw new Error('Refrigerator ID is required for updateSettings');
+      if (!groupId) {
+        throw new Error('Group ID is required for updateSettings');
       }
       return aiApi.put<InventorySettingsResponse>(
-        `/refrigerators/${refrigeratorId}/inventory/settings`,
+        ENDPOINTS.INVENTORY.SETTINGS(groupId),
         data,
       );
     },
@@ -193,13 +187,13 @@ export const createInventoryApi = (): InventoryApi => {
     consumeItem: async (
       id: string,
       data: { quantity: number; reasons: string[]; customReason?: string },
-      refrigeratorId?: string,
+      groupId?: string,
     ): Promise<ApiSuccess<{ id: string; remainingQuantity: number }>> => {
-      if (!refrigeratorId) {
-        throw new Error('Refrigerator ID is required for consumeItem');
+      if (!groupId) {
+        throw new Error('Group ID is required for consumeItem');
       }
       return aiApi.post<ApiSuccess<{ id: string; remainingQuantity: number }>>(
-        `/refrigerators/${refrigeratorId}/inventory/${id}/consume`,
+        ENDPOINTS.INVENTORY.CONSUME(groupId, id),
         data,
       );
     },

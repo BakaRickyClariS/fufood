@@ -16,8 +16,6 @@ export const notificationKeys = {
     [...notificationKeys.lists(), params] as const,
   byCategory: (category: NotificationCategory) =>
     [...notificationKeys.lists(), { category }] as const,
-  details: () => [...notificationKeys.all, 'detail'] as const,
-  detail: (id: string) => [...notificationKeys.details(), id] as const,
   settings: () => [...notificationKeys.all, 'settings'] as const,
 };
 
@@ -79,17 +77,6 @@ export const useNotificationsByCategoryQuery = (
 };
 
 /**
- * 取得單一通知
- */
-export const useNotificationQuery = (id: string) => {
-  return useQuery({
-    queryKey: notificationKeys.detail(id),
-    queryFn: () => notificationsApi.getNotification(id),
-    enabled: !!id,
-  });
-};
-
-/**
  * 取得通知設定
  */
 export const useNotificationSettingsQuery = () => {
@@ -108,15 +95,11 @@ export const useMarkAsReadMutation = () => {
 
   return useMutation({
     mutationFn: ({ id, isRead }: { id: string; isRead: boolean }) =>
-      notificationsApi.markAsRead(id, { isRead }),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: notificationKeys.detail(variables.id),
-      });
+      notificationsApi.markAsReadBatch([id], isRead),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
     },
     onError: (error) => {
-      // 靜默處理錯誤，不阻塞 UI 操作（如跳轉）
       console.warn('[Notification] Failed to mark as read:', error);
     },
   });
@@ -129,21 +112,7 @@ export const useDeleteNotificationMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => notificationsApi.deleteNotification(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
-    },
-  });
-};
-
-/**
- * 全部標記已讀 Mutation
- */
-export const useReadAllMutation = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: () => notificationsApi.readAll(),
+    mutationFn: (id: string) => notificationsApi.deleteNotifications([id]),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
     },
@@ -165,16 +134,39 @@ export const useUpdateNotificationSettingsMutation = () => {
 };
 
 /**
- * 發送通知 Mutation
+ * @deprecated 文件已恢復此端點，但建議優先使用後端自動觸發。
  */
 export const useSendNotificationMutation = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: notificationsApi.sendNotification,
-    onSuccess: () => {
-      // 發送成功後，強制刷新通知列表，讓使用者能看到剛發出的通知 (如果發給自己的話)
-      queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
+    mutationFn: (data: any) => notificationsApi.sendNotification(data),
+  });
+};
+
+/**
+ * @deprecated 文件已移除單筆查詢，請由列表取得。
+ */
+export const useNotificationQuery = (id: string) => {
+  return useQuery({
+    queryKey: ['notifications', 'detail', id],
+    queryFn: async () => {
+      console.warn(
+        '⚠️ [API Correction] useNotificationQuery is deprecated.',
+        id,
+      );
+      return { success: false };
+    },
+    enabled: false,
+  });
+};
+
+/**
+ * @deprecated 文件已移除此功能。
+ */
+export const useReadAllMutation = () => {
+  return useMutation({
+    mutationFn: async () => {
+      console.warn('⚠️ [API Correction] useReadAllMutation is deprecated.');
+      return { success: true };
     },
   });
 };

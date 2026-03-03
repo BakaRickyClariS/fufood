@@ -8,14 +8,15 @@ import type {
   ConsumptionConfirmation,
   MealPlanInput,
 } from '@/modules/recipe/types';
-import { backendApi } from '@/api/client';
+import { api } from '@/api/client';
 import { aiRecipeApi } from '@/modules/ai/api/aiRecipeApi';
+import { ENDPOINTS } from '@/api/endpoints';
 
 export type RecipeApi = {
   getRecipes(params?: {
     category?: RecipeCategory;
     favorite?: boolean;
-    refrigeratorId?: string;
+    groupId?: string;
   }): Promise<RecipeListItem[]>;
   getRecipeById(id: string): Promise<Recipe>;
   toggleFavorite(
@@ -45,25 +46,19 @@ export class RealRecipeApi implements RecipeApi {
   getRecipes = async (params?: {
     category?: RecipeCategory;
     favorite?: boolean;
-    refrigeratorId?: string;
+    groupId?: string;
   }): Promise<RecipeListItem[]> => {
     // 從 AI API 取得所有食譜
-    let savedRecipes = await aiRecipeApi.getSavedRecipes(
-      params?.refrigeratorId,
-    );
+    let savedRecipes = await aiRecipeApi.getSavedRecipes(params?.groupId);
 
     // 若列表為空且未在 seeding 中，自動儲存預設食譜
     if (savedRecipes.length === 0 && !this._isSeeding) {
       this._isSeeding = true;
       try {
-        const seeded = await aiRecipeApi.seedDefaultRecipes(
-          params?.refrigeratorId,
-        );
+        const seeded = await aiRecipeApi.seedDefaultRecipes(params?.groupId);
         if (seeded) {
           // 重新取得食譜列表
-          savedRecipes = await aiRecipeApi.getSavedRecipes(
-            params?.refrigeratorId,
-          );
+          savedRecipes = await aiRecipeApi.getSavedRecipes(params?.groupId);
         }
       } finally {
         this._isSeeding = false;
@@ -194,36 +189,22 @@ export class RealRecipeApi implements RecipeApi {
       }));
   };
 
-  // --- 以下維持原樣 (或是也需要 Mock/Pending) ---
-
   getRecommendedRecipes = async (
-    ingredientNames: string[],
+    _ingredientNames: string[],
   ): Promise<RecipeListItem[]> => {
-    // 這部分暫時維持呼叫主後端，或是 Mock
-    const query = ingredientNames
-      .map((name) => `ingredients=${encodeURIComponent(name)}`)
-      .join('&');
-    return backendApi
-      .get<RecipeListItem[]>(`/api/v1/recipes/recommended?${query}`)
-      .catch(() => []); // 避免錯誤阻擋 UI
+    // V2 doesn't have an endpoint for recommendations yet, using empty array or mock
+    return [];
   };
 
   confirmCook = async (
     data: ConsumptionConfirmation,
   ): Promise<{ success: boolean; message: string }> => {
-    // 消耗食材通常涉及主後端的庫存，所以這裡應該還是打主後端
-    // 但因為食譜來源是 AI Backend，ID 無法對應。
-    // 這是一個整合斷點。
-    // 暫時假設：消耗食材只扣庫存，不依賴後端食譜 ID 驗證 (或後端會忽略無效 ID)
-
-    // 如果主後端需要有效的 Recipe ID，這裡會失敗。
-    // 但目前需求是「消耗時推薦的食譜需要與庫存相關」，這可能指 getRecommendedRecipes。
-    // confirmCook 暫時先維持呼叫主後端，若失敗則僅 log
     try {
-      const response = await backendApi.patch<{
+      const response = await api.patch<{
         success?: boolean;
         message?: string;
-      }>(`/api/v1/recipes/${data.recipeId}`, {
+      }>(ENDPOINTS.RECIPES.BY_ID(data.recipeId), {
+        // Note: using BY_ID for base path
         status: 'cooked',
         consumption: data,
       });
@@ -240,22 +221,19 @@ export class RealRecipeApi implements RecipeApi {
     }
   };
 
-  addMealPlan = async (data: MealPlanInput): Promise<MealPlan> => {
-    return backendApi.post<MealPlan>('/api/v1/recipes/plan', data);
+  addMealPlan = async (_data: MealPlanInput): Promise<MealPlan> => {
+    return Promise.reject(
+      new Error('Meal plans not implemented in v2 endpoints'),
+    );
   };
 
   getMealPlans = async (): Promise<MealPlan[]> => {
-    // 避免 404
-    try {
-      return await backendApi.get<MealPlan[]>('/api/v1/recipes/plan');
-    } catch {
-      return [];
-    }
+    return [];
   };
 
-  deleteMealPlan = async (planId: string): Promise<{ success: boolean }> => {
-    return backendApi.delete<{ success: boolean }>(
-      `/api/v1/recipes/plan/${planId}`,
+  deleteMealPlan = async (_planId: string): Promise<{ success: boolean }> => {
+    return Promise.reject(
+      new Error('Meal plans not implemented in v2 endpoints'),
     );
   };
 }

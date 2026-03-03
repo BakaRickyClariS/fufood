@@ -23,11 +23,11 @@ type PostCardProps = {
 };
 
 // Sub-component for individual item to handle animation state
-const PostCardItem = ({ 
-  item, 
-  isExpanded, 
-  onToggle 
-}: { 
+const PostCardItem = ({
+  item,
+  isExpanded,
+  onToggle,
+}: {
   item: SharedListItem & { imageUrl?: string | null };
   isExpanded: boolean;
   onToggle: () => void;
@@ -84,12 +84,9 @@ const PostCardItem = ({
       {/* Expandable Image Area */}
       {/* Always render container for animation, control visibility via GSAP */}
       {hasImage && (
-        <div 
-          ref={imageContainerRef} 
-          className="overflow-hidden h-0 opacity-0"
-        >
+        <div ref={imageContainerRef} className="overflow-hidden h-0 opacity-0">
           <div className="mt-3">
-             <img
+            <img
               src={item.photoPath || item.imageUrl || undefined}
               alt={item.name}
               className="w-full h-[200px] rounded-xl object-cover"
@@ -128,9 +125,13 @@ export const PostCard = ({ post, onEdit, onDelete }: PostCardProps) => {
       <div className="flex items-center justify-between mb-3 px-4 pt-4">
         <div className="flex items-center gap-3">
           <img
-            src={post.authorAvatar}
-            alt={post.authorName}
+            src={
+              post.authorAvatar ||
+              `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(post.authorName || 'Guest')}`
+            }
+            alt={post.authorName || 'Guest'}
             className="w-[42px] h-[42px] rounded-full bg-neutral-100 object-cover"
+            referrerPolicy="no-referrer"
           />
           <div>
             <div className="font-bold text-sm">{post.authorName}</div>

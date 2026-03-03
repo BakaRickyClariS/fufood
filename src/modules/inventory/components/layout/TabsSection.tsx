@@ -13,7 +13,7 @@ import {
   selectLayoutAppliedNotification,
   hideLayoutAppliedNotification,
 } from '@/modules/inventory/store/inventorySlice';
-import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
+import { selectActiveGroupId } from '@/store/slices/activeGroupSlice';
 import { useInventoryQuery } from '@/modules/inventory/api/queries';
 
 type MainTabId = 'overview' | 'settings';
@@ -30,15 +30,16 @@ const TabsSection = () => {
 
   const dispatch = useDispatch();
   const layoutNotification = useSelector(selectLayoutAppliedNotification);
-  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const activeGroupId = useSelector(selectActiveGroupId);
 
   // Fetch inventory items for FoodDetailModal (使用 TanStack Query 以便自動更新)
   const { data: inventoryData, refetch } = useInventoryQuery({
-    refrigeratorId: activeRefrigeratorId || undefined,
+    groupId: activeGroupId || undefined,
   });
 
   // 從 query 結果中取得 items
-  const allItems = inventoryData?.data?.items ?? [];
+  const allItems =
+    (inventoryData as any)?.data?.items || (inventoryData as any)?.items || [];
   const [selectedItem, setSelectedItem] = useState<(typeof allItems)[0] | null>(
     null,
   );
@@ -46,7 +47,7 @@ const TabsSection = () => {
   // Update selectedItem when activeItemId changes
   useEffect(() => {
     if (activeItemId && allItems.length > 0) {
-      const item = allItems.find((i) => i.id === activeItemId);
+      const item = allItems.find((i: any) => i.id === activeItemId);
       if (item) {
         setSelectedItem(item);
       }

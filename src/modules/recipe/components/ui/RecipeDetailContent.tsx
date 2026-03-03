@@ -23,7 +23,7 @@ type RecipeDetailContentProps = {
   // Parent visibility controls
   onHideParent?: () => void;
   onShowParent?: () => void;
-  refrigeratorId?: string;
+  groupId?: string;
 };
 
 /**
@@ -42,7 +42,7 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
   isLoading = false,
   onHideParent,
   onShowParent,
-  refrigeratorId,
+  groupId,
 }) => {
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -93,7 +93,7 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
         defaultReasons={['recipe_consumption']}
         onHideParent={onHideParent}
         onShowParent={onShowParent}
-        refrigeratorId={refrigeratorId}
+        groupId={groupId}
         onConfirm={(success) => {
           onShowConsumptionModal(false);
           onConfirmConsumption?.(success);

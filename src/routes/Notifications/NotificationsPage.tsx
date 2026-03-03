@@ -68,7 +68,7 @@ const NotificationsPage = () => {
   const [openItemId, setOpenItemId] = useState<string | null>(null);
   const [openRecipeId, setOpenRecipeId] = useState<string | null>(null);
 
-  // 使用 API 取得通知 (Production Mode)
+  // 使用 API 取得通知 (Production Mode)，交由後端進行分頁與正確分類
   const { data, isLoading } = useNotificationsByCategoryQuery(activeTab);
 
   const markAsRead = useMarkAsReadMutation();
@@ -99,9 +99,13 @@ const NotificationsPage = () => {
 
   // 將通知按日期分組
   const groupedData = useMemo(() => {
-    if (!data?.data.items) return [];
-    return groupNotificationsByDate(data.data.items);
-  }, [data?.data.items]);
+    // Check if data is already unwrapped (has items) or is the array itself
+    const items = data?.items || (Array.isArray(data) ? data : undefined);
+    if (!items) return [];
+
+    // 後端已修正邏輯，直接使用後端回傳的 items 即可
+    return groupNotificationsByDate(items);
+  }, [data]);
 
   // 處理通知點擊
   const handleNotificationClick = (notification: NotificationMessage) => {
@@ -153,8 +157,9 @@ const NotificationsPage = () => {
 
   // 處理全選
   const handleSelectAll = () => {
-    if (!data?.data.items) return;
-    const allIds = data.data.items.map((item) => item.id);
+    const items = data?.items || (Array.isArray(data) ? data : undefined);
+    if (!items) return;
+    const allIds = items.map((item) => item.id);
     enterEditMode();
     selectAll(allIds);
   };

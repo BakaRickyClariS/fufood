@@ -1,9 +1,17 @@
 import { authApi } from '@/modules/auth/api/authApi';
 import { authService } from '@/modules/auth/services/authService';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { UpdateProfilePayload, ProfileResponse, User } from '@/modules/auth/types';
-import { mapBackendTierToFrontend } from '@/modules/auth/api/queries';
+import type {
+  UpdateProfilePayload,
+  ProfileResponse,
+  User,
+} from '@/modules/auth/types';
+import {
+  mapBackendTierToFrontend,
+  mapBackendGenderToEnum,
+} from '@/modules/auth/api/queries';
 import { parsePreferences } from '@/modules/settings/utils/dietaryUtils';
+import { identity } from '@/shared/utils/identity';
 
 /**
  * 更新個人資料請求參數
@@ -22,22 +30,25 @@ export const useUpdateProfileMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ data }: UpdateProfileParams): Promise<ProfileResponse> => {
+    mutationFn: async ({
+      data,
+    }: UpdateProfileParams): Promise<ProfileResponse> => {
       return authApi.updateProfile(data);
     },
     onSuccess: (response, variables) => {
-      if (!response.data) return;
+      const profileData = (response as any).data ?? response;
+      if (!profileData) return;
 
-      const profileData = response.data;
       const requestedTier = variables.data.subscriptionTier;
 
       // 取得現有的 user 資料，避免覆蓋重要欄位
       const existingUser = authService.getUser();
 
       // 計算新的會員等級 (如果變數中有 mock 值，優先使用，否則使用 API 回傳值)
-      const newMembershipTier = requestedTier !== undefined
-        ? mapBackendTierToFrontend(requestedTier)
-        : mapBackendTierToFrontend(profileData.subscriptionTier);
+      const newMembershipTier =
+        requestedTier !== undefined
+          ? mapBackendTierToFrontend(requestedTier)
+          : mapBackendTierToFrontend(profileData.subscriptionTier);
 
       // 將 ProfileData 轉換為 User 格式，保留原有資料
       const updatedUser: User = {
@@ -46,18 +57,40 @@ export const useUpdateProfileMutation = () => {
         // 更新從 API 回傳的資料
         id: profileData.id,
         lineId: profileData.lineId,
-        name: profileData.name,
-        displayName: profileData.name, // 使用 name 作為 displayName
-        avatar: profileData.profilePictureUrl ?? profileData.avatar ?? existingUser?.avatar ?? '',
-        pictureUrl: profileData.profilePictureUrl ?? existingUser?.pictureUrl,
+        name:
+          profileData.name ||
+          profileData.displayName ||
+          profileData.display_name ||
+          existingUser?.name ||
+          '',
+        displayName:
+          profileData.displayName ||
+          profileData.name ||
+          profileData.display_name ||
+          existingUser?.displayName ||
+          '',
+        avatar:
+          profileData.profilePictureUrl ??
+          profileData.avatar ??
+          existingUser?.avatar ??
+          '',
+        pictureUrl:
+          profileData.profilePictureUrl ??
+          profileData.avatar ??
+          existingUser?.pictureUrl,
         email: profileData.email ?? existingUser?.email ?? undefined,
-        dietaryPreference: profileData.preferences 
-          ? parsePreferences(profileData.preferences) 
+        gender: mapBackendGenderToEnum(profileData.gender),
+        customGender: profileData.customGender ?? existingUser?.customGender,
+        dietaryPreference: profileData.preferences
+          ? parsePreferences(profileData.preferences)
           : existingUser?.dietaryPreference,
         membershipTier: newMembershipTier,
         createdAt: existingUser?.createdAt ?? new Date(),
         updatedAt: new Date(),
       };
+
+      // 同步到 identity，確保其他使用的地方也能拿最新值
+      identity.setUser(updatedUser);
 
       // 更新 React Query 快取（轉換後的 User 格式）
       queryClient.setQueryData(['GET_USER_PROFILE'], updatedUser);

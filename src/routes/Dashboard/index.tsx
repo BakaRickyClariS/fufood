@@ -3,16 +3,16 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '@/modules/auth';
 import { useGroups } from '@/modules/groups/hooks/useGroups';
 import {
-  selectActiveRefrigeratorId,
-  setActiveRefrigeratorId,
-} from '@/store/slices/refrigeratorSlice';
+  selectActiveGroupId,
+  setActiveGroupId,
+} from '@/store/slices/activeGroupSlice';
 import { useTheme } from '@/shared/providers/ThemeProvider';
 import { ThemeSelectionSheet } from '@/shared/components/modals/ThemeSelectionSheet';
 import InventorySection from '@/modules/dashboard/components/InventorySection';
 import RecipeSection from '@/modules/dashboard/components/RecipeSection';
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isInitialLoading } = useAuth();
   const dispatch = useDispatch();
 
   // 主題系統
@@ -21,21 +21,23 @@ const Dashboard: React.FC = () => {
 
   // 使用 useGroups 確保群組資料被載入
   const { groups: allGroups } = useGroups();
-  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const activeGroupId = useSelector(selectActiveGroupId);
 
-  // 自動初始化 activeRefrigeratorId
+  // 自動初始化 activeGroupId
   useEffect(() => {
-    if (allGroups && allGroups.length > 0 && !activeRefrigeratorId) {
+    if (allGroups && allGroups.length > 0 && !activeGroupId) {
       const defaultId = allGroups[0].id;
       console.log(
-        '[Dashboard] Auto-selecting default refrigerator:',
+        '[Dashboard] Auto-selecting default activeGroup:',
         defaultId,
       );
-      dispatch(setActiveRefrigeratorId(defaultId));
+      dispatch(setActiveGroupId(defaultId));
     }
-  }, [allGroups, activeRefrigeratorId, dispatch]);
+  }, [allGroups, activeGroupId, dispatch]);
 
-  const displayName = user?.name || user?.displayName || 'Guest';
+  const displayName = isInitialLoading
+    ? ''
+    : user?.name || user?.displayName || 'Guest';
 
   return (
     <>
@@ -50,7 +52,9 @@ const Dashboard: React.FC = () => {
           await setTheme(themeId);
         }}
         isFirstLogin={true}
-        defaultUserName={displayName !== 'Guest' ? displayName : ''}
+        defaultUserName={
+          displayName && displayName !== 'Guest' ? displayName : ''
+        }
       />
 
       {/* Hero 區塊 */}
@@ -59,7 +63,7 @@ const Dashboard: React.FC = () => {
           <div className="flex flex-row justify-center max-w-layout-container w-full">
             <div className="flex flex-col max-w-[150px] mr-[-100px] mt-14 w-full z-10">
               <h1 className="text-xl/7 font-bold text-neutral-600 mb-5">
-                早安,{displayName}!
+                {displayName ? `早安,${displayName}!` : '早安!'}
               </h1>
               <p className="text-sm text-neutral-600 py-1 px-3 bg-white rounded-b-xl rounded-tl-xl whitespace-nowrap">
                 歡迎回到冰箱小隊～
