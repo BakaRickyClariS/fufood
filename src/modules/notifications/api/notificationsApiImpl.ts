@@ -20,13 +20,16 @@ import type {
 export const notificationsApiImpl: NotificationsApi = {
   // 發送通知
   sendNotification: async (data: SendNotificationRequest) => {
-    return aiApi.post<SendNotificationResponse>('/notifications/send', data);
+    return aiApi.post<SendNotificationResponse>(
+      '/api/v1/notifications/send',
+      data,
+    );
   },
 
   // 取得通知列表
   getNotifications: async (params?: GetNotificationsRequest) => {
     const response = await aiApi.get<GetNotificationsResponse>(
-      '/notifications',
+      '/api/v1/notifications',
       params as Record<string, any>,
     );
 
@@ -59,7 +62,7 @@ export const notificationsApiImpl: NotificationsApi = {
   // 取得單一通知
   getNotification: async (id: string) => {
     const response = await aiApi.get<GetNotificationResponse>(
-      `/notifications/${id}`,
+      `/api/v1/notifications/${id}`,
     );
 
     if (response.success && response.data.item) {
@@ -77,27 +80,35 @@ export const notificationsApiImpl: NotificationsApi = {
 
   // 標記已讀
   markAsRead: async (id: string, data: MarkAsReadRequest) => {
-    return aiApi.patch<MarkAsReadResponse>(`/notifications/${id}/read`, data);
+    return aiApi.patch<MarkAsReadResponse>(
+      `/api/v1/notifications/${id}/read`,
+      data,
+    );
   },
 
   // 刪除通知
   deleteNotification: async (id: string) => {
-    return aiApi.delete<DeleteNotificationResponse>(`/notifications/${id}`);
+    return aiApi.delete<DeleteNotificationResponse>(
+      `/api/v1/notifications/${id}`,
+    );
   },
 
   // 全部標記已讀
   readAll: async () => {
-    return aiApi.post<ReadAllResponse>('/notifications/read-all');
+    return aiApi.post<ReadAllResponse>('/api/v1/notifications/read-all');
   },
 
   // 取得設定
   getSettings: async () => {
-    return aiApi.get<GetSettingsResponse>('/notifications/settings');
+    return aiApi.get<GetSettingsResponse>('/api/v1/notifications/settings');
   },
 
   // 更新設定
   updateSettings: async (data: UpdateSettingsRequest) => {
-    return aiApi.patch<UpdateSettingsResponse>('/notifications/settings', data);
+    return aiApi.patch<UpdateSettingsResponse>(
+      '/api/v1/notifications/settings',
+      data,
+    );
   },
 
   // 批次刪除
@@ -106,16 +117,22 @@ export const notificationsApiImpl: NotificationsApi = {
     // 若後端不支援，可改用 POST /notifications/batch-delete)
     // 這裡假設後端支援或改用 POST
     // 為了相容性，建議用 POST
-    return aiApi.post<BatchDeleteResponse>('/notifications/batch-delete', {
-      ids,
-    });
+    return aiApi.post<BatchDeleteResponse>(
+      '/api/v1/notifications/batch-delete',
+      {
+        ids,
+      },
+    );
   },
 
   // 批次標記已讀
   markAsReadBatch: async (ids: string[], isRead: boolean) => {
-    return aiApi.post<BatchMarkAsReadResponse>('/notifications/batch-read', {
-      ids,
-      isRead,
-    });
+    return aiApi.post<BatchMarkAsReadResponse>(
+      '/api/v1/notifications/batch-read',
+      {
+        ids,
+        isRead,
+      },
+    );
   },
 };

@@ -1,4 +1,5 @@
 import { backendApi } from '@/api/client';
+import { identity } from '@/shared/utils/identity';
 import type {
   Group,
   CreateGroupForm,
@@ -414,19 +415,14 @@ export const groupsApi = {
    * 加入群組（冰箱）
    * POST /api/v1/refrigerator_memberships
    */
-  join: async (_groupId: string, data: JoinGroupForm): Promise<void> => {
-    // Note: groupId is not used in the new endpoint but kept for compatibility with call signature if needed,
-    // though the caller should probably just pass the token.
-    // For now we assume existing callers might pass groupId but we ignore it for the endpoint.
-    const endpoint = `/api/v1/refrigerator_memberships`;
-    console.log(' [Groups API] 加入群組:', { data });
+  join: async (groupId: string, data: JoinGroupForm): Promise<void> => {
+    const endpoint = `/api/v1/refrigerators/${groupId}/members`;
+    console.log(' [Groups API] 加入群組:', { groupId, data });
 
     return tryRealApiWithMockFallback(
       'POST',
       endpoint,
-      // 真實 API 呼叫
       () => backendApi.post<void>(endpoint, data),
-      // Mock fallback
       async () => {
         await new Promise((resolve) => setTimeout(resolve, 500));
         return;
@@ -441,15 +437,15 @@ export const groupsApi = {
    * 注意：擁有者不能退出自己的群組
    */
   leaveGroup: async (groupId: string): Promise<void> => {
-    const endpoint = `/api/v1/refrigerator/${groupId}/leave`;
+    const memberId = identity.getUserId();
+    if (!memberId) throw new Error('無法取得當前用戶 ID');
+    const endpoint = `/api/v1/refrigerators/${groupId}/members/${memberId}`;
     console.log('🚪 [Groups API] 退出群組:', groupId);
 
     return tryRealApiWithMockFallback(
       'DELETE',
       endpoint,
-      // 真實 API 呼叫
       () => backendApi.delete<void>(endpoint),
-      // Mock fallback
       async () => {
         await new Promise((resolve) => setTimeout(resolve, 500));
         return;
@@ -486,7 +482,7 @@ export const groupsApi = {
    * 注意：只有冰箱擁有者可以移除成員
    */
   removeMember: async (groupId: string, memberId: string): Promise<void> => {
-    const endpoint = `/api/v1/refrigerator/${groupId}/memberships/${memberId}`;
+    const endpoint = `/api/v1/refrigerators/${groupId}/members/${memberId}`;
     console.log('❌ [Groups API] 移除成員:', { groupId, memberId });
 
     return tryRealApiWithMockFallback(

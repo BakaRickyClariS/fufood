@@ -167,9 +167,12 @@ export const createRealFoodScanApi = (): FoodScanApi => {
   const recognizeImage = async (imageUrl: string): Promise<ScanResult> => {
     try {
       // Updated endpoint to match v2.1 spec
-      const data = await aiApi.post<RawScanResponse>('/ai/analyze-image', {
-        imageUrl,
-      });
+      const data = await aiApi.post<RawScanResponse>(
+        '/api/v1/ai/analyze-image',
+        {
+          imageUrl,
+        },
+      );
       return transformScanResult(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -194,7 +197,7 @@ export const createRealFoodScanApi = (): FoodScanApi => {
 
       // Updated endpoint to match v2.1 spec
       const response = await aiApi.post<MultipleScanResult>(
-        '/ai/analyze-image/multiple',
+        '/api/v1/ai/analyze-image/multiple',
         formData,
         {
           headers: {
@@ -235,7 +238,7 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     // 庫存 API 在 AI 後端上 (/refrigerators/{id}/inventory)
     if (data.groupId) {
       return aiApi.post<FoodItemResponse>(
-        `/refrigerators/${data.groupId}/inventory`,
+        `/api/v1/refrigerators/${data.groupId}/inventory`,
         apiPayload,
       );
     }
@@ -244,7 +247,7 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     const cachedId = localStorage.getItem('activeRefrigeratorId');
     if (cachedId) {
       return aiApi.post<FoodItemResponse>(
-        `/refrigerators/${cachedId}/inventory`,
+        `/api/v1/refrigerators/${cachedId}/inventory`,
         apiPayload,
       );
     }

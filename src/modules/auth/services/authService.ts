@@ -107,7 +107,7 @@ export const authService = {
 
     if (response.token?.accessToken) {
       try {
-        await aiApi.post('/auth/sync-session', {
+        await aiApi.post('/api/v1/auth/sync-session', {
           token: response.token.accessToken,
         });
       } catch (error) {
@@ -128,7 +128,7 @@ export const authService = {
     authService.saveUser(response.user);
     if (response.token?.accessToken) {
       try {
-        await aiApi.post('/auth/sync-session', {
+        await aiApi.post('/api/v1/auth/sync-session', {
           token: response.token.accessToken,
         });
       } catch (error) {

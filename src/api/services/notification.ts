@@ -1,5 +1,5 @@
 import { aiApi } from '@/api/client';
-import type { 
+import type {
   NotificationSettings,
   SendNotificationRequest,
 } from '@/modules/notifications/types';
@@ -26,7 +26,7 @@ export const notificationService = {
    * 將 FCM Token 傳送至 AI 後端儲存
    */
   registerToken: async (token: string) => {
-    return aiApi.post<void>('/notifications/token', {
+    return aiApi.post<void>('/api/v1/notifications/token', {
       fcmToken: token,
       deviceType: 'web',
     });
@@ -36,21 +36,23 @@ export const notificationService = {
    * 更新通知設定
    */
   updateSettings: async (settings: Partial<NotificationSettings>) => {
-    return aiApi.patch('/notifications/settings', settings);
+    return aiApi.patch('/api/v1/notifications/settings', settings);
   },
 
   /**
    * 取得通知設定
    */
   getSettings: async () => {
-    return aiApi.get<{ success: boolean; data: NotificationSettings }>('/notifications/settings');
+    return aiApi.get<{ success: boolean; data: NotificationSettings }>(
+      '/api/v1/notifications/settings',
+    );
   },
 
   /**
    * 取得通知列表
    */
   getNotifications: async (params?: { page?: number; limit?: number }) => {
-    return aiApi.get('/notifications', params);
+    return aiApi.get('/api/v1/notifications', params);
   },
 
   /**
@@ -58,13 +60,22 @@ export const notificationService = {
    * 用於：入庫、消耗、群組變更、購物清單更新等事件
    */
   sendNotification: async (data: SendNotificationRequest) => {
-    console.log('🚀 [Notification Debug] Payload:', JSON.stringify(data, null, 2));
+    console.log(
+      '🚀 [Notification Debug] Payload:',
+      JSON.stringify(data, null, 2),
+    );
     try {
-      return await aiApi.post<SendNotificationResponse>('/notifications/send', data);
+      return await aiApi.post<SendNotificationResponse>(
+        '/api/v1/notifications/send',
+        data,
+      );
     } catch (error: any) {
       console.error('❌ [Notification Debug] Error:', error);
       if (error.data) {
-        console.error('❌ [Notification Debug] Error Data:', JSON.stringify(error.data, null, 2));
+        console.error(
+          '❌ [Notification Debug] Error Data:',
+          JSON.stringify(error.data, null, 2),
+        );
       }
       throw error;
     }

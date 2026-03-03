@@ -36,7 +36,7 @@ export const authApi = {
         token: MOCK_TOKEN,
       };
     }
-    return backendApi.post<LoginResponse>('/auth/login', data);
+    return backendApi.post<LoginResponse>('/api/v1/auth/login', data);
   },
 
   /**
@@ -57,7 +57,7 @@ export const authApi = {
         token: MOCK_TOKEN,
       };
     }
-    return backendApi.post<RegisterResponse>('/auth/register', data);
+    return backendApi.post<RegisterResponse>('/api/v1/auth/register', data);
   },
 
   /**
@@ -92,7 +92,7 @@ export const authApi = {
         expiresIn: 3600,
       };
     }
-    return backendApi.post<RefreshTokenResponse>('/auth/refresh', data);
+    return backendApi.post<RefreshTokenResponse>('/api/v1/auth/refresh', data);
   },
 
   /**
@@ -103,7 +103,7 @@ export const authApi = {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return MOCK_USERS[0];
     }
-    return backendApi.get<User>('/auth/me');
+    return backendApi.get<User>('/api/v1/auth/me');
   },
 
   /**
@@ -114,7 +114,7 @@ export const authApi = {
       await new Promise((resolve) => setTimeout(resolve, 300));
       return;
     }
-    return backendApi.get<void>('/auth/check');
+    return backendApi.get<void>('/api/v1/auth/check');
   },
 
   /**
@@ -161,7 +161,10 @@ export const authApi = {
 
       // 3. 發送 PUT 請求 (無 ID)
       // 如果此處發生 Failed to fetch，極高機率是後端 CORS 未開放 PUT 方法
-      return await backendApi.put<ProfileResponse>(`/api/v1/profile`, payload);
+      return await backendApi.put<ProfileResponse>(
+        `/api/v1/auth/update-profile`,
+        payload,
+      );
     } catch (error) {
       if (!USE_MOCK) {
         const errMessage = (error as Error)?.message || '';

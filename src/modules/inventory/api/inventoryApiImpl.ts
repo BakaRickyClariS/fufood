@@ -40,7 +40,7 @@ export const createInventoryApi = (): InventoryApi => {
       delete queryParams.groupId;
 
       return aiApi.get<GetInventoryResponse>(
-        `/refrigerators/${refrigeratorId}/inventory`,
+        `/api/v1/refrigerators/${refrigeratorId}/inventory`,
         queryParams,
       );
     },
@@ -56,7 +56,7 @@ export const createInventoryApi = (): InventoryApi => {
         throw new Error('Refrigerator ID is required for getItem');
       }
       return aiApi.get<ApiSuccess<{ item: FoodItem }>>(
-        `/refrigerators/${refrigeratorId}/inventory/${id}`,
+        `/api/v1/refrigerators/${refrigeratorId}/inventory/${id}`,
       );
     },
 
@@ -72,7 +72,7 @@ export const createInventoryApi = (): InventoryApi => {
         throw new Error('Refrigerator ID is required for addItem');
       }
       return aiApi.post<AddFoodItemResponse>(
-        `/refrigerators/${targetId}/inventory`,
+        `/api/v1/refrigerators/${targetId}/inventory`,
         data,
       );
     },
@@ -89,7 +89,7 @@ export const createInventoryApi = (): InventoryApi => {
         throw new Error('Refrigerator ID is required for updateItem');
       }
       return aiApi.put<UpdateFoodItemResponse>(
-        `/refrigerators/${refrigeratorId}/inventory/${id}`,
+        `/api/v1/refrigerators/${refrigeratorId}/inventory/${id}`,
         data,
       );
     },
@@ -105,7 +105,7 @@ export const createInventoryApi = (): InventoryApi => {
         throw new Error('Refrigerator ID is required for deleteItem');
       }
       return aiApi.delete<DeleteFoodItemResponse>(
-        `/refrigerators/${refrigeratorId}/inventory/${id}`,
+        `/api/v1/refrigerators/${refrigeratorId}/inventory/${id}`,
       );
     },
 
@@ -120,7 +120,7 @@ export const createInventoryApi = (): InventoryApi => {
         throw new Error('Refrigerator ID is required for batchDelete');
       }
       return aiApi.delete<ApiSuccess<Record<string, never>>>(
-        `/refrigerators/${refrigeratorId}/inventory/batch`,
+        `/api/v1/refrigerators/${refrigeratorId}/inventory/batch`,
         {
           body: data,
         },
@@ -137,7 +137,7 @@ export const createInventoryApi = (): InventoryApi => {
         throw new Error('Refrigerator ID is required for getSummary');
       }
       return aiApi.get<InventorySummaryResponse>(
-        `/refrigerators/${refrigeratorId}/inventory/summary`,
+        `/api/v1/refrigerators/${refrigeratorId}/inventory/summary`,
       );
     },
 
@@ -151,7 +151,7 @@ export const createInventoryApi = (): InventoryApi => {
         throw new Error('Refrigerator ID is required for getCategories');
       }
       return aiApi.get<InventoryCategoriesResponse>(
-        `/refrigerators/${refrigeratorId}/inventory/categories`,
+        `/api/v1/refrigerators/${refrigeratorId}/inventory/categories`,
       );
     },
 
@@ -167,7 +167,7 @@ export const createInventoryApi = (): InventoryApi => {
         throw new Error('Refrigerator ID is required for getSettings');
       }
       return aiApi.get<InventorySettingsResponse>(
-        `/refrigerators/${refrigeratorId}/inventory/settings`,
+        `/api/v1/refrigerators/${refrigeratorId}/inventory/settings`,
       );
     },
 
@@ -182,7 +182,7 @@ export const createInventoryApi = (): InventoryApi => {
         throw new Error('Refrigerator ID is required for updateSettings');
       }
       return aiApi.put<InventorySettingsResponse>(
-        `/refrigerators/${refrigeratorId}/inventory/settings`,
+        `/api/v1/refrigerators/${refrigeratorId}/inventory/settings`,
         data,
       );
     },
@@ -199,7 +199,7 @@ export const createInventoryApi = (): InventoryApi => {
         throw new Error('Refrigerator ID is required for consumeItem');
       }
       return aiApi.post<ApiSuccess<{ id: string; remainingQuantity: number }>>(
-        `/refrigerators/${refrigeratorId}/inventory/${id}/consume`,
+        `/api/v1/refrigerators/${refrigeratorId}/inventory/${id}/consume`,
         data,
       );
     },

@@ -117,7 +117,7 @@ export const aiRecipeApi = {
     // 先嘗試真實 API
     try {
       const response = await aiApi.get<AISuggestionsResponse>(
-        '/ai/recipe/suggestions',
+        '/api/v1/ai/recipe/suggestions',
       );
       return { ...response, isMock: false };
     } catch (error) {
@@ -149,7 +149,7 @@ export const aiRecipeApi = {
       console.log('[AI API] generateRecipe 請求內容:', request);
 
       const response = await aiApi.post<AIRecipeResponse>(
-        '/ai/recipe',
+        '/api/v1/ai/recipe',
         request,
       );
       return { ...response, isMock: false };
@@ -188,7 +188,7 @@ export const aiRecipeApi = {
    * 取得 SSE Streaming URL
    * 用於 fetch + ReadableStream 處理
    */
-  getStreamUrl: (): string => `${AI_API_BASE}/ai/recipe/stream`,
+  getStreamUrl: (): string => `${AI_API_BASE}/api/v1/ai/recipe/stream`,
 
   /**
    * 檢查是否使用 Mock 模式
@@ -210,7 +210,7 @@ export const aiRecipeApi = {
     }
 
     const response = await aiApi.post<{ data: SavedRecipe }>(
-      '/recipes',
+      '/api/v1/recipes',
       recipe,
     );
     return response.data;
@@ -232,7 +232,7 @@ export const aiRecipeApi = {
       // aiApi.get 第二個參數為 query params
       const response = await aiApi.get<{
         data: { recipes: SavedRecipeListItem[] };
-      }>('/recipes', { userId, refrigeratorId, limit: 50 });
+      }>('/api/v1/recipes', { userId, refrigeratorId, limit: 50 });
       return response.data.recipes || [];
     } catch (error) {
       console.warn('Failed to get saved recipes', error);
@@ -245,7 +245,9 @@ export const aiRecipeApi = {
    * 取得單一已儲存食譜詳情
    */
   getSavedRecipeById: async (id: string): Promise<SavedRecipe> => {
-    const response = await aiApi.get<{ data: SavedRecipe }>(`/recipes/${id}`);
+    const response = await aiApi.get<{ data: SavedRecipe }>(
+      `/api/v1/recipes/${id}`,
+    );
     return response.data;
   },
 
@@ -262,7 +264,7 @@ export const aiRecipeApi = {
     }
 
     const response = await aiApi.put<{ data: SavedRecipe }>(
-      `/recipes/${id}`,
+      `/api/v1/recipes/${id}`,
       data,
     );
     return response.data;

@@ -88,7 +88,7 @@ export const useFCM = ({
       try {
         // 明確傳入 X-User-Id header，覆蓋 aiApi 預設的群組 ID
         await aiApi.post(
-          '/notifications/token',
+          '/api/v1/notifications/token',
           {
             fcmToken,
             platform: detectPlatform(),
@@ -301,7 +301,7 @@ export const useFCM = ({
 
     try {
       // 明確傳入 X-User-Id header，使用真正的用戶 ID
-      await aiApi.delete('/notifications/token', {
+      await aiApi.delete('/api/v1/notifications/token', {
         body: { fcmToken: token },
         headers: {
           'X-User-Id': userId,

@@ -17,7 +17,7 @@ export const aiMediaApi = {
     formData.append('file', file);
 
     const result = await aiApi.post<MediaUploadResponse>(
-      '/media/upload',
+      '/api/v1/media/upload',
       formData,
     );
 
@@ -33,7 +33,7 @@ export const aiMediaApi = {
    * @param imageUrl 已上傳的圖片 URL
    */
   analyzeImageByUrl: (imageUrl: string): Promise<AnalyzeImageResponse> =>
-    aiApi.post<AnalyzeImageResponse>('/ai/analyze-image', { imageUrl }),
+    aiApi.post<AnalyzeImageResponse>('/api/v1/ai/analyze-image', { imageUrl }),
 
   /**
    * AI 食材辨識 - 直接上傳檔案
@@ -43,6 +43,9 @@ export const aiMediaApi = {
     const formData = new FormData();
     formData.append('file', file);
 
-    return aiApi.post<AnalyzeImageResponse>('/ai/analyze-image', formData);
+    return aiApi.post<AnalyzeImageResponse>(
+      '/api/v1/ai/analyze-image',
+      formData,
+    );
   },
 };
