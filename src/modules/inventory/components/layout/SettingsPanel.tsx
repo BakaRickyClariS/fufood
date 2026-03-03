@@ -35,12 +35,12 @@ import {
   selectAllGroups,
   fetchGroups,
 } from '@/modules/groups/store/groupsSlice';
-import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
+import { selectActiveGroupId } from '@/store/slices/activeGroupSlice';
 import type { CategoryInfo } from '@/modules/inventory/types';
 import type { LayoutType } from '@/modules/inventory/types/layoutTypes';
 import { LAYOUT_CONFIGS } from '@/modules/inventory/types/layoutTypes';
+import { identity } from '@/shared/utils/identity';
 import { toast } from 'sonner';
-import { getRefrigeratorId } from '../../utils/getRefrigeratorId';
 import { categories as defaultCategories } from '../../constants/categories';
 
 const CounterItem = ({
@@ -54,7 +54,9 @@ const CounterItem = ({
   onChange: (val: number) => void;
   disabled?: boolean;
 }) => (
-  <div className={`flex items-center justify-between py-4 border-b border-gray-100 last:border-0 ${disabled ? 'opacity-50' : ''}`}>
+  <div
+    className={`flex items-center justify-between py-4 border-b border-gray-100 last:border-0 ${disabled ? 'opacity-50' : ''}`}
+  >
     <span className="text-base font-bold text-neutral-900">{label}</span>
     <div className="flex items-center gap-3">
       <Button
@@ -142,13 +144,14 @@ const SettingsPanel: React.FC = () => {
   // 類別狀態
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [originalSettings, setOriginalSettings] = useState<any>(null);
 
   // 主控庫存提醒設定狀態 -- Renamed to match API semantics
   const [lowStockThreshold, setLowStockThreshold] = useState(2);
   const [expiringSoonDays, setExpiringSoonDays] = useState(3);
 
   // Hooks & Refs
-  const { groupId } = useParams<{ groupId: string }>();
+  const { groupId: urlGroupId } = useParams<{ groupId: string }>();
   const dispatch = useDispatch();
 
   const [savedCategoryOrder, setSavedCategoryOrder] = useState<string[]>([]);
@@ -165,9 +168,10 @@ const SettingsPanel: React.FC = () => {
 
   // Get groups to derive default ID if needed
   const groups = useSelector(selectAllGroups);
-  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
-  // 使用多來源 fallback 機制取得 refrigeratorId
-  const targetGroupId = activeRefrigeratorId || getRefrigeratorId(groupId, groups);
+  const activeGroupId = useSelector(selectActiveGroupId);
+  // 使用多來源 fallback 機制取得 groupId
+  const targetGroupId =
+    activeGroupId || identity.getGroupId(urlGroupId, groups);
   const { user } = useAuth();
   const isOwner = useMemo(() => {
     if (!user || !targetGroupId || groups.length === 0) return false;
@@ -177,10 +181,6 @@ const SettingsPanel: React.FC = () => {
 
   const categoryOrder = useSelector(selectCategoryOrder);
 
-
-
-
-
   // Effect 1: 確保 groups 已載入
   useEffect(() => {
     if (groups.length === 0) {
@@ -189,17 +189,17 @@ const SettingsPanel: React.FC = () => {
     }
   }, [dispatch, groups.length]);
 
-  // Effect 2: 當 groups 已載入或有有效 refrigeratorId 時，載入 settings
+  // Effect 2: 當 groups 已載入或有有效 groupId 時，載入 settings
   useEffect(() => {
-    // 計算 refrigeratorId
+    // 計算 groupId
     const refId = targetGroupId;
 
     // 如果還沒有 refId，不執行
     if (!refId) {
       // groups 還在載入中或真的沒有冰箱
       if (groups.length > 0) {
-        console.error('[Settings] 無法取得 refrigeratorId');
-        toast.error('無法確認冰箱，請重新登入');
+        console.error('[Settings] 無法取得 groupId');
+        toast.error('無法確認群組，請重新登入');
         setIsLoading(false);
       }
       return;
@@ -210,8 +210,11 @@ const SettingsPanel: React.FC = () => {
         setIsLoading(true);
 
         // Fetch settings
-        const settingsResponse = await inventoryApi.getSettings(refId);
-        const settings = settingsResponse.data.settings;
+        const settingsResponse = (await inventoryApi.getSettings(refId)) as any;
+        const settings = settingsResponse.data
+          ? settingsResponse.data.settings
+          : settingsResponse.settings;
+        setOriginalSettings(settings);
 
         // 設定 Layout
         const layoutType = settings.layoutType || 'layout-a';
@@ -234,7 +237,7 @@ const SettingsPanel: React.FC = () => {
         if (settings.categories && settings.categories.length > 0) {
           // 從 settings.categories 轉換為 CategoryInfo 格式
           // 使用預設類別常數補充樣式資訊
-          categoryData = settings.categories.map((cat) => {
+          categoryData = settings.categories.map((cat: any) => {
             const defaults = defaultCategoryMap.get(cat.id);
             return {
               id: cat.id,
@@ -248,8 +251,12 @@ const SettingsPanel: React.FC = () => {
           });
         } else {
           // Fallback 到 categories API
-          const categoriesResponse = await inventoryApi.getCategories(refId);
-          categoryData = categoriesResponse.data.categories;
+          const categoriesResponse = (await inventoryApi.getCategories(
+            refId,
+          )) as any;
+          categoryData = categoriesResponse.data
+            ? categoriesResponse.data.categories
+            : categoriesResponse.categories;
         }
 
         setCategories(categoryData);
@@ -376,6 +383,7 @@ const SettingsPanel: React.FC = () => {
     try {
       await inventoryApi.updateSettings(
         {
+          ...(originalSettings || {}),
           layoutType: selectedLayoutType,
           categoryOrder: categoryOrder,
           lowStockThreshold,
@@ -404,15 +412,15 @@ const SettingsPanel: React.FC = () => {
           />
         </div>
 
-
-
         {!isOwner && (
           <div className="bg-primary-50 text-primary-600 px-4 py-3 rounded-xl text-sm font-medium border border-primary-100">
             權限限制：只有群組擁有者可以修改庫存設定
           </div>
         )}
 
-        <div className={`bg-white rounded-[20px] p-4 space-y-6 ${!isOwner ? 'pointer-events-none opacity-60' : ''}`}>
+        <div
+          className={`bg-white rounded-[20px] p-4 space-y-6 ${!isOwner ? 'pointer-events-none opacity-60' : ''}`}
+        >
           <div ref={layoutContainerRef} className="relative z-10">
             <div className="grid grid-cols-3 gap-3">
               {LAYOUT_CONFIGS.map((config) => {

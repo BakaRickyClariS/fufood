@@ -5,7 +5,7 @@ import {
   selectAllGroups,
   fetchGroups,
 } from '@/modules/groups/store/groupsSlice';
-import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
+import { selectActiveGroupId } from '@/store/slices/activeGroupSlice';
 import CommonItemCard from '@/modules/inventory/components/ui/card/CommonItemCard';
 import { useInventoryExtras } from '@/modules/inventory/hooks';
 import useFadeInAnimation from '@/shared/hooks/useFadeInAnimation';
@@ -25,9 +25,9 @@ const CommonItemsPanel: React.FC<CommonItemsPanelProps> = ({ onOpenItem }) => {
   const { groupId } = useParams<{ groupId: string }>();
   const dispatch = useDispatch();
   const groups = useSelector(selectAllGroups);
-  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const activeGroupId = useSelector(selectActiveGroupId);
   // Prioritize activeId from Redux, then URL param, then fallback
-  const targetGroupId = activeRefrigeratorId || groupId || groups[0]?.id;
+  const targetGroupId = activeGroupId || groupId || groups[0]?.id;
 
   // 取得設定資料以獲取分類中文名稱
   const { data: settingsData } = useInventorySettingsQuery(targetGroupId);
@@ -38,8 +38,11 @@ const CommonItemsPanel: React.FC<CommonItemsPanelProps> = ({ onOpenItem }) => {
     defaultCategories.forEach((c) => {
       map[c.id] = c.title;
     });
-    const categories = settingsData?.data?.settings?.categories || [];
-    categories.forEach((cat) => {
+    const categories =
+      (settingsData as any)?.data?.settings?.categories ||
+      (settingsData as any)?.settings?.categories ||
+      [];
+    categories.forEach((cat: any) => {
       map[cat.id] = cat.title;
     });
     return map;

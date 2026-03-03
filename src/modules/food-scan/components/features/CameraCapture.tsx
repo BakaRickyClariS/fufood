@@ -144,15 +144,18 @@ export const CameraCapture: React.FC = () => {
     if (img) {
       setScanError(null); // Clear previous error
       try {
-        const result = await uploadImage(img);
-        if (result && result.success) {
+        const result = (await uploadImage(img)) as any;
+
+        // 考慮到 client.ts 可能會自動解包 { success: true, data: {...} } 變成只剩 data
+        // 如果 API 沒有明確回傳 success: false，就當作成功
+        if (result && result.success !== false) {
           toast.success('掃描成功！');
 
-          // Check if it's a MultipleScanResult (has ingredients array)
-          // We cast to any to check for property existence easily or use type guard
-          const multiResult = result as any;
-          if (multiResult.data && Array.isArray(multiResult.data.ingredients)) {
-            const ingredients = multiResult.data.ingredients;
+          // 判斷解包後的資料結構
+          const responseData = result.data ? result.data : result;
+
+          if (responseData && Array.isArray(responseData.ingredients)) {
+            const ingredients = responseData.ingredients;
             // Dispatch to batch store
             const batchItems = ingredients.map((item: any) => ({
               id: crypto.randomUUID(), // or some unique id
@@ -170,7 +173,7 @@ export const CameraCapture: React.FC = () => {
           } else {
             // Legacy / Single item fallback
             navigate('/upload/scan-result', {
-              state: { result: result.data, imageUrl: img },
+              state: { result: responseData, imageUrl: img },
             });
           }
         } else {

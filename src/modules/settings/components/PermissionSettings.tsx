@@ -1,5 +1,5 @@
 import { Switch } from '@/shared/components/ui/switch';
-import { useFCMContext } from '@/shared/providers/FCMProvider';
+import { useFCMContext } from '@/shared/hooks/useFCMContext';
 import { useCameraPermission } from '@/hooks/useCameraPermission';
 
 const PermissionSettings = () => {
@@ -47,7 +47,9 @@ const PermissionSettings = () => {
     <div className="bg-white rounded-3xl p-6 shadow-sm">
       <div className="flex items-center gap-2 mb-6">
         <div className="w-1 h-4 bg-primary-500 rounded-full" />
-        <span className="text-base font-semibold text-neutral-800">權限設定</span>
+        <span className="text-base font-semibold text-neutral-800">
+          權限設定
+        </span>
       </div>
 
       <div className="space-y-6">

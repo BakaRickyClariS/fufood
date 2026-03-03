@@ -1,11 +1,11 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useFCM } from '@/hooks/useFCM';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useNotificationPolling } from '@/modules/notifications/hooks';
 import { invalidateQueriesByNotification } from '@/modules/notifications/utils/invalidation';
 
-type FCMContextValue = {
+export type FCMContextValue = {
   /** FCM Token */
   token: string | null;
   /** 通知權限狀態 */
@@ -24,7 +24,7 @@ type FCMContextValue = {
   isRegistered: boolean;
 };
 
-const FCMContext = createContext<FCMContextValue | null>(null);
+export const FCMContext = createContext<FCMContextValue | null>(null);
 
 type FCMProviderProps = {
   children: ReactNode;
@@ -89,28 +89,6 @@ export const FCMProvider = ({
   });
 
   return <FCMContext.Provider value={fcm}>{children}</FCMContext.Provider>;
-};
-
-/**
- * 取得 FCM 推播通知的狀態和方法
- *
- * @example
- * ```tsx
- * const { permission, requestPermission, isLoading } = useFCMContext();
- *
- * if (permission === 'default') {
- *   return <button onClick={requestPermission}>開啟通知</button>;
- * }
- * ```
- */
-export const useFCMContext = (): FCMContextValue => {
-  const context = useContext(FCMContext);
-
-  if (!context) {
-    throw new Error('useFCMContext must be used within a FCMProvider');
-  }
-
-  return context;
 };
 
 export default FCMProvider;

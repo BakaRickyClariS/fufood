@@ -18,7 +18,6 @@ export type ApiSuccess<T> = {
 // 取得庫存請求
 export type GetInventoryRequest = {
   groupId?: string;
-  refrigeratorId?: string;
   category?: FoodCategory;
   status?: InventoryStatus;
   include?: string; // e.g., "summary,stats"
@@ -114,7 +113,7 @@ export type InventorySettingsResponse = ApiSuccess<{
 
 export interface InventoryTransaction {
   id: UUID;
-  refrigeratorId: UUID;
+  groupId: UUID;
   committedAt: ISOTimestamp | null;
   items: InventoryTransactionItem[];
   createdAt: ISOTimestamp;

@@ -5,7 +5,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { useSharedListItems } from '@/modules/planning/hooks/useSharedListItems';
 import { mediaApi } from '@/modules/media/api/mediaApi';
-import { useNotificationMetadata } from '@/modules/notifications/hooks/useNotificationMetadata';
+
 import type { ShoppingItem, SharedListItem } from '@/modules/planning/types';
 
 const UNITS = [
@@ -121,17 +121,11 @@ export const PostFormFeature = ({
   initialData,
   initialItems,
   onClose,
-  refrigeratorId,
-  listName,
-}: PostFormProps & { refrigeratorId?: string; listName?: string }) => {
+}: PostFormProps) => {
   const { createItems, updateItem, deleteItem } = useSharedListItems(listId);
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // 取得通知 metadata（群組名稱和操作者資訊）
-  const { groupName, actorName, actorId } =
-    useNotificationMetadata(refrigeratorId);
 
   // Note: content is removed as Item API does not support it
   const [items, setItems] = useState<ShoppingItem[]>([]);
@@ -393,32 +387,7 @@ export const PostFormFeature = ({
 
         await Promise.all(promises);
 
-        // 發送更新通知（俏皮風格，統一 metadata）
-        try {
-          const { notificationsApiImpl } = await import(
-            '@/modules/notifications/api/notificationsApiImpl'
-          );
-          const displayListName = listName || '採買清單';
-          await notificationsApiImpl.sendNotification({
-            groupId: refrigeratorId || listId,
-            title: `「${displayListName}」清單內容變更！`,
-            body: `採買小隊報告！「${displayListName}」已有異動，請各位確認！`,
-            type: 'shopping',
-            subType: 'list',
-            groupName,
-            actorName,
-            actorId,
-            group_name: groupName,
-            actor_name: actorName,
-            actor_id: actorId,
-            action: {
-              type: 'shopping-list',
-              payload: { listId },
-            },
-          });
-        } catch (nErr) {
-          console.warn('通知失敗', nErr);
-        }
+        // 通知由後端在 API 完成時自動觸發，前端不再手動發送
 
         toast.dismiss(toastId);
         toast.success('更新成功');
@@ -432,43 +401,7 @@ export const PostFormFeature = ({
         }));
         await createItems(createInputs);
 
-        // 發送新增項目的通知（俏皮風格，帶入清單名稱）
-        try {
-          const { notificationsApiImpl } = await import(
-            '@/modules/notifications/api/notificationsApiImpl'
-          );
-          const displayListName = listName || '採買清單';
-          const firstItem = processedItems[0].name;
-          const count = processedItems.length;
-          const title =
-            count > 1
-              ? `${firstItem} 等 ${count} 項商品加入「${displayListName}」！`
-              : `${firstItem} 加入「${displayListName}」！`;
-          const body =
-            count > 1
-              ? `採買小隊報告！${count} 項新任務已登錄至「${displayListName}」！`
-              : `採買小隊報告！${firstItem} 已加入「${displayListName}」，收到請回報！`;
-
-          await notificationsApiImpl.sendNotification({
-            groupId: refrigeratorId || listId,
-            title,
-            body,
-            type: 'shopping',
-            subType: 'list',
-            groupName,
-            actorName,
-            actorId,
-            group_name: groupName,
-            actor_name: actorName,
-            actor_id: actorId,
-            action: {
-              type: 'shopping-list',
-              payload: { listId },
-            },
-          });
-        } catch (nErr) {
-          console.warn('通知失敗', nErr);
-        }
+        // 通知由後端在 API 完成時自動觸發，前端不再手動發送
 
         toast.dismiss(toastId);
         toast.success('新增成功');

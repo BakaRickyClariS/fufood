@@ -44,7 +44,7 @@ export const useNotificationPolling = ({
 
   // 初始化：記錄最新的通知 ID 與時間
   useEffect(() => {
-    const latestItem = data?.data?.items?.[0];
+    const latestItem = data?.items?.[0];
     if (latestItem && !lastNotificationIdRef.current) {
       lastNotificationIdRef.current = latestItem.id;
       lastNotificationDateRef.current = new Date(latestItem.createdAt);
@@ -53,7 +53,7 @@ export const useNotificationPolling = ({
         date: latestItem.createdAt,
       });
     }
-  }, [data?.data?.items]);
+  }, [data?.items]);
 
   const refetchNotifications = useCallback(async () => {
     // 刷新通知列表
@@ -71,9 +71,9 @@ export const useNotificationPolling = ({
       const payload = action.payload;
       switch (action.type) {
         case 'inventory':
-          // 跳轉到庫存頁，如果有 refrigeratorId 可以帶參數
-          if (payload?.refrigeratorId) {
-            return `/inventory?fridgeId=${payload.refrigeratorId}`;
+          // 跳轉到庫存頁，如果有 groupId 可以帶參數
+          if (payload?.groupId) {
+            return `/inventory/${payload.groupId}`;
           }
           return '/inventory';
         case 'shopping-list':
@@ -103,7 +103,7 @@ export const useNotificationPolling = ({
 
   // 檢查是否有新通知並顯示 Toast
   const checkAndShowNewNotifications = useCallback(() => {
-    const items = data?.data?.items;
+    const items = data?.items;
     if (!items || items.length === 0) return;
 
     const latestItem = items[0];
@@ -172,14 +172,14 @@ export const useNotificationPolling = ({
     // 更新最後的通知 ID 與時間
     lastNotificationIdRef.current = latestId;
     lastNotificationDateRef.current = latestDate;
-  }, [data?.data?.items, currentUserId, user, getNavigationPath, navigate]);
+  }, [data?.items, currentUserId, user, getNavigationPath, navigate]);
 
   // 當資料更新時檢查新通知
   useEffect(() => {
-    if (enabled && data?.data?.items) {
+    if (enabled && data?.items) {
       checkAndShowNewNotifications();
     }
-  }, [enabled, data?.data?.items, checkAndShowNewNotifications]);
+  }, [enabled, data?.items, checkAndShowNewNotifications]);
 
   // 定時輪詢
   useEffect(() => {

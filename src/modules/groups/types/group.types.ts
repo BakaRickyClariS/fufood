@@ -28,7 +28,7 @@ export type Group = {
 };
 
 /**
- * 群組建立表單型別（對應後端 POST /api/v1/refrigerators）
+ * 群組建立表單型別（對應後端 POST /api/v2/groups）
  */
 export type CreateGroupForm = {
   name: string;
@@ -36,7 +36,7 @@ export type CreateGroupForm = {
 };
 
 /**
- * 群組更新表單型別（對應後端 PUT /api/v1/refrigerators/:id）
+ * 群組更新表單型別（對應後端 PUT /api/v2/groups/:id）
  */
 export type UpdateGroupForm = {
   name?: string;
@@ -73,13 +73,13 @@ export type InvitationCreator = {
 };
 
 /**
- * 邀請 API 回應型別（對應後端 GET /api/v1/invitations/{token}）
+ * 邀請 API 回應型別（對應後端 GET /api/v2/invitations/{token} 或類似機制）
  */
 export type InvitationResponse = {
   id: string;
   token: string;
-  refrigeratorId: string;
-  refrigeratorName?: string;
+  groupId: string;
+  groupName?: string;
   invitedById: string;
   inviterName?: string;
   expiresAt: string;

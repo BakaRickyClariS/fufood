@@ -1,16 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSelector } from 'react-redux';
 import type {
   SharedList,
   CreateSharedListInput,
   SharedListStatus,
 } from '../types';
 import { sharedListApi } from '../services/api/sharedListApi';
-import { selectAllGroups } from '@/modules/groups/store/groupsSlice';
-import { useAuth } from '@/modules/auth';
 
 export const useSharedLists = (
-  refrigeratorId: string,
+  groupId: string,
   year?: number,
   month?: number,
 ) => {
@@ -18,8 +15,6 @@ export const useSharedLists = (
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasLoadedRef = useRef(false);
-  const groups = useSelector(selectAllGroups);
-  const { user } = useAuth();
 
   // Status 計算邏輯
   const computeStatus = (startsAt: string): SharedListStatus => {
@@ -34,7 +29,7 @@ export const useSharedLists = (
   };
 
   const fetchLists = useCallback(async () => {
-    if (!refrigeratorId) return;
+    if (!groupId) return;
 
     // 只有在首次載入時才顯示 loading 狀態，避免返回頁面時閃爍
     if (!hasLoadedRef.current) {
@@ -42,7 +37,7 @@ export const useSharedLists = (
     }
     setError(null);
     try {
-      const data = await sharedListApi.getSharedLists(refrigeratorId);
+      const data = await sharedListApi.getSharedLists(groupId);
 
       // 前端加工 Status
       const processedLists = data.map((list) => ({
@@ -67,52 +62,19 @@ export const useSharedLists = (
     } finally {
       setIsLoading(false);
     }
-  }, [refrigeratorId, year, month]);
+  }, [groupId, year, month]);
 
   const createList = async (input: CreateSharedListInput) => {
-    if (!refrigeratorId) throw new Error('No refrigerator ID provided');
+    if (!groupId) throw new Error('No group ID provided');
     setIsLoading(true);
     try {
-      const newList = await sharedListApi.createSharedList(
-        refrigeratorId,
-        input,
-      );
+      const newList = await sharedListApi.createSharedList(groupId, input);
       const processedList = {
         ...newList,
         status: computeStatus(newList.startsAt),
       };
 
-      // 發送通知給群組成員
-      try {
-        // 取得群組名稱和使用者名稱
-        const currentGroup = groups.find((g) => g.id === refrigeratorId);
-        const groupName = currentGroup?.name || '我的冰箱';
-        const actorName = user?.displayName || user?.email || '使用者';
-
-        const { notificationsApiImpl } = await import(
-          '@/modules/notifications/api/notificationsApiImpl'
-        );
-        await notificationsApiImpl.sendNotification({
-          groupId: refrigeratorId,
-          title: `新採購清單「${input.title}」出爐！`,
-          body: '採買小隊報告！新清單已建立，快來看看需要買什麼！',
-          type: 'shopping',
-          subType: 'list', // 新增 subType
-          groupName,
-          actorName,
-          group_name: groupName,
-          actor_name: actorName,
-          action: {
-            type: 'shopping-list',
-            payload: {
-              refrigeratorId: refrigeratorId,
-              listId: newList.id,
-            },
-          },
-        });
-      } catch (notifyError) {
-        console.warn('通知發送失敗:', notifyError);
-      }
+      // 通知由後端在 API 完成時自動觸發，前端不再手動發送
 
       setLists((prev) => [processedList, ...prev]);
       return processedList;

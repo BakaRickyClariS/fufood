@@ -39,7 +39,7 @@ export type NotificationActionType =
 export type NotificationAction = {
   type: NotificationActionType;
   payload?: {
-    refrigeratorId?: string;
+    groupId?: string;
     itemId?: string;
     listId?: string;
     recipeId?: string;

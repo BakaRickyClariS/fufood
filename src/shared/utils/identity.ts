@@ -16,7 +16,7 @@
  * const userId = identity.getUserId();
  *
  * // 取得當前冰箱 ID
- * const refId = identity.getRefrigeratorId();
+ * const refId = identity.getGroupId();
  *
  * // 儲存使用者資料
  * identity.setUser(userData);
@@ -29,9 +29,10 @@
 const STORAGE_KEYS = {
   /** 使用者資料物件 */
   USER: 'user',
-  // AUTH_TOKEN: 'auth_token', // Removed: Using HttpOnly Cookie
-  /** 當前活躍的冰箱/群組 ID */
-  REFRIGERATOR_ID: 'activeRefrigeratorId',
+  /** JWT 認證令牌 */
+  AUTH_TOKEN: 'auth_token',
+  /** 當前活躍的群組 ID */
+  GROUP_ID: 'activeGroupId',
 } as const;
 
 // ============================================================
@@ -60,19 +61,19 @@ export const identity = {
   /**
    * 取得使用者 ID (用於 X-User-Id Header)
    *
-   * 重要：此處的 "User ID" 實際上是 **群組 ID** (activeRefrigeratorId)
+   * 重要：此處的 "User ID" 實際上是 **群組 ID** (activeGroupId)
    * 這是因為 AI Backend 使用 X-User-Id 來識別當前操作的冰箱/群組
    *
-   * @returns activeRefrigeratorId (群組 ID)
+   * @returns activeGroupId (群組 ID)
    */
   getUserId: (): string | null => {
     try {
-      const refId = localStorage.getItem(STORAGE_KEYS.REFRIGERATOR_ID);
-      if (refId) {
-        return refId;
+      const groupId = localStorage.getItem(STORAGE_KEYS.GROUP_ID);
+      if (groupId) {
+        return groupId;
       }
 
-      // Fallback: 如果沒有 activeRefrigeratorId，嘗試使用 User ID
+      // Fallback: 如果沒有 activeGroupId，嘗試使用 User ID
       const userStr = localStorage.getItem(STORAGE_KEYS.USER);
       if (userStr) {
         const user = JSON.parse(userStr);
@@ -81,7 +82,7 @@ export const identity = {
         }
       }
     } catch (e) {
-      console.warn('[Identity] Failed to get activeRefrigeratorId', e);
+      console.warn('[Identity] Failed to get activeGroupId', e);
     }
     return null;
   },
@@ -150,10 +151,9 @@ export const identity = {
       if (loggedOut === 'true') return false;
 
       const hasUserCache = localStorage.getItem(STORAGE_KEYS.USER) !== null;
-      const hasRefrigeratorId =
-        localStorage.getItem(STORAGE_KEYS.REFRIGERATOR_ID) !== null;
+      const hasGroupId = localStorage.getItem(STORAGE_KEYS.GROUP_ID) !== null;
 
-      return hasUserCache || hasRefrigeratorId;
+      return hasUserCache || hasGroupId;
     } catch (e) {
       console.warn('[Identity] Failed to check auth state', e);
       return false;
@@ -187,13 +187,45 @@ export const identity = {
   },
 
   // ----------------------------------------------------------
-  // Auth Token 相關 (已移除：改用 HttpOnly Cookie)
+  // Auth Token 相關
   // ----------------------------------------------------------
 
-  // getAuthToken, setAuthToken, clearAuthToken removed
+  /**
+   * 取得認證令牌
+   */
+  getAuthToken: (): string | null => {
+    try {
+      return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    } catch (e) {
+      console.warn('[Identity] Failed to get auth token', e);
+      return null;
+    }
+  },
+
+  /**
+   * 儲存認證令牌
+   */
+  setAuthToken: (token: string): void => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+    } catch (e) {
+      console.error('[Identity] Failed to save auth token', e);
+    }
+  },
+
+  /**
+   * 清除認證令牌
+   */
+  clearAuthToken: (): void => {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    } catch (e) {
+      console.error('[Identity] Failed to clear auth token', e);
+    }
+  },
 
   // ----------------------------------------------------------
-  // Refrigerator ID 相關
+  // Group ID 相關
   // ----------------------------------------------------------
 
   /**
@@ -204,18 +236,18 @@ export const identity = {
    * 3. localStorage 快取
    * 4. 使用者 ID 作為 fallback（個人冰箱）
    */
-  getRefrigeratorId: (
+  getGroupId: (
     urlGroupId?: string,
     storeGroups?: { id: string }[],
   ): string | null => {
     // 1. URL 參數優先
     if (urlGroupId) {
-      identity.setRefrigeratorId(urlGroupId);
+      identity.setGroupId(urlGroupId);
       return urlGroupId;
     }
 
     // 2. 從快取取得
-    const cached = identity.getCachedRefrigeratorId();
+    const cached = identity.getCachedGroupId();
 
     // 3. Redux store 驗證與 Fallback
     if (storeGroups && storeGroups.length > 0) {
@@ -226,7 +258,7 @@ export const identity = {
 
       // 否則使用列表第一個（並更新快取）
       const id = storeGroups[0].id;
-      identity.setRefrigeratorId(id);
+      identity.setGroupId(id);
       return id;
     }
 
@@ -236,7 +268,7 @@ export const identity = {
     // 5. userId fallback（已移除）
     // const userId = identity.getUserId();
     // if (userId) {
-    //   console.warn('[Identity] Using userId as refrigeratorId fallback');
+    //   console.warn('[Identity] Using userId as groupId fallback');
     //   return userId;
     // }
 
@@ -244,36 +276,36 @@ export const identity = {
   },
 
   /**
-   * 儲存當前冰箱/群組 ID
+   * 儲存當前群組 ID
    */
-  setRefrigeratorId: (id: string): void => {
+  setGroupId: (id: string): void => {
     try {
-      localStorage.setItem(STORAGE_KEYS.REFRIGERATOR_ID, id);
+      localStorage.setItem(STORAGE_KEYS.GROUP_ID, id);
     } catch (e) {
-      console.warn('[Identity] Failed to save refrigerator ID', e);
+      console.warn('[Identity] Failed to save group ID', e);
     }
   },
 
   /**
-   * 取得快取的冰箱/群組 ID
+   * 取得快取的群組 ID
    */
-  getCachedRefrigeratorId: (): string | null => {
+  getCachedGroupId: (): string | null => {
     try {
-      return localStorage.getItem(STORAGE_KEYS.REFRIGERATOR_ID);
+      return localStorage.getItem(STORAGE_KEYS.GROUP_ID);
     } catch (e) {
-      console.warn('[Identity] Failed to get cached refrigerator ID', e);
+      console.warn('[Identity] Failed to get cached group ID', e);
       return null;
     }
   },
 
   /**
-   * 清除冰箱/群組 ID 快取
+   * 清除群組 ID 快取
    */
-  clearRefrigeratorId: (): void => {
+  clearGroupId: (): void => {
     try {
-      localStorage.removeItem(STORAGE_KEYS.REFRIGERATOR_ID);
+      localStorage.removeItem(STORAGE_KEYS.GROUP_ID);
     } catch (e) {
-      console.warn('[Identity] Failed to clear refrigerator ID', e);
+      console.warn('[Identity] Failed to clear group ID', e);
     }
   },
 
@@ -286,8 +318,8 @@ export const identity = {
    */
   clearAll: (): void => {
     identity.clearUser();
-    // identity.clearAuthToken(); // Removed
-    identity.clearRefrigeratorId();
+    identity.clearAuthToken();
+    identity.clearGroupId();
 
     // 清除舊版可能遺留的 key
     localStorage.removeItem('cachedUserId');
@@ -303,13 +335,13 @@ export const identity = {
     hasUser: boolean;
     userId: string | null;
     hasToken: boolean;
-    refrigeratorId: string | null;
+    groupId: string | null;
   } => {
     return {
       hasUser: identity.hasUser(),
       userId: identity.getUserId(),
-      hasToken: false, // !!identity.getAuthToken(),
-      refrigeratorId: identity.getCachedRefrigeratorId(),
+      hasToken: !!identity.getAuthToken(),
+      groupId: identity.getCachedGroupId(),
     };
   },
 };

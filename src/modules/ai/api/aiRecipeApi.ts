@@ -5,6 +5,7 @@
  * 支援 Mock 模式（VITE_USE_MOCK_API=true）
  */
 import { aiApi } from '@/api/client';
+import { ENDPOINTS } from '@/api/endpoints';
 import { identity } from '@/shared/utils/identity';
 import type {
   AIRecipeRequest,
@@ -16,7 +17,7 @@ import type {
   SaveRecipeInput,
 } from '../types';
 
-const AI_API_BASE = import.meta.env.VITE_AI_API_BASE_URL || '';
+const AI_API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_API === 'true';
 
 // ============================================================
@@ -117,7 +118,7 @@ export const aiRecipeApi = {
     // 先嘗試真實 API
     try {
       const response = await aiApi.get<AISuggestionsResponse>(
-        '/ai/recipe/suggestions',
+        ENDPOINTS.AI.RECIPE_SUGGESTIONS,
       );
       return { ...response, isMock: false };
     } catch (error) {
@@ -149,7 +150,7 @@ export const aiRecipeApi = {
       console.log('[AI API] generateRecipe 請求內容:', request);
 
       const response = await aiApi.post<AIRecipeResponse>(
-        '/ai/recipe',
+        ENDPOINTS.AI.RECIPE,
         request,
       );
       return { ...response, isMock: false };
@@ -168,19 +169,15 @@ export const aiRecipeApi = {
       await new Promise((resolve) => setTimeout(resolve, 800));
       // 真實 API 失敗，回傳 Mock 資料
       return {
-        status: true,
-        message: 'Mock fallback - 真實 API 暫時無法使用',
-        data: {
-          greeting: `根據您「${request.prompt}」的需求，為您推薦以下料理：`,
-          recipes: MOCK_RECIPES,
-          aiMetadata: {
-            generatedAt: new Date().toISOString(),
-            model: 'mock-model (fallback)',
-          },
-          remainingQueries: 5,
+        greeting: `根據您「${request.prompt}」的需求，為您推薦以下料理：`,
+        recipes: MOCK_RECIPES,
+        aiMetadata: {
+          generatedAt: new Date().toISOString(),
+          model: 'mock-model (fallback)',
         },
+        remainingQueries: 5,
         isMock: true,
-      };
+      } as unknown as AIRecipeResponseWithMock;
     }
   },
 
@@ -188,7 +185,7 @@ export const aiRecipeApi = {
    * 取得 SSE Streaming URL
    * 用於 fetch + ReadableStream 處理
    */
-  getStreamUrl: (): string => `${AI_API_BASE}/ai/recipe/stream`,
+  getStreamUrl: (): string => `${AI_API_BASE}${ENDPOINTS.AI.RECIPE_STREAM}`,
 
   /**
    * 檢查是否使用 Mock 模式
@@ -209,31 +206,38 @@ export const aiRecipeApi = {
       throw new Error('User ID not found. Please login first.');
     }
 
-    const response = await aiApi.post<{ data: SavedRecipe }>(
-      '/recipes',
-      recipe,
-    );
-    return response.data;
+    const response = await aiApi.post<any>(ENDPOINTS.RECIPES.BASE, recipe);
+    // aiApi auto-unwraps V2 responses, so response might already be SavedRecipe
+    return response.data || response;
   },
 
   /**
    * 取得使用者已儲存的食譜列表
    */
-  getSavedRecipes: async (
-    refrigeratorId?: string,
-  ): Promise<SavedRecipeListItem[]> => {
-    const userId = identity.getUserId();
-    if (!userId) {
-      console.warn('No user ID, returning empty list');
+  getSavedRecipes: async (groupId?: string): Promise<SavedRecipeListItem[]> => {
+    // Only check if user is logged in via token or identity cache
+    if (!identity.getAuthToken() && !identity.getUserId()) {
+      console.warn('No user identity, returning empty list');
       return [];
     }
 
     try {
-      // aiApi.get 第二個參數為 query params
-      const response = await aiApi.get<{
-        data: { recipes: SavedRecipeListItem[] };
-      }>('/recipes', { userId, refrigeratorId, limit: 50 });
-      return response.data.recipes || [];
+      // Do not pass userId here, the backend will resolve it from the JWT.
+      const response = await aiApi.get<any>(ENDPOINTS.RECIPES.BASE, {
+        groupId, // Pass groupId just in case backend starts supporting group filtering
+        limit: 50,
+      });
+      // Client auto-unwraps, so response could be an array, { recipes: [...] }, or { data: { recipes: [...] } }
+      // Check if it's already unwrapped to pagination format
+      if (response.recipes && Array.isArray(response.recipes)) {
+        return response.recipes;
+      }
+
+      const recipes =
+        response.data?.recipes ||
+        (Array.isArray(response.data) ? response.data : null) ||
+        (Array.isArray(response) ? response : []);
+      return recipes;
     } catch (error) {
       console.warn('Failed to get saved recipes', error);
       // 保持原有行為，失敗時回傳空陣列 (例如 404)
@@ -245,8 +249,8 @@ export const aiRecipeApi = {
    * 取得單一已儲存食譜詳情
    */
   getSavedRecipeById: async (id: string): Promise<SavedRecipe> => {
-    const response = await aiApi.get<{ data: SavedRecipe }>(`/recipes/${id}`);
-    return response.data;
+    const response = await aiApi.get<any>(ENDPOINTS.RECIPES.BY_ID(id));
+    return response.data || response;
   },
 
   /**
@@ -261,11 +265,15 @@ export const aiRecipeApi = {
       throw new Error('User ID not found. Please login first.');
     }
 
-    const response = await aiApi.put<{ data: SavedRecipe }>(
-      `/recipes/${id}`,
-      data,
-    );
-    return response.data;
+    const response = await aiApi.put<any>(ENDPOINTS.RECIPES.BY_ID(id), data);
+    return response.data || response;
+  },
+
+  /**
+   * 刪除已儲存的食譜
+   */
+  deleteSavedRecipe: async (id: string): Promise<void> => {
+    return aiApi.delete<void>(ENDPOINTS.RECIPES.BY_ID(id));
   },
 
   /**
@@ -276,10 +284,10 @@ export const aiRecipeApi = {
    * 2. 檢查是否已有食譜（避免重複儲存）
    * 3. 若無食譜，批次儲存預設食譜
    *
-   * @param refrigeratorId - 可選的冰箱 ID
+   * @param groupId - 可選的群組 ID
    * @returns 是否成功儲存預設食譜
    */
-  seedDefaultRecipes: async (refrigeratorId?: string): Promise<boolean> => {
+  seedDefaultRecipes: async (groupId?: string): Promise<boolean> => {
     const userId = identity.getUserId();
     if (!userId) {
       console.log('[AI API] 未登入，跳過預設食譜 seed');
@@ -295,7 +303,7 @@ export const aiRecipeApi = {
         DEFAULT_RECIPES.map((recipe) =>
           aiRecipeApi.saveRecipe({
             ...recipe,
-            refrigeratorId,
+            groupId,
           }),
         ),
       );

@@ -30,12 +30,12 @@ const categoryItems: Category<RecipeCategory>[] = RECIPE_CATEGORIES.map(
 
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
+import { selectActiveGroupId } from '@/store/slices/activeGroupSlice';
 
 export const RecipeList = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const activeGroupId = useSelector(selectActiveGroupId);
   const { openRecipeModal } = useRecipeModal();
 
   // 優先從 location.state 取得完整食譜物件 (AI 生成/通知點擊)
@@ -51,7 +51,7 @@ export const RecipeList = () => {
 
   const { recipes, isLoading, error } = useRecipes(
     selectedCategory,
-    activeRefrigeratorId || undefined,
+    activeGroupId || undefined,
   );
 
   // Handle recipe selection (from State or URL)

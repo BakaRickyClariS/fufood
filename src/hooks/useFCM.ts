@@ -2,6 +2,7 @@
 import { getToken } from 'firebase/messaging';
 import { toast } from 'sonner';
 import { aiApi } from '@/api/client';
+import { ENDPOINTS } from '@/api/endpoints';
 import { messaging, onMessageListener } from '@/lib/firebase';
 
 // Firebase 相關
@@ -86,16 +87,15 @@ export const useFCM = ({
       }
 
       try {
-        // 明確傳入 X-User-Id header，覆蓋 aiApi 預設的群組 ID
         await aiApi.post(
-          '/notifications/token',
+          ENDPOINTS.NOTIFICATIONS.TOKEN,
           {
             fcmToken,
             platform: detectPlatform(),
           },
           {
             headers: {
-              'X-User-Id': userId, // 使用真正的用戶 ID
+              'Content-Type': 'application/json',
             },
           },
         );
@@ -300,11 +300,10 @@ export const useFCM = ({
     }
 
     try {
-      // 明確傳入 X-User-Id header，使用真正的用戶 ID
-      await aiApi.delete('/notifications/token', {
+      await aiApi.delete(ENDPOINTS.NOTIFICATIONS.TOKEN, {
         body: { fcmToken: token },
         headers: {
-          'X-User-Id': userId,
+          'Content-Type': 'application/json',
         },
       });
 

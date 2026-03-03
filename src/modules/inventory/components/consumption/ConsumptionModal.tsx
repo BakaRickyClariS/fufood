@@ -21,7 +21,6 @@ import {
   selectConsumptionStep,
   selectConsumptionContextId,
 } from '@/modules/inventory/store/consumptionSlice';
-import { useNotificationMetadata } from '@/modules/notifications/hooks/useNotificationMetadata';
 
 // Helper type extending ConsumptionItem with reason info
 type ItemWithReason = ConsumptionItem & {
@@ -54,7 +53,7 @@ type ConsumptionModalProps = {
   // Callbacks to control parent visibility/animation
   onHideParent?: () => void;
   onShowParent?: () => void;
-  refrigeratorId?: string;
+  groupId?: string;
 };
 
 export const ConsumptionModal = ({
@@ -69,7 +68,7 @@ export const ConsumptionModal = ({
   defaultReasons = [],
   onHideParent,
   onShowParent,
-  refrigeratorId,
+  groupId,
 }: ConsumptionModalProps) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -94,8 +93,6 @@ export const ConsumptionModal = ({
   const consumptionItems = useSelector(selectConsumptionItems);
   const consumptionStep = useSelector(selectConsumptionStep);
   const consumptionContextId = useSelector(selectConsumptionContextId);
-  const { groupName, actorName, actorId } =
-    useNotificationMetadata(refrigeratorId);
 
   // Skip animation flag (local state based on restoration)
   const [skipAnimation, setSkipAnimation] = useState(false);
@@ -261,54 +258,12 @@ export const ConsumptionModal = ({
               reasons: reasons,
               customReason: customReason,
             },
-            refrigeratorId,
+            groupId,
           });
         }),
       );
 
-      // 發送推播通知（使用 groupId 發送給群組所有成員，與清單建立一致）
-      try {
-        if (itemsToConsume.length > 0 && refrigeratorId) {
-          const firstItemName = itemsToConsume[0].ingredientName || '未知食材';
-          const otherCount = itemsToConsume.length - 1;
-
-          console.log(
-            `[ConsumptionModal] Sending notification to group: ${refrigeratorId}`,
-            { groupName, actorName, actorId },
-          );
-
-          const { notificationsApiImpl } = await import(
-            '@/modules/notifications/api/notificationsApiImpl'
-          );
-          await notificationsApiImpl.sendNotification({
-            groupId: refrigeratorId, // 使用 groupId 發送給群組所有成員
-            type: 'inventory',
-            subType: 'consume',
-            title:
-              otherCount > 0
-                ? `${firstItemName} 等 ${itemsToConsume.length} 項食材已出動！`
-                : `${firstItemName} 完成任務，光榮退役！`,
-            body:
-              otherCount > 0
-                ? `冰箱小隊報告！${itemsToConsume.length} 項食材已順利上桌，任務達成！`
-                : `冰箱小隊報告！${firstItemName} 已順利上桌，美味任務達成！`,
-            groupName,
-            actorName,
-            actorId,
-            group_name: groupName,
-            actor_name: actorName,
-            actor_id: actorId,
-            action: {
-              type: 'inventory',
-              payload: {
-                refrigeratorId: refrigeratorId,
-              },
-            },
-          });
-        }
-      } catch (notifyError) {
-        console.error('Notification error:', notifyError);
-      }
+      // 通知由後端在 API 完成時自動觸發，前端不再手動發送
 
       // Mutate will trigger invalidation automatically
       return true;

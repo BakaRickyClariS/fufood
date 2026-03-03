@@ -19,14 +19,14 @@ export const inventoryKeys = {
   list: (params?: GetInventoryRequest) =>
     [...inventoryKeys.lists(), params] as const,
   details: () => [...inventoryKeys.all, 'detail'] as const,
-  detail: (id: string, refrigeratorId?: string) =>
-    [...inventoryKeys.details(), id, refrigeratorId] as const,
-  summary: (refrigeratorId?: string) =>
-    [...inventoryKeys.all, 'summary', refrigeratorId] as const,
-  categories: (refrigeratorId?: string) =>
-    [...inventoryKeys.all, 'categories', refrigeratorId] as const,
-  settings: (refrigeratorId?: string) =>
-    [...inventoryKeys.all, 'settings', refrigeratorId] as const,
+  detail: (id: string, groupId?: string) =>
+    [...inventoryKeys.details(), id, groupId] as const,
+  summary: (groupId?: string) =>
+    [...inventoryKeys.all, 'summary', groupId] as const,
+  categories: (groupId?: string) =>
+    [...inventoryKeys.all, 'categories', groupId] as const,
+  settings: (groupId?: string) =>
+    [...inventoryKeys.all, 'settings', groupId] as const,
 };
 
 /**
@@ -36,7 +36,7 @@ export const useInventoryQuery = (params?: GetInventoryRequest) => {
   return useQuery({
     queryKey: inventoryKeys.list(params),
     queryFn: () => inventoryApi.getInventory(params),
-    enabled: !!params?.refrigeratorId, // 確保有 ID 才查詢
+    enabled: !!params?.groupId, // 確保有 ID 才查詢
     staleTime: 1000 * 60 * 5, // 5 分鐘
   });
 };
@@ -44,22 +44,22 @@ export const useInventoryQuery = (params?: GetInventoryRequest) => {
 /**
  * 取得單一食材詳情
  */
-export const useInventoryItemQuery = (id: string, refrigeratorId?: string) => {
+export const useInventoryItemQuery = (id: string, groupId?: string) => {
   return useQuery({
-    queryKey: inventoryKeys.detail(id, refrigeratorId),
-    queryFn: () => inventoryApi.getItem(id, refrigeratorId),
-    enabled: !!id && !!refrigeratorId, // 確保有 ID 才查詢
+    queryKey: inventoryKeys.detail(id, groupId),
+    queryFn: () => inventoryApi.getItem(id, groupId),
+    enabled: !!id && !!groupId, // 確保有 ID 才查詢
   });
 };
 
 /**
  * 取得庫存摘要
  */
-export const useInventorySummaryQuery = (refrigeratorId?: string) => {
+export const useInventorySummaryQuery = (groupId?: string) => {
   return useQuery({
-    queryKey: inventoryKeys.summary(refrigeratorId),
-    queryFn: () => inventoryApi.getSummary(refrigeratorId),
-    enabled: !!refrigeratorId, // 確保有 ID 才查詢
+    queryKey: inventoryKeys.summary(groupId),
+    queryFn: () => inventoryApi.getSummary(groupId),
+    enabled: !!groupId, // 確保有 ID 才查詢
     staleTime: 1000 * 60 * 5,
   });
 };
@@ -67,11 +67,11 @@ export const useInventorySummaryQuery = (refrigeratorId?: string) => {
 /**
  * 取得類別列表
  */
-export const useInventoryCategoriesQuery = (refrigeratorId?: string) => {
+export const useInventoryCategoriesQuery = (groupId?: string) => {
   return useQuery({
-    queryKey: inventoryKeys.categories(refrigeratorId),
-    queryFn: () => inventoryApi.getCategories(refrigeratorId),
-    enabled: !!refrigeratorId, // 確保有 ID 才查詢
+    queryKey: inventoryKeys.categories(groupId),
+    queryFn: () => inventoryApi.getCategories(groupId),
+    enabled: !!groupId, // 確保有 ID 才查詢
     staleTime: 1000 * 60 * 30, // 30 分鐘（類別不常變動）
   });
 };
@@ -79,11 +79,11 @@ export const useInventoryCategoriesQuery = (refrigeratorId?: string) => {
 /**
  * 取得庫存設定
  */
-export const useInventorySettingsQuery = (refrigeratorId?: string) => {
+export const useInventorySettingsQuery = (groupId?: string) => {
   return useQuery({
-    queryKey: inventoryKeys.settings(refrigeratorId),
-    queryFn: () => inventoryApi.getSettings(refrigeratorId),
-    enabled: !!refrigeratorId, // 確保有 ID 才查詢
+    queryKey: inventoryKeys.settings(groupId),
+    queryFn: () => inventoryApi.getSettings(groupId),
+    enabled: !!groupId, // 確保有 ID 才查詢
   });
 };
 
@@ -116,16 +116,16 @@ export const useUpdateInventoryItemMutation = () => {
     mutationFn: ({
       id,
       data,
-      refrigeratorId,
+      groupId,
     }: {
       id: string;
       data: UpdateFoodItemRequest;
-      refrigeratorId?: string;
-    }) => inventoryApi.updateItem(id, data, refrigeratorId),
+      groupId?: string;
+    }) => inventoryApi.updateItem(id, data, groupId),
     onSuccess: (_, variables) => {
       // 使特定食材和列表失效
       queryClient.invalidateQueries({
-        queryKey: inventoryKeys.detail(variables.id, variables.refrigeratorId),
+        queryKey: inventoryKeys.detail(variables.id, variables.groupId),
       });
       queryClient.invalidateQueries({ queryKey: inventoryKeys.lists() });
     },
@@ -139,17 +139,12 @@ export const useDeleteInventoryItemMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      id,
-      refrigeratorId,
-    }: {
-      id: string;
-      refrigeratorId?: string;
-    }) => inventoryApi.deleteItem(id, refrigeratorId),
+    mutationFn: ({ id, groupId }: { id: string; groupId?: string }) =>
+      inventoryApi.deleteItem(id, groupId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: inventoryKeys.lists() });
       queryClient.invalidateQueries({
-        queryKey: inventoryKeys.summary(variables.refrigeratorId),
+        queryKey: inventoryKeys.summary(variables.groupId),
       });
     },
   });
@@ -162,17 +157,12 @@ export const useBatchDeleteInventoryMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      ids,
-      refrigeratorId,
-    }: {
-      ids: string[];
-      refrigeratorId?: string;
-    }) => inventoryApi.batchDelete({ ids }, refrigeratorId),
+    mutationFn: ({ ids, groupId }: { ids: string[]; groupId?: string }) =>
+      inventoryApi.batchDelete({ ids }, groupId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: inventoryKeys.lists() });
       queryClient.invalidateQueries({
-        queryKey: inventoryKeys.summary(variables.refrigeratorId),
+        queryKey: inventoryKeys.summary(variables.groupId),
       });
     },
   });
@@ -187,14 +177,14 @@ export const useUpdateInventorySettingsMutation = () => {
   return useMutation({
     mutationFn: ({
       data,
-      refrigeratorId,
+      groupId,
     }: {
       data: UpdateInventorySettingsRequest;
-      refrigeratorId?: string;
-    }) => inventoryApi.updateSettings(data, refrigeratorId),
+      groupId?: string;
+    }) => inventoryApi.updateSettings(data, groupId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: inventoryKeys.settings(variables.refrigeratorId),
+        queryKey: inventoryKeys.settings(variables.groupId),
       });
     },
   });
@@ -210,20 +200,20 @@ export const useConsumeItemMutation = () => {
     mutationFn: ({
       id,
       data,
-      refrigeratorId,
+      groupId,
     }: {
       id: string;
       data: { quantity: number; reasons: string[]; customReason?: string };
-      refrigeratorId?: string;
-    }) => inventoryApi.consumeItem(id, data, refrigeratorId),
+      groupId?: string;
+    }) => inventoryApi.consumeItem(id, data, groupId),
     onSuccess: (_, variables) => {
       // 使特定食材和列表失效
       queryClient.invalidateQueries({
-        queryKey: inventoryKeys.detail(variables.id, variables.refrigeratorId),
+        queryKey: inventoryKeys.detail(variables.id, variables.groupId),
       });
       queryClient.invalidateQueries({ queryKey: inventoryKeys.lists() });
       queryClient.invalidateQueries({
-        queryKey: inventoryKeys.summary(variables.refrigeratorId),
+        queryKey: inventoryKeys.summary(variables.groupId),
       });
     },
   });
