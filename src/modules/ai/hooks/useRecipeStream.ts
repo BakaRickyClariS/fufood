@@ -104,6 +104,14 @@ export const useRecipeStream = () => {
           break;
 
         case 'done': {
+          // [DEBUG] 確認後端 SSE done event 是否有 imageUrl
+          console.log(
+            '[AI SSE Done] recipes imageUrls:',
+            (event.data.recipes || []).map((r: any) => ({
+              name: r.name,
+              imageUrl: r.imageUrl,
+            })),
+          );
           // 驗證 AI 回應結構
           const validatedRecipes = validateRecipes(event.data.recipes || []);
 
@@ -161,6 +169,12 @@ export const useRecipeStream = () => {
                 validatedRecipes,
                 savedIds,
               );
+
+              // 將後端回傳的 imageUrl 覆蓋進去（如果後端有填補）
+              finalRecipes = finalRecipes.map((recipe, i) => ({
+                ...recipe,
+                imageUrl: savedRecipes[i]?.imageUrl ?? recipe.imageUrl,
+              }));
 
               // 通知由後端在 API 完成時自動觸發，前端不再手動發送
             } catch (err) {
