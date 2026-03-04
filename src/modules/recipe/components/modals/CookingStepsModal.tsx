@@ -20,7 +20,7 @@ const DRAG_THRESHOLD = 200;
  * - 使用 GSAP 實現從下方滑入/滑出動畫
  * - 使用 createPortal 確保 Modal 在最上層
  * - 支援下滑手勢關閉
- * - z-index 設定為 140 (高於 RecipeDetailModal 的 130)
+ * - z-index 設定為 210 (高於 RecipeDetailModal 的 200)
  */
 export const CookingStepsModal = ({
   isOpen,
@@ -133,7 +133,7 @@ export const CookingStepsModal = ({
   return createPortal(
     <div
       ref={containerRef}
-      className="fixed inset-0 flex items-end justify-center pointer-events-auto z-140"
+      className="fixed inset-0 flex items-end justify-center pointer-events-auto z-210"
     >
       {/* Backdrop */}
       <div
