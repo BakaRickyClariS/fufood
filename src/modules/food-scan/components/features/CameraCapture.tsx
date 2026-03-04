@@ -169,12 +169,18 @@ export const CameraCapture: React.FC = () => {
 
             dispatch(setItems(batchItems));
 
-            navigate('/upload/scan-result');
+            // navigate('/upload/scan-result'); // <--- 已移除，改用 Modal 顯示
           } else {
-            // Legacy / Single item fallback
-            navigate('/upload/scan-result', {
-              state: { result: responseData, imageUrl: img },
-            });
+            // Legacy / Single item fallback 改為包裝送入 Batch
+            const singleItem = [
+              {
+                id: crypto.randomUUID(),
+                data: responseData,
+                imageUrl: img,
+                status: 'pending' as const,
+              },
+            ];
+            dispatch(setItems(singleItem));
           }
         } else {
           const msg = '掃描失敗，請重試';
