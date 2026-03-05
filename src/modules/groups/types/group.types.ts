@@ -2,7 +2,9 @@
  * 群組成員型別
  */
 export type GroupMember = {
-  id: string;
+  id: string; // 舊 API 欄位 (通常是 userId)
+  userId?: string; // V2 API 欄位
+  membershipId?: string; // V2 API 欄位
   name: string;
   avatar: string; // 前端顯示用，對應 profilePictureUrl
   profilePictureUrl?: string; // 後端回傳原始欄位
@@ -10,6 +12,7 @@ export type GroupMember = {
   role: 'owner' | 'member';
   createdAt?: string;
   updatedAt?: string;
+  joinedAt?: string; // V2 API 欄位
 };
 
 /**
@@ -21,6 +24,8 @@ export type Group = {
   ownerId?: string; // 群組擁有人 ID
   admin?: string; // 舊欄位，暫時保留相容
   members?: GroupMember[];
+  memberCount?: number; // 新增: 供列表用的成員數量
+  memberAvatars?: (string | null)[]; // 新增: 前幾名成員的頭像
   imageUrl?: string;
   plan?: 'free' | 'premium';
   createdAt?: Date | string;
