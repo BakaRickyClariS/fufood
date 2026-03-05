@@ -93,7 +93,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-200 flex items-end justify-center">
       {/* Backdrop */}
       <div
         ref={overlayRef}

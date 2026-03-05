@@ -190,9 +190,9 @@ export const ScanResultPreview: React.FC<ScanResultPreviewProps> = ({
   }, [submitStatus, isBatchMode]);
 
   return (
-    <div className="min-h-screen bg-gray-50 relative overflow-hidden max-w-layout-container mx-auto">
+    <div className="absolute inset-0 bg-gray-50 flex flex-col overflow-hidden max-w-layout-container mx-auto pt-[60px]">
       {/* Header with Back Button */}
-      <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center">
+      <div className="fixed top-0 left-0 right-0 w-full max-w-layout-container mx-auto bg-white p-4 shadow-sm z-50 flex items-center">
         {onBack && (
           <button onClick={onBack} className="p-1 -ml-1 mr-2">
             <ChevronLeft size={24} className="text-slate-800" />
@@ -204,10 +204,9 @@ export const ScanResultPreview: React.FC<ScanResultPreviewProps> = ({
         {onBack && <div className="w-8" />}
       </div>
 
-      {/* Swipeable Content Area */}
       <div
         ref={contentRef}
-        className="overflow-y-auto"
+        className="flex-1 overflow-y-auto w-full pb-32 hide-scrollbar"
         style={{
           touchAction: isBatchMode ? 'pan-y' : 'auto',
           willChange: isBatchMode ? 'transform' : 'auto',
@@ -321,7 +320,7 @@ export const ScanResultPreview: React.FC<ScanResultPreviewProps> = ({
       </div>
 
       {/* Fixed Bottom Area - Buttons */}
-      <div className="px-4 py-4 bg-gray-50">
+      <div className="fixed bottom-0 left-0 right-0 max-w-layout-container mx-auto px-4 py-6 bg-white rounded-t-3xl shadow-[0_-4px_10px_rgba(0,0,0,0.1)] z-50">
         {/* 批次模式頁面指示器 - 只有箭頭圖示，不可點擊 */}
         {isBatchMode && (
           <div className="flex items-center justify-center gap-4 mb-3">
@@ -381,8 +380,8 @@ export const ScanResultPreview: React.FC<ScanResultPreviewProps> = ({
         </div>
       </div>
 
-      {/* 底部留白，確保不被 Bottom Navigation 遮擋 */}
-      <div className="h-20"></div>
+      {/* 底部留白，確保不被 Bottom Navigation 或懸浮按鈕區塊遮擋 */}
+      <div className="h-40"></div>
     </div>
   );
 };

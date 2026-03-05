@@ -8,6 +8,7 @@ import AuthRoutes from './Auth';
 import SettingsRoutes from './Settings';
 import NotificationsRoutes from './Notifications';
 import InviteRoutes from './Invite';
+import DevTestModal from './DevTestModal';
 
 // GroupsRoutes 已移除，Group Modals 改為在 Dashboard 渲染
 import { RecipeDetailView } from '@/modules/recipe/components/features/RecipeDetailView';
@@ -112,6 +113,12 @@ export const router = createBrowserRouter([
             ),
           },
         ],
+      },
+
+      // 開發測試專用 Modal 測試路由
+      {
+        path: 'dev-test-modal',
+        element: <DevTestModal />,
       },
 
       // 食譜詳情頁 (獨立路由)

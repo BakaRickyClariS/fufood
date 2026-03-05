@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+
+import { useDispatch, useSelector } from 'react-redux';
 import { useQueryClient } from '@tanstack/react-query';
+import { createPortal } from 'react-dom';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import { ScanResultEditor } from '@/modules/food-scan/components/features/ScanResultEditor';
 import { ScanResultPreview } from '@/modules/food-scan/components/features/ScanResultPreview';
 import { StockInSuccessModal } from '@/modules/food-scan/components/ui/StockInSuccessModal';
@@ -23,11 +27,56 @@ import { identity } from '@/shared/utils/identity';
 import { inventoryKeys } from '@/modules/inventory/api/queries';
 import { useEffect } from 'react';
 
-const ScanResult: React.FC = () => {
-  const location = useLocation();
+type ScanResultModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  resultData?: FoodItemInput | null;
+  resultImageUrl?: string;
+};
+
+const ScanResultModal: React.FC<ScanResultModalProps> = ({
+  isOpen,
+  onClose,
+  resultData,
+  resultImageUrl,
+}) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
+  const modalRef = React.useRef<HTMLDivElement>(null);
+
+  // GSAP 進入/退出動畫
+  useGSAP(
+    () => {
+      if (isOpen && modalRef.current) {
+        gsap.fromTo(
+          modalRef.current,
+          { x: '100%' },
+          { x: '0%', duration: 0.4, ease: 'power3.out' },
+        );
+      }
+    },
+    { scope: modalRef, dependencies: [isOpen] },
+  );
+
+  const { contextSafe } = useGSAP({ scope: modalRef });
+
+  const handleCloseModal = contextSafe(() => {
+    if (modalRef.current) {
+      gsap.to(modalRef.current, {
+        x: '100%',
+        duration: 0.3,
+        ease: 'power3.in',
+        onComplete: () => {
+          if (items.length > 0) dispatch(reset());
+          onClose();
+        },
+      });
+    } else {
+      if (items.length > 0) dispatch(reset());
+      onClose();
+    }
+  });
 
   // Redux state for batch scan
   const { items, currentIndex } = useSelector(
@@ -38,20 +87,18 @@ const ScanResult: React.FC = () => {
   const groups = useSelector(selectAllGroups);
   const activeGroupId = useSelector(selectActiveGroupId);
   // ScanResult doesn't have groupId in URL, so we rely on active or default
-  const targetGroupId =
-    activeGroupId || identity.getGroupId(undefined, groups);
+  const targetGroupId = activeGroupId || identity.getGroupId(undefined, groups);
 
   useEffect(() => {
     // Ensure groups are loaded so we can get the ID
     if (groups.length === 0) {
-      // @ts-ignore
-      dispatch(fetchGroups());
+      dispatch(fetchGroups() as any);
     }
   }, [dispatch, groups.length]);
 
-  // Local state fallbacks (legacy single item flow)
-  const { result: locationResult, imageUrl: locationImageUrl } =
-    location.state || {};
+  // Local state fallbacks (legacy single item flow props)
+  const locationResult = resultData;
+  const locationImageUrl = resultImageUrl;
 
   const [mode, setMode] = useState<'preview' | 'edit'>('preview');
   const [submitStatus, setSubmitStatus] = useState<
@@ -110,18 +157,26 @@ const ScanResult: React.FC = () => {
     groupId: targetGroupId || undefined,
   };
 
+  if (!isOpen) {
+    return null;
+  }
+
   if (!displayResult && !showSuccessModal) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen p-6 text-center">
+    return createPortal(
+      <div
+        ref={modalRef}
+        className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white p-6 text-center shadow-xl"
+      >
         <h2 className="text-xl font-bold text-slate-800 mb-2">無資料</h2>
         <p className="text-slate-500 mb-6">找不到掃描結果，請重新掃描。</p>
         <button
-          onClick={() => navigate('/upload')}
+          onClick={handleCloseModal}
           className="bg-red-500 text-white px-6 py-2 rounded-full font-bold"
         >
           返回掃描
         </button>
-      </div>
+      </div>,
+      document.body,
     );
   }
 
@@ -150,7 +205,6 @@ const ScanResult: React.FC = () => {
         setTimeout(() => {
           if (isOnlyOneLeft) {
             // All done - show success modal
-            dispatch(reset());
             setShowSuccessModal(true);
           } else {
             // Remove current item from batch (next item will auto-display)
@@ -180,50 +234,43 @@ const ScanResult: React.FC = () => {
   };
 
   const handleBack = () => {
-    if (isBatchMode) {
-      dispatch(reset());
-    }
-    navigate('/upload');
+    handleCloseModal();
   };
 
   const handleDeleteItem = () => {
     if (isBatchMode) {
       if (items.length === 1) {
         // Last item being deleted, go back to upload
-        dispatch(reset());
-        navigate('/upload');
+        handleCloseModal();
       } else {
         dispatch(removeItem(currentIndex));
-        window.scrollTo(0, 0);
+        if (modalRef.current) {
+          modalRef.current.scrollTo(0, 0);
+        }
       }
     } else {
-      // Single item mode - just go back
-      navigate('/upload');
+      // Single item mode - just close
+      handleCloseModal();
     }
   };
 
   const handleRetake = () => {
-    if (isBatchMode) {
-      // In batch mode, "retake" might mean delete this item or re-scan just this one?
-      // For MVP, maybe just go back to upload and clear everything?
-      // Or "Discard" current item?
-      // Let's keep it simple: clear batch and go back.
-      dispatch(reset());
-    }
-    navigate('/upload');
+    handleCloseModal();
   };
 
   const handlePickImage = () => {
-    if (isBatchMode) dispatch(reset());
-    navigate('/upload');
+    handleCloseModal();
   };
 
   const handleViewInventory = () => {
+    if (isBatchMode) {
+      dispatch(reset());
+    }
     navigate('/inventory');
   };
 
   const handleContinueScan = () => {
-    navigate('/upload');
+    handleCloseModal();
   };
 
   // Navigation handlers for batch mode
@@ -324,9 +371,13 @@ const ScanResult: React.FC = () => {
     }
   };
 
-  if (mode === 'preview' && displayResult) {
-    return (
-      <>
+  // Single cohesive Portal for stable outer animation with modalRef
+  return createPortal(
+    <div
+      ref={modalRef}
+      className="fixed inset-0 z-[100] bg-white overflow-hidden"
+    >
+      {displayResult && (
         <ScanResultPreview
           result={editedData || displayResult}
           imageUrl={displayImage}
@@ -341,45 +392,30 @@ const ScanResult: React.FC = () => {
           currentIndex={isBatchMode ? currentIndex + 1 : undefined}
           totalCount={isBatchMode ? items.length : undefined}
         />
-        <StockInSuccessModal
-          isOpen={showSuccessModal}
-          onViewInventory={handleViewInventory}
-          onContinueScan={handleContinueScan}
-          itemCount={submittedCount}
+      )}
+
+      {mode === 'edit' && displayResult && (
+        <ScanResultEditor
+          initialData={editedData || displayResult}
+          imageUrl={displayImage || ''}
+          onSave={handleEditorSave}
+          onBack={() => setMode('preview')}
+          onRetake={handleRetake}
+          onPickImage={handlePickImage}
+          currentIndex={isBatchMode ? currentIndex + 1 : undefined}
+          totalCount={isBatchMode ? items.length : undefined}
         />
-      </>
-    );
-  }
+      )}
 
-  if (displayResult) {
-    return (
-      <ScanResultEditor
-        initialData={editedData || displayResult}
-        imageUrl={displayImage || ''}
-        onSave={handleEditorSave}
-        onBack={() => setMode('preview')}
-        onRetake={handleRetake}
-        onPickImage={handlePickImage}
-        currentIndex={isBatchMode ? currentIndex + 1 : undefined}
-        totalCount={isBatchMode ? items.length : undefined}
-      />
-    );
-  }
-
-  // Fallback if somehow execution gets here (e.g. showSuccessModal is true but no displayResult)
-  if (showSuccessModal) {
-    return (
       <StockInSuccessModal
         isOpen={showSuccessModal}
         onViewInventory={handleViewInventory}
         onContinueScan={handleContinueScan}
         itemCount={submittedCount}
       />
-    );
-  }
-
-  // Final fallback (should not be reached due to initial check, but for safety)
-  return null;
+    </div>,
+    document.body,
+  );
 };
 
-export default ScanResult;
+export default ScanResultModal;

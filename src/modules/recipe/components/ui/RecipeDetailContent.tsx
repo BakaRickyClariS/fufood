@@ -129,7 +129,7 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
       </div>
 
       {/* 內容區域 */}
-      <div className="relative -mt-10 bg-white rounded-t-3xl min-h-screen px-4 py-6">
+      <div className="relative -mt-10 bg-white rounded-t-3xl min-h-screen px-4 pt-6 pb-32">
         <div className="flex items-center justify-between mb-4 gap-2">
           <div className="flex-1 min-w-0">
             <h1 className="text-[20px] font-bold text-gray-900 tracking-tight mb-3 truncate">
@@ -174,7 +174,7 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
             <IngredientList ingredients={recipe.ingredients} />
 
             {/* 確認消耗按鈕 */}
-            <div className="mt-8 mb-6">
+            <div className="fixed bottom-0 left-0 right-0 max-w-layout-container mx-auto px-4 py-6 bg-white rounded-t-3xl shadow-[0_-4px_10px_rgba(0,0,0,0.1)] z-50">
               <button
                 disabled={consumptionItems.length === 0}
                 onClick={() => onShowConsumptionModal(true)}
