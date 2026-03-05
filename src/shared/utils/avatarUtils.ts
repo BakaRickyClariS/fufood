@@ -71,6 +71,14 @@ export const getUserAvatarUrl = (
     return userInfo.pictureUrl;
   }
 
+  // 檢查 avatar 欄位本身是否為遠端 URL (v2 API 格式)
+  if (
+    typeof userInfo.avatar === 'string' &&
+    isValidRemoteUrl(userInfo.avatar)
+  ) {
+    return userInfo.avatar;
+  }
+
   // 最後使用本地頭像 ID 轉換
   if (userInfo.avatar) {
     return getLocalAvatarById(userInfo.avatar);

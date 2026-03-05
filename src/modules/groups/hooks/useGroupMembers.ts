@@ -43,15 +43,20 @@ export const useGroupMembers = (
       const data = await groupsApi.getMembers(groupId);
       const user = currentUserRef.current;
 
-      // 確保 data 是陣列
-      const memberList = Array.isArray(data) ? data : [];
+      // 確保 data 是陣列，並且映射 v2 API 的 userId 到 id (供前端共用)
+      const memberList = (Array.isArray(data) ? data : []).map((m) => ({
+        ...m,
+        id: m.id || m.userId || m.membershipId || '',
+      }));
       let finalMembers = [...memberList];
 
       // 注入當前使用者（如果不在清單中）
       // 這通常發生在剛建立群組或後端 API 未回傳擁有者時
       if (user && user.name) {
         const userIndex = memberList.findIndex(
-          (m) => m.name === user.name || (m.id && user.id && m.id === user.id),
+          (m) =>
+            (m.id && user.id && String(m.id) === String(user.id)) ||
+            m.name === user.name,
         );
 
         if (userIndex !== -1) {
