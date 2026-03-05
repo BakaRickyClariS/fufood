@@ -213,9 +213,13 @@ export const GroupCard: FC<GroupCardProps> = ({
           <h3 className="text-xl font-bold text-primary-700">{group.name}</h3>
           <p className="text-sm text-stone-500 font-medium">
             管理員{' '}
-            {group.members?.find((m) => m.id === group.ownerId)?.name ||
-              group.admin ||
-              'Unknown'}
+            {String(group.ownerId) === String(user?.id)
+              ? user?.displayName || user?.name || 'Unknown'
+              : group.members?.find(
+                  (m) => String(m.id) === String(group.ownerId),
+                )?.name ||
+                group.admin ||
+                'Unknown'}
           </p>
         </div>
 
@@ -232,32 +236,42 @@ export const GroupCard: FC<GroupCardProps> = ({
       {/* 成員區域 */}
       <div className="flex flex-col justify-center gap-2 mb-2 relative z-10">
         <span className="text-sm text-neutral-500 font-medium">
-          成員 ({group.members?.length ?? 0})
+          成員 ({group.memberCount ?? group.members?.length ?? 0})
         </span>
         <div className="flex">
-          {(group.members ?? [])
-            .slice(0, MAX_AVATARS_DISPLAY)
-            .map((member, index) => {
-              const isCurrentUser = user?.id === member.id;
-              return (
-                <div
-                  key={member.id}
-                  className={`w-9 h-9 rounded-full border-2 overflow-hidden bg-gray-100 ${
-                    isCurrentUser ? 'border-primary-400' : 'border-neutral-500'
-                  }`}
-                  style={{
-                    marginLeft: index === 0 ? 0 : '-0.75rem',
-                    zIndex: (group.members?.length ?? 0) - index,
+          {/* 優先使用 API 提供的前 4 名頭像，如果沒有才 fallback 去 mapping members 陣列 (舊邏輯/詳細資料才有) */}
+          {(group.memberAvatars && group.memberAvatars.length > 0
+            ? group.memberAvatars
+                .slice(0, MAX_AVATARS_DISPLAY)
+                .map((avatar, idx) => ({ id: `avatar-${idx}`, avatar }))
+            : (group.members ?? []).slice(0, MAX_AVATARS_DISPLAY)
+          ).map((member, index) => {
+            const isCurrentUser = 'id' in member && user?.id === member.id;
+            return (
+              <div
+                key={member.id}
+                className={`w-9 h-9 rounded-full border-2 overflow-hidden bg-gray-100 ${
+                  isCurrentUser ? 'border-primary-400' : 'border-neutral-500'
+                }`}
+                style={{
+                  marginLeft: index === 0 ? 0 : '-0.75rem',
+                  zIndex: 10 - index,
+                }}
+              >
+                <img
+                  src={member.avatar || ''}
+                  alt={isCurrentUser && user ? user.name : '成員'}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // 破圖時使用預設空圖或者隱藏
+                    (e.target as HTMLImageElement).src =
+                      'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%25" height="100%25"><rect width="100%25" height="100%25" fill="%23e5e7eb"/></svg>';
                   }}
-                >
-                  <img
-                    src={member.avatar || ''}
-                    alt={member.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              );
-            })}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
 

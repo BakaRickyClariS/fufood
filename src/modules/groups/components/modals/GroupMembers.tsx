@@ -117,7 +117,8 @@ export const GroupMembers: FC<GroupMembersProps> = ({
             {/* Admin: 14px Normal */}
             <p className="text-[14px] font-normal text-neutral-500 relative z-0">
               管理員{' '}
-              {members.find((m) => m.id === group.ownerId)?.name || '未知'}
+              {members.find((m) => String(m.id) === String(group.ownerId))
+                ?.name || '未知'}
             </p>
           </div>
 
@@ -137,7 +138,7 @@ export const GroupMembers: FC<GroupMembersProps> = ({
           <div className="flex items-center justify-between px-4 py-2">
             {/* Header: 16px Semibold */}
             <span className="text-[16px] font-semibold text-neutral-800">
-              成員 {members.length}
+              成員 {group.memberCount ?? members.length}
             </span>
             {user?.id === group.ownerId && (
               <button
