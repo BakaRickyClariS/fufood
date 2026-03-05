@@ -86,12 +86,9 @@ export const notificationsMockApi: NotificationsApi = {
     const paginatedItems = items.slice(start, start + limit);
 
     return {
-      success: true,
-      data: {
-        items: paginatedItems,
-        total: items.length,
-        unreadCount: items.filter((n) => !n.isRead).length,
-      },
+      items: paginatedItems,
+      total: items.length,
+      unreadCount: items.filter((n) => !n.isRead).length,
     };
   },
 

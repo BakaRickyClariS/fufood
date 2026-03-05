@@ -162,6 +162,12 @@ export const useRecipeStream = () => {
                 savedIds,
               );
 
+              // 將後端回傳的 imageUrl 覆蓋進去（如果後端有填補）
+              finalRecipes = finalRecipes.map((recipe, i) => ({
+                ...recipe,
+                imageUrl: savedRecipes[i]?.imageUrl ?? recipe.imageUrl,
+              }));
+
               // 通知由後端在 API 完成時自動觸發，前端不再手動發送
             } catch (err) {
               console.error('Auto-save recipes failed:', err);

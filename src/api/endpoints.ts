@@ -68,9 +68,9 @@ export const ENDPOINTS = {
   // 🤖 AI（v1/v2）
   // ============================================================
   AI: {
-    RECIPE: '/api/v1/ai/recipe',
-    RECIPE_STREAM: '/api/v1/ai/recipe/stream',
-    RECIPE_SUGGESTIONS: '/api/v1/ai/recipe/suggestions',
+    RECIPE: '/api/v2/ai/recipe',
+    RECIPE_STREAM: '/api/v2/ai/recipe/stream',
+    RECIPE_SUGGESTIONS: '/api/v2/ai/recipe/suggestions',
     ANALYZE_IMAGE: '/api/v1/ai/analyze-image',
     ANALYZE_MULTIPLE: '/api/v1/ai/analyze-image/multiple',
     MEDIA_UPLOAD: '/api/v2/media/upload',

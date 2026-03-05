@@ -101,7 +101,8 @@ export type AIRecipeResponse = {
 export type AISuggestionsResponse = {
   status: boolean;
   message: string;
-  data: string[];
+  /** v1: string[], v2: { suggestions: string[] } */
+  data: string[] | { suggestions: string[] };
 };
 
 // ============================================================
