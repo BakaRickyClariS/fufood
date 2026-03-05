@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/modules/auth';
 import type { UserProfile } from '@/modules/settings/types/settings.types';
 import { getUserAvatarUrl } from '@/shared/utils/avatarUtils';
-import { useFCMContext } from '@/shared/providers/FCMProvider';
+import { useFCMContext } from '@/shared/hooks/useFCMContext';
 
 // Components
 import ProfileSection from '@/modules/settings/components/ProfileSection';

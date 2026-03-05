@@ -23,6 +23,8 @@ export type AvatarSource = 'local' | 'remote';
 export type UserAvatarInfo = {
   /** 遠端頭像 URL（LINE 或其他第三方登入提供） */
   pictureUrl?: string;
+  /** 後端 Group API 提供的真實頭像 URL */
+  profilePictureUrl?: string;
   /** 本地頭像 ID（數字或字串） */
   avatar?: string | number;
   /** 頭像完整 URL（真實 API 可能直接提供） */

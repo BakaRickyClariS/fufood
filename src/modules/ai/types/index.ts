@@ -101,7 +101,8 @@ export type AIRecipeResponse = {
 export type AISuggestionsResponse = {
   status: boolean;
   message: string;
-  data: string[];
+  /** v1: string[], v2: { suggestions: string[] } */
+  data: string[] | { suggestions: string[] };
 };
 
 // ============================================================
@@ -235,7 +236,7 @@ export type SaveRecipeInput = {
   seasonings?: { name: string; quantity: string; unit: string }[];
   steps: { step: number; description: string }[];
   originalPrompt?: string;
-  refrigeratorId?: string;
+  groupId?: string;
 };
 
 /** 已儲存的食譜 (完整) */

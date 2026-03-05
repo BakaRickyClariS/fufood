@@ -5,7 +5,7 @@ import { useInventorySummaryQuery } from '@/modules/inventory/api/queries';
 import InventoryCard from './InventoryCard';
 
 import { useSelector } from 'react-redux';
-import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
+import { selectActiveGroupId } from '@/store/slices/activeGroupSlice';
 import { RefreshCw } from 'lucide-react';
 
 // 格式化相對時間 (ex: 今天 10:00, 昨天 14:30, 12/25 09:00)
@@ -37,11 +37,11 @@ const formatRelativeTime = (dateString?: string) => {
 };
 
 const InventorySection = () => {
-  // 取得當前選擇的冰箱 ID (Redux)
-  const refrigeratorId = useSelector(selectActiveRefrigeratorId) || '';
+  // 取得當前選擇的群組 ID (Redux)
+  const groupId = useSelector(selectActiveGroupId) || '';
 
-  const { data, isLoading } = useInventorySummaryQuery(refrigeratorId);
-  const summary = data?.data?.summary;
+  const { data, isLoading } = useInventorySummaryQuery(groupId);
+  const summary = (data as any)?.summary || (data as any)?.data?.summary;
 
   // 使用 API 提供的 lastSyncedAt 或當前時間 (如果有的話)
   // 這裡假設 summary 可能沒有 lastSyncedAt，若無則暫時顯示 "更新中..." 或不顯示

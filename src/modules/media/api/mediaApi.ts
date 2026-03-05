@@ -1,4 +1,5 @@
-import { aiApi } from '@/api/client';
+import { api } from '@/api/client';
+import { ENDPOINTS } from '@/api/endpoints';
 
 /**
  * 媒體上傳 API 回應格式
@@ -16,9 +17,9 @@ export type UploadResponse = {
 /**
  * 媒體 API
  *
- * 所有媒體相關操作使用 AI API 後端
- * Base URL: VITE_AI_API_BASE_URL
- * 端點: /media/upload
+ * 所有媒體相關操作使用 API 後端
+ * Base URL: VITE_API_BASE_URL
+ * 端點: /api/v2/media/upload
  */
 export const mediaApi = {
   /**
@@ -43,9 +44,8 @@ export const mediaApi = {
     formData.append('file', file);
 
     try {
-      // 注意：aiApi 的 base URL 已經是 /api/v1，所以這裡只需要 /media/upload
-      const response = await aiApi.post<UploadResponse>(
-        '/media/upload',
+      const response = await api.post<UploadResponse>(
+        ENDPOINTS.AI.MEDIA_UPLOAD,
         formData,
       );
 

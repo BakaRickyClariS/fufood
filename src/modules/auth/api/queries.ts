@@ -7,12 +7,12 @@ import type {
   MembershipTier,
 } from '../types';
 import { Gender } from '../types';
-import { backendApi } from '@/api/client';
+import { api } from '@/api/client';
 import { MOCK_USERS } from './mock/authMockData';
 import { parsePreferences } from '@/modules/settings/utils/dietaryUtils';
 
 // Gender 字串轉數值對應表
-const mapBackendGenderToEnum = (
+export const mapBackendGenderToEnum = (
   genderStr: string | number | undefined | null,
 ): GenderValue => {
   if (typeof genderStr === 'number') return genderStr as GenderValue;
@@ -49,10 +49,10 @@ export async function getUserProfile(): Promise<User | null> {
   const userStr = localStorage.getItem('user');
 
   try {
-    const result = await backendApi.get<ProfileResponse>('/api/v1/profile');
+    const result = await api.get<ProfileResponse>('/api/v2/profile');
 
     // 將 API 回傳的 ProfileData (可能含字串 enum) 轉換為 User 格式 (數值 enum)
-    const backendData = result.data as any; // 使用 any 繞過 TS 檢查，因為後端回傳型別與文件不符
+    const backendData = (result as any).data ?? result; // 支援已解開 data 的情況
 
     console.log('[UserProfile] Raw Gender from Backend:', backendData.gender);
     const mappedGender = mapBackendGenderToEnum(backendData.gender);
@@ -61,10 +61,13 @@ export async function getUserProfile(): Promise<User | null> {
     const user: User = {
       id: backendData.id,
       lineId: backendData.lineId,
-      name: backendData.name,
-      displayName: backendData.name,
-      avatar: backendData.avatar ?? '',
-      pictureUrl: backendData.profilePictureUrl ?? undefined,
+      name:
+        backendData.name || backendData.displayName || backendData.display_name,
+      displayName:
+        backendData.displayName || backendData.name || backendData.display_name,
+      avatar: backendData.avatar || backendData.profilePictureUrl || '',
+      pictureUrl:
+        backendData.profilePictureUrl || backendData.avatar || undefined,
       email: backendData.email || undefined,
       gender: mappedGender,
       customGender: backendData.customGender,

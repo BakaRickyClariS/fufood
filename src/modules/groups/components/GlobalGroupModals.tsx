@@ -17,13 +17,15 @@ import { HomeModal } from '@/modules/groups/components/modals/HomeModal';
  * 在任何頁面都能根據 URL query params 顯示群組相關的 Modal
  */
 export const GlobalGroupModals = () => {
-  const { user } = useAuth();
+  const { user, isInitialLoading } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Group Modal Context
   const { activeGroup, groups } = useGroupModal();
 
-  const displayName = user?.name || user?.displayName || 'Guest';
+  const displayName = isInitialLoading
+    ? ''
+    : user?.name || user?.displayName || 'Guest';
   const userAvatar = getUserAvatarUrl(user);
 
   // === Group Modal 狀態 ===

@@ -14,6 +14,7 @@ type FoodCardProps = {
 const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
   const { status } = useExpiryCheck(item);
   const dispatch = useDispatch();
+  console.log('[DEBUG] FoodItem:', item);
 
   // Status colors & Labels
   const getStatusStyles = () => {
@@ -98,11 +99,13 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
       onKeyDown={handleKeyDown}
     >
       {/* Background Image */}
-      <img
-        src={item.imageUrl}
-        alt={item.name}
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+      {item.imageUrl && item.imageUrl !== '' && (
+        <img
+          src={item.imageUrl}
+          alt={item.name}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      )}
 
       {/* Top Left Status Tag */}
       {styles.tagText && (
@@ -154,8 +157,9 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
             </span>
             <span className="text-white text-sm tracking-wider font-light">
               {(() => {
-                if (!item.purchaseDate) return '-';
-                const d = new Date(item.purchaseDate);
+                const dateToUse = item.purchaseDate || item.createdAt;
+                if (!dateToUse) return '-';
+                const d = new Date(dateToUse);
                 return isNaN(d.getTime()) ? '-' : d.toLocaleDateString();
               })()}
             </span>
@@ -167,7 +171,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
               過期
             </span>
             <span className="text-sm tracking-wider font-light">
-               {(() => {
+              {(() => {
                 if (!item.expiryDate) return '-';
                 const d = new Date(item.expiryDate);
                 return isNaN(d.getTime()) ? '-' : d.toLocaleDateString();

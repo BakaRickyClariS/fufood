@@ -2,13 +2,14 @@ import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import {
-  setActiveRefrigeratorId,
-  selectActiveRefrigeratorId,
-} from '@/store/slices/refrigeratorSlice';
+  setActiveGroupId,
+  selectActiveGroupId,
+} from '@/store/slices/activeGroupSlice';
 // import { closeModal } from '@/modules/groups/store/groupModalSlice';
 import type { Group } from '@/modules/groups/types/group.types';
 // import { useAuth } from '@/modules/auth'; // Removed unused
 import { useGroups } from '@/modules/groups/hooks/useGroups';
+import { identity } from '@/shared/utils/identity';
 import type { AppDispatch } from '@/store';
 
 type GroupModalContextType = {
@@ -53,15 +54,13 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
   const dispatch = useDispatch<AppDispatch>();
 
   // Redux: 活動群組 ID
-  const reduxActiveId = useSelector(selectActiveRefrigeratorId);
-  const activeGroupId =
-    reduxActiveId || localStorage.getItem('activeRefrigeratorId') || '1';
+  const reduxActiveId = useSelector(selectActiveGroupId);
+  const activeGroupId = reduxActiveId || identity.getCachedGroupId() || '1';
 
   // 處理群組載入後的預設選取邏輯
   useEffect(() => {
     if (!isLoading && groups.length > 0) {
-      const currentId =
-        reduxActiveId || localStorage.getItem('activeRefrigeratorId');
+      const currentId = reduxActiveId || identity.getCachedGroupId();
       const isValid = groups.some((g) => g.id === currentId);
 
       if (!currentId || !isValid) {
@@ -69,9 +68,9 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
           '🔄 [GroupModalProvider] 自動選取第一個群組:',
           groups[0].id,
         );
-        dispatch(setActiveRefrigeratorId(groups[0].id));
+        dispatch(setActiveGroupId(groups[0].id));
       } else if (!reduxActiveId && currentId && isValid) {
-        dispatch(setActiveRefrigeratorId(currentId));
+        dispatch(setActiveGroupId(currentId));
       }
     }
   }, [groups, isLoading, reduxActiveId, dispatch]);
@@ -82,7 +81,7 @@ export const GroupModalProvider = ({ children }: GroupModalProviderProps) => {
 
   // Actions - 使用 URL query params，保留當前路徑
   const switchGroup = (groupId: string) => {
-    dispatch(setActiveRefrigeratorId(groupId));
+    dispatch(setActiveGroupId(groupId));
   };
 
   const openHome = () => {

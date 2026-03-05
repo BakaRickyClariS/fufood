@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef } from 'react';
 import { ChevronLeft } from 'lucide-react';
+import { getUserAvatarUrl } from '@/shared/utils/avatarUtils';
 import { toast } from 'sonner';
 import { useSharedListDetail } from '@/modules/planning/hooks/useSharedLists';
 import { useSharedListItems } from '@/modules/planning/hooks/useSharedListItems';
@@ -38,9 +39,9 @@ export const SharedListDetail = ({
     items,
     isLoading: itemsLoading,
     deleteItem,
-  } = useSharedListItems(listId || undefined, list?.refrigeratorId);
+  } = useSharedListItems(listId || undefined);
   const { members } = useGroupMembers(
-    list?.refrigeratorId || '',
+    list?.groupId || (list as any)?.group_id || '',
     currentUser
       ? {
           name: currentUser.displayName || 'Me',
@@ -77,14 +78,24 @@ export const SharedListDetail = ({
         let authorName = 'Unknown User';
         let authorAvatar = '';
 
-        const creator = members.find((m) => m.id === item.creatorId);
+        const actualCreatorId = item.creatorId || (item as any).userId;
+        const creator = actualCreatorId
+          ? members.find(
+              (m) =>
+                m.id === actualCreatorId ||
+                (m as any).userId === actualCreatorId,
+            )
+          : undefined;
 
-        if (creator) {
-          authorName = creator.name;
-          authorAvatar = creator.avatar;
-        } else if (currentUser && item.creatorId === currentUser.id) {
-          authorName = currentUser.displayName || 'Me';
-          authorAvatar = currentUser.avatar || '';
+        if (currentUser && actualCreatorId === currentUser.id) {
+          authorName = currentUser.displayName || currentUser.name || 'Me';
+          authorAvatar = getUserAvatarUrl(currentUser);
+        } else if (creator) {
+          authorName = creator.name || 'Unknown User';
+          authorAvatar = getUserAvatarUrl(creator);
+        } else if ((item as any).creator?.name) {
+          authorName = (item as any).creator.name;
+          authorAvatar = getUserAvatarUrl((item as any).creator);
         }
 
         currentCreatorId = item.creatorId;
@@ -275,8 +286,6 @@ export const SharedListDetail = ({
               initialData={editingItem}
               initialItems={editingItems}
               onClose={handleCloseForm}
-              refrigeratorId={list?.refrigeratorId}
-              listName={list?.title}
             />
           )}
         </>

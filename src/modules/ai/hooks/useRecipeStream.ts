@@ -5,7 +5,7 @@
  */
 import { useState, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
+import { selectActiveGroupId } from '@/store/slices/activeGroupSlice';
 import { aiRecipeApi } from '../api/aiRecipeApi';
 import { validateRecipes, validateGreeting } from '../utils/responseValidator';
 import {
@@ -13,8 +13,6 @@ import {
   type DisplayRecipe,
 } from '../utils/recipeTransformer';
 import { useSaveAIRecipeMutation } from '../api/queries';
-import { useSendNotificationMutation } from '@/modules/notifications/api/queries';
-import { useNotificationMetadata } from '@/modules/notifications/hooks/useNotificationMetadata';
 import type { AIRecipeRequest, AIStreamEvent } from '../types';
 
 export type StreamState = {
@@ -61,17 +59,11 @@ export const useRecipeStream = () => {
   const abortControllerRef = useRef<AbortController | null>(null);
   const currentPromptRef = useRef<string>('');
 
-  // 從 Redux 取得當前冰箱 ID（根據 Code Review 建議，統一來源）
-  const refrigeratorId = useSelector(selectActiveRefrigeratorId);
-
-  // 取得群組名稱和操作者資訊
-  const { groupName, actorName, actorId } = useNotificationMetadata(
-    refrigeratorId || undefined,
-  );
+  // 從 Redux 取得當前群組 ID（根據 Code Review 建議，統一來源）
+  const groupId = useSelector(selectActiveGroupId);
 
   // Mutations
   const { mutateAsync: saveRecipe } = useSaveAIRecipeMutation();
-  const { mutateAsync: sendNotification } = useSendNotificationMutation();
 
   /**
    * 解析 SSE 事件並更新狀態
@@ -158,7 +150,7 @@ export const useRecipeStream = () => {
                       description: s.description,
                     })),
                     originalPrompt: currentPromptRef.current,
-                    refrigeratorId: refrigeratorId || undefined,
+                    groupId: groupId || undefined,
                   });
                 }),
               );
@@ -170,29 +162,13 @@ export const useRecipeStream = () => {
                 savedIds,
               );
 
-              // 發送 AI 食譜生成通知
-              if (refrigeratorId && finalRecipes.length > 0) {
-                const firstRecipeName = finalRecipes[0].name;
-                const msg =
-                  finalRecipes.length > 1
-                    ? `已為您生成 ${firstRecipeName} 等 ${finalRecipes.length} 道新食譜！`
-                    : `已為您生成新食譜：${firstRecipeName}`;
+              // 將後端回傳的 imageUrl 覆蓋進去（如果後端有填補）
+              finalRecipes = finalRecipes.map((recipe, i) => ({
+                ...recipe,
+                imageUrl: savedRecipes[i]?.imageUrl ?? recipe.imageUrl,
+              }));
 
-                await sendNotification({
-                  groupId: refrigeratorId,
-                  title: 'AI 食譜生成完成',
-                  body: msg,
-                  type: 'recipe',
-                  subType: 'generate',
-                  group_name: groupName,
-                  actor_name: actorName,
-                  actor_id: actorId,
-                  action: {
-                    type: 'recipe',
-                    payload: { recipeId: finalRecipes[0].id },
-                  },
-                });
-              }
+              // 通知由後端在 API 完成時自動觸發，前端不再手動發送
             } catch (err) {
               console.error('Auto-save recipes failed:', err);
               // 動態引入 toast 以避免頂層循環依賴或 SSR 問題
@@ -235,14 +211,7 @@ export const useRecipeStream = () => {
         }
       }
     },
-    [
-      refrigeratorId,
-      groupName,
-      actorName,
-      actorId,
-      saveRecipe,
-      sendNotification,
-    ],
+    [groupId, saveRecipe],
   );
 
   /**

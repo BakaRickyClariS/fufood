@@ -1,4 +1,7 @@
-import { aiApi, backendApi } from '@/api/client';
+import { api } from '@/api/client';
+import { ENDPOINTS } from '@/api/endpoints';
+import { identity } from '@/shared/utils/identity';
+
 import type {
   FoodScanApi,
   ScanResult,
@@ -164,10 +167,12 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     };
   };
 
+  /* ... */
+
   const recognizeImage = async (imageUrl: string): Promise<ScanResult> => {
     try {
       // Updated endpoint to match v2.1 spec
-      const data = await aiApi.post<RawScanResponse>('/ai/analyze-image', {
+      const data = await api.post<RawScanResponse>(ENDPOINTS.AI.ANALYZE_IMAGE, {
         imageUrl,
       });
       return transformScanResult(data);
@@ -193,8 +198,8 @@ export const createRealFoodScanApi = (): FoodScanApi => {
       formData.append('maxIngredients', String(maxIngredients));
 
       // Updated endpoint to match v2.1 spec
-      const response = await aiApi.post<MultipleScanResult>(
-        '/ai/analyze-image/multiple',
+      const response = await api.post<MultipleScanResult>(
+        ENDPOINTS.AI.ANALYZE_MULTIPLE,
         formData,
         {
           headers: {
@@ -214,13 +219,18 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     data: FoodItemInput,
   ): Promise<FoodItemResponse> => {
     // 將前端 FoodItemInput 格式轉換為 API 預期的 FoodItem 格式
+    const groupId = identity.getCachedGroupId();
+    if (!groupId) throw new Error('無效的群組');
+
     const apiPayload = {
       name: data.productName, // productName → name
       category: data.category,
       quantity: Number(data.purchaseQuantity) || 1, // purchaseQuantity → quantity, ensure number
       unit: data.unit,
       purchaseDate: data.purchaseDate,
-      expiryDate: data.expiryDate ? data.expiryDate : undefined, // empty string -> undefined
+      purchase_date: data.purchaseDate, // fallback for backend v2
+      expiryDate: data.expiryDate ? data.expiryDate : undefined,
+      expiry_date: data.expiryDate ? data.expiryDate : undefined, // fallback for backend v2
       lowStockAlert: data.lowStockAlert,
       lowStockThreshold: Number(data.lowStockThreshold) || 2,
       notes: data.notes,
@@ -232,53 +242,83 @@ export const createRealFoodScanApi = (): FoodScanApi => {
           : [],
     };
 
-    // 庫存 API 在 AI 後端上 (/refrigerators/{id}/inventory)
-    if (data.groupId) {
-      return aiApi.post<FoodItemResponse>(
-        `/refrigerators/${data.groupId}/inventory`,
-        apiPayload,
-      );
-    }
-
-    // 如果沒有 groupId，嘗試從 localStorage 取得
-    const cachedId = localStorage.getItem('activeRefrigeratorId');
-    if (cachedId) {
-      return aiApi.post<FoodItemResponse>(
-        `/refrigerators/${cachedId}/inventory`,
-        apiPayload,
-      );
-    }
-
-    // 最後 fallback：拋出錯誤提示使用者需要選擇冰箱
-    throw new Error('無法入庫：請先選擇一個冰箱群組');
+    // 這裡使用 api (原 backendApi) 呼叫標準後端 API
+    return api.post<FoodItemResponse>(
+      ENDPOINTS.INVENTORY.LIST(groupId),
+      apiPayload,
+    );
   };
 
+  /**
+   * 更新庫存品項 (修正與確認)
+   */
   const updateFoodItem = async (
     id: string,
     data: Partial<FoodItemInput>,
   ): Promise<FoodItemResponse> => {
-    // 庫存 API 已遷移至主後端
-    return backendApi.put<FoodItemResponse>(`/api/v1/inventory/${id}`, data);
+    const groupId = identity.getCachedGroupId();
+    if (!groupId) throw new Error('無效的群組');
+    return api.put<FoodItemResponse>(
+      ENDPOINTS.INVENTORY.BY_ID(groupId, id),
+      data,
+    );
   };
 
+  /**
+   * 刪除/撤銷辨識結果 (如果已儲存)
+   */
   const deleteFoodItem = async (id: string): Promise<{ success: boolean }> => {
-    // 庫存 API 已遷移至主後端
-    return backendApi.delete<{ success: boolean }>(`/api/v1/inventory/${id}`);
+    const groupId = identity.getCachedGroupId();
+    if (!groupId) throw new Error('無效的群組');
+    return api.delete<{ success: boolean }>(
+      ENDPOINTS.INVENTORY.BY_ID(groupId, id),
+    );
+  };
+
+  /**
+   * 取得特定庫存項目的詳細資訊 (用於 verify)
+   */
+  // const getInventoryItem = async (id: string): Promise<FoodItem> => {
+  //   const groupId = identity.getCachedGroupId();
+  //   if (!groupId) throw new Error("無效的冰箱群組");
+  //   const response = await api.get<{ data: FoodItem }>(
+  //     ENDPOINTS.INVENTORY.BY_ID(groupId, id),
+  //   );
+  //   return response.data || (response as unknown as FoodItem);
+  // };
+
+  /**
+   * 取得最近的辨識/新增紀錄
+   */
+  const getRecentItems = async (limit = 10): Promise<FoodItem[]> => {
+    const groupId = identity.getCachedGroupId();
+    if (!groupId) return [];
+
+    const response = await api.get<{ items: FoodItem[] }>(
+      `${ENDPOINTS.INVENTORY.LIST(groupId)}?limit=${limit}&sort=created_at&order=desc`,
+    );
+    // Handle response structure check
+    if (Array.isArray(response)) return response;
+    return response.items || (response as any).data || [];
   };
 
   const getFoodItems = async (
     filters?: FoodItemFilters,
   ): Promise<FoodItem[]> => {
+    const groupId = identity.getCachedGroupId();
+    if (!groupId) return [];
+
     // 庫存 API 已遷移至主後端
     const params: Record<string, string | number | boolean | undefined> = {};
     if (filters?.category) params.category = filters.category;
     if (filters?.status) params.status = filters.status;
 
-    const response = await backendApi.get<{ items: FoodItem[] }>(
-      '/api/v1/inventory',
-      params,
+    const response = await api.get<{ items: FoodItem[] }>(
+      ENDPOINTS.INVENTORY.LIST(groupId),
+      params as any, // Cast or fix type issue if needed
     );
-    return response.items;
+    if (Array.isArray(response)) return response;
+    return response.items || [];
   };
 
   return {
@@ -288,5 +328,6 @@ export const createRealFoodScanApi = (): FoodScanApi => {
     updateFoodItem,
     deleteFoodItem,
     getFoodItems,
+    getRecentItems,
   };
 };

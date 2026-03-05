@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
+import { getUserAvatarUrl } from '@/shared/utils/avatarUtils';
 import type { GroupMember } from '../../types/group.types';
 
 type MemberItemProps = {
@@ -25,9 +26,10 @@ export const MemberItem: FC<MemberItemProps> = ({
       {/* Avatar: w-14 h-14 (56px) */}
       <div className="w-14 h-14 rounded-full overflow-hidden border border-neutral-300 shrink-0">
         <img
-          src={member.avatar || ''}
+          src={getUserAvatarUrl(member)}
           alt={member.name}
           className="w-full h-full object-cover"
+          referrerPolicy="no-referrer"
         />
       </div>
       <div className="flex flex-col gap-1">

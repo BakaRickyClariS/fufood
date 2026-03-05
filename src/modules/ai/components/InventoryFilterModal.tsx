@@ -6,7 +6,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { cn } from '@/lib/utils';
 import { useSelector } from 'react-redux';
-import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
+import { selectActiveGroupId } from '@/store/slices/activeGroupSlice';
 import { categories as defaultCategories } from '@/modules/inventory/constants/categories';
 
 // Component Props
@@ -30,7 +30,7 @@ export const InventoryFilterModal: React.FC<InventoryFilterModalProps> = ({
   const overlayRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
+  const activeGroupId = useSelector(selectActiveGroupId);
 
   // 本地選擇狀態
   const [localSelected, setLocalSelected] =
@@ -39,7 +39,7 @@ export const InventoryFilterModal: React.FC<InventoryFilterModalProps> = ({
   // 取得庫存資料
   const { data, isLoading } = useInventoryQuery({
     limit: 100,
-    refrigeratorId: activeRefrigeratorId || undefined,
+    groupId: activeGroupId || undefined,
   });
   const items = data?.data?.items || [];
 

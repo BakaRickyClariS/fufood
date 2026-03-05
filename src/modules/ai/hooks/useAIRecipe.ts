@@ -7,17 +7,15 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import { selectActiveRefrigeratorId } from '@/store/slices/refrigeratorSlice';
+import { selectActiveGroupId } from '@/store/slices/activeGroupSlice';
 import { aiRecipeApi } from '../api/aiRecipeApi';
 import { useRecipeStream } from './useRecipeStream';
 import { useSaveAIRecipeMutation } from '../api/queries';
-import { useSendNotificationMutation } from '@/modules/notifications/api/queries';
-import { useNotificationMetadata } from '@/modules/notifications/hooks/useNotificationMetadata';
 import {
   transformAIRecipesToDisplayModels,
   type DisplayRecipe,
 } from '../utils/recipeTransformer';
-import type { AIRecipeRequest } from '../types';
+import type { AIRecipeRequest, AIRecipeItem } from '../types';
 import { validateRecipes } from '../utils/responseValidator';
 
 // ============================================================
@@ -123,9 +121,9 @@ export const useAIRecipeGenerate = (
   // 標準模式
   const mutation = useGenerateRecipeMutation();
   const { mutateAsync: saveRecipe } = useSaveAIRecipeMutation();
-  const { mutateAsync: sendNotification } = useSendNotificationMutation();
-  const activeRefrigeratorId = useSelector(selectActiveRefrigeratorId);
-  const { groupName, actorName, actorId } = useNotificationMetadata(activeRefrigeratorId || undefined);
+
+  const activeGroupId = useSelector(selectActiveGroupId);
+
   const [manualRecipes, setManualRecipes] = useState<DisplayRecipe[] | null>(
     null,
   );
@@ -140,11 +138,16 @@ export const useAIRecipeGenerate = (
     } else {
       const response = await mutation.mutateAsync(request);
 
+      // aiApi 已 auto-unwrap v2 response，response 直接是 { greeting, recipes, ... }
+      // 需同時相容 mock 資料（有 isMock 欄位，recipes 已在頂層）
+      const recipes: AIRecipeItem[] =
+        (response as any).recipes ?? (response as any).data?.recipes ?? [];
+
       // 如果是真實 API 回傳且有食譜，執行自動儲存
-      if (!response.isMock && response.data.recipes.length > 0) {
+      if (!response.isMock && recipes.length > 0) {
         try {
           // 1. 驗證並清理資料 (確保結構正確且安全)
-          const validatedRecipes = validateRecipes(response.data.recipes);
+          const validatedRecipes = validateRecipes(recipes);
 
           const savedResults = await Promise.all(
             validatedRecipes.map((r) =>
@@ -170,48 +173,17 @@ export const useAIRecipeGenerate = (
                   description: s.description,
                 })),
                 originalPrompt: request.prompt,
-                refrigeratorId: activeRefrigeratorId || undefined,
+                groupId: activeGroupId || undefined,
               }),
             ),
           );
 
-          // 發送 AI 食譜生成通知
-          if (activeRefrigeratorId && savedResults.length > 0) {
-            const firstRecipeName = savedResults[0].name;
-            const title =
-              savedResults.length > 1
-                ? `阿福靈感大爆發！${savedResults.length} 道新食譜出爐`
-                : `阿福靈感大爆發！新食譜出爐`;
-            const msg =
-              savedResults.length > 1
-                ? `冰箱小隊為您獻上 ${firstRecipeName} 等 ${savedResults.length} 道料理靈感！`
-                : `冰箱小隊為您獻上今日料理靈感：${firstRecipeName}`;
-
-            sendNotification({
-              groupId: activeRefrigeratorId,
-              title,
-              body: msg,
-              type: 'recipe',
-              subType: 'generate',
-              groupName,
-              actorName,
-              actorId,
-              group_name: groupName,
-              actor_name: actorName,
-              actor_id: actorId,
-              action: {
-                type: 'recipe',
-                payload: { recipeId: savedResults[0].id },
-              },
-            }).catch((err) =>
-              console.error('[useAIRecipe] Failed to send notification:', err),
-            );
-          }
+          // 通知由後端在 API 完成時自動觸發，前端不再手動發送
 
           // 使用後端回傳的真實 ID 轉換資料
           const savedIds = savedResults.map((s) => s?.id);
           const transformedRecipes = transformAIRecipesToDisplayModels(
-            response.data.recipes,
+            recipes,
             savedIds,
           );
 
@@ -219,17 +191,11 @@ export const useAIRecipeGenerate = (
         } catch (err) {
           console.error('Auto-save failed in normal mode:', err);
           // 儲存失敗仍顯示原始結果（也需轉換以正確顯示）
-          const transformedRecipes = transformAIRecipesToDisplayModels(
-            response.data.recipes,
-          );
-          setManualRecipes(transformedRecipes);
+          setManualRecipes(transformAIRecipesToDisplayModels(recipes));
         }
       } else {
         // Mock 資料或無結果
-        const transformedRecipes = transformAIRecipesToDisplayModels(
-          response.data.recipes,
-        );
-        setManualRecipes(transformedRecipes);
+        setManualRecipes(transformAIRecipesToDisplayModels(recipes));
       }
     }
   };
@@ -278,23 +244,31 @@ export const useAIRecipeGenerate = (
   }
 
   // 計算 recipes（確保型別一致）
+  // aiApi auto-unwrap 後 mutation.data 直接是 { greeting, recipes, ... }
   const getRecipes = (): DisplayRecipe[] | null => {
     if (manualRecipes) return manualRecipes;
-    if (mutation.data?.data.recipes) {
-      return transformAIRecipesToDisplayModels(mutation.data.data.recipes);
+    const rawData = mutation.data as any;
+    const recipeList = rawData?.recipes ?? rawData?.data?.recipes;
+    if (recipeList) {
+      return transformAIRecipesToDisplayModels(recipeList);
     }
     return null;
   };
 
+  const rawMutationData = mutation.data as any;
+
   return {
     generate,
     isLoading: mutation.isPending,
-    text: mutation.data?.data.greeting ?? '',
+    text: rawMutationData?.greeting ?? rawMutationData?.data?.greeting ?? '',
     progress: mutation.isSuccess ? 100 : 0,
     stage: mutation.isPending ? '生成中...' : mutation.isSuccess ? '完成' : '',
     recipes: getRecipes(),
     error: errorMsg,
-    remainingQueries: mutation.data?.data.remainingQueries ?? null,
+    remainingQueries:
+      rawMutationData?.remainingQueries ??
+      rawMutationData?.data?.remainingQueries ??
+      null,
     stop,
     reset,
   };

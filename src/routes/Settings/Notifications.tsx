@@ -5,7 +5,7 @@ import {
   useNotificationSettingsQuery,
   useUpdateNotificationSettingsMutation,
 } from '@/modules/notifications/api/queries';
-import { useFCMContext } from '@/shared/providers/FCMProvider';
+import { useFCMContext } from '@/shared/hooks/useFCMContext';
 import type { NotificationSettings } from '@/modules/notifications/types';
 import { useEffect, useState } from 'react';
 

@@ -1,7 +1,5 @@
 ﻿import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSelector } from 'react-redux';
 import { groupsApi, GroupsApiError } from '../api';
-import { selectAllGroups } from '../store/groupsSlice';
 import type { GroupMember, InviteMemberForm } from '../types/group.types';
 
 type CurrentUserInfo = {
@@ -26,13 +24,6 @@ export const useGroupMembers = (
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-
-  // 取得群組資訊以獲取群組名稱
-  const allGroups = useSelector(selectAllGroups);
-  const currentGroup = allGroups.find((g) => g.id === groupId);
-  const groupName = currentGroup?.name || '我的冰箱';
-  const actorName = currentUser?.name || '使用者';
-  const actorId = currentUser?.id;
 
   // Use ref to avoid infinite loop from object dependency
   const currentUserRef = useRef(currentUser);
@@ -59,11 +50,21 @@ export const useGroupMembers = (
       // 注入當前使用者（如果不在清單中）
       // 這通常發生在剛建立群組或後端 API 未回傳擁有者時
       if (user && user.name) {
-        const userAlreadyInList = memberList.some(
+        const userIndex = memberList.findIndex(
           (m) => m.name === user.name || (m.id && user.id && m.id === user.id),
         );
 
-        if (!userAlreadyInList) {
+        if (userIndex !== -1) {
+          // 當前使用者已在名單中，但後端可能沒有回傳完整的 LINE 頭像 (僅有字串 "1")
+          // 因此利用傳入的 currentUser 覆蓋
+          finalMembers[userIndex] = {
+            ...finalMembers[userIndex],
+            avatar:
+              finalMembers[userIndex].profilePictureUrl ||
+              user.avatar ||
+              finalMembers[userIndex].avatar,
+          };
+        } else {
           const currentUserMember: GroupMember = {
             id: user.id || 'current-user',
             name: user.name,
@@ -107,32 +108,7 @@ export const useGroupMembers = (
       console.log('✅ [useGroupMembers] 邀請成功，重新取得成員列表');
       await fetchMembers();
 
-      // 發送通知給群組成員（新成員加入）
-      try {
-        const memberIds = members.map((m) => m.id).filter(Boolean) as string[];
-        if (memberIds.length > 0) {
-          const { notificationsApiImpl } = await import(
-            '@/modules/notifications/api/notificationsApiImpl'
-          );
-          await notificationsApiImpl.sendNotification({
-            userIds: memberIds,
-            title: '新成員加入',
-            body: `${form.email} 已被邀請加入群組`,
-            type: 'group',
-            subType: 'member',
-            group_name: groupName,
-            actor_name: actorName,
-            actor_id: actorId,
-            action: {
-              type: 'detail',
-              payload: { refrigeratorId: groupId },
-            },
-          });
-          console.log('📢 [useGroupMembers] 已發送成員加入通知');
-        }
-      } catch (notifyError) {
-        console.warn('通知發送失敗 (不影響主流程):', notifyError);
-      }
+      // 通知由後端在 API 完成時自動觸發，前端不再手動發送
 
       console.groupEnd();
     } catch (err) {
@@ -156,45 +132,11 @@ export const useGroupMembers = (
     setIsLoading(true);
     setError(null);
 
-    // 取得成員名稱供通知使用
-    const memberToRemove = members.find((m) => m.id === memberId);
-    const memberName = memberToRemove?.name || '成員';
-
     try {
       await groupsApi.removeMember(groupId, memberId);
       setMembers((prev) => prev.filter((m) => m.id !== memberId));
 
-      // 發送推播通知給剩餘成員
-      try {
-        // 取得剩餘成員 ID（排除被移除的成員）
-        const remainingMemberIds = members
-          .filter((m) => m.id !== memberId)
-          .map((m) => m.id)
-          .filter(Boolean) as string[];
-
-        if (remainingMemberIds.length > 0) {
-          const { notificationsApiImpl } = await import(
-            '@/modules/notifications/api/notificationsApiImpl'
-          );
-          await notificationsApiImpl.sendNotification({
-            userIds: remainingMemberIds,
-            title: '群組成員變動',
-            body: `${memberName} 已離開群組`,
-            type: 'group',
-            subType: 'member',
-            group_name: groupName,
-            actor_name: actorName,
-            actor_id: actorId,
-            action: {
-              type: 'detail',
-              payload: { refrigeratorId: groupId },
-            },
-          });
-          console.log('📢 [useGroupMembers] 已發送成員離開通知');
-        }
-      } catch (notifyError) {
-        console.warn('通知發送失敗 (不影響主流程):', notifyError);
-      }
+      // 通知由後端在 API 完成時自動觸發，前端不再手動發送
 
       console.log('✅ [useGroupMembers] 成員移除成功');
       console.groupEnd();

@@ -7,7 +7,7 @@ export type SharedList = {
   title: string;
   coverPhotoPath: string | null;
   startsAt: string; // ISO String
-  refrigeratorId: string;
+  groupId: string;
   enableNotifications: boolean;
   items?: SharedListItem[]; // 取得單一清單時才會有
   createdAt: string;
@@ -57,4 +57,3 @@ export type SharedListPost = {
   items: (SharedListItem & { imageUrl?: string | null })[]; // Merge photoPath/imageUrl
   createdAt: string;
 };
-

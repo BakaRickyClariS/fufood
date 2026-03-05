@@ -1,4 +1,8 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
+import {
+  createSlice,
+  createAsyncThunk,
+  type PayloadAction,
+} from '@reduxjs/toolkit';
 import { sharedListApi } from '@/modules/planning/services/api/sharedListApi';
 import type {
   SharedList,
@@ -29,9 +33,9 @@ const initialState: ShoppingListState = {
 
 export const fetchShoppingLists = createAsyncThunk(
   'shoppingList/fetchLists',
-  async (refrigeratorId: string, { rejectWithValue }) => {
+  async (groupId: string, { rejectWithValue }) => {
     try {
-      return await sharedListApi.getSharedLists(refrigeratorId);
+      return await sharedListApi.getSharedLists(groupId);
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : 'Failed to fetch lists',
@@ -56,19 +60,13 @@ export const fetchListItems = createAsyncThunk(
 export const createShoppingList = createAsyncThunk(
   'shoppingList/createList',
   async (
-    {
-      refrigeratorId,
-      input,
-    }: { refrigeratorId: string; input: CreateSharedListInput },
+    { groupId, input }: { groupId: string; input: CreateSharedListInput },
     { dispatch, rejectWithValue },
   ) => {
     try {
-      const newList = await sharedListApi.createSharedList(
-        refrigeratorId,
-        input,
-      );
+      const newList = await sharedListApi.createSharedList(groupId, input);
       // Automatically refresh lists
-      dispatch(fetchShoppingLists(refrigeratorId));
+      dispatch(fetchShoppingLists(groupId));
       return newList;
     } catch (error) {
       return rejectWithValue(
@@ -81,12 +79,12 @@ export const createShoppingList = createAsyncThunk(
 export const deleteShoppingList = createAsyncThunk(
   'shoppingList/deleteList',
   async (
-    { listId, refrigeratorId }: { listId: string; refrigeratorId: string },
+    { listId, groupId }: { listId: string; groupId: string },
     { dispatch, rejectWithValue },
   ) => {
     try {
       await sharedListApi.deleteSharedList(listId);
-      dispatch(fetchShoppingLists(refrigeratorId));
+      dispatch(fetchShoppingLists(groupId));
       return listId;
     } catch (error) {
       return rejectWithValue(
@@ -101,10 +99,7 @@ export const deleteShoppingList = createAsyncThunk(
 export const createListItem = createAsyncThunk(
   'shoppingList/createItem',
   async (
-    {
-      listId,
-      input,
-    }: { listId: string; input: CreateSharedListItemInput },
+    { listId, input }: { listId: string; input: CreateSharedListItemInput },
     { dispatch, rejectWithValue },
   ) => {
     try {
@@ -124,10 +119,7 @@ export const createListItem = createAsyncThunk(
 export const createListItems = createAsyncThunk(
   'shoppingList/createItems',
   async (
-    {
-      listId,
-      inputs,
-    }: { listId: string; inputs: CreateSharedListItemInput[] },
+    { listId, inputs }: { listId: string; inputs: CreateSharedListItemInput[] },
     { dispatch, rejectWithValue },
   ) => {
     try {
@@ -237,8 +229,9 @@ const shoppingListSlice = createSlice({
 
 export const { setCurrentListId, clearError } = shoppingListSlice.actions;
 
-export const selectShoppingLists = (state: { shoppingList: ShoppingListState }) =>
-  state.shoppingList.lists;
+export const selectShoppingLists = (state: {
+  shoppingList: ShoppingListState;
+}) => state.shoppingList.lists;
 export const selectCurrentListItems = (state: {
   shoppingList: ShoppingListState;
 }) => state.shoppingList.currentListItems;

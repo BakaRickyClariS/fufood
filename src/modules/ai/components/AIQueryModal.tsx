@@ -96,10 +96,19 @@ export const AIQueryModal = ({
   // 建議標籤
   const { data: suggestionsData } = useRecipeSuggestions();
   const suggestionTags = useMemo(() => {
-    const tags = Array.isArray(suggestionsData?.data)
-      ? suggestionsData.data
-      : DEFAULT_SUGGESTION_TAGS;
-    // 確保標籤不重複
+    const rawData = suggestionsData?.data;
+    let tags: string[] = DEFAULT_SUGGESTION_TAGS;
+    if (Array.isArray(rawData)) {
+      // v1 格式: data 直接是 string[]
+      tags = rawData;
+    } else if (
+      rawData &&
+      typeof rawData === 'object' &&
+      'suggestions' in rawData
+    ) {
+      // v2 格式: data.suggestions 是 string[]
+      tags = (rawData as { suggestions: string[] }).suggestions;
+    }
     return Array.from(new Set(tags));
   }, [suggestionsData]);
 
@@ -147,10 +156,18 @@ export const AIQueryModal = ({
           hasAutoOpenedRef.current = true;
           // 稍微延遲一點開啟，讓使用者能看到生成的過程或結果卡片出現的瞬間
           setTimeout(() => {
-            // 這裡直接使用 handleCardClick 邏輯，但為了避免重複 code，直接呼叫
             const mappedRecipe = recipes.find((r) => r.id === firstRecipe.id);
             if (mappedRecipe) {
-              setSelectedRecipe(mappedRecipe as unknown as RecipeListItem);
+              // 只傳 list-item 格式，讓 RecipeDetailModal 去 API fetch 完整資料
+              setSelectedRecipe({
+                id: mappedRecipe.id,
+                name: mappedRecipe.name,
+                category: mappedRecipe.category,
+                imageUrl: mappedRecipe.imageUrl,
+                servings: mappedRecipe.servings,
+                cookTime: mappedRecipe.cookTime,
+                isFavorite: mappedRecipe.isFavorite,
+              } as unknown as RecipeListItem);
               setIsRecipeModalOpen(true);
             }
           }, 500);
@@ -266,10 +283,20 @@ export const AIQueryModal = ({
   };
 
   const handleCardClick = (recipeId: string) => {
-    // 優先從 displayRecipes 找
     const recipe = displayRecipes?.find((r) => r.id === recipeId);
     if (recipe) {
-      setSelectedRecipe(recipe as unknown as RecipeListItem);
+      // 只傳 list-item 格式（不帶 ingredients/steps），讓 RecipeDetailModal 走正常 API fetch 流程
+      // 這樣能確保拿到後端儲存的完整資料（含 imageUrl）
+      const recipeListItem = {
+        id: recipe.id,
+        name: recipe.name,
+        category: recipe.category,
+        imageUrl: recipe.imageUrl,
+        servings: recipe.servings,
+        cookTime: recipe.cookTime,
+        isFavorite: recipe.isFavorite,
+      } as unknown as RecipeListItem;
+      setSelectedRecipe(recipeListItem);
       setIsRecipeModalOpen(true);
     }
   };
@@ -315,7 +342,7 @@ export const AIQueryModal = ({
             'fixed inset-0 z-150 flex flex-col transition-all duration-0',
             !isOpen && 'invisible pointer-events-none',
             // 在 inspiration 模式下，當 RecipeDetailModal 開啟時，隱藏 AIQueryModal 主體
-            // 這樣 RecipeDetailModal (z-130) 才能正確顯示在最上層
+            // 這樣 RecipeDetailModal (z-200) 才能正確顯示在最上層
             mode === 'inspiration' &&
               isRecipeModalOpen &&
               'invisible pointer-events-none',

@@ -18,11 +18,10 @@ jobs:
             ENVIRONMENT="測試版 (QA)"
           fi
 
-          curl -X POST "https://gemini-ai-recipe-gen-mvp.vercel.app/api/v1/admin/announcements/release" \
+          curl -X POST "https://gemini-ai-recipe-gen-mvp.vercel.app/api/v1/admin/release" \
           -H "Content-Type: application/json" \
-          -H "X-Deploy-Secret: ${{ secrets.DEPLOY_SECRET }}" \
+          -H "X-Deploy-Secret: ${{ secrets.ADMIN_DEPLOY_SECRET }}" \
           -d "{
             \"version\": \"FE-${{ github.sha }}\",
-            \"releaseNotes\": \"🚀 $ENVIRONMENT 更新：${{ github.event.head_commit.message }}\",
-            \"forceUpdate\": false
+            \"changes\": \"🚀 $ENVIRONMENT 更新：${{ github.event.head_commit.message }}\"
           }"

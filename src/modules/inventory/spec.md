@@ -19,7 +19,7 @@
 
 本模組負責管理使用者的 **食材庫存**。提供庫存列表檢視、食材新增/編輯/刪除、過期狀態追蹤、以及庫存統計功能。支援多種篩選與排序方式，並透過 Redux 管理全域狀態。
 
-> 新版 API（參考 `API_REFERENCE_V2.md`）：全面採用 `/refrigerators/{refrigeratorId}/inventory` 路徑。已整合過期、常用、統計路由；新增消耗功能。
+> 新版 API（參考 `API_REFERENCE_V2.md`）：全面採用 `/refrigerators/{groupId}/inventory` 路徑。已整合過期、常用、統計路由；新增消耗功能。
 
 
 ### 核心功能
@@ -145,34 +145,34 @@ export type FoodCategory =
 export const inventoryApi = {
   getInventory: (
     params?: GetInventoryRequest,
-    refrigeratorId?: string,
+    groupId?: string,
   ) => Promise<{ status: true; data: { items: FoodItem[]; total: number; stats?: InventoryStats; summary?: InventorySummary } }>;
-  getItem: (id: string, refrigeratorId?: string) => Promise<{ status: true; data: { item: FoodItem } }>;
+  getItem: (id: string, groupId?: string) => Promise<{ status: true; data: { item: FoodItem } }>;
   addItem: (
     data: AddFoodItemRequest,
-    refrigeratorId?: string,
+    groupId?: string,
   ) => Promise<{ status: true; message: string; data: { id: string } }>;
   updateItem: (
     id: string,
     data: UpdateFoodItemRequest,
-    refrigeratorId?: string,
+    groupId?: string,
   ) => Promise<{ status: true; message: string; data: { id: string } }>;
-  deleteItem: (id: string, refrigeratorId?: string) => Promise<{ status: true; message: string }>;
+  deleteItem: (id: string, groupId?: string) => Promise<{ status: true; message: string }>;
   batchDelete: (
     data: BatchDeleteInventoryRequest,
-    refrigeratorId?: string,
+    groupId?: string,
   ) => Promise<{ status: true; message?: string; data: Record<string, never> }>;
-  getCategories: (refrigeratorId?: string) => Promise<{ status: true; data: { categories: CategoryInfo[] } }>;
-  getSummary: (refrigeratorId?: string) => Promise<{ status: true; data: { summary: InventorySummary } }>;
-  getSettings: (refrigeratorId?: string) => Promise<{ status: true; data: { settings: InventorySettings } }>;
+  getCategories: (groupId?: string) => Promise<{ status: true; data: { categories: CategoryInfo[] } }>;
+  getSummary: (groupId?: string) => Promise<{ status: true; data: { summary: InventorySummary } }>;
+  getSettings: (groupId?: string) => Promise<{ status: true; data: { settings: InventorySettings } }>;
   updateSettings: (
     data: UpdateInventorySettingsRequest,
-    refrigeratorId?: string,
+    groupId?: string,
   ) => Promise<{ status: true; message?: string; data: { settings: InventorySettings } }>;
   consumeItem: (
     id: string,
     data: ConsumeFoodItemRequest,
-    refrigeratorId?: string,
+    groupId?: string,
   ) => Promise<{ status: true; message: string; data: { id: string; remainingQuantity: number; consumedAt: string } }>;
 
 };
@@ -206,7 +206,7 @@ export const foodsApi = {
 **Endpoint**
 
 ```
-GET /api/v1/refrigerators/{refrigeratorId}/inventory
+GET /api/v1/refrigerators/{groupId}/inventory
 
 ```
 
@@ -237,7 +237,7 @@ GET /api/v1/refrigerators/{refrigeratorId}/inventory
 **Endpoint**
 
 ```
-POST /api/v1/refrigerators/{refrigeratorId}/inventory
+POST /api/v1/refrigerators/{groupId}/inventory
 
 ```
 
@@ -276,15 +276,15 @@ POST /api/v1/refrigerators/{refrigeratorId}/inventory
 
 ```typescript
 ```typescript
-const useInventory = (groupId?: string) => { // groupId 即 refrigeratorId
+const useInventory = (groupId?: string) => { // groupId 即 groupId
   return {
     items: FoodItem[];
     isLoading: boolean;
     error: Error | null;
-    addItem: (data: AddFoodItemRequest, refrigeratorId?: string) => Promise<void>;
-    updateItem: (id: string, data: UpdateFoodItemRequest, refrigeratorId?: string) => Promise<void>;
-    deleteItem: (id: string, refrigeratorId?: string) => Promise<void>;
-    batchDelete: (ids: string[], refrigeratorId?: string) => Promise<void>;
+    addItem: (data: AddFoodItemRequest, groupId?: string) => Promise<void>;
+    updateItem: (id: string, data: UpdateFoodItemRequest, groupId?: string) => Promise<void>;
+    deleteItem: (id: string, groupId?: string) => Promise<void>;
+    batchDelete: (ids: string[], groupId?: string) => Promise<void>;
     refetch: () => Promise<void>;
   };
 };
