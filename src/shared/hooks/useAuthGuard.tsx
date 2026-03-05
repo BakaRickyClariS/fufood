@@ -1,10 +1,6 @@
-﻿import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+﻿import { useAuth } from '@/modules/auth/hooks/useAuth';
 
 export const useAuthGuard = () => {
-  // const navigate = useNavigate();
-  // useEffect(() => {
-  //   // 暫時 Disable guard 方便測試
-  // }, []);
-  return { isAuthenticated: true, user: { name: "Test User" } };
+  const { user, isAuthenticated } = useAuth();
+  return { isAuthenticated, user };
 };

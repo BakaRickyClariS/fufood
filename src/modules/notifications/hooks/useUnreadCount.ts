@@ -15,9 +15,9 @@ export const useUnreadCount = () => {
   const { data, isLoading } = useNotificationsQuery();
 
   const unreadCount = useMemo(() => {
-    if (!data?.data?.items) return 0;
-    return data.data.items.filter((n) => !n.isRead).length;
-  }, [data?.data?.items]);
+    if (!data?.items) return 0;
+    return data.items.filter((n) => !n.isRead).length;
+  }, [data?.items]);
 
   const hasUnread = unreadCount > 0;
 

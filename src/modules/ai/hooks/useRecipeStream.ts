@@ -104,14 +104,6 @@ export const useRecipeStream = () => {
           break;
 
         case 'done': {
-          // [DEBUG] 確認後端 SSE done event 是否有 imageUrl
-          console.log(
-            '[AI SSE Done] recipes imageUrls:',
-            (event.data.recipes || []).map((r: any) => ({
-              name: r.name,
-              imageUrl: r.imageUrl,
-            })),
-          );
           // 驗證 AI 回應結構
           const validatedRecipes = validateRecipes(event.data.recipes || []);
 
