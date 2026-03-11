@@ -43,9 +43,9 @@ export const useNotificationMetadata = (groupId?: string) => {
     currentGroup?.name ||
     (groups.length > 0 && !groupId ? groups[0]?.name : '我的群組');
 
-  // 使用 Email 前綴作為 displayName 的備案
+  // 使用 Email 前綴作為 name 的備案
   const emailPrefix = user?.email ? user.email.split('@')[0] : '使用者';
-  const actorName = user?.displayName || user?.name || emailPrefix;
+  const actorName = user?.name || emailPrefix;
   const actorId = user?.id;
 
   return {

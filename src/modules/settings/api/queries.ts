@@ -63,12 +63,6 @@ export const useUpdateProfileMutation = () => {
           profileData.display_name ||
           existingUser?.name ||
           '',
-        displayName:
-          profileData.displayName ||
-          profileData.name ||
-          profileData.display_name ||
-          existingUser?.displayName ||
-          '',
         avatar:
           profileData.profilePictureUrl ??
           profileData.avatar ??

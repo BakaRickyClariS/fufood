@@ -19,6 +19,7 @@ import { categories as defaultCategories } from '@/modules/inventory/constants/c
 import { selectActiveGroupId } from '@/store/slices/activeGroupSlice';
 import { useDispatch } from 'react-redux';
 import { clearConsumption } from '@/modules/inventory/store/consumptionSlice';
+import { useTourStore } from '@/store/useTourStore';
 
 type FoodDetailModalProps = {
   item: FoodItem;
@@ -38,6 +39,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   const activeGroupId = useSelector(selectActiveGroupId);
   const dispatch = useDispatch();
+  const { setStep } = useTourStore();
 
   // 消耗 Modal 狀態
   const [showConsumptionModal, setShowConsumptionModal] = useState(false);
@@ -207,6 +209,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
         mode: 'inspiration',
       });
       setShowAIModal(true);
+      setStep('RECIPE_SYNC');
     } finally {
       setIsProcessing(false);
     }
@@ -454,7 +457,7 @@ const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
                 {isCompleted ? '已消耗完畢' : '消耗食材'}
               </button>
               <button
-                className="flex-1 py-3 bg-primary-400 text-white rounded-lg text-base font-bold active:scale-95 transition-transform shadow-md shadow-orange-100"
+                className="tour-step-ai-recipe flex-1 py-3 bg-primary-400 text-white rounded-lg text-base font-bold active:scale-95 transition-transform shadow-md shadow-orange-100"
                 onClick={handleRecipeInspiration}
                 disabled={isProcessing}
               >

@@ -141,7 +141,7 @@ const PlanningHome = () => {
     : null;
 
   return (
-    <div className="min-h-screen bg-neutral-50 pb-24 max-w-layout-container mx-auto">
+    <div className="tour-step-shopping-list min-h-screen bg-neutral-50 pb-24 max-w-layout-container mx-auto">
       <PlanningTabsSection>
         {(mainTab, subTab, year, month) => (
           <>

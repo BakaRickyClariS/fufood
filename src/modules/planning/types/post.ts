@@ -7,8 +7,6 @@ export type ShoppingItem = {
   imageUrl?: string;
 };
 
-
-
 /** 建立貼文輸入 */
 export type CreatePostInput = {
   listId: string;

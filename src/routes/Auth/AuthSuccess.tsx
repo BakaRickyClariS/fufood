@@ -26,11 +26,6 @@ const AuthSuccess = () => {
             profileData.displayName ||
             profileData.display_name ||
             '',
-          displayName:
-            profileData.displayName ||
-            profileData.name ||
-            profileData.display_name ||
-            '',
           avatar: profileData.profilePictureUrl || profileData.avatar || '',
           pictureUrl:
             profileData.profilePictureUrl || profileData.avatar || undefined,

@@ -80,7 +80,7 @@ export const useSharedListItems = (listId: string | undefined) => {
       );
       // 因為 updateSharedListItem 只回傳 void，這裡樂觀更新或重新 fetch
       // 若需要完整資料需重新 fetch，但為了效能先這樣
-      fetchItems(); 
+      fetchItems();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to update item';
       toast.error(msg);

@@ -27,17 +27,12 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (allGroups && allGroups.length > 0 && !activeGroupId) {
       const defaultId = allGroups[0].id;
-      console.log(
-        '[Dashboard] Auto-selecting default activeGroup:',
-        defaultId,
-      );
+      console.log('[Dashboard] Auto-selecting default activeGroup:', defaultId);
       dispatch(setActiveGroupId(defaultId));
     }
   }, [allGroups, activeGroupId, dispatch]);
 
-  const displayName = isInitialLoading
-    ? ''
-    : user?.name || user?.displayName || 'Guest';
+  const displayName = isInitialLoading ? '' : user?.name || 'Guest';
 
   return (
     <>

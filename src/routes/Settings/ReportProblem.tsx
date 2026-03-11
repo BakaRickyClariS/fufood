@@ -27,12 +27,7 @@ const ReportProblem = ({ isOpen, onClose }: ReportProblemProps) => {
   };
 
   return (
-    <SettingsModalLayout
-      isOpen={isOpen}
-      onClose={onClose}
-      title="回報問題"
-    >
-
+    <SettingsModalLayout isOpen={isOpen} onClose={onClose} title="回報問題">
       <form
         onSubmit={handleSubmit}
         className="max-w-layout-container mx-auto px-4 py-6 space-y-6"

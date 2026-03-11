@@ -5,9 +5,7 @@ import type {
   CreateSharedListItemInput,
   SharedListPost,
 } from '@/modules/planning/types/sharedList';
-import type {
-  CreatePostInput,
-} from '@/modules/planning/types/post';
+import type { CreatePostInput } from '@/modules/planning/types/post';
 import { MOCK_SHARED_LISTS, MOCK_POSTS } from './mockSharedListData';
 import { mockRequestHandlers } from '@/utils/debug/mockRequestHandlers';
 import type { SharedListApi } from '@/modules/planning/services/api/sharedListApi';
@@ -230,14 +228,14 @@ export class MockSharedListApi implements SharedListApi {
       authorAvatar: mockUser.avatar,
       content: input.content,
       images: input.images,
-      items: input.items.map(item => ({
+      items: input.items.map((item) => ({
         ...item,
         unit: item.unit || '個',
         photoPath: item.imageUrl || null,
         creatorId: mockUser.id,
         shoppingListId: input.listId,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       })),
       createdAt: new Date().toISOString(),
     };
@@ -275,14 +273,14 @@ export class MockSharedListApi implements SharedListApi {
       ...listPosts[index],
       content: input.content,
       images: input.images,
-      items: input.items.map(item => ({
+      items: input.items.map((item) => ({
         ...item,
         unit: item.unit || '個',
         photoPath: item.imageUrl || null,
         creatorId: 'mock_user', // Preserve existing or use generic
         shoppingListId: listId,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       })),
     };
 

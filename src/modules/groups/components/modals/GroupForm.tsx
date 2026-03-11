@@ -13,6 +13,7 @@ import { useAuth } from '@/modules/auth/hooks';
 import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock';
 import { getGroupLimit } from '@/modules/groups/constants/membershipLimits';
 import { toast } from 'sonner';
+import { useTourStore } from '@/store/useTourStore';
 
 type GroupFormProps = {
   open: boolean;
@@ -44,6 +45,7 @@ export const GroupForm: FC<GroupFormProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const { setStep } = useTourStore();
 
   const { user } = useAuth();
   const { currentTheme } = useTheme();
@@ -214,6 +216,8 @@ export const GroupForm: FC<GroupFormProps> = ({
         // 切換到新群組
         switchGroup(newGroup.id);
         toast.success('群組建立成功');
+        // 觸發新手導覽的下一步
+        setStep('PROFILE');
         handleClose();
         return;
       }

@@ -2,7 +2,9 @@ import { useRef, useEffect, useState } from 'react';
 import { useAuth } from '@/modules/auth';
 import { useUpdateProfileMutation } from '@/modules/settings/api/queries';
 import { Button } from '@/shared/components/ui/button';
-import SettingsModalLayout, { type SettingsModalLayoutRef } from '@/modules/settings/components/SettingsModalLayout';
+import SettingsModalLayout, {
+  type SettingsModalLayoutRef,
+} from '@/modules/settings/components/SettingsModalLayout';
 import ChipGroup from '@/modules/settings/components/ChipGroup';
 import {
   COOKING_FREQUENCY_OPTIONS,
@@ -21,7 +23,13 @@ import type {
 // 允許各欄位為 undefined（未選狀態）
 // type EditableDietaryPreference 已移除，直接使用 DietaryPreference
 
-const EditDietaryPreference = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+const EditDietaryPreference = ({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) => {
   // const navigate = useNavigate(); // remove
   const { user } = useAuth();
   const updateProfileMutation = useUpdateProfileMutation();
@@ -67,7 +75,7 @@ const EditDietaryPreference = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
     // 將 dietaryPreference 內容轉換成 preference 標籤陣列
     // 只加入有選擇的值，過濾掉 undefined 和 'none'
     const preferenceLabels: string[] = [];
-    
+
     if (preferences.cookingFrequency) {
       preferenceLabels.push(preferences.cookingFrequency);
     }
@@ -108,7 +116,6 @@ const EditDietaryPreference = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
       onClose={onClose}
       title="編輯飲食喜好"
     >
-
       <div className="max-w-layout-container mx-auto px-4 py-6 space-y-8">
         {/* 烹飪基礎 */}
         <div className="space-y-4">

@@ -44,7 +44,7 @@ export const SharedListDetail = ({
     list?.groupId || (list as any)?.group_id || '',
     currentUser
       ? {
-          name: currentUser.displayName || 'Me',
+          name: currentUser.name || 'Me',
           avatar: currentUser.avatar || '',
           id: currentUser.id,
         }
@@ -88,7 +88,7 @@ export const SharedListDetail = ({
           : undefined;
 
         if (currentUser && actualCreatorId === currentUser.id) {
-          authorName = currentUser.displayName || currentUser.name || 'Me';
+          authorName = currentUser.name || 'Me';
           authorAvatar = getUserAvatarUrl(currentUser);
         } else if (creator) {
           authorName = creator.name || 'Unknown User';

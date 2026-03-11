@@ -52,7 +52,7 @@ export type RecipeListItem = {
   id: string;
   name: string;
   category: RecipeCategory;
-  imageUrl: string | null;  // 允許 null，表示圖片生成失敗或未完成
+  imageUrl: string | null; // 允許 null，表示圖片生成失敗或未完成
   servings: number;
   cookTime: number;
   isFavorite?: boolean;

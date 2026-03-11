@@ -27,6 +27,7 @@ import {
   openThemeSelection,
   selectThemeSelectionIsOpen,
 } from '@/store/slices/themeSelectionSlice';
+import { useTourStore } from '@/store/useTourStore';
 
 /**
  * 表單值類型
@@ -69,16 +70,7 @@ const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const updateProfileMutation = useUpdateProfileMutation();
-
-  // 處理開啟主題選擇面板
-  const handleOpenThemeSheet = () => {
-    dispatch(
-      openThemeSelection({
-        selectedThemeId: selectedThemeId,
-        userName: displayName,
-      }),
-    );
-  };
+  const { setStep } = useTourStore();
 
   // 使用 memo 化的資料作為表單初始值，當使用者資料載入或更新時自動重設表單
   const initialValues = useMemo(() => {
@@ -108,6 +100,17 @@ const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
   const selectedGender = watch('gender');
   const selectedThemeId = watch('themeId');
   const selectedTheme = getThemeById(selectedThemeId);
+  const userName = effectiveUser?.name || 'User';
+
+  // 處理開啟主題選擇面板
+  const handleOpenThemeSheet = () => {
+    dispatch(
+      openThemeSelection({
+        selectedThemeId: selectedThemeId,
+        userName: userName,
+      }),
+    );
+  };
 
   const onSubmit = (data: ProfileFormValues) => {
     const genderValue = stringToGenderValue(data.gender);
@@ -125,6 +128,8 @@ const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
         onSuccess: async () => {
           // 儲存主題設定
           await setTheme(data.themeId);
+          // 推進導覽進度
+          setStep('AI_SCAN');
           // 顯示成功彈跳視窗
           setShowSuccessModal(true);
         },
@@ -140,25 +145,24 @@ const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
     setValue('themeId', themeId, { shouldDirty: true });
   };
 
-  const displayName =
-    effectiveUser?.name || effectiveUser?.displayName || 'User';
-
   return (
     <SettingsModalLayout isOpen={isOpen} onClose={onClose} title="編輯個人檔案">
-      <div className="max-w-layout-container mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-layout-container mx-auto px-4 pt-6 pb-32 space-y-6">
         {/* Avatar Section - 顯示 LINE 大頭貼 */}
         <div className="flex justify-center">
           <ProfileAvatar
             lineProfilePictureUrl={effectiveUser?.pictureUrl}
-            alt={displayName}
+            alt={userName}
           />
         </div>
 
         {/* 目前角色區塊 - 點擊變更開啟主題選擇 */}
-        <CurrentThemeCard
-          theme={selectedTheme}
-          onChangeClick={handleOpenThemeSheet}
-        />
+        <div className="tour-step-profile-edit">
+          <CurrentThemeCard
+            theme={selectedTheme}
+            onChangeClick={handleOpenThemeSheet}
+          />
+        </div>
 
         {/* 主題選擇底部彈出面板 */}
         <ThemeSelectionSheet
@@ -173,7 +177,7 @@ const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
         <form
           id="profile-form"
           onSubmit={handleSubmit(onSubmit)}
-          className="space-y-4 bg-white p-4 rounded-2xl"
+          className="tour-step-dietary space-y-4 bg-white p-4 rounded-2xl"
         >
           {/* Name */}
           <div className="space-y-2">
@@ -245,12 +249,14 @@ const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
             </div>
           )}
         </form>
+      </div>
 
-        {/* 儲存按鈕 - 放在 form 外面避免被白色背景影響 */}
+      {/* 固定在底部的儲存按鈕（與 Recipe 食譜樣式一致） */}
+      <div className="fixed bottom-0 left-0 right-0 max-w-layout-container mx-auto px-4 py-6 bg-white rounded-t-3xl shadow-[0_-4px_10px_rgba(0,0,0,0.1)] z-50">
         <Button
           type="submit"
           form="profile-form"
-          className="w-full py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-primary-300 disabled:opacity-100"
+          className="w-full h-[52px] bg-[#F5655D] hover:bg-[#E5554D] text-white rounded-xl font-bold text-base transition-colors shadow-lg shadow-red-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
           disabled={!isDirty || updateProfileMutation.isPending}
         >
           {updateProfileMutation.isPending ? '儲存中...' : '儲存'}

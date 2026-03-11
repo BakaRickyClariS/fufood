@@ -110,7 +110,10 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
       {/* 圖片區域 */}
       <div className="relative aspect-square md:aspect-21/9 md:h-auto overflow-hidden bg-neutral-100">
         <img
-          src={recipe.imageUrl || 'https://placehold.co/600x400?text=No+Image'}
+          src={
+            recipe.imageUrl ||
+            'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80'
+          }
           alt={recipe.name}
           className="w-full h-full object-cover"
         />
@@ -178,7 +181,7 @@ export const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
               <button
                 disabled={consumptionItems.length === 0}
                 onClick={() => onShowConsumptionModal(true)}
-                className="w-full py-3.5 bg-[#F5655D] text-white rounded-xl font-bold hover:bg-[#E5554D] transition-colors shadow-lg shadow-red-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                className="tour-step-recipe-consume w-full py-3.5 bg-[#F5655D] text-white rounded-xl font-bold hover:bg-[#E5554D] transition-colors shadow-lg shadow-red-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
               >
                 {consumptionItems.length === 0 ? '無可消耗食材' : '確認消耗'}
               </button>

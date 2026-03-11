@@ -1,5 +1,7 @@
-﻿import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useDispatch } from 'react-redux';
 import { groupsApi, GroupsApiError } from '../api';
+import { updateGroupMembers } from '../store/groupsSlice';
 import type { GroupMember, InviteMemberForm } from '../types/group.types';
 
 type CurrentUserInfo = {
@@ -24,6 +26,7 @@ export const useGroupMembers = (
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const dispatch = useDispatch();
 
   // Use ref to avoid infinite loop from object dependency
   const currentUserRef = useRef(currentUser);
@@ -48,15 +51,16 @@ export const useGroupMembers = (
       let finalMembers = [...memberList];
 
       // 注入當前使用者（如果不在清單中）
-      // 這通常發生在剛建立群組或後端 API 未回傳擁有者時
       if (user && user.name) {
+        const userIdToMatch = String(user.id);
         const userIndex = memberList.findIndex(
-          (m) => m.name === user.name || (m.id && user.id && m.id === user.id),
+          (m) =>
+            m.name === user.name ||
+            (m.id && userIdToMatch && String(m.id) === userIdToMatch),
         );
 
         if (userIndex !== -1) {
-          // 當前使用者已在名單中，但後端可能沒有回傳完整的 LINE 頭像 (僅有字串 "1")
-          // 因此利用傳入的 currentUser 覆蓋
+          // 當前使用者已在名單中，更新頭像資訊
           finalMembers[userIndex] = {
             ...finalMembers[userIndex],
             avatar:
@@ -64,22 +68,25 @@ export const useGroupMembers = (
               user.avatar ||
               finalMembers[userIndex].avatar,
           };
+          console.log(`✅ [useGroupMembers] 成功識別當前使用者 (${user.name})`);
         } else {
+          // 只有在成員列表為空，或真的找不到自己時才注入
           const currentUserMember: GroupMember = {
-            id: user.id || 'current-user',
+            id: user.id || '1',
             name: user.name,
             avatar: user.avatar,
-            role: 'owner', // 假設當前使用者是擁有者（對於新群組通常是）
+            role: 'owner',
           };
-          // 將當前使用者加入到列表最前方，且保留原始回傳的成員
           finalMembers = [currentUserMember, ...memberList];
           console.log(
-            `ℹ️ [useGroupMembers] 當前使用者不在列表中，已自動注入 (${user.name})`,
+            `ℹ️ [useGroupMembers] 當前使用者不在列表中，已主動注入 (${user.name})`,
           );
         }
       }
 
       setMembers(finalMembers);
+      // 同步到 Redux 全域狀態，確保 GroupList 等組件也能看到最新成員數
+      dispatch(updateGroupMembers({ groupId, members: finalMembers }));
       console.log(
         `✅ [useGroupMembers] 成功取得成員列表 (總數: ${finalMembers.length}, API回傳: ${memberList.length})`,
       );

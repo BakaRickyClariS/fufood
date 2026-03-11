@@ -38,12 +38,7 @@ const AppGuide = ({ isOpen, onClose }: AppGuideProps) => {
   // const navigate = useNavigate();
 
   return (
-    <SettingsModalLayout
-      isOpen={isOpen}
-      onClose={onClose}
-      title="使用說明"
-    >
-
+    <SettingsModalLayout isOpen={isOpen} onClose={onClose} title="使用說明">
       <div className="max-w-layout-container mx-auto px-4 py-6 space-y-6">
         {/* Intro */}
         <div className="text-center py-6">

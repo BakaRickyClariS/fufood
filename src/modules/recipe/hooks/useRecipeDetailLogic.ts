@@ -4,6 +4,7 @@ import { recipeApi } from '@/modules/recipe/services';
 import { useConsumption } from '@/modules/recipe/hooks/useConsumption';
 import { parseQuantity } from '@/modules/recipe/utils/parseQuantity';
 import type { Recipe, ConsumptionItem } from '@/modules/recipe/types';
+import { useTourStore } from '@/store/useTourStore';
 
 type UseRecipeDetailLogicProps = {
   recipeId?: string;
@@ -99,6 +100,12 @@ export const useRecipeDetailLogic = ({
 
       // 不在此處關閉 modal 或父層，由 ConsumptionModal 內部處理
       // setShowConsumptionModal 和 onClose 的調用已移至 RecipeDetailContent 的 onConfirm callback
+
+      // 導覽邏輯：若導覽進行中，切換至通知中心階段
+      const { isActive, setStep } = useTourStore.getState();
+      if (isActive) {
+        setStep('NOTIFICATIONS');
+      }
     } catch (err) {
       console.error('Consumption failed:', err);
       toast.error('更新失敗', {

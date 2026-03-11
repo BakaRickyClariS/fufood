@@ -9,6 +9,7 @@ const OtherSettingsList = ({ onNavigate }: OtherSettingsListProps) => {
     { label: '問題與幫助', key: 'help' },
     { label: '回報問題', key: 'report' },
     { label: '使用說明', key: 'guide' },
+    { label: '體驗新手教學', key: 'restart-tour' },
   ];
 
   return (

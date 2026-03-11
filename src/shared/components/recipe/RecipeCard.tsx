@@ -26,7 +26,9 @@ export const RecipeCard = ({
   };
 
   // Fallback image if imageUrl is null or empty
-  const displayImage = recipe.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80';
+  const displayImage =
+    recipe.imageUrl ||
+    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80';
 
   return (
     <div

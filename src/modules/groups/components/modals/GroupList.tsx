@@ -239,7 +239,7 @@ export const GroupList: FC<GroupListProps> = ({
           {/* 建立群組按鈕 - 設計稿樣式 */}
           <button
             onClick={onOpenCreateModal}
-            className="w-full h-14 rounded-lg border-2 mb-6 border-neutral-300 bg-white flex items-center justify-center gap-2 text-neutral-600 font-semibold hover:bg-neutral-50 hover:border-neutral-400 transition-colors"
+            className="tour-step-create-group w-full h-14 rounded-lg border-2 mb-6 border-neutral-300 bg-white flex items-center justify-center gap-2 text-neutral-600 font-semibold hover:bg-neutral-50 hover:border-neutral-400 transition-colors"
           >
             <Plus className="w-5 h-5" />
             建立群組

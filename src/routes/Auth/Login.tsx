@@ -87,10 +87,7 @@ const Login = () => {
             const groups = await groupsApi.getAll();
             if (groups && groups.length > 0) {
               const defaultGroupId = groups[0].id;
-              console.log(
-                '[Login] 設定預設 activeGroupId:',
-                defaultGroupId,
-              );
+              console.log('[Login] 設定預設 activeGroupId:', defaultGroupId);
               localStorage.setItem('activeGroupId', defaultGroupId);
             } else {
               console.log('[Login] 用戶沒有群組，無法設定預設 ID');

@@ -26,6 +26,7 @@ import { selectActiveGroupId } from '@/store/slices/activeGroupSlice';
 import { identity } from '@/shared/utils/identity';
 import { inventoryKeys } from '@/modules/inventory/api/queries';
 import { useEffect } from 'react';
+import { useTourStore } from '@/store/useTourStore';
 
 type ScanResultModalProps = {
   isOpen: boolean;
@@ -44,6 +45,7 @@ const ScanResultModal: React.FC<ScanResultModalProps> = ({
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const modalRef = React.useRef<HTMLDivElement>(null);
+  const { setStep } = useTourStore();
 
   // GSAP 進入/退出動畫
   useGSAP(
@@ -165,7 +167,7 @@ const ScanResultModal: React.FC<ScanResultModalProps> = ({
     return createPortal(
       <div
         ref={modalRef}
-        className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white p-6 text-center shadow-xl"
+        className="fixed inset-0 z-100 flex flex-col items-center justify-center bg-white p-6 text-center shadow-xl"
       >
         <h2 className="text-xl font-bold text-slate-800 mb-2">無資料</h2>
         <p className="text-slate-500 mb-6">找不到掃描結果，請重新掃描。</p>
@@ -266,6 +268,7 @@ const ScanResultModal: React.FC<ScanResultModalProps> = ({
     if (isBatchMode) {
       dispatch(reset());
     }
+    setStep('INVENTORY_WARNING');
     navigate('/inventory');
   };
 
@@ -375,23 +378,25 @@ const ScanResultModal: React.FC<ScanResultModalProps> = ({
   return createPortal(
     <div
       ref={modalRef}
-      className="fixed inset-0 z-[100] bg-white overflow-hidden"
+      className="fixed inset-0 z-100 bg-white overflow-hidden"
     >
       {displayResult && (
-        <ScanResultPreview
-          result={editedData || displayResult}
-          imageUrl={displayImage}
-          onEdit={() => setMode('edit')}
-          onConfirm={handleConfirm}
-          onBack={handleBack}
-          onDelete={handleDeleteItem}
-          onPrev={handlePrev}
-          onNext={handleNext}
-          onConfirmAll={handleConfirmAll}
-          submitStatus={submitStatus}
-          currentIndex={isBatchMode ? currentIndex + 1 : undefined}
-          totalCount={isBatchMode ? items.length : undefined}
-        />
+        <div className="tour-step-scan-confirm h-full">
+          <ScanResultPreview
+            result={editedData || displayResult}
+            imageUrl={displayImage}
+            onEdit={() => setMode('edit')}
+            onConfirm={handleConfirm}
+            onBack={handleBack}
+            onDelete={handleDeleteItem}
+            onPrev={handlePrev}
+            onNext={handleNext}
+            onConfirmAll={handleConfirmAll}
+            submitStatus={submitStatus}
+            currentIndex={isBatchMode ? currentIndex + 1 : undefined}
+            totalCount={isBatchMode ? items.length : undefined}
+          />
+        </div>
       )}
 
       {mode === 'edit' && displayResult && (

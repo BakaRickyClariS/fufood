@@ -60,12 +60,11 @@ const OverviewPanel: React.FC<OverviewPanelProps> = ({ onOpenCategory }) => {
 
   // 計算 groupId
   const targetGroupId =
-    activeGroupId ||
-    identity.getGroupId(groupId, groups) ||
-    firstGroupId;
+    activeGroupId || identity.getGroupId(groupId, groups) || firstGroupId;
 
   // 使用 TanStack Query 取得庫存資料（消耗後會自動更新）
-  const { data: inventoryData } = useInventoryQuery({
+  // 只有當 targetGroupId 有值時才啟用 Query，防止打出 /api/v2/groups/undefined
+  const { data: inventoryData, isLoading: isInventoryLoading } = useInventoryQuery({
     groupId: targetGroupId || undefined,
   });
 
@@ -90,12 +89,16 @@ const OverviewPanel: React.FC<OverviewPanelProps> = ({ onOpenCategory }) => {
       console.log('[Overview] 自動設定 activeGroupId:', refId);
     }
 
-    // 如果還沒有 refId，不執行
+    // 如果還沒有 refId，分情況處理
     if (!refId) {
       if (groups.length === 0) {
-        console.error('[Overview] 無法取得 groupId (使用者無群組)');
-        setIsLoading(false);
+        // groups 還在載入中，保持 loading 等 Redux fetchGroups 完成
+        // Effect 會因 groups dependency 在資料到來後重新執行
+        return;
       }
+      // groups 已載入但仍找不到 refId，才是真的無群組
+      console.error('[Overview] 無法取得 groupId (使用者無群組)');
+      setIsLoading(false);
       return;
     }
 
@@ -261,10 +264,27 @@ const OverviewPanel: React.FC<OverviewPanelProps> = ({ onOpenCategory }) => {
     return map;
   }, [layoutSlots, categoriesWithUpdatedCounts]);
 
-  if (isLoading) {
+  if (isLoading || (!!targetGroupId && isInventoryLoading)) {
     return (
       <div className="p-4 text-center text-neutral-400">
-        Loading categories...
+        正在載入中...
+      </div>
+    );
+  }
+
+  // 畫面空庫存防呆 (沒有群組)
+  if (!targetGroupId) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+        <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
+          <svg className="w-8 h-8 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-bold text-neutral-800 mb-2">尚未加入任何冰箱群組</h3>
+        <p className="text-neutral-500 text-sm max-w-xs mx-auto mb-6">
+          您需要加入或建立一個冰箱群組才能管理庫存。
+        </p>
       </div>
     );
   }

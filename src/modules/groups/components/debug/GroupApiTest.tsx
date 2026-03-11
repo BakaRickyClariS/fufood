@@ -17,7 +17,7 @@ export const GroupApiTest = () => {
     setLoading(true);
     setLogs([]);
     addLog('🚀 開始 API 測試...');
-    addLog(`目前使用者: ${user?.displayName || '未登入'}`);
+    addLog(`目前使用者: ${user?.name || '未登入'}`);
 
     try {
       // 1. 取得所有群組

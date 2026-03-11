@@ -147,20 +147,25 @@ export const authApi = {
 
       // 2. 建構符合 Swagger 定義的 Payload
       const payload = {
-        displayName: data.name || profileData.name,
+        name: data.name || profileData.name,
         email: data.email || profileData.email,
         avatar: data.avatar || profileData.avatar,
-        preferences:
+        profilePictureUrl:
+          data.profilePictureUrl || profileData.profilePictureUrl,
+        preference:
           data.preferences ||
           profileData.preferences ||
           (profileData as any).preference ||
           [],
         gender: data.gender ?? profileData.gender,
+        customGender: data.customGender ?? profileData.customGender ?? null,
       };
 
       console.log('[AuthApi] UpdateProfile: Sending PUT to endpoint', payload);
 
-      return await api.put<ProfileResponse>(ENDPOINTS.PROFILE.BASE, payload);
+      // 依據前端與後端實際對接經驗，直接打 /api/v2/profile 即可，透過 Token 識別
+      const endpoint = ENDPOINTS.PROFILE.BASE;
+      return await api.put<ProfileResponse>(endpoint, payload);
     } catch (error) {
       if (!USE_MOCK) {
         throw error;
@@ -218,7 +223,7 @@ export const authApi = {
         user: {
           ...MOCK_USERS[0],
           lineId: 'U1234567890',
-          displayName: 'LINE 測試用戶',
+          name: 'LINE 測試用戶',
           pictureUrl: 'https://profile.line-scdn.net/0h3Example',
         },
         token: MOCK_TOKEN,

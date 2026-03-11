@@ -64,6 +64,8 @@ export const authService = {
    * 執行登入流程（帳密登入）
    */
   login: async (credentials: LoginCredentials) => {
+    // 確保登入時清除可能殘留的前一位使用者的冰箱 ID
+    identity.clearGroupId();
     const response = await authApi.login(credentials);
 
     // 登入成功後，立即獲取完整的使用者個人資料並儲存
@@ -78,12 +80,7 @@ export const authService = {
         const fullUser = {
           ...response.user,
           ...profileData,
-          name:
-            profileData.name ||
-            profileData.displayName ||
-            profileData.display_name ||
-            response.user?.name ||
-            'Guest',
+          name: profileData.name || response.user?.name || 'Guest',
           avatar:
             profileData.avatar ||
             profileData.picture_url ||
@@ -125,6 +122,8 @@ export const authService = {
    * 執行註冊流程
    */
   register: async (data: RegisterData) => {
+    // 確保註冊時清除可能殘留的前一位使用者的冰箱 ID
+    identity.clearGroupId();
     const response = await authApi.register(data);
     authService.saveUser(response.user);
     return response;

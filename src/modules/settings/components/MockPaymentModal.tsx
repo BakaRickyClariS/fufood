@@ -19,7 +19,9 @@ const MockPaymentModal = ({
   amount,
   onConfirm,
 }: MockPaymentModalProps) => {
-  const [status, setStatus] = useState<'idle' | 'processing' | 'success'>('idle');
+  const [status, setStatus] = useState<'idle' | 'processing' | 'success'>(
+    'idle',
+  );
   const overlayRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
@@ -34,13 +36,17 @@ const MockPaymentModal = ({
       setStatus('idle');
       // Entrance Animation
       if (overlayRef.current) {
-        gsap.fromTo(overlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3 });
+        gsap.fromTo(
+          overlayRef.current,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.3 },
+        );
       }
       if (containerRef.current) {
         gsap.fromTo(
           containerRef.current,
           { scale: 0.9, opacity: 0 },
-          { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(1.7)' }
+          { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(1.7)' },
         );
       }
     }
@@ -60,16 +66,16 @@ const MockPaymentModal = ({
 
   const handlePayment = async () => {
     setStatus('processing');
-    
+
     // Simulate initial processing delay
-    await new Promise(resolve => setTimeout(resolve, 4000));
+    await new Promise((resolve) => setTimeout(resolve, 4000));
 
     try {
       // Trigger data update (wait for it if async)
       await onConfirm();
-      
+
       setStatus('success');
-      
+
       // Auto close after showing success state
       setTimeout(() => {
         handleClose();
@@ -83,15 +89,14 @@ const MockPaymentModal = ({
   if (!isOpen) return null;
 
   return createPortal(
-    <div 
+    <div
       ref={overlayRef}
       className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
     >
-      <div 
+      <div
         ref={containerRef}
         className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-xl"
       >
-        
         {/* Header */}
         <div className="text-center mb-6">
           <div className="w-16 h-16 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4 text-primary-500">
@@ -104,9 +109,7 @@ const MockPaymentModal = ({
           <h3 className="text-xl font-bold text-neutral-800">
             {status === 'success' ? '付款成功' : '確認付款'}
           </h3>
-          <p className="text-sm text-neutral-500 mt-1">
-            (此為模擬付款頁面)
-          </p>
+          <p className="text-sm text-neutral-500 mt-1">(此為模擬付款頁面)</p>
         </div>
 
         {/* Content */}
@@ -139,7 +142,7 @@ const MockPaymentModal = ({
               '確認付款'
             )}
           </Button>
-          
+
           {status === 'idle' && (
             <button
               onClick={handleClose}
@@ -151,7 +154,7 @@ const MockPaymentModal = ({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };
 

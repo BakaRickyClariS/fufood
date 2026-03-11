@@ -4,6 +4,7 @@ import { useAuth } from '@/modules/auth';
 import type { UserProfile } from '@/modules/settings/types/settings.types';
 import { getUserAvatarUrl } from '@/shared/utils/avatarUtils';
 import { useFCMContext } from '@/shared/hooks/useFCMContext';
+import { useTourStore } from '@/store/useTourStore';
 
 // Components
 import ProfileSection from '@/modules/settings/components/ProfileSection';
@@ -106,6 +107,12 @@ const SettingsPage = () => {
   const activeModal = searchParams.get('modal');
 
   const handleNavigate = (key: string) => {
+    if (key === 'restart-tour') {
+      const { restartTour } = useTourStore.getState();
+      restartTour();
+      navigate('/?modal=groups-list');
+      return;
+    }
     setSearchParams({ modal: key });
   };
 
@@ -116,7 +123,7 @@ const SettingsPage = () => {
   // Transform auth User to UserProfile type
   const userProfile: UserProfile = {
     ...user,
-    name: user?.displayName || user?.name || '使用者',
+    name: user?.name || '使用者',
     avatar: getUserAvatarUrl(user),
     // 直接傳遞 dietaryPreference，讓子元件處理 undefined 的情況
     dietaryPreference: user?.dietaryPreference,
@@ -186,6 +193,20 @@ const SettingsPage = () => {
 
           {/* 開發測試用：群組 API 測試按鈕 */}
           {import.meta.env.DEV && <GroupApiTest />}
+
+          {/* 開發測試用：自由開啟新手教學 */}
+          {import.meta.env.DEV && (
+            <button
+              onClick={() => {
+                const { restartTour } = useTourStore.getState();
+                restartTour();
+                navigate('/?modal=groups-list');
+              }}
+              className="w-full bg-orange-100 text-orange-600 py-3 rounded-xl font-bold"
+            >
+              自由開啟新手教學 (DEV Only)
+            </button>
+          )}
         </div>
       </div>
 

@@ -1,5 +1,8 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { ConsumptionItem, ConsumptionReason } from '@/modules/recipe/types';
+import type {
+  ConsumptionItem,
+  ConsumptionReason,
+} from '@/modules/recipe/types';
 
 // Extended item type for consumption flow
 export type ItemWithReason = ConsumptionItem & {
@@ -49,14 +52,17 @@ const consumptionSlice = createSlice({
   reducers: {
     startConsumption: (
       state,
-      action: PayloadAction<{ items: ItemWithReason[]; contextId?: string }>
+      action: PayloadAction<{ items: ItemWithReason[]; contextId?: string }>,
     ) => {
       state.items = action.payload.items;
       state.step = 'input';
       state.contextId = action.payload.contextId || null;
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     },
-    updateConsumptionItems: (state, action: PayloadAction<ItemWithReason[]>) => {
+    updateConsumptionItems: (
+      state,
+      action: PayloadAction<ItemWithReason[]>,
+    ) => {
       state.items = action.payload;
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     },
@@ -88,11 +94,14 @@ export const {
 } = consumptionSlice.actions;
 
 // Selectors
-export const selectConsumptionItems = (state: { consumption: ConsumptionState }) =>
-  state.consumption.items;
-export const selectConsumptionStep = (state: { consumption: ConsumptionState }) =>
-  state.consumption.step;
-export const selectConsumptionContextId = (state: { consumption: ConsumptionState }) =>
-  state.consumption.contextId;
+export const selectConsumptionItems = (state: {
+  consumption: ConsumptionState;
+}) => state.consumption.items;
+export const selectConsumptionStep = (state: {
+  consumption: ConsumptionState;
+}) => state.consumption.step;
+export const selectConsumptionContextId = (state: {
+  consumption: ConsumptionState;
+}) => state.consumption.contextId;
 
 export default consumptionSlice.reducer;

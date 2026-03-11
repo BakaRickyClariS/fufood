@@ -26,11 +26,8 @@ export const useSignOutMutation = () => {
         localStorage.removeItem('tokenExpiry');
       }
 
-      // 清除用戶 Profile 快取
-      client.invalidateQueries({
-        queryKey: ['GET_USER_PROFILE'],
-      });
-      client.setQueryData(['GET_USER_PROFILE'], null);
+      // 徹底清除 React Query 中所有的快取資料，包含 Profile, Groups, Inventory 等
+      client.clear();
     },
   });
 };
@@ -55,7 +52,6 @@ export const useUpdateProfileMutation = () => {
           id: profileData.id ?? existingUser?.id,
           lineId: profileData.lineId ?? existingUser?.lineId,
           name: profileData.name ?? existingUser?.name,
-          displayName: profileData.name ?? existingUser?.displayName,
           avatar:
             profileData.profilePictureUrl ??
             profileData.avatar ??

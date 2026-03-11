@@ -44,12 +44,7 @@ const HelpCenter = ({ isOpen, onClose }: HelpCenterProps) => {
   };
 
   return (
-    <SettingsModalLayout
-      isOpen={isOpen}
-      onClose={onClose}
-      title="問題與幫助"
-    >
-
+    <SettingsModalLayout isOpen={isOpen} onClose={onClose} title="問題與幫助">
       <div className="max-w-layout-container mx-auto px-4 py-6 space-y-6">
         {/* Contact Support CTA */}
         <div className="bg-white rounded-2xl p-6 shadow-sm text-center">

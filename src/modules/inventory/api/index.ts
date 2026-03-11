@@ -16,9 +16,7 @@ export const inventoryApi: InventoryApi = USE_MOCK
 
 // Log current backend for debugging
 if (import.meta.env.DEV) {
-  console.info(
-    `[Inventory] Backend: ${USE_MOCK ? 'mock' : INVENTORY_BACKEND}`,
-  );
+  console.info(`[Inventory] Backend: ${USE_MOCK ? 'mock' : INVENTORY_BACKEND}`);
 }
 
 export * from './inventoryApi';

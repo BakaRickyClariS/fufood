@@ -46,4 +46,3 @@ export const AVATAR_OPTIONS = [
  * 預設頭像
  */
 export const DEFAULT_AVATAR = DefaultAvatarImg;
-

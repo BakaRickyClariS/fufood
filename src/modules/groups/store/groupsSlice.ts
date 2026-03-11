@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type {
   Group,
+  GroupMember,
   CreateGroupForm,
   UpdateGroupForm,
   Friend,
@@ -47,6 +48,15 @@ export const fetchGroups = createAsyncThunk(
         (err as Error).message || 'Failed to fetch groups',
       );
     }
+  },
+  {
+    condition: (_, { getState }) => {
+      const state = getState() as { groups: GroupsState };
+      // Prevent duplicate fetching if already loading
+      if (state.groups.isLoading) {
+        return false;
+      }
+    },
   },
 );
 
@@ -141,6 +151,19 @@ const groupsSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    /**
+     * 手動更新特定群組的成員列表 (用於 Hook 與 Redux 資料同步)
+     */
+    updateGroupMembers: (
+      state,
+      action: { payload: { groupId: string; members: GroupMember[] } },
+    ) => {
+      const { groupId, members } = action.payload;
+      const index = state.items.findIndex((g) => g.id === groupId);
+      if (index !== -1) {
+        state.items[index].members = members;
+      }
+    },
   },
   extraReducers: (builder) => {
     // fetchGroups
@@ -150,7 +173,23 @@ const groupsSlice = createSlice({
     });
     builder.addCase(fetchGroups.fulfilled, (state, action) => {
       state.isLoading = false;
-      state.items = action.payload;
+      // 智慧合併：如果 action.payload 中的群組已存在，且 payload 中沒給 members，則保留舊的 members
+      const newItems = action.payload.map((newGroup: Group) => {
+        const existingGroup = state.items.find((g) => g.id === newGroup.id);
+        if (existingGroup) {
+          return {
+            ...newGroup,
+            members:
+              newGroup.members && newGroup.members.length > 0
+                ? newGroup.members
+                : existingGroup.members,
+            // 補齊可能缺失的欄位（針對舊 API 回傳）
+            admin: newGroup.admin ?? existingGroup.admin,
+          };
+        }
+        return newGroup;
+      });
+      state.items = newItems;
     });
     builder.addCase(fetchGroups.rejected, (state, action) => {
       state.isLoading = false;
@@ -247,7 +286,7 @@ const groupsSlice = createSlice({
   },
 });
 
-export const { clearError } = groupsSlice.actions;
+export const { clearError, updateGroupMembers } = groupsSlice.actions;
 
 // Selectors
 export const selectAllGroups = (state: { groups: GroupsState }) =>

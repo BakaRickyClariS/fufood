@@ -133,7 +133,7 @@ export const useNotificationPolling = ({
 
         // Fallback: 如果 ID 若有似無，試著比對名稱 (有些後端可能沒存 ID)
         // 注意：這有誤殺風險，但在本人操作當下，名稱通常完全一致
-        if (user?.displayName && actorName === user.displayName) return false;
+        if (user?.name && actorName === user.name) return false;
 
         return true;
       });

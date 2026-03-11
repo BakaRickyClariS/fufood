@@ -39,23 +39,71 @@ import Group08 from '@/assets/images/group/08-group.webp';
 export type Theme = {
   id: number;
   name: string;
-  avatar: string;      // 大頭貼
-  homeBanner: string;  // Dashboard 橫幅
-  groupImage: string;  // 群組卡片圖片
+  avatar: string; // 大頭貼
+  homeBanner: string; // Dashboard 橫幅
+  groupImage: string; // 群組卡片圖片
 };
 
 /**
  * 所有可用主題列表
  */
 export const THEMES: Theme[] = [
-  { id: 1, name: '阿福', avatar: Avatar1, homeBanner: Home01, groupImage: Group01 },
-  { id: 2, name: '綠精靈', avatar: Avatar2, homeBanner: Home02, groupImage: Group02 },
-  { id: 3, name: '雲端精靈', avatar: Avatar3, homeBanner: Home03, groupImage: Group03 },
-  { id: 4, name: '食譜助手', avatar: Avatar4, homeBanner: Home04, groupImage: Group04 },
-  { id: 5, name: '冰箱', avatar: Avatar5, homeBanner: Home05, groupImage: Group05 },
-  { id: 6, name: '卓伊', avatar: Avatar6, homeBanner: Home06, groupImage: Group06 },
-  { id: 7, name: '瑞奇', avatar: Avatar7, homeBanner: Home07, groupImage: Group07 },
-  { id: 8, name: '喬斯林', avatar: Avatar8, homeBanner: Home08, groupImage: Group08 },
+  {
+    id: 1,
+    name: '阿福',
+    avatar: Avatar1,
+    homeBanner: Home01,
+    groupImage: Group01,
+  },
+  {
+    id: 2,
+    name: '綠精靈',
+    avatar: Avatar2,
+    homeBanner: Home02,
+    groupImage: Group02,
+  },
+  {
+    id: 3,
+    name: '雲端精靈',
+    avatar: Avatar3,
+    homeBanner: Home03,
+    groupImage: Group03,
+  },
+  {
+    id: 4,
+    name: '食譜助手',
+    avatar: Avatar4,
+    homeBanner: Home04,
+    groupImage: Group04,
+  },
+  {
+    id: 5,
+    name: '冰箱',
+    avatar: Avatar5,
+    homeBanner: Home05,
+    groupImage: Group05,
+  },
+  {
+    id: 6,
+    name: '卓伊',
+    avatar: Avatar6,
+    homeBanner: Home06,
+    groupImage: Group06,
+  },
+  {
+    id: 7,
+    name: '瑞奇',
+    avatar: Avatar7,
+    homeBanner: Home07,
+    groupImage: Group07,
+  },
+  {
+    id: 8,
+    name: '喬斯林',
+    avatar: Avatar8,
+    homeBanner: Home08,
+    groupImage: Group08,
+  },
 ];
 
 /**

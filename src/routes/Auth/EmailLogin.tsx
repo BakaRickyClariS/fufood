@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { authApi, authService } from '@/modules/auth';
+import { authService } from '@/modules/auth';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 
@@ -45,12 +45,16 @@ const EmailLogin = () => {
     setIsLoading(true);
 
     try {
-      const response = await authApi.login({ email, password });
+      const response = await authService.login({ email, password });
 
       if (response && response.user) {
-        // 更新快取與 localStorage
-        authService.saveUser(response.user);
+        // 更新快取
         queryClient.setQueryData(['GET_USER_PROFILE'], response.user);
+        
+        // 清除登出標記
+        try {
+          sessionStorage.removeItem('logged_out');
+        } catch(e) {}
 
         // 導向成功過渡頁
         navigate('/auth/success', { replace: true });
@@ -180,13 +184,12 @@ const EmailLogin = () => {
           {/* 註冊連結 */}
           <div className="flex justify-center mt-4 gap-1">
             <span className="text-sm text-neutral-500">還沒有帳號？</span>
-            <button
-              type="button"
-              onClick={() => navigate('/sign-up')}
+            <Link
+              to="/auth/sign-up"
               className="text-sm text-primary-500 font-medium hover:text-primary-600 transition-colors"
             >
               立即註冊
-            </button>
+            </Link>
           </div>
         </div>
       </form>

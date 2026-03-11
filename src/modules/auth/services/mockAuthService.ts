@@ -12,7 +12,7 @@
  * import { mockAuthService } from '@/modules/auth/services/mockAuthService';
  *
  * // Mock 登入
- * const { user, token } = mockAuthService.mockLogin(avatarId, displayName);
+ * const { user, token } = mockAuthService.mockLogin(avatarId, name);
  */
 
 import type { User, AuthToken } from '../types';
@@ -28,11 +28,11 @@ export const mockAuthService = {
   /**
    * 執行假登入流程
    * @param avatarId - 頭像 ID
-   * @param displayName - 顯示名稱
+   * @param name - 顯示名稱
    */
   mockLogin: (
     avatarId: number,
-    displayName: string,
+    name: string,
   ): { user: User; token: AuthToken } => {
     const mockToken: AuthToken = {
       accessToken: `mock_auth_${Date.now()}`,
@@ -43,8 +43,7 @@ export const mockAuthService = {
     const user: User = {
       id: `mock_user_${Date.now()}`,
       email: 'mock@example.com',
-      name: displayName,
-      displayName: displayName,
+      name: name,
       avatar: String(avatarId),
       createdAt: new Date(),
       updatedAt: new Date(),

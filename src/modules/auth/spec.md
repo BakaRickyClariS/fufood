@@ -100,7 +100,6 @@ export type User = {
   updatedAt: Date;
   // LINE 專屬欄位
   lineId?: string;
-  displayName?: string;
   pictureUrl?: string;      // LINE 頭貼 URL（用於 TopNav 顯示）
   // 會員等級
   membershipTier?: MembershipTier;

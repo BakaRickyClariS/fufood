@@ -92,7 +92,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onClick }) => {
 
   return (
     <div
-      className={`relative w-full aspect-3/4 rounded-2xl overflow-hidden cursor-pointer transition-transform active:scale-95 border-2 ${styles.borderColor} ${styles.shadow}`}
+      className={`tour-step-expire-item relative w-full aspect-3/4 rounded-2xl overflow-hidden cursor-pointer transition-transform active:scale-95 border-2 ${styles.borderColor} ${styles.shadow}`}
       role="button"
       tabIndex={0}
       onClick={onClick}

@@ -175,6 +175,7 @@ const MobileBottomNav = ({
               navigate(fabItem.href);
             }}
             className="
+              tour-step-camera-btn
               absolute
               left-1/2
               transform

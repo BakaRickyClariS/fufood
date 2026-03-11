@@ -24,7 +24,9 @@ const Inventory: React.FC = () => {
 
   // 優先使用 state 中的 itemId，其次是 URL params，最後是恢復的 ID
   const targetItemId =
-    (location.state as { openItemId?: string })?.openItemId || itemId || restoredItemId;
+    (location.state as { openItemId?: string })?.openItemId ||
+    itemId ||
+    restoredItemId;
 
   const { data: itemData, refetch } = useInventoryItemQuery(targetItemId || '');
 

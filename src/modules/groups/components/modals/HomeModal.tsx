@@ -180,7 +180,7 @@ export const HomeModal = ({
         {/* Content - 可滾動區域 */}
         <div className="px-6 space-y-4 overflow-y-auto flex-1 select-none">
           {/* Current User Info */}
-          <div className="flex items-center gap-4 py-2 border-b border-neutral-100 pb-4">
+          <div className="tour-step-share-invite flex items-center gap-4 py-2 border-b border-neutral-100 pb-4">
             <div className="w-14 h-14 rounded-full overflow-hidden border border-neutral-300 shrink-0">
               <img
                 src={currentUser.avatar}

@@ -14,7 +14,9 @@ const LogoutSection = ({
   return (
     <div className="bg-white rounded-3xl p-6 shadow-sm space-y-4">
       {email && (
-        <div className="text-base font-semibold text-neutral-800 px-1">{email}</div>
+        <div className="text-base font-semibold text-neutral-800 px-1">
+          {email}
+        </div>
       )}
       <button
         onClick={onLogout}

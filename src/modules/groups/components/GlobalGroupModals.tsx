@@ -23,9 +23,7 @@ export const GlobalGroupModals = () => {
   // Group Modal Context
   const { activeGroup, groups } = useGroupModal();
 
-  const displayName = isInitialLoading
-    ? ''
-    : user?.name || user?.displayName || 'Guest';
+  const displayName = isInitialLoading ? '' : user?.name || 'Guest';
   const userAvatar = getUserAvatarUrl(user);
 
   // === Group Modal 狀態 ===

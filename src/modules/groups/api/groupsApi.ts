@@ -140,8 +140,16 @@ export const groupsApi = {
             id: 'group-1',
             name: '我的冰箱',
             description: '個人使用的冰箱',
-            ownerId: 'user-1',
-            members: [],
+            ownerId: '1',
+            members: [
+              {
+                id: '1',
+                name: 'Jocelyn',
+                avatar:
+                  'https://api.dicebear.com/7.x/avataaars/svg?seed=Jocelyn',
+                role: 'owner',
+              },
+            ],
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           },
@@ -164,8 +172,15 @@ export const groupsApi = {
         return {
           id,
           name: '我的冰箱',
-          ownerId: 'user-1',
-          members: [],
+          ownerId: '1',
+          members: [
+            {
+              id: '1',
+              name: 'Jocelyn',
+              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jocelyn',
+              role: 'owner',
+            },
+          ],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -187,8 +202,15 @@ export const groupsApi = {
         return {
           id: `group-${Date.now()}`,
           name: data.name,
-          ownerId: 'user-1',
-          members: [],
+          ownerId: '1',
+          members: [
+            {
+              id: '1',
+              name: 'Jocelyn',
+              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jocelyn',
+              role: 'owner',
+            },
+          ],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -210,8 +232,15 @@ export const groupsApi = {
         return {
           id,
           name: data.name || 'Updated Group',
-          ownerId: 'user-1',
-          members: [],
+          ownerId: '1',
+          members: [
+            {
+              id: '1',
+              name: 'Jocelyn',
+              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jocelyn',
+              role: 'owner',
+            },
+          ],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -254,9 +283,9 @@ export const groupsApi = {
       async () => {
         return [
           {
-            id: 'user-1',
-            name: 'Mock User',
-            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mock',
+            id: '1',
+            name: 'Jocelyn',
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jocelyn',
             role: 'owner' as const,
           },
         ];

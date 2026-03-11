@@ -43,7 +43,6 @@ const STORAGE_KEYS = {
 type IdentityUser = {
   id: string;
   name?: string;
-  displayName?: string;
   lineId?: string;
   avatar?: string;
   pictureUrl?: string;

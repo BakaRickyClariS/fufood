@@ -21,9 +21,9 @@ const ProfileSection = ({ user, onNavigate }: ProfileSectionProps) => {
   ) => options.find((o) => o.value === value)?.label;
 
   const preference = user.dietaryPreference;
-  
+
   const tags = preference
-    ? [
+    ? ([
         preference.cookingFrequency &&
           `烹飪頻率：${getLabel(COOKING_FREQUENCY_OPTIONS, preference.cookingFrequency) || preference.cookingFrequency}`,
         preference.prepTime &&
@@ -33,14 +33,14 @@ const ProfileSection = ({ user, onNavigate }: ProfileSectionProps) => {
         ...(preference.restrictions || []).map(
           (r) => `特殊限制：${getLabel(DIETARY_RESTRICTION_OPTIONS, r) || r}`,
         ),
-      ].filter(Boolean) as string[]
+      ].filter(Boolean) as string[])
     : [];
 
   return (
     <div className="bg-white rounded-3xl overflow-hidden">
       {/* 上半部：個人檔案 - 點擊整塊跳轉 */}
-      <div 
-        onClick={() => onNavigate('profile')} 
+      <div
+        onClick={() => onNavigate('profile')}
         className="block px-6 pt-4 pb-2 border-b border-neutral-100 hover:bg-neutral-50 transition-colors cursor-pointer"
       >
         <div className="flex items-center justify-between">
@@ -63,14 +63,18 @@ const ProfileSection = ({ user, onNavigate }: ProfileSectionProps) => {
             {/* 中間：名字與標籤 */}
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
-                <h2 className="text-xs font-semibold text-neutral-600">{user.name}</h2>
+                <h2 className="text-xs font-semibold text-neutral-600">
+                  {user.name}
+                </h2>
               </div>
-              
+
               {/* LINE 已綁定標記 - 僅當有 lineId 時顯示 */}
               {user.lineId && (
                 <div className="inline-flex items-center gap-1.5 bg-success-50 px-2 py-1.5 rounded-full w-fit">
                   <img src={LineIconGreen} alt="LINE" className="w-3 h-3" />
-                  <span className="text-[10px] text-neutral-600 font-semibold leading-none">已綁定</span>
+                  <span className="text-[10px] text-neutral-600 font-semibold leading-none">
+                    已綁定
+                  </span>
                 </div>
               )}
             </div>

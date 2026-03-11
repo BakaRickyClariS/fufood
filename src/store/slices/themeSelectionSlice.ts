@@ -47,7 +47,7 @@ const themeSelectionSlice = createSlice({
   reducers: {
     openThemeSelection: (
       state,
-      action: PayloadAction<{ selectedThemeId?: number; userName?: string }>
+      action: PayloadAction<{ selectedThemeId?: number; userName?: string }>,
     ) => {
       state.isOpen = true;
       state.selectedThemeId = action.payload.selectedThemeId ?? null;
@@ -57,7 +57,7 @@ const themeSelectionSlice = createSlice({
     },
     updateThemeSelection: (
       state,
-      action: PayloadAction<{ selectedThemeId?: number; userName?: string }>
+      action: PayloadAction<{ selectedThemeId?: number; userName?: string }>,
     ) => {
       if (action.payload.selectedThemeId !== undefined) {
         state.selectedThemeId = action.payload.selectedThemeId;
@@ -88,13 +88,17 @@ export const {
 } = themeSelectionSlice.actions;
 
 // Selectors
-export const selectThemeSelectionIsOpen = (state: { themeSelection: ThemeSelectionState }) =>
-  state.themeSelection.isOpen;
-export const selectThemeSelectionSelectedId = (state: { themeSelection: ThemeSelectionState }) =>
-  state.themeSelection.selectedThemeId;
-export const selectThemeSelectionUserName = (state: { themeSelection: ThemeSelectionState }) =>
-  state.themeSelection.userName;
-export const selectThemeSelectionSkipAnimation = (state: { themeSelection: ThemeSelectionState }) =>
-  state.themeSelection.skipAnimation;
+export const selectThemeSelectionIsOpen = (state: {
+  themeSelection: ThemeSelectionState;
+}) => state.themeSelection.isOpen;
+export const selectThemeSelectionSelectedId = (state: {
+  themeSelection: ThemeSelectionState;
+}) => state.themeSelection.selectedThemeId;
+export const selectThemeSelectionUserName = (state: {
+  themeSelection: ThemeSelectionState;
+}) => state.themeSelection.userName;
+export const selectThemeSelectionSkipAnimation = (state: {
+  themeSelection: ThemeSelectionState;
+}) => state.themeSelection.skipAnimation;
 
 export default themeSelectionSlice.reducer;

@@ -63,8 +63,6 @@ export async function getUserProfile(): Promise<User | null> {
       lineId: backendData.lineId,
       name:
         backendData.name || backendData.displayName || backendData.display_name,
-      displayName:
-        backendData.displayName || backendData.name || backendData.display_name,
       avatar: backendData.avatar || backendData.profilePictureUrl || '',
       pictureUrl:
         backendData.profilePictureUrl || backendData.avatar || undefined,
@@ -106,7 +104,6 @@ export async function getUserProfile(): Promise<User | null> {
         return {
           ...savedUser,
           lineId: savedUser.lineId || 'U1234567890',
-          displayName: savedUser.displayName || savedUser.name,
           pictureUrl: savedUser.pictureUrl || savedUser.avatar,
         };
       } catch {
@@ -117,7 +114,6 @@ export async function getUserProfile(): Promise<User | null> {
     return {
       ...MOCK_USERS[0],
       lineId: 'U1234567890',
-      displayName: MOCK_USERS[0].name,
       pictureUrl: MOCK_USERS[0].avatar,
     };
   }

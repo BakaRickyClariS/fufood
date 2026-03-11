@@ -24,8 +24,7 @@ const activeGroupSlice = createSlice({
 export const { setActiveGroupId, clearActiveGroupId } =
   activeGroupSlice.actions;
 
-export const selectActiveGroupId = (state: {
-  activeGroup: ActiveGroupState;
-}) => state.activeGroup.activeGroupId;
+export const selectActiveGroupId = (state: { activeGroup: ActiveGroupState }) =>
+  state.activeGroup.activeGroupId;
 
 export default activeGroupSlice.reducer;

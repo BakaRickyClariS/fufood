@@ -55,7 +55,6 @@ export type User = {
   updatedAt: Date;
   // LINE 專屬欄位
   lineId?: string;
-  displayName?: string;
   pictureUrl?: string;
   // 會員等級
   membershipTier?: MembershipTier;
@@ -91,7 +90,7 @@ export type AuthState = {
 // 假登入設定資料
 export type MockLoginData = {
   avatarId: number;
-  displayName: string;
+  name: string;
 };
 
 /**

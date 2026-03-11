@@ -38,12 +38,7 @@ const PurchaseHistory = ({ isOpen, onClose }: PurchaseHistoryProps) => {
   }, [isOpen]);
 
   return (
-    <SettingsModalLayout
-      isOpen={isOpen}
-      onClose={onClose}
-      title="購買紀錄"
-    >
-
+    <SettingsModalLayout isOpen={isOpen} onClose={onClose} title="購買紀錄">
       <div className="max-w-layout-container mx-auto px-4 py-6 space-y-4">
         {orders.length > 0 ? (
           orders.map((order) => (
