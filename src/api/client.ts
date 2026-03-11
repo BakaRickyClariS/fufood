@@ -196,11 +196,21 @@ class ApiClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('API Error Details (422 info):', errorData);
+
+        // 如果是 401，且不是在登入或公開 API
+        if (response.status === 401 && !isPublicEndpoint) {
+          console.error('[ApiClient] Token 過期或失效，自動登出...');
+          localStorage.removeItem('user');
+          localStorage.removeItem('auth_token');
+          sessionStorage.setItem('logged_out', 'true');
+          window.location.href = '/login';
+        }
+
+        console.error(`API Error Details (${response.status}):`, errorData);
         throw new ApiError(
-          errorData.message || `API Error: ${response.status}`,
+          errorData?.error?.message || errorData.message || `API Error: ${response.status}`,
           response.status,
-          errorData.code,
+          errorData.code || errorData?.error?.code,
           errorData,
         );
       }

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { SplashScreen } from '@/shared/components/SplashScreen';
 import { gsap } from 'gsap';
 import { Toaster } from 'sonner';
+import { AppTourProvider } from '@/components/ui/AppTourProvider';
 
 const App: React.FC = () => {
   const [needRefresh, setNeedRefresh] = useState(false);
@@ -68,6 +69,7 @@ const App: React.FC = () => {
       <div ref={contentRef} style={{ opacity: 0 }}>
         <RouterProvider router={router} />
       </div>
+      <AppTourProvider />
       <Toaster position="top-center" richColors />
       <SWPrompt
         show={needRefresh}
