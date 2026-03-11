@@ -1,4 +1,4 @@
-﻿import ProBadge from '@/assets/images/settings/silver.webp';
+import ProBadge from '@/assets/images/settings/silver.webp';
 import FreeBadge from '@/assets/images/settings/brown.webp';
 
 import { useState, useRef, type FC } from 'react';
@@ -30,7 +30,7 @@ export const GroupMembers: FC<GroupMembersProps> = ({
 }) => {
   const layoutRef = useRef<GroupPageLayoutRef>(null);
   const { user } = useAuth();
-  const currentUserName = user?.displayName || user?.name || '';
+  const currentUserName = user?.name || '';
   const currentUserAvatar = getUserAvatarUrl(user);
 
   const { openInvite } = useGroupModal();
@@ -117,7 +117,7 @@ export const GroupMembers: FC<GroupMembersProps> = ({
             {/* Admin: 14px Normal */}
             <p className="text-[14px] font-normal text-neutral-500 relative z-0">
               管理員{' '}
-              {members.find((m) => m.id === group.ownerId)?.name || '未知'}
+              {members.find((m) => (m.userId ?? m.id) === group.ownerId)?.name || '未知'}
             </p>
           </div>
 

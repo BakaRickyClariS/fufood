@@ -213,9 +213,14 @@ export const GroupCard: FC<GroupCardProps> = ({
           <h3 className="text-xl font-bold text-primary-700">{group.name}</h3>
           <p className="text-sm text-stone-500 font-medium">
             管理員{' '}
-            {group.members?.find((m) => m.id === group.ownerId)?.name ||
-              group.admin ||
-              'Unknown'}
+            {group.members && group.members.length > 0
+              ? group.members.find(
+                  (m) =>
+                    String(m.userId ?? m.id) === String(group.ownerId),
+                )?.name ||
+                group.admin ||
+                'Unknown'
+              : group.admin || 'Unknown'}
           </p>
         </div>
 

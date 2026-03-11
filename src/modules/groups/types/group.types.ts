@@ -3,6 +3,7 @@
  */
 export type GroupMember = {
   id: string;
+  userId?: string; // v2 API 回傳格式，對應 groupMemberships.userId
   name: string;
   avatar: string; // 前端顯示用，對應 profilePictureUrl
   profilePictureUrl?: string; // 後端回傳原始欄位
