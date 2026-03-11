@@ -62,6 +62,9 @@ const InviteAcceptPage = () => {
 
     // 未登入則導向登入頁面，並帶上返回 URL
     if (!isAuthenticated) {
+      if (token) {
+        sessionStorage.setItem('pendingInviteToken', token);
+      }
       const returnUrl = encodeURIComponent(window.location.pathname);
       navigate(`/auth/login?redirect=${returnUrl}`, { replace: true });
       return;
