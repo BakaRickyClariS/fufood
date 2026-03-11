@@ -23,7 +23,7 @@ const TopNav = () => {
 
   // 使用頭像工具函數取得使用者頭像
   const userAvatar = getUserAvatarUrl(user);
-  const userName = user?.displayName || user?.name || '使用者';
+  const userName = user?.name || '使用者';
 
   // 當前群組使用 Provider 中的 activeGroup
   const currentGroup = activeGroup;
@@ -51,7 +51,7 @@ const TopNav = () => {
                 },
                 // Filter out current user from group members to avoid duplicates
                 ...(currentGroup?.members?.filter(
-                  (m) => m.name !== userName && m.name !== user?.displayName,
+                  (m) => (m.userId ?? m.id) !== user?.id,
                 ) || []),
               ]}
               maxDisplay={3}
@@ -81,7 +81,7 @@ const TopNav = () => {
           </Button>
 
           <div
-            className="relative w-10 h-10 cursor-pointer"
+            className="tour-step-profile-link relative w-10 h-10 cursor-pointer"
             onClick={() => navigate('/settings')}
           >
             <div className="w-full h-full rounded-full overflow-hidden border-2 border-primary-300">
