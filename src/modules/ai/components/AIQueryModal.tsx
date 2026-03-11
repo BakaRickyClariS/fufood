@@ -80,7 +80,7 @@ export const AIQueryModal = ({
 
   // 取得使用者資訊
   const { user } = useAuth();
-  const userName = user?.name || user?.displayName || 'User';
+  const userName = user?.name || 'User';
 
   // AI 生成 Hook
   const { generate, isLoading, text, recipes, error, remainingQueries, reset } =
