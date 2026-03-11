@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 export function useFCMToken() {
   const [permission, setPermission] = useState<NotificationPermission>(
-    Notification.permission
+    Notification.permission,
   );
 
   const enablePush = useCallback(async () => {
